@@ -1,9 +1,10 @@
 "use client"
 
-import React from 'react'
+import React, { useState } from 'react'
 import { Avatar } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { ThreadMessageInput } from './ThreadMessageInput'
 import { cn } from '@/lib/utils'
 
 interface RightSidebarProps {
@@ -32,6 +33,43 @@ const mockMembers: Member[] = [
 
 export const RightSidebar: React.FC<RightSidebarProps> = ({ onClose, mode, onModeChange, selectedThread }) => {
   const [activeTab, setActiveTab] = React.useState<'info' | 'members' | 'files' | 'pinned'>('info')
+  const [threadReplies, setThreadReplies] = useState<Array<{
+    id: string
+    content: string
+    author: string
+    timestamp: string
+  }>>([
+    {
+      id: '1',
+      content: 'Great idea! I\'m excited to see how this develops. 🎉',
+      author: 'Jane Smith',
+      timestamp: '1h'
+    },
+    {
+      id: '2',
+      content: 'I\'ll start working on the implementation today.',
+      author: 'Mike Johnson',
+      timestamp: '45m'
+    },
+    {
+      id: '3',
+      content: 'Perfect! Let me know if you need help with the design specs.',
+      author: 'Sarah Wilson',
+      timestamp: '30m'
+    },
+    {
+      id: '4',
+      content: 'I can help with testing once it\'s ready! 🧪',
+      author: 'Alex Brown',
+      timestamp: '15m'
+    },
+    {
+      id: '5',
+      content: 'Thanks everyone! I\'ll keep you all updated. 🚀',
+      author: 'John Doe',
+      timestamp: '5m'
+    }
+  ])
 
   const getStatusColor = (status: Member['status']) => {
     switch (status) {
@@ -52,6 +90,16 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({ onClose, mode, onMod
     }
     const config = variants[role]
     return <Badge variant={config.variant} className="text-xs">{config.text}</Badge>
+  }
+
+  const handleThreadMessageSend = (message: string) => {
+    const newReply = {
+      id: Date.now().toString(),
+      content: message,
+      author: 'You',
+      timestamp: 'now'
+    }
+    setThreadReplies(prev => [...prev, newReply])
   }
 
   return (
@@ -138,136 +186,30 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({ onClose, mode, onMod
             {/* Thread Replies */}
             <div className="space-y-3">
               <div className="text-xs text-[hsl(var(--chat-text-muted))] font-medium">
-                5 replies
+                {threadReplies.length} {threadReplies.length === 1 ? 'reply' : 'replies'}
               </div>
               
               <div className="space-y-2">
-                {/* Mock replies */}
-                <div className="flex space-x-2">
-                  <Avatar fallback="Jane Smith" size="sm" className="w-5 h-5 text-xs" />
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-1 mb-1">
-                      <span className="text-xs font-medium">Jane Smith</span>
-                      <span className="text-xs text-[hsl(var(--chat-text-muted))]">1h</span>
-                    </div>
-                    <div className="text-xs text-[hsl(var(--chat-text))]">
-                      Great idea! I'm excited to see how this develops. 🎉
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex space-x-2">
-                  <Avatar fallback="Mike Johnson" size="sm" className="w-5 h-5 text-xs" />
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-1 mb-1">
-                      <span className="text-xs font-medium">Mike Johnson</span>
-                      <span className="text-xs text-[hsl(var(--chat-text-muted))]">45m</span>
-                    </div>
-                    <div className="text-xs text-[hsl(var(--chat-text))]">
-                      I'll start working on the implementation today.
+                {threadReplies.map((reply) => (
+                  <div key={reply.id} className="flex space-x-2">
+                    <Avatar fallback={reply.author} size="sm" className="w-5 h-5 text-xs" />
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-1 mb-1">
+                        <span className="text-xs font-medium">{reply.author}</span>
+                        <span className="text-xs text-[hsl(var(--chat-text-muted))]">{reply.timestamp}</span>
+                      </div>
+                      <div className="text-xs text-[hsl(var(--chat-text))]">
+                        {reply.content}
+                      </div>
                     </div>
                   </div>
-                </div>
-
-                <div className="flex space-x-2">
-                  <Avatar fallback="Sarah Wilson" size="sm" className="w-5 h-5 text-xs" />
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-1 mb-1">
-                      <span className="text-xs font-medium">Sarah Wilson</span>
-                      <span className="text-xs text-[hsl(var(--chat-text-muted))]">30m</span>
-                    </div>
-                    <div className="text-xs text-[hsl(var(--chat-text))]">
-                      Perfect! Let me know if you need help with the design specs.
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex space-x-2">
-                  <Avatar fallback="Alex Brown" size="sm" className="w-5 h-5 text-xs" />
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-1 mb-1">
-                      <span className="text-xs font-medium">Alex Brown</span>
-                      <span className="text-xs text-[hsl(var(--chat-text-muted))]">15m</span>
-                    </div>
-                    <div className="text-xs text-[hsl(var(--chat-text))]">
-                      I can help with testing once it's ready! 🧪
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex space-x-2">
-                  <Avatar fallback="John Doe" size="sm" className="w-5 h-5 text-xs" />
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-1 mb-1">
-                      <span className="text-xs font-medium">John Doe</span>
-                      <span className="text-xs text-[hsl(var(--chat-text-muted))]">5m</span>
-                    </div>
-                    <div className="text-xs text-[hsl(var(--chat-text))]">
-                      Thanks everyone! I'll keep you all updated. 🚀
-                    </div>
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
 
             {/* Reply Input */}
             <div className="sticky bottom-0 pt-2 border-t border-[hsl(var(--chat-border))]">
-              <div className="flex space-x-2">
-                <Avatar fallback="You" size="sm" className="w-5 h-5 text-xs" />
-                <div className="flex-1">
-                  <div className="flex items-end space-x-2 p-2 bg-[hsl(var(--chat-input-bg))] border border-[hsl(var(--chat-border))] rounded-md focus-within:border-[hsl(var(--chat-accent))] focus-within:ring-2 focus-within:ring-[hsl(var(--chat-accent-light))] transition-all duration-200">
-                    {/* Left toolbar */}
-                    <div className="flex items-center space-x-1">
-                      <button className="h-6 w-6 text-[hsl(var(--chat-text-muted))] hover:text-[hsl(var(--chat-text))] hover:bg-[hsl(var(--chat-message-hover))] rounded flex items-center justify-center">
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                        </svg>
-                      </button>
-                      
-                      <button className="h-6 w-6 text-[hsl(var(--chat-text-muted))] hover:text-[hsl(var(--chat-text))] hover:bg-[hsl(var(--chat-message-hover))] rounded flex items-center justify-center">
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </button>
-                      
-                      <button className="h-6 w-6 text-[hsl(var(--chat-text-muted))] hover:text-[hsl(var(--chat-text))] hover:bg-[hsl(var(--chat-message-hover))] rounded flex items-center justify-center">
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                      </button>
-                    </div>
-
-                    {/* Textarea */}
-                    <div className="flex-1 min-w-0">
-                      <textarea
-                        placeholder="Reply to thread..."
-                        className="w-full min-h-[20px] max-h-24 resize-none bg-transparent border-none outline-none text-[hsl(var(--chat-text))] placeholder-[hsl(var(--chat-text-muted))] text-xs leading-relaxed"
-                        rows={1}
-                        style={{
-                          height: 'auto',
-                          minHeight: '20px',
-                          maxHeight: '96px'
-                        }}
-                      />
-                    </div>
-
-                    {/* Right toolbar */}
-                    <div className="flex items-center space-x-1">
-                      <button className="h-6 w-6 text-[hsl(var(--chat-text-muted))] hover:text-[hsl(var(--chat-text))] hover:bg-[hsl(var(--chat-message-hover))] rounded flex items-center justify-center">
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </button>
-                      
-                      <button className="h-6 px-2 text-xs transition-all duration-200 chat-button rounded">
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <ThreadMessageInput onSendMessage={handleThreadMessageSend} />
             </div>
           </div>
         ) : mode === 'info' && activeTab === 'info' ? (

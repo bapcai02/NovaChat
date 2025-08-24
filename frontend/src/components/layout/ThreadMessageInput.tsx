@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useRef } from 'react'
-import { Button } from '@/components/ui/button'
+import { Avatar } from '@/components/ui/avatar'
 import { EmojiPicker } from '@/components/ui/emoji-picker'
 import { cn } from '@/lib/utils'
 
@@ -18,9 +18,12 @@ const formatText = (text: string, format: 'bold' | 'italic' | 'code' | 'strike')
   return `${prefix}${text}${suffix}`
 }
 
-export const MessageInput: React.FC = () => {
+interface ThreadMessageInputProps {
+  onSendMessage: (message: string) => void
+}
+
+export const ThreadMessageInput: React.FC<ThreadMessageInputProps> = ({ onSendMessage }) => {
   const [message, setMessage] = useState('')
-  const [isTyping, setIsTyping] = useState(false)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -28,9 +31,8 @@ export const MessageInput: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (message.trim()) {
-      console.log('Sending message:', message)
+      onSendMessage(message.trim())
       setMessage('')
-      setIsTyping(false)
     }
   }
 
@@ -106,7 +108,7 @@ export const MessageInput: React.FC = () => {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
+    <form onSubmit={handleSubmit} className="space-y-2">
       {/* File upload preview area */}
       <div className="hidden">
         <input
@@ -121,89 +123,77 @@ export const MessageInput: React.FC = () => {
 
       {/* Message input area */}
       <div className="relative">
-        <div className="flex items-end space-x-3 p-3 bg-[hsl(var(--chat-input-bg))] border border-[hsl(var(--chat-border))] rounded-lg focus-within:border-[hsl(var(--chat-accent))] focus-within:ring-2 focus-within:ring-[hsl(var(--chat-accent-light))] transition-all duration-200">
+        <div className="flex items-end space-x-2 p-2 bg-[hsl(var(--chat-input-bg))] border border-[hsl(var(--chat-border))] rounded-md focus-within:border-[hsl(var(--chat-accent))] focus-within:ring-2 focus-within:ring-[hsl(var(--chat-accent-light))] transition-all duration-200">
           {/* Left toolbar */}
           <div className="flex items-center space-x-1">
-            <Button
+            <button
               type="button"
-              variant="ghost"
-              size="icon"
               onClick={handleFileUpload}
-              className="h-8 w-8 text-[hsl(var(--chat-text-muted))] hover:text-[hsl(var(--chat-text))] hover:bg-[hsl(var(--chat-message-hover))]"
+              className="h-6 w-6 text-[hsl(var(--chat-text-muted))] hover:text-[hsl(var(--chat-text))] hover:bg-[hsl(var(--chat-message-hover))] rounded flex items-center justify-center"
               title="Attach file"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
               </svg>
-            </Button>
+            </button>
             
-            <Button
+            <button
               type="button"
-              variant="ghost"
-              size="icon"
               onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-              className="h-8 w-8 text-[hsl(var(--chat-text-muted))] hover:text-[hsl(var(--chat-text))] hover:bg-[hsl(var(--chat-message-hover))]"
+              className="h-6 w-6 text-[hsl(var(--chat-text-muted))] hover:text-[hsl(var(--chat-text))] hover:bg-[hsl(var(--chat-message-hover))] rounded flex items-center justify-center"
               title="Emoji picker"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-            </Button>
+            </button>
             
-            <Button
+            <button
               type="button"
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-[hsl(var(--chat-text-muted))] hover:text-[hsl(var(--chat-text))] hover:bg-[hsl(var(--chat-message-hover))]"
+              className="h-6 w-6 text-[hsl(var(--chat-text-muted))] hover:text-[hsl(var(--chat-text))] hover:bg-[hsl(var(--chat-message-hover))] rounded flex items-center justify-center"
               title="Insert image"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-            </Button>
+            </button>
 
             {/* Formatting toolbar */}
-            <div className="w-px h-6 bg-[hsl(var(--chat-border))] mx-1"></div>
+            <div className="w-px h-4 bg-[hsl(var(--chat-border))] mx-1"></div>
             
-            <Button
+            <button
               type="button"
-              variant="ghost"
-              size="icon"
               onClick={() => applyFormatting('bold')}
-              className="h-8 w-8 text-[hsl(var(--chat-text-muted))] hover:text-[hsl(var(--chat-text))] hover:bg-[hsl(var(--chat-message-hover))]"
+              className="h-6 w-6 text-[hsl(var(--chat-text-muted))] hover:text-[hsl(var(--chat-text))] hover:bg-[hsl(var(--chat-message-hover))] rounded flex items-center justify-center"
               title="Bold (Ctrl+B)"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 4h8a4 4 0 014 4 4 4 0 01-4 4H6z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 12h9a4 4 0 014 4 4 4 0 01-4 4H6z" />
               </svg>
-            </Button>
+            </button>
             
-            <Button
+            <button
               type="button"
-              variant="ghost"
-              size="icon"
               onClick={() => applyFormatting('italic')}
-              className="h-8 w-8 text-[hsl(var(--chat-text-muted))] hover:text-[hsl(var(--chat-text))] hover:bg-[hsl(var(--chat-message-hover))]"
+              className="h-6 w-6 text-[hsl(var(--chat-text-muted))] hover:text-[hsl(var(--chat-text))] hover:bg-[hsl(var(--chat-message-hover))] rounded flex items-center justify-center"
               title="Italic (Ctrl+I)"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
               </svg>
-            </Button>
+            </button>
             
-            <Button
+            <button
               type="button"
-              variant="ghost"
-              size="icon"
               onClick={() => applyFormatting('code')}
-              className="h-8 w-8 text-[hsl(var(--chat-text-muted))] hover:text-[hsl(var(--chat-text))] hover:bg-[hsl(var(--chat-message-hover))]"
+              className="h-6 w-6 text-[hsl(var(--chat-text-muted))] hover:text-[hsl(var(--chat-text))] hover:bg-[hsl(var(--chat-message-hover))] rounded flex items-center justify-center"
               title="Code (Ctrl+`)"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
               </svg>
-            </Button>
+            </button>
           </div>
 
           {/* Textarea */}
@@ -211,76 +201,58 @@ export const MessageInput: React.FC = () => {
             <textarea
               ref={textareaRef}
               value={message}
-              onChange={(e) => {
-                setMessage(e.target.value)
-                setIsTyping(e.target.value.length > 0)
-              }}
+              onChange={(e) => setMessage(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Type your message..."
-              className="w-full min-h-[20px] max-h-32 resize-none bg-transparent border-none outline-none text-[hsl(var(--chat-text))] placeholder-[hsl(var(--chat-text-muted))] text-xs leading-relaxed"
+              placeholder="Reply to thread..."
+              className="w-full min-h-[20px] max-h-24 resize-none bg-transparent border-none outline-none text-[hsl(var(--chat-text))] placeholder-[hsl(var(--chat-text-muted))] text-xs leading-relaxed"
               rows={1}
               style={{
                 height: 'auto',
                 minHeight: '20px',
-                maxHeight: '128px'
+                maxHeight: '96px'
               }}
             />
           </div>
 
           {/* Right toolbar */}
           <div className="flex items-center space-x-1">
-            <Button
+            <button
               type="button"
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-[hsl(var(--chat-text-muted))] hover:text-[hsl(var(--chat-text))] hover:bg-[hsl(var(--chat-message-hover))]"
+              className="h-6 w-6 text-[hsl(var(--chat-text-muted))] hover:text-[hsl(var(--chat-text))] hover:bg-[hsl(var(--chat-message-hover))] rounded flex items-center justify-center"
+              title="More options"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-            </Button>
+            </button>
             
-            <Button
+            <button
               type="submit"
               disabled={!message.trim()}
               className={cn(
-                "h-8 px-3 text-xs transition-all duration-200",
+                "h-6 px-2 text-xs transition-all duration-200 rounded",
                 message.trim()
                   ? "chat-button"
                   : "bg-[hsl(var(--chat-message-hover))] text-[hsl(var(--chat-text-muted))] cursor-not-allowed"
               )}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
               </svg>
-            </Button>
+            </button>
           </div>
         </div>
         
         {/* Emoji Picker */}
         {showEmojiPicker && (
-          <EmojiPicker
-            onEmojiSelect={handleEmojiSelect}
-            onClose={() => setShowEmojiPicker(false)}
-          />
+          <div className="absolute bottom-full right-0 mb-2 z-50">
+            <EmojiPicker
+              variant="compact"
+              onEmojiSelect={handleEmojiSelect}
+              onClose={() => setShowEmojiPicker(false)}
+            />
+          </div>
         )}
-      </div>
-
-      {/* Additional info */}
-      <div className="flex items-center justify-between text-xs text-[hsl(var(--chat-text-muted))] px-1">
-        <div className="flex items-center space-x-4">
-          <span>Press Enter to send, Shift+Enter for new line</span>
-          {isTyping && <span className="flex items-center space-x-1">
-            <div className="typing-dot w-1 h-1 bg-[hsl(var(--chat-text-muted))] rounded-full"></div>
-            <div className="typing-dot w-1 h-1 bg-[hsl(var(--chat-text-muted))] rounded-full"></div>
-            <div className="typing-dot w-1 h-1 bg-[hsl(var(--chat-text-muted))] rounded-full"></div>
-          </span>}
-        </div>
-        <div className="flex items-center space-x-2">
-          <span>Message length: {message.length}</span>
-          <span>•</span>
-          <span>Online: 5 members</span>
-        </div>
       </div>
     </form>
   )
