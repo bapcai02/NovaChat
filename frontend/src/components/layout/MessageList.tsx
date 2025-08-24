@@ -4,6 +4,8 @@ import React, { useEffect, useRef, useState } from 'react'
 import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { EmojiPicker } from '@/components/ui/emoji-picker'
+import { VoicePlayer } from '@/components/ui/voice-player'
+import { MessageRenderer } from '@/components/ui/message-renderer'
 import { cn } from '@/lib/utils'
 
 interface Message {
@@ -40,7 +42,7 @@ interface Message {
 const mockMessages: Message[] = [
   {
     id: '1',
-    content: 'Hey everyone! Welcome to NovaChat! 🚀 This is going to be an amazing place for our team to collaborate.',
+    content: 'Hey everyone! Welcome to **NovaChat**! 🚀 This is going to be an *amazing* place for our team to collaborate.\n\nCheck out our `README.md` for setup instructions!',
     author: {
       name: 'John Doe',
       username: 'johndoe'
@@ -61,7 +63,7 @@ const mockMessages: Message[] = [
   },
   {
     id: '2',
-    content: 'Thanks John! This looks absolutely fantastic! ✨ I love the modern design and the smooth animations.',
+    content: 'Thanks John! This looks absolutely *fantastic*! ✨ I love the modern design and the smooth animations.\n\nHere\'s a link to our [documentation](https://docs.novachat.com) and some `code examples`!',
     author: {
       name: 'Jane Smith',
       username: 'janesmith'
@@ -73,7 +75,7 @@ const mockMessages: Message[] = [
   },
   {
     id: '3',
-    content: 'I\'ve uploaded the latest design mockups for the new feature. Let me know what you think!',
+    content: 'I\'ve uploaded the latest design mockups for the new feature. Let me know what you think!\n\n**Key features:**\n• ~~Old design~~ New modern UI\n• *Responsive* layout\n• `TypeScript` support\n\nVisit https://figma.com/design for preview!',
     author: {
       name: 'Mike Johnson',
       username: 'mikejohnson'
@@ -98,249 +100,109 @@ const mockMessages: Message[] = [
   },
   {
     id: '4',
-    content: 'The designs look great! I especially like the new color scheme. Should we schedule a call to discuss the implementation details?',
+    content: 'Great work everyone! I can see the progress we\'ve made. The new interface looks much cleaner.\n\n**Performance metrics:**\n• Load time: `2.3s` → `0.8s`\n• *60% improvement* in speed! 🚀',
     author: {
       name: 'Sarah Wilson',
       username: 'sarahwilson'
     },
-    timestamp: '10:38 AM',
-    isEdited: true
-  },
-  {
-    id: '5',
-    content: 'Absolutely! Let\'s set up a meeting for tomorrow. I\'ll create a calendar invite.',
-    author: {
-      name: 'John Doe',
-      username: 'johndoe'
-    },
-    timestamp: '10:40 AM'
-  },
-  {
-    id: '6',
-    content: 'Perfect! I\'ll send out the calendar invite to everyone. Looking forward to our discussion! 📅',
-    author: {
-      name: 'Alex Brown',
-      username: 'alexbrown'
-    },
-    timestamp: '10:42 AM',
+    timestamp: '10:40 AM',
     reactions: [
       { emoji: '👍', count: 2, users: ['user1', 'user2'] }
     ]
   },
   {
-    id: '7',
-    content: 'Great initiative! I\'ve been working on the backend API and it\'s coming along nicely. Should have the first version ready by next week.',
+    id: '5',
+    content: 'I agree! The performance improvements are *noticeable*. Much faster loading times.\n\nHere\'s a quick `console.log` example:\n```js\nconsole.log("Hello NovaChat!");\n```',
     author: {
-      name: 'David Chen',
-      username: 'davidchen'
+      name: 'Alex Brown',
+      username: 'alexbrown'
     },
-    timestamp: '10:45 AM'
+    timestamp: '10:42 AM'
   },
   {
-    id: '8',
-    content: 'That\'s awesome David! I\'ve been working on the frontend components and they\'re looking really good. The new design system is working perfectly.',
+    id: '6',
+    content: 'Don\'t forget about the meeting at **2 PM today**! We\'ll be discussing the Q4 roadmap.\n\n~~Old meeting time~~ → *New meeting time*\n\n[Meeting Link](https://meet.google.com/abc-defg-hij)',
     author: {
-      name: 'Emily Davis',
-      username: 'emilydavis'
+      name: 'John Doe',
+      username: 'johndoe'
+    },
+    timestamp: '10:45 AM',
+    isPinned: true,
+    reactions: [
+      { emoji: '📅', count: 1, users: ['user1'] },
+      { emoji: '✅', count: 3, users: ['user2', 'user3', 'user4'] }
+    ]
+  },
+  {
+    id: '7',
+    content: 'I\'ll prepare the presentation slides. Should I include the analytics data from last month?\n\n**Topics to cover:**\n• ~~Old metrics~~ *New improved metrics*\n• `API performance`\n• User engagement 📊',
+    author: {
+      name: 'Jane Smith',
+      username: 'janesmith'
     },
     timestamp: '10:47 AM',
     thread: {
       count: 2,
       lastReply: {
-        author: 'David Chen',
-        timestamp: '1 minute ago'
-      },
-      participants: ['David Chen', 'Emily Davis']
-    }
-  },
-  {
-    id: '9',
-    content: 'I\'ve uploaded the latest user research findings. The feedback has been overwhelmingly positive! 📊',
-    author: {
-      name: 'Lisa Wang',
-      username: 'lisawang'
-    },
-    timestamp: '10:50 AM',
-    attachments: [
-      {
-        type: 'file',
-        url: '#',
-        name: 'user-research-report.pdf',
-        size: '1.8 MB'
-      }
-    ]
-  },
-  {
-    id: '10',
-    content: 'This is fantastic news! The user engagement metrics are looking really promising. We\'re definitely on the right track! 🎯',
-    author: {
-      name: 'Mark Thompson',
-      username: 'markthompson'
-    },
-    timestamp: '10:52 AM',
-    reactions: [
-      { emoji: '🎯', count: 3, users: ['user1', 'user2', 'user3'] },
-      { emoji: '🔥', count: 1, users: ['user4'] }
-    ]
-  },
-  {
-    id: '11',
-    content: 'I agree! The team has been working incredibly hard on this project. Everyone should be proud of what we\'ve accomplished so far.',
-    author: {
-      name: 'Sophie Martin',
-      username: 'sophiemartin'
-    },
-    timestamp: '10:55 AM'
-  },
-  {
-    id: '12',
-    content: 'Just a quick reminder: we have our weekly standup in 15 minutes. Don\'t forget to update your task status! ⏰',
-    author: {
-      name: 'Ryan Wilson',
-      username: 'ryanwilson'
-    },
-    timestamp: '10:57 AM',
-    isPinned: true
-  },
-  {
-    id: '13',
-    content: 'Thanks for the reminder Ryan! I\'ll make sure to have my updates ready.',
-    author: {
-      name: 'Jessica Lee',
-      username: 'jessicalee'
-    },
-    timestamp: '11:00 AM'
-  },
-  {
-    id: '14',
-    content: 'I\'ve been testing the new notification system and it\'s working perfectly. Users are getting real-time updates without any issues.',
-    author: {
-      name: 'Kevin Zhang',
-      username: 'kevinzhang'
-    },
-    timestamp: '11:02 AM'
-  },
-  {
-    id: '15',
-    content: 'That\'s great to hear Kevin! The notification system was one of our top priorities. Great job on the implementation! 👏',
-    author: {
-      name: 'Amanda Foster',
-      username: 'amandafoster'
-    },
-    timestamp: '11:05 AM',
-    reactions: [
-      { emoji: '👏', count: 4, users: ['user1', 'user2', 'user3', 'user4'] }
-    ]
-  },
-  {
-    id: '16',
-    content: 'I\'ve been working on the mobile app version and it\'s looking really good. The responsive design is working perfectly across all devices.',
-    author: {
-      name: 'Tom Anderson',
-      username: 'tomanderson'
-    },
-    timestamp: '11:08 AM',
-    thread: {
-      count: 4,
-      lastReply: {
-        author: 'Sarah Wilson',
-        timestamp: '3 minutes ago'
-      },
-      participants: ['Tom Anderson', 'Sarah Wilson', 'Mike Johnson']
-    }
-  },
-  {
-    id: '17',
-    content: 'The mobile version is indeed impressive! I tested it on my phone and the user experience is smooth and intuitive.',
-    author: {
-      name: 'Rachel Green',
-      username: 'rachelgreen'
-    },
-    timestamp: '11:10 AM'
-  },
-  {
-    id: '18',
-    content: 'I\'ve been working on the documentation and it\'s almost complete. Should have it ready for review by the end of the day.',
-    author: {
-      name: 'Chris Rodriguez',
-      username: 'chrisrodriguez'
-    },
-    timestamp: '11:12 AM'
-  },
-  {
-    id: '19',
-    content: 'Perfect timing Chris! I was just about to ask about the documentation. Looking forward to reviewing it.',
-    author: {
-      name: 'Nina Patel',
-      username: 'ninapatel'
-    },
-    timestamp: '11:15 AM'
-  },
-  {
-    id: '20',
-    content: 'I\'ve been thinking about our next sprint planning. We should probably focus on the performance optimization features.',
-    author: {
-      name: 'Daniel Kim',
-      username: 'danielkim'
-    },
-    timestamp: '11:18 AM',
-    thread: {
-      count: 6,
-      lastReply: {
         author: 'John Doe',
         timestamp: '1 minute ago'
       },
-      participants: ['Daniel Kim', 'John Doe', 'Sarah Wilson', 'Mike Johnson']
+      participants: ['John Doe', 'Jane Smith']
     }
   },
   {
-    id: '21',
-    content: 'Great idea Daniel! Performance is definitely a priority. I\'ve noticed some areas where we can make significant improvements.',
+    id: '8',
+    type: 'voice',
+    audioUrl: 'data:audio/webm;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT',
+    duration: 15,
     author: {
-      name: 'Maria Garcia',
-      username: 'mariagarcia'
+      name: 'Mike Johnson',
+      username: 'mikejohnson'
     },
-    timestamp: '11:20 AM'
+    timestamp: '10:50 AM'
   },
   {
-    id: '22',
-    content: 'I\'ve been working on the analytics dashboard and it\'s coming along nicely. The data visualization is looking really good.',
+    id: '9',
+    type: 'voice',
+    audioUrl: 'data:audio/webm;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT',
+    duration: 8,
     author: {
-      name: 'James Wilson',
-      username: 'jameswilson'
+      name: 'Sarah Wilson',
+      username: 'sarahwilson'
     },
-    timestamp: '11:22 AM'
+    timestamp: '10:52 AM'
   },
   {
-    id: '23',
-    content: 'The analytics dashboard is going to be a game-changer! I can\'t wait to see all the insights we\'ll get from it.',
+    id: '10',
+    content: 'Yes, please include the analytics. Also, can someone help me with the API integration? I\'m getting a `404 error`.\n\n**Error details:**\n• Endpoint: `GET /api/users`\n• Status: *404 Not Found*\n• Check https://api.novachat.com/docs for reference',
     author: {
-      name: 'Laura Taylor',
-      username: 'laurataylor'
+      name: 'Mike Johnson',
+      username: 'mikejohnson'
     },
-    timestamp: '11:25 AM',
+    timestamp: '10:53 AM',
+    isEdited: true
+  },
+  {
+    id: '11',
+    content: 'I can help with the API issue. What endpoint are you trying to access?\n\nTry using the `v2` API: `https://api.novachat.com/v2/users`\n\n*Let me know if you need more help!* 🛠️',
+    author: {
+      name: 'Sarah Wilson',
+      username: 'sarahwilson'
+    },
+    timestamp: '10:54 AM'
+  },
+  {
+    id: '12',
+    content: 'The new emoji reactions are so much fun! 🎉 I love how we can express ourselves better now.\n\n**Available reactions:**\n• 👍 *Like*\n• ❤️ *Love*\n• 🚀 *Awesome*\n• ~~Old reactions~~ *New reactions*\n\nCheck out [emoji guide](https://emojipedia.org) for more!',
+    author: {
+      name: 'Alex Brown',
+      username: 'alexbrown'
+    },
+    timestamp: '10:55 AM',
     reactions: [
-      { emoji: '🚀', count: 2, users: ['user1', 'user2'] },
-      { emoji: '📊', count: 1, users: ['user3'] }
+      { emoji: '🎉', count: 4, users: ['user1', 'user2', 'user3', 'user4'] },
+      { emoji: '❤️', count: 2, users: ['user5', 'user6'] }
     ]
-  },
-  {
-    id: '24',
-    content: 'I\'ve been testing the new search functionality and it\'s working really well. The filters are intuitive and the results are accurate.',
-    author: {
-      name: 'Steve Johnson',
-      username: 'stevejohnson'
-    },
-    timestamp: '11:28 AM'
-  },
-  {
-    id: '25',
-    content: 'That\'s excellent Steve! Search is such a critical feature. Great job on making it user-friendly and powerful.',
-    author: {
-      name: 'Jennifer Adams',
-      username: 'jenniferadams'
-    },
-    timestamp: '11:30 AM'
   }
 ]
 
@@ -405,9 +267,21 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect }) => {
                 )}
               </div>
               
-              <div className="text-xs text-[hsl(var(--chat-text))] leading-relaxed mb-1">
-                {message.content}
-              </div>
+                                   {/* Message Content */}
+              {message.type === 'voice' ? (
+                <div className="mb-1">
+                  <VoicePlayer
+                    audioUrl={message.audioUrl}
+                    duration={message.duration}
+                    author={message.author.name}
+                    timestamp={message.timestamp}
+                  />
+                </div>
+              ) : (
+                <div className="mb-1">
+                  <MessageRenderer content={message.content} />
+                </div>
+              )}
               
               {/* Attachments */}
               {message.attachments && message.attachments.length > 0 && (

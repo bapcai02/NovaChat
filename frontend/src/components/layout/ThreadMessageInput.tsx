@@ -3,6 +3,7 @@
 import React, { useState, useRef } from 'react'
 import { Avatar } from '@/components/ui/avatar'
 import { EmojiPicker } from '@/components/ui/emoji-picker'
+import { MessageRenderer } from '@/components/ui/message-renderer'
 import { cn } from '@/lib/utils'
 
 // Message formatting utilities
@@ -40,6 +41,22 @@ export const ThreadMessageInput: React.FC<ThreadMessageInputProps> = ({ onSendMe
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       handleSubmit(e)
+    }
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Formatting shortcuts (only when in textarea)
+    if (e.target === textareaRef.current) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+        e.preventDefault()
+        applyFormatting('bold')
+      } else if ((e.ctrlKey || e.metaKey) && e.key === 'i') {
+        e.preventDefault()
+        applyFormatting('italic')
+      } else if ((e.ctrlKey || e.metaKey) && e.key === '`') {
+        e.preventDefault()
+        applyFormatting('code')
+      }
     }
   }
 
@@ -203,6 +220,7 @@ export const ThreadMessageInput: React.FC<ThreadMessageInputProps> = ({ onSendMe
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyPress={handleKeyPress}
+              onKeyDown={handleKeyDown}
               placeholder="Reply to thread..."
               className="w-full min-h-[20px] max-h-24 resize-none bg-transparent border-none outline-none text-[hsl(var(--chat-text))] placeholder-[hsl(var(--chat-text-muted))] text-xs leading-relaxed"
               rows={1}
@@ -212,6 +230,13 @@ export const ThreadMessageInput: React.FC<ThreadMessageInputProps> = ({ onSendMe
                 maxHeight: '96px'
               }}
             />
+            {/* Formatting Preview */}
+            {message && (
+              <div className="mt-1 p-2 bg-[hsl(var(--chat-message-bg))] border border-[hsl(var(--chat-border))] rounded text-xs">
+                <div className="text-[hsl(var(--chat-text-muted))] mb-1">Preview:</div>
+                <MessageRenderer content={message} />
+              </div>
+            )}
           </div>
 
           {/* Right toolbar */}

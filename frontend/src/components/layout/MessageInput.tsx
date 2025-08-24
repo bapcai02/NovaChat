@@ -3,6 +3,8 @@
 import React, { useState, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { EmojiPicker } from '@/components/ui/emoji-picker'
+import { VoiceRecorder } from '@/components/ui/voice-recorder'
+import { MessageRenderer } from '@/components/ui/message-renderer'
 import { cn } from '@/lib/utils'
 
 // Message formatting utilities
@@ -22,6 +24,7 @@ export const MessageInput: React.FC = () => {
   const [message, setMessage] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+  const [showVoiceRecorder, setShowVoiceRecorder] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -38,6 +41,22 @@ export const MessageInput: React.FC = () => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       handleSubmit(e)
+    }
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Formatting shortcuts (only when not in input)
+    if (e.target === textareaRef.current) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+        e.preventDefault()
+        applyFormatting('bold')
+      } else if ((e.ctrlKey || e.metaKey) && e.key === 'i') {
+        e.preventDefault()
+        applyFormatting('italic')
+      } else if ((e.ctrlKey || e.metaKey) && e.key === '`') {
+        e.preventDefault()
+        applyFormatting('code')
+      }
     }
   }
 
@@ -216,6 +235,7 @@ export const MessageInput: React.FC = () => {
                 setIsTyping(e.target.value.length > 0)
               }}
               onKeyPress={handleKeyPress}
+              onKeyDown={handleKeyDown}
               placeholder="Type your message..."
               className="w-full min-h-[20px] max-h-32 resize-none bg-transparent border-none outline-none text-[hsl(var(--chat-text))] placeholder-[hsl(var(--chat-text-muted))] text-xs leading-relaxed"
               rows={1}
@@ -225,6 +245,13 @@ export const MessageInput: React.FC = () => {
                 maxHeight: '128px'
               }}
             />
+            {/* Formatting Preview */}
+            {message && (
+              <div className="mt-2 p-3 bg-[hsl(var(--chat-message-bg))] border border-[hsl(var(--chat-border))] rounded-lg text-sm">
+                <div className="text-[hsl(var(--chat-text-muted))] mb-2 text-xs font-medium">Preview:</div>
+                <MessageRenderer content={message} />
+              </div>
+            )}
           </div>
 
           {/* Right toolbar */}
@@ -233,10 +260,13 @@ export const MessageInput: React.FC = () => {
               type="button"
               variant="ghost"
               size="icon"
+              onClick={() => setShowVoiceRecorder(true)}
               className="h-8 w-8 text-[hsl(var(--chat-text-muted))] hover:text-[hsl(var(--chat-text))] hover:bg-[hsl(var(--chat-message-hover))]"
+              title="Voice Message"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z"/>
+                <path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/>
               </svg>
             </Button>
             
@@ -263,6 +293,21 @@ export const MessageInput: React.FC = () => {
             onEmojiSelect={handleEmojiSelect}
             onClose={() => setShowEmojiPicker(false)}
           />
+        )}
+
+        {/* Voice Recorder */}
+        {showVoiceRecorder && (
+          <div className="absolute bottom-full left-0 right-0 mb-2">
+            <VoiceRecorder
+              onRecordingComplete={(audioBlob, duration) => {
+                console.log('Voice message recorded:', { audioBlob, duration })
+                // TODO: Send voice message to backend
+                setShowVoiceRecorder(false)
+              }}
+              onCancel={() => setShowVoiceRecorder(false)}
+              maxDuration={60}
+            />
+          </div>
         )}
       </div>
 
