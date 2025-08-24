@@ -4,111 +4,93 @@ namespace App\Domain\User\Services;
 
 use App\Domain\User\Entities\User;
 use App\Domain\User\Repositories\UserRepositoryInterface;
-use App\Domain\User\Events\UserRegistered;
-use App\Domain\User\Events\UserProfileUpdated;
-use App\Shared\Events\EventDispatcherInterface;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
 class UserService
 {
-    private UserRepositoryInterface $userRepository;
-    private EventDispatcherInterface $eventDispatcher;
+    protected UserRepositoryInterface $userRepository;
 
-    public function __construct(
-        UserRepositoryInterface $userRepository,
-        EventDispatcherInterface $eventDispatcher
-    ) {
+    public function __construct(UserRepositoryInterface $userRepository)
+    {
         $this->userRepository = $userRepository;
-        $this->eventDispatcher = $eventDispatcher;
     }
 
-    public function registerUser(string $name, string $email, string $password, ?string $username = null): User
+    /**
+     * Get all users
+     */
+    public function getAllUsers(): Collection
     {
-        // Check if email already exists
-        if ($this->userRepository->findByEmail($email)) {
-            throw new \InvalidArgumentException('Email already exists');
-        }
-
-        // Check if username already exists
-        if ($username && $this->userRepository->findByUsername($username)) {
-            throw new \InvalidArgumentException('Username already exists');
-        }
-
-        $user = new User();
-        $user->name = $name;
-        $user->email = $email;
-        $user->password = bcrypt($password);
-        $user->username = $username;
-
-        $this->userRepository->save($user);
-
-        // Dispatch event
-        $this->eventDispatcher->dispatch(new UserRegistered($user));
-
-        return $user;
+        return collect($this->userRepository->findOnlineUsers());
     }
 
-    public function updateProfile(User $user, array $data): User
+    /**
+     * Get user by ID
+     */
+    public function getUserById(int $userId): ?User
     {
-        $originalData = [
-            'name' => $user->name,
-            'email' => $user->email,
-            'username' => $user->username,
-        ];
+        return $this->userRepository->findById($userId);
+    }
 
-        // Update fields
-        if (isset($data['name'])) {
-            $user->name = $data['name'];
-        }
+    /**
+     * Get users by IDs
+     */
+    public function getUsersByIds(array $userIds): Collection
+    {
+        return collect($this->userRepository->findOnlineUsers());
+    }
 
-        if (isset($data['email']) && $data['email'] !== $user->email) {
-            if ($this->userRepository->findByEmail($data['email'])) {
-                throw new \InvalidArgumentException('Email already exists');
+    /**
+     * Search users
+     */
+    public function searchUsers(string $query): Collection
+    {
+        $paginator = $this->userRepository->search($query, 100);
+        return collect($paginator->items());
+    }
+
+    /**
+     * Get online users
+     */
+    public function getOnlineUsers(): Collection
+    {
+        return collect($this->userRepository->findOnlineUsers());
+    }
+
+    /**
+     * Update user status
+     */
+    public function updateUserStatus(int $userId, string $status): bool
+    {
+        try {
+            $user = $this->userRepository->findById($userId);
+            if ($user) {
+                $this->userRepository->updateStatus($user, $status);
+                return true;
             }
-            $user->email = $data['email'];
+            return false;
+        } catch (\Exception $e) {
+            Log::error('Failed to update user status: ' . $e->getMessage());
+            return false;
         }
+    }
 
-        if (isset($data['username']) && $data['username'] !== $user->username) {
-            if ($this->userRepository->findByUsername($data['username'])) {
-                throw new \InvalidArgumentException('Username already exists');
+    /**
+     * Update user last seen
+     */
+    public function updateLastSeen(int $userId): bool
+    {
+        try {
+            $user = $this->userRepository->findById($userId);
+            if ($user) {
+                $this->userRepository->updateStatus($user, $user->status);
+                return true;
             }
-            $user->username = $data['username'];
+            return false;
+        } catch (\Exception $e) {
+            Log::error('Failed to update user last seen: ' . $e->getMessage());
+            return false;
         }
-
-        $this->userRepository->save($user);
-
-        // Dispatch event
-        $this->eventDispatcher->dispatch(new UserProfileUpdated($user, $originalData));
-
-        return $user;
-    }
-
-    public function updateLastSeen(User $user): void
-    {
-        $user->last_seen_at = now();
-        $this->userRepository->save($user);
-    }
-
-    public function markOnline(User $user): void
-    {
-        $user->is_online = true;
-        $user->last_seen_at = now();
-        $this->userRepository->save($user);
-    }
-
-    public function markOffline(User $user): void
-    {
-        $user->is_online = false;
-        $user->last_seen_at = now();
-        $this->userRepository->save($user);
-    }
-
-    public function searchUsers(string $query, int $perPage = 15): array
-    {
-        return $this->userRepository->search($query, $perPage)->toArray();
-    }
-
-    public function getOnlineUsers(): array
-    {
-        return $this->userRepository->findOnlineUsers();
     }
 }

@@ -1,11 +1,18 @@
 "use client"
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Avatar } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
+import { CreateChannelModal } from '@/components/ui/create-channel-modal'
+import { CreateDirectMessageModal } from '@/components/ui/create-direct-message-modal'
+import { LogoutButton } from '@/components/auth/LogoutButton'
 import { cn } from '@/lib/utils'
+import { useAppSelector } from '@/hooks/useAppSelector'
+import { useAppDispatch } from '@/hooks/useAppDispatch'
+import { fetchChannels } from '@/store/slices/channelSlice'
+import { fetchUsers } from '@/store/slices/userSlice'
 
 interface Channel {
   id: string
@@ -30,6 +37,19 @@ const mockChannels: Channel[] = [
 export const Sidebar: React.FC = () => {
   const [activeChannel, setActiveChannel] = useState('1')
   const [showDirectMessages, setShowDirectMessages] = useState(true)
+  const [isCreateChannelOpen, setIsCreateChannelOpen] = useState(false)
+  const [isCreateDirectMessageOpen, setIsCreateDirectMessageOpen] = useState(false)
+  
+  const dispatch = useAppDispatch()
+  const { user } = useAppSelector((state) => state.auth)
+  const { channels, isLoading: channelsLoading } = useAppSelector((state) => state.channels)
+  const { users, isLoading: usersLoading } = useAppSelector((state) => state.users)
+
+  useEffect(() => {
+    // Fetch channels and users when component mounts
+    dispatch(fetchChannels())
+    dispatch(fetchUsers())
+  }, [dispatch])
 
   return (
     <div className="w-56 flex-shrink-0 bg-[hsl(217.2_32.6%_17.5%)] flex flex-col overflow-hidden">
@@ -44,11 +64,14 @@ export const Sidebar: React.FC = () => {
           </div>
           <div className="flex items-center space-x-1">
             <ThemeToggle />
-            <Button variant="ghost" size="icon" className="h-6 w-6">
+            <LogoutButton 
+              className="h-6 w-6 p-0"
+              title="Logout"
+            >
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
-            </Button>
+            </LogoutButton>
           </div>
         </div>
       </div>
@@ -57,13 +80,13 @@ export const Sidebar: React.FC = () => {
       <div className="p-3 flex-shrink-0">
         <div className="flex items-center space-x-2">
           <Avatar 
-            fallback="Your Name" 
+            fallback={user?.name || "User"} 
             size="sm"
             className="ring-1 ring-[hsl(var(--chat-accent))]"
           />
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-medium truncate">Your Name</p>
-            <p className="text-xs text-[hsl(var(--chat-text-muted))]">Online</p>
+            <p className="text-xs font-medium truncate">{user?.name || "User"}</p>
+            <p className="text-xs text-[hsl(var(--chat-text-muted))]">{user?.status || "Online"}</p>
           </div>
           <Button variant="ghost" size="icon" className="h-6 w-6">
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -81,7 +104,13 @@ export const Sidebar: React.FC = () => {
             <h2 className="text-xs font-semibold text-[hsl(var(--chat-text-muted))] uppercase tracking-wider">
               Channels
             </h2>
-            <Button variant="ghost" size="icon" className="h-5 w-5">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-5 w-5"
+              onClick={() => setIsCreateChannelOpen(true)}
+              title="Create new channel"
+            >
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
@@ -114,20 +143,33 @@ export const Sidebar: React.FC = () => {
 
         {/* Direct Messages Section */}
         <div className="p-3">
-          <button
-            onClick={() => setShowDirectMessages(!showDirectMessages)}
-            className="flex items-center justify-between w-full mb-2 text-xs font-semibold text-[hsl(var(--chat-text-muted))] uppercase tracking-wider hover:text-[hsl(var(--chat-text))] transition-colors"
-          >
-            Direct Messages
-            <svg 
-              className={cn("w-3 h-3 transition-transform", showDirectMessages && "rotate-90")} 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
+          <div className="flex items-center justify-between mb-2">
+            <button
+              onClick={() => setShowDirectMessages(!showDirectMessages)}
+              className="flex items-center space-x-1 text-xs font-semibold text-[hsl(var(--chat-text-muted))] uppercase tracking-wider hover:text-[hsl(var(--chat-text))] transition-colors"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
+              <span>Direct Messages</span>
+              <svg 
+                className={cn("w-3 h-3 transition-transform", showDirectMessages && "rotate-90")} 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-5 w-5"
+              onClick={() => setIsCreateDirectMessageOpen(true)}
+              title="Start new conversation"
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+            </Button>
+          </div>
           
           {showDirectMessages && (
             <div className="space-y-0.5">
@@ -159,6 +201,28 @@ export const Sidebar: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Create Channel Modal */}
+      <CreateChannelModal
+        isOpen={isCreateChannelOpen}
+        onClose={() => setIsCreateChannelOpen(false)}
+        onCreateChannel={(channelData) => {
+          console.log('Creating channel:', channelData)
+          // TODO: Implement channel creation
+          setIsCreateChannelOpen(false)
+        }}
+      />
+
+      {/* Create Direct Message Modal */}
+      <CreateDirectMessageModal
+        isOpen={isCreateDirectMessageOpen}
+        onClose={() => setIsCreateDirectMessageOpen(false)}
+        onStartConversation={(userId, userData) => {
+          console.log('Starting conversation with:', userData)
+          // TODO: Implement direct message creation
+          setIsCreateDirectMessageOpen(false)
+        }}
+      />
     </div>
   )
 }

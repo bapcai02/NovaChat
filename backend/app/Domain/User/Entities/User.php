@@ -6,7 +6,7 @@ namespace App\Domain\User\Entities;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
+use Laravel\Passport\HasApiTokens;
 use App\Domain\Channel\Entities\Channel;
 use App\Domain\Channel\Entities\ChannelMember;
 use App\Domain\Message\Entities\Message;

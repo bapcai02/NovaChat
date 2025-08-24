@@ -17,4 +17,5 @@ interface UserRepositoryInterface
     public function search(string $query, int $perPage = 15): LengthAwarePaginator;
     public function findOnlineUsers(): array;
     public function findActiveUsers(): array;
+    public function updateStatus(User $user, string $status, ?string $statusMessage = null): User;
 }

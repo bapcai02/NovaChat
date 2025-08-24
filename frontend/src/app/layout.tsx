@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { ReduxProvider } from "@/store/provider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -23,7 +24,9 @@ export default function RootLayout({
       '--chat-text': '210 40% 98%'
     } as React.CSSProperties}>
       <body className={`${inter.className} h-full antialiased bg-[hsl(222.2_84%_4.9%)] text-[hsl(210_40%_98%)]`}>
-        {children}
+        <ReduxProvider>
+          {children}
+        </ReduxProvider>
       </body>
     </html>
   );
