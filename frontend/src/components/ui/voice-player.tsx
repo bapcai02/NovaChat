@@ -12,20 +12,43 @@ interface VoicePlayerProps {
   className?: string
 }
 
-export const VoicePlayer: React.FC<VoicePlayerProps> = ({ 
-  audioUrl, 
-  duration, 
-  author, 
-  timestamp, 
-  className 
+export const VoicePlayer: React.FC<VoicePlayerProps> = ({
+  audioUrl,
+  duration,
+  author,
+  timestamp,
+  className
 }) => {
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [waveform, setWaveform] = useState<number[]>([])
 
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const animationFrameRef = useRef<number | null>(null)
+
+  // Generate waveform on mount to avoid hydration issues
+  useEffect(() => {
+    const generateWaveform = () => {
+      const bars = 20
+      const waveformData = []
+      
+      // Use a seed based on duration to ensure consistency
+      const seed = duration * 1000
+      for (let i = 0; i < bars; i++) {
+        // Use deterministic "random" based on seed and index
+        const pseudoRandom = Math.sin(seed + i) * 10000
+        const normalized = (pseudoRandom - Math.floor(pseudoRandom))
+        const height = normalized * 0.8 + 0.2 // Height between 0.2 and 1.0
+        waveformData.push(height)
+      }
+      
+      return waveformData
+    }
+
+    setWaveform(generateWaveform())
+  }, [duration])
 
   useEffect(() => {
     return () => {
@@ -109,20 +132,7 @@ export const VoicePlayer: React.FC<VoicePlayerProps> = ({
     return duration > 0 ? (currentTime / duration) * 100 : 0
   }
 
-  const generateWaveform = () => {
-    // Generate mock waveform data for visualization
-    const bars = 20
-    const waveform = []
-    
-    for (let i = 0; i < bars; i++) {
-      const height = Math.random() * 0.8 + 0.2 // Random height between 0.2 and 1.0
-      waveform.push(height)
-    }
-    
-    return waveform
-  }
 
-  const waveform = generateWaveform()
 
   if (error) {
     return (
@@ -136,7 +146,7 @@ export const VoicePlayer: React.FC<VoicePlayerProps> = ({
   }
 
   return (
-    <div className={cn("flex items-center space-x-3 p-3 bg-[hsl(var(--chat-message-bg))] rounded-lg border border-[hsl(var(--chat-border))]", className)}>
+            <div className={cn("flex items-center space-x-3 p-3 bg-[hsl(var(--chat-message-bg))] rounded-lg", className)}>
       {/* Play/Pause Button */}
       <Button
         variant="ghost"

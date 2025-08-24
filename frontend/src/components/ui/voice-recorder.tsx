@@ -201,7 +201,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
   }
 
   return (
-    <div className="bg-[hsl(var(--chat-bg))] border border-[hsl(var(--chat-border))] rounded-lg p-4 space-y-4">
+            <div className="bg-[hsl(217.2_32.6%_17.5%)] rounded-xl p-4 space-y-4 border border-[hsl(217.2_32.6%_17.5%)] shadow-2xl">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-medium">Voice Message</h3>

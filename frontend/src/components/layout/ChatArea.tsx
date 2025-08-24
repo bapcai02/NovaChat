@@ -6,6 +6,9 @@ import { Input } from '@/components/ui/input'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { KeyboardShortcuts } from '@/components/ui/keyboard-shortcuts'
 import { SearchModal } from '@/components/ui/search-modal'
+import { NotificationCenter } from '@/components/ui/notification-center'
+import { NotificationBadge } from '@/components/ui/notification-badge'
+import { ToastNotification } from '@/components/ui/toast-notification'
 import { MessageList } from './MessageList'
 import { MessageInput } from './MessageInput'
 import { cn } from '@/lib/utils'
@@ -19,11 +22,76 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onToggleRightSidebar, onThre
   const [currentChannel] = useState('general')
   const [isMuted, setIsMuted] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [isNotificationCenterOpen, setIsNotificationCenterOpen] = useState(false)
+  const [notificationCount, setNotificationCount] = useState(2)
+  const [toastNotifications, setToastNotifications] = useState<Array<{
+    id: string
+    type: 'message' | 'mention' | 'reaction' | 'system' | 'file'
+    title: string
+    message: string
+    sender?: { name: string; username: string; avatar?: string }
+    channel?: string
+  }>>([])
+
+  const handleNotificationClick = (notification: any) => {
+    console.log('Notification clicked:', notification)
+    // TODO: Navigate to the notification target
+  }
+
+  const handleToastAction = (action: 'navigate' | 'reply' | 'dismiss') => {
+    console.log('Toast action:', action)
+    // TODO: Handle toast actions
+  }
+
+  const addToastNotification = (notification: any) => {
+    const id = Date.now().toString()
+    setToastNotifications(prev => [...prev, { ...notification, id }])
+  }
+
+  const removeToastNotification = (id: string) => {
+    setToastNotifications(prev => prev.filter(n => n.id !== id))
+  }
+
+  // Simulate incoming notifications
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (Math.random() > 0.8) {
+        const notifications = [
+          {
+            type: 'mention' as const,
+            title: 'You were mentioned',
+            message: '@you Check out this new feature!',
+            sender: { name: 'John Doe', username: 'johndoe' },
+            channel: 'general'
+          },
+          {
+            type: 'reaction' as const,
+            title: 'New reaction',
+            message: '👍 on your message',
+            sender: { name: 'Jane Smith', username: 'janesmith' },
+            channel: 'random'
+          },
+          {
+            type: 'message' as const,
+            title: 'New message',
+            message: 'Hey, can you review this PR?',
+            sender: { name: 'Mike Johnson', username: 'mikejohnson' },
+            channel: 'dev-team'
+          }
+        ]
+        const randomNotification = notifications[Math.floor(Math.random() * notifications.length)]
+        addToastNotification(randomNotification)
+        setNotificationCount(prev => prev + 1)
+      }
+    }, 10000) // Every 10 seconds
+
+    return () => clearInterval(interval)
+  }, [])
 
   return (
-    <div className="flex-1 flex flex-col bg-[hsl(var(--chat-bg))] overflow-hidden">
+    <div className="flex-1 flex flex-col bg-[hsl(222.2_84%_4.9%)] overflow-hidden">
       {/* Header */}
-      <div className="h-14 border-b border-[hsl(var(--chat-border))] bg-[hsl(var(--chat-sidebar))] flex items-center justify-between px-4 flex-shrink-0">
+                  <div className="h-14 bg-[hsl(217.2_32.6%_17.5%)] flex items-center justify-between px-4 flex-shrink-0">
         <div className="flex items-center space-x-3">
           <div className="flex items-center space-x-2">
             <span className="text-[hsl(var(--chat-text-muted))] text-lg">#</span>
@@ -39,6 +107,11 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onToggleRightSidebar, onThre
         
         <div className="flex items-center space-x-1">
           <ThemeToggle />
+          <NotificationBadge
+            count={notificationCount}
+            onClick={() => setIsNotificationCenterOpen(true)}
+            className="h-7 w-7"
+          />
           <Button 
             variant="ghost" 
             size="icon" 
@@ -73,6 +146,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onToggleRightSidebar, onThre
             onFileUpload={() => console.log('File upload triggered')}
             onEmojiPicker={() => console.log('Emoji picker triggered')}
             onCloseModals={() => console.log('Close modals triggered')}
+            onOpenNotifications={() => setIsNotificationCenterOpen(true)}
           />
         </div>
       </div>
@@ -87,13 +161,35 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onToggleRightSidebar, onThre
         }}
       />
 
+      {/* Notification Center */}
+      <NotificationCenter
+        isOpen={isNotificationCenterOpen}
+        onClose={() => setIsNotificationCenterOpen(false)}
+        onNotificationClick={handleNotificationClick}
+      />
+
+      {/* Toast Notifications */}
+      {toastNotifications.map((notification, index) => (
+        <ToastNotification
+          key={notification.id}
+          id={notification.id}
+          type={notification.type}
+          title={notification.title}
+          message={notification.message}
+          sender={notification.sender}
+          channel={notification.channel}
+          onClose={removeToastNotification}
+          onAction={handleToastAction}
+        />
+      ))}
+
       {/* Messages */}
       <div className="flex-1 overflow-y-auto min-h-0 scrollbar-thin scrollbar-thumb-[hsl(var(--chat-border))] scrollbar-track-transparent hover:scrollbar-thumb-[hsl(var(--chat-text-muted))]">
         <MessageList onThreadSelect={onThreadSelect} />
       </div>
 
       {/* Input Area */}
-      <div className="border-t border-[hsl(var(--chat-border))] bg-[hsl(var(--chat-sidebar))] p-3 flex-shrink-0">
+                  <div className="bg-[hsl(217.2_32.6%_17.5%)] p-3 flex-shrink-0">
         <MessageInput />
       </div>
     </div>

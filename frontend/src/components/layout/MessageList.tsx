@@ -5,6 +5,8 @@ import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { EmojiPicker } from '@/components/ui/emoji-picker'
 import { VoicePlayer } from '@/components/ui/voice-player'
+import { ReadReceipts } from '@/components/ui/read-receipts'
+import { MessageAnalytics } from '@/components/ui/message-analytics'
 import { MessageRenderer } from '@/components/ui/message-renderer'
 import { cn } from '@/lib/utils'
 
@@ -48,9 +50,22 @@ const mockMessages: Message[] = [
       username: 'johndoe'
     },
     timestamp: '10:30 AM',
+    readBy: [
+      { id: '1', name: 'Jane Smith', username: 'janesmith', readAt: '2024-01-15T10:31:00Z' },
+      { id: '2', name: 'Mike Johnson', username: 'mikejohnson', readAt: '2024-01-15T10:32:00Z' },
+      { id: '3', name: 'Sarah Wilson', username: 'sarahwilson', readAt: '2024-01-15T10:33:00Z' },
+      { id: '4', name: 'Alex Brown', username: 'alexbrown', readAt: '2024-01-15T10:34:00Z' }
+    ],
     reactions: [
-      { emoji: '🚀', count: 3, users: ['user1', 'user2', 'user3'] },
-      { emoji: '👋', count: 2, users: ['user4', 'user5'] }
+      { emoji: '🚀', count: 3, users: [
+        { id: '1', name: 'Jane Smith', username: 'janesmith' },
+        { id: '2', name: 'Mike Johnson', username: 'mikejohnson' },
+        { id: '3', name: 'Sarah Wilson', username: 'sarahwilson' }
+      ]},
+      { emoji: '👋', count: 2, users: [
+        { id: '4', name: 'Alex Brown', username: 'alexbrown' },
+        { id: '5', name: 'Emma Davis', username: 'emmadavis' }
+      ]}
     ],
     thread: {
       count: 5,
@@ -59,7 +74,10 @@ const mockMessages: Message[] = [
         timestamp: '2 minutes ago'
       },
       participants: ['Jane Smith', 'Mike Johnson', 'Sarah Wilson']
-    }
+    },
+    views: 15,
+    shares: 2,
+    bookmarks: 1
   },
   {
     id: '2',
@@ -213,6 +231,7 @@ interface MessageListProps {
 export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [showReactionPicker, setShowReactionPicker] = useState<string | null>(null)
+  const [showAnalytics, setShowAnalytics] = useState<string | null>(null)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -408,9 +427,13 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect }) => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                   </svg>
                 </button>
-                <button className="p-1 hover:bg-[hsl(var(--chat-message-hover))] rounded text-[hsl(var(--chat-text-muted))] hover:text-[hsl(var(--chat-text))] transition-colors">
+                <button 
+                  onClick={() => setShowAnalytics(showAnalytics === message.id ? null : message.id)}
+                  className="p-1 hover:bg-[hsl(var(--chat-message-hover))] rounded text-[hsl(var(--chat-text-muted))] hover:text-[hsl(var(--chat-text))] transition-colors"
+                  title="Message analytics"
+                >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
                 </button>
               </div>
@@ -435,6 +458,42 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect }) => {
         </div>
       </div>
       
+      {/* Read Receipts for last message */}
+      {mockMessages.length > 0 && (
+        <div className="px-4 py-2">
+          <ReadReceipts
+            users={mockMessages[0].readBy || []}
+            totalRecipients={15}
+            compact={true}
+          />
+        </div>
+      )}
+
+      {/* Message Analytics Modal */}
+      {showAnalytics && (
+        <MessageAnalytics
+          message={{
+            id: showAnalytics,
+            content: mockMessages.find(m => m.id === showAnalytics)?.content || '',
+            author: mockMessages.find(m => m.id === showAnalytics)?.author || { name: '', username: '' },
+            timestamp: mockMessages.find(m => m.id === showAnalytics)?.timestamp || '',
+            readBy: mockMessages.find(m => m.id === showAnalytics)?.readBy || [],
+            reactions: mockMessages.find(m => m.id === showAnalytics)?.reactions || [],
+            replies: mockMessages.find(m => m.id === showAnalytics)?.thread?.participants.map((p, i) => ({
+              id: i.toString(),
+              content: `Reply from ${p}`,
+              author: { name: p, username: p.toLowerCase().replace(' ', '') },
+              timestamp: '2 minutes ago'
+            })) || [],
+            views: mockMessages.find(m => m.id === showAnalytics)?.views || 0,
+            shares: mockMessages.find(m => m.id === showAnalytics)?.shares || 0,
+            bookmarks: mockMessages.find(m => m.id === showAnalytics)?.bookmarks || 0
+          }}
+          isOpen={!!showAnalytics}
+          onClose={() => setShowAnalytics(null)}
+        />
+      )}
+
       {/* Scroll to bottom reference */}
       <div ref={messagesEndRef} />
     </div>

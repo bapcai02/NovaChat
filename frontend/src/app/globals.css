@@ -4,6 +4,41 @@
 
 @layer base {
   :root {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 84% 4.9%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215.4 16.3% 56.9%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 217.2 91.2% 59.8%;
+    --radius: 0.5rem;
+    
+    /* Chat specific colors - Dark theme by default */
+    --chat-bg: 222.2 84% 4.9%;
+    --chat-sidebar: 217.2 32.6% 17.5%;
+    --chat-message-bg: 217.2 32.6% 17.5%;
+    --chat-message-hover: 215 25% 27%;
+    --chat-input-bg: 217.2 32.6% 17.5%;
+    --chat-border: 217.2 32.6% 17.5%;
+    --chat-text: 210 40% 98%;
+    --chat-text-muted: 215.4 16.3% 56.9%;
+    --chat-accent: 217.2 91.2% 59.8%;
+    --chat-accent-light: 217.2 91.2% 20%;
+  }
+
+  .light {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
@@ -23,9 +58,8 @@
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 221.2 83.2% 53.3%;
-    --radius: 0.5rem;
     
-    /* Chat specific colors */
+    /* Chat specific colors - Light mode */
     --chat-bg: 0 0% 100%;
     --chat-sidebar: 0 0% 98%;
     --chat-message-bg: 0 0% 100%;
@@ -36,40 +70,6 @@
     --chat-text-muted: 215.4 16.3% 46.9%;
     --chat-accent: 221.2 83.2% 53.3%;
     --chat-accent-light: 221.2 83.2% 95%;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 84% 4.9%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 94.1%;
-    
-    /* Chat specific colors - Dark mode */
-    --chat-bg: 222.2 84% 4.9%;
-    --chat-sidebar: 217.2 32.6% 17.5%;
-    --chat-message-bg: 217.2 32.6% 17.5%;
-    --chat-message-hover: 215 25% 27%;
-    --chat-input-bg: 217.2 32.6% 17.5%;
-    --chat-border: 217.2 32.6% 17.5%;
-    --chat-text: 210 40% 98%;
-    --chat-text-muted: 215 20.2% 65.1%;
-    --chat-accent: 217.2 91.2% 59.8%;
-    --chat-accent-light: 217.2 91.2% 20%;
   }
 }
 
@@ -83,20 +83,29 @@
     transition: background-color 0.3s ease, color 0.3s ease;
   }
   
+  /* Add dark class by default */
+  html {
+    @apply dark;
+  }
+  
   /* Smooth transitions for theme switching */
   * {
     transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
   }
   
   /* Ensure chat container fits properly */
-  html, body {
-    height: 100%;
-    overflow: hidden;
-  }
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+#__next {
+  height: 100%;
+}
+
+
   
-  #__next {
-    height: 100%;
-  }
+
   
   /* Custom scrollbar styles */
   .scrollbar-thin::-webkit-scrollbar {

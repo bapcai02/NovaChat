@@ -12,6 +12,7 @@ interface KeyboardShortcutsProps {
   onFileUpload?: () => void
   onEmojiPicker?: () => void
   onCloseModals?: () => void
+  onOpenNotifications?: () => void
 }
 
 interface Shortcut {
@@ -28,7 +29,8 @@ export const KeyboardShortcuts: React.FC<KeyboardShortcutsProps> = ({
   onToggleMute,
   onFileUpload,
   onEmojiPicker,
-  onCloseModals
+  onCloseModals,
+  onOpenNotifications
 }) => {
   const [showHelp, setShowHelp] = useState(false)
   const [isMuted, setIsMuted] = useState(false)
@@ -80,6 +82,24 @@ export const KeyboardShortcuts: React.FC<KeyboardShortcutsProps> = ({
       key: 'Ctrl/Cmd + V',
       description: 'Voice message',
       action: () => console.log('Voice message'),
+      category: 'actions'
+    },
+    {
+      key: 'Ctrl/Cmd + A',
+      description: 'Message analytics',
+      action: () => console.log('Message analytics'),
+      category: 'actions'
+    },
+    {
+      key: 'Ctrl/Cmd + T',
+      description: 'Theme manager',
+      action: () => console.log('Theme manager'),
+      category: 'actions'
+    },
+    {
+      key: 'Ctrl/Cmd + N',
+      description: 'Open notifications',
+      action: () => onOpenNotifications?.(),
       category: 'actions'
     },
     
@@ -201,9 +221,9 @@ export const KeyboardShortcuts: React.FC<KeyboardShortcutsProps> = ({
       </Button>
 
       {/* Help Modal */}
-      {showHelp && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-[hsl(var(--chat-bg))] border border-[hsl(var(--chat-border))] rounded-lg shadow-lg max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden">
+              {showHelp && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-[hsl(217.2_32.6%_17.5%)] rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden border border-[hsl(217.2_32.6%_17.5%)]">
             {/* Header */}
             <div className="p-4 border-b border-[hsl(var(--chat-border))] flex items-center justify-between">
               <h2 className="text-lg font-semibold">Keyboard Shortcuts</h2>
@@ -248,7 +268,7 @@ export const KeyboardShortcuts: React.FC<KeyboardShortcutsProps> = ({
             </div>
 
             {/* Footer */}
-            <div className="p-4 border-t border-[hsl(var(--chat-border))] bg-[hsl(var(--chat-message-bg))]">
+            <div className="p-4 bg-[hsl(var(--chat-message-bg))]">
               <p className="text-xs text-[hsl(var(--chat-text-muted))] text-center">
                 Press <kbd className="px-1 py-0.5 text-xs font-mono bg-[hsl(var(--chat-message-hover))] border border-[hsl(var(--chat-border))] rounded">Escape</kbd> to close
               </p>

@@ -103,9 +103,9 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({ onClose, mode, onMod
   }
 
   return (
-    <div className="w-96 flex-shrink-0 chat-sidebar flex flex-col border-l border-[hsl(var(--chat-border))] overflow-hidden">
-      {/* Header */}
-      <div className="p-3 border-b border-[hsl(var(--chat-border))] flex-shrink-0">
+            <div className="w-96 flex-shrink-0 bg-[hsl(217.2_32.6%_17.5%)] flex flex-col overflow-hidden">
+              {/* Header */}
+        <div className="p-3 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             {mode === 'thread' && (
@@ -208,7 +208,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({ onClose, mode, onMod
             </div>
 
             {/* Reply Input */}
-            <div className="sticky bottom-0 pt-2 border-t border-[hsl(var(--chat-border))]">
+            <div className="sticky bottom-0 pt-2">
               <ThreadMessageInput onSendMessage={handleThreadMessageSend} />
             </div>
           </div>

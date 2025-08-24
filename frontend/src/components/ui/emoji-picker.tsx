@@ -32,7 +32,7 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({ onEmojiSelect, onClose
   const isCompact = variant === 'compact'
 
   return (
-    <div className={`absolute bottom-full right-0 mb-2 bg-[hsl(var(--chat-message-bg))] border border-[hsl(var(--chat-border))] rounded-lg shadow-lg p-3 z-50 ${
+            <div className={`absolute bottom-full right-0 mb-2 bg-[hsl(var(--chat-message-bg))] rounded-lg shadow-lg p-3 z-50 ${
       isCompact ? 'w-64' : 'w-80'
     }`}>
       <div className="flex items-center justify-between mb-3">

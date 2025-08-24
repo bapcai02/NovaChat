@@ -32,7 +32,7 @@ export const ChatLayout: React.FC = () => {
   }
 
   return (
-    <div className="h-full w-full flex bg-[hsl(var(--chat-bg))] text-[hsl(var(--chat-text))] overflow-hidden">
+    <div className="h-full w-full flex bg-[hsl(222.2_84%_4.9%)] text-[hsl(210_40%_98%)] overflow-hidden">
       {/* Left Sidebar */}
       <Sidebar />
       

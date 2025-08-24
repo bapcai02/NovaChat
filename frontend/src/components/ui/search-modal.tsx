@@ -208,15 +208,15 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onRes
       case 'file':
         return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+        return 'bg-[hsl(var(--chat-message-hover))] text-[hsl(var(--chat-text))]'
     }
   }
 
   if (!isOpen) return null
 
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-[hsl(var(--chat-bg))] border border-[hsl(var(--chat-border))] rounded-lg shadow-lg max-w-4xl w-full mx-4 max-h-[80vh] overflow-hidden">
+    return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+              <div className="bg-[hsl(217.2_32.6%_17.5%)] rounded-xl shadow-2xl max-w-4xl w-full mx-4 max-h-[80vh] overflow-hidden border border-[hsl(217.2_32.6%_17.5%)]">
         {/* Header */}
         <div className="p-4 border-b border-[hsl(var(--chat-border))] flex items-center justify-between">
           <div className="flex items-center space-x-3">
@@ -398,7 +398,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onRes
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-[hsl(var(--chat-border))] bg-[hsl(var(--chat-message-bg))]">
+        <div className="p-4 bg-[hsl(var(--chat-message-bg))]">
           <div className="flex items-center justify-between text-xs text-[hsl(var(--chat-text-muted))]">
             <div className="flex items-center space-x-4">
               <span>↑↓ Navigate</span>

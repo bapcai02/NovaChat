@@ -1,9 +1,10 @@
 "use client"
 
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { EmojiPicker } from '@/components/ui/emoji-picker'
 import { VoiceRecorder } from '@/components/ui/voice-recorder'
+import { TypingIndicator } from '@/components/ui/typing-indicator'
 import { MessageRenderer } from '@/components/ui/message-renderer'
 import { cn } from '@/lib/utils'
 
@@ -25,6 +26,12 @@ export const MessageInput: React.FC = () => {
   const [isTyping, setIsTyping] = useState(false)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [showVoiceRecorder, setShowVoiceRecorder] = useState(false)
+  const [typingUsers, setTypingUsers] = useState<Array<{
+    id: string
+    name: string
+    username: string
+    avatar?: string
+  }>>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -43,6 +50,24 @@ export const MessageInput: React.FC = () => {
       handleSubmit(e)
     }
   }
+
+  // Simulate typing indicator for demo
+  useEffect(() => {
+    const mockTypingUsers = [
+      { id: '1', name: 'Jane Smith', username: 'janesmith' },
+      { id: '2', name: 'Mike Johnson', username: 'mikejohnson' }
+    ]
+
+    const interval = setInterval(() => {
+      if (Math.random() > 0.7) {
+        setTypingUsers(mockTypingUsers.slice(0, Math.floor(Math.random() * 3)))
+      } else {
+        setTypingUsers([])
+      }
+    }, 3000)
+
+    return () => clearInterval(interval)
+  }, [])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     // Formatting shortcuts (only when not in input)
@@ -307,6 +332,13 @@ export const MessageInput: React.FC = () => {
               onCancel={() => setShowVoiceRecorder(false)}
               maxDuration={60}
             />
+          </div>
+        )}
+
+        {/* Typing Indicator */}
+        {typingUsers.length > 0 && (
+          <div className="absolute bottom-full left-0 right-0 mb-2">
+            <TypingIndicator users={typingUsers} />
           </div>
         )}
       </div>

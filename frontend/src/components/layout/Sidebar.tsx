@@ -32,9 +32,9 @@ export const Sidebar: React.FC = () => {
   const [showDirectMessages, setShowDirectMessages] = useState(true)
 
   return (
-    <div className="w-56 flex-shrink-0 chat-sidebar flex flex-col overflow-hidden">
+    <div className="w-56 flex-shrink-0 bg-[hsl(217.2_32.6%_17.5%)] flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="p-3 border-b border-[hsl(var(--chat-border))] flex-shrink-0">
+      <div className="p-3 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-md flex items-center justify-center">
@@ -54,7 +54,7 @@ export const Sidebar: React.FC = () => {
       </div>
 
       {/* User Profile */}
-      <div className="p-3 border-b border-[hsl(var(--chat-border))] flex-shrink-0">
+      <div className="p-3 flex-shrink-0">
         <div className="flex items-center space-x-2">
           <Avatar 
             fallback="Your Name" 
@@ -113,7 +113,7 @@ export const Sidebar: React.FC = () => {
         </div>
 
         {/* Direct Messages Section */}
-        <div className="p-3 border-t border-[hsl(var(--chat-border))]">
+        <div className="p-3">
           <button
             onClick={() => setShowDirectMessages(!showDirectMessages)}
             className="flex items-center justify-between w-full mb-2 text-xs font-semibold text-[hsl(var(--chat-text-muted))] uppercase tracking-wider hover:text-[hsl(var(--chat-text))] transition-colors"

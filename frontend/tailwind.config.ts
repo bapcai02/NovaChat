@@ -43,6 +43,19 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Chat-specific colors
+        chat: {
+          bg: "hsl(var(--chat-bg))",
+          sidebar: "hsl(var(--chat-sidebar))",
+          "message-bg": "hsl(var(--chat-message-bg))",
+          "message-hover": "hsl(var(--chat-message-hover))",
+          "input-bg": "hsl(var(--chat-input-bg))",
+          border: "hsl(var(--chat-border))",
+          text: "hsl(var(--chat-text))",
+          "text-muted": "hsl(var(--chat-text-muted))",
+          accent: "hsl(var(--chat-accent))",
+          "accent-light": "hsl(var(--chat-accent-light))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
