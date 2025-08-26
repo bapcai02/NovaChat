@@ -56,12 +56,14 @@ class UserRepository implements UserRepositoryInterface
 
     public function findOnlineUsers(): array
     {
-        return User::where('status', 'online')->get()->toArray();
+        // Use presence flag instead of writing presence into the status enum
+        return User::where('is_online', true)->get()->toArray();
     }
 
     public function findActiveUsers(): array
     {
-        return User::where('status', '!=', 'offline')->get()->toArray();
+        // Treat any user with is_online true as active for presence purposes
+        return User::where('is_online', true)->get()->toArray();
     }
 
     // Additional helper methods for the application
@@ -108,16 +110,30 @@ class UserRepository implements UserRepositoryInterface
 
     public function getOnlineUsers(): Collection
     {
-        return User::where('status', 'online')->get();
+        return User::where('is_online', true)->get();
     }
 
     public function updateStatus(User $user, string $status, ?string $statusMessage = null): User
     {
-        $user->update([
-            'status' => $status,
-            'status_message' => $statusMessage,
+        // Map presence values to presence flags; do not overwrite the status enum
+        $updates = [
             'last_seen_at' => now(),
-        ]);
+        ];
+
+        if ($status === 'online') {
+            $updates['is_online'] = true;
+        } elseif ($status === 'offline') {
+            $updates['is_online'] = false;
+        }
+
+        // Optionally reflect presence in status_message
+        if ($statusMessage !== null) {
+            $updates['status_message'] = $statusMessage;
+        } elseif (in_array($status, ['online', 'offline', 'away', 'busy'], true)) {
+            $updates['status_message'] = ucfirst($status);
+        }
+
+        $user->update($updates);
 
         return $user->fresh();
     }

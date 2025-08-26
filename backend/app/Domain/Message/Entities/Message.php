@@ -2,11 +2,12 @@
 
 namespace App\Domain\Message\Entities;
 
+use App\Domain\User\Entities\User;
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-use User;
 use App\Domain\Channel\Entities\Channel;
 use App\Domain\Message\Entities\Message;
 use App\Domain\Message\Entities\MessageReaction;

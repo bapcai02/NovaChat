@@ -2,60 +2,50 @@
 
 namespace App\Application\Services;
 
-use App\Domain\User\Services\UserService;
-use App\Domain\User\Entities\User;
-use App\Application\DTOs\UserDTO;
-use App\Application\Commands\CreateUserCommand;
-use App\Application\Commands\UpdateUserCommand;
-use App\Application\Queries\GetUserQuery;
-use App\Application\Queries\SearchUsersQuery;
+use App\Domain\User\Repositories\UserRepositoryInterface;
 
 class UserApplicationService
 {
-    public function __construct(
-        private UserService $userService
-    ) {}
+    private UserRepositoryInterface $userRepository;
 
-    public function createUser(CreateUserCommand $command): UserDTO
+    public function __construct(UserRepositoryInterface $userRepository)
     {
-        $user = $this->userService->registerUser(
-            $command->name,
-            $command->email,
-            $command->password,
-            $command->username
-        );
-
-        return UserDTO::fromEntity($user);
+        $this->userRepository = $userRepository;
     }
 
-    public function updateUser(UpdateUserCommand $command): UserDTO
+    public function getAllUsers(): array
     {
-        $user = $this->userService->updateProfile(
-            $command->user,
-            $command->data
-        );
-
-        return UserDTO::fromEntity($user);
+        $users = $this->userRepository->paginate(100)->items();
+        return array_map(function($user) {
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'username' => $user->username,
+                'email' => $user->email,
+                'avatar' => $user->avatar,
+                'status' => $user->status,
+                'is_online' => $user->is_online,
+                'last_seen_at' => $user->last_seen_at ? $user->last_seen_at->toISOString() : null,
+            ];
+        }, $users);
     }
 
-    public function getUser(GetUserQuery $query): ?UserDTO
+    public function getUserById(int $id): ?array
     {
-        $user = $this->userService->findById($query->userId);
-        
-        return $user ? UserDTO::fromEntity($user) : null;
-    }
+        $user = $this->userRepository->findById($id);
+        if (!$user) {
+            return null;
+        }
 
-    public function searchUsers(SearchUsersQuery $query): array
-    {
-        $users = $this->userService->searchUsers($query->query, $query->perPage);
-        
-        return array_map(fn($user) => UserDTO::fromEntity($user), $users);
-    }
-
-    public function getOnlineUsers(): array
-    {
-        $users = $this->userService->getOnlineUsers();
-        
-        return array_map(fn($user) => UserDTO::fromEntity($user), $users);
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'username' => $user->username,
+            'email' => $user->email,
+            'avatar' => $user->avatar,
+            'status' => $user->status,
+            'is_online' => $user->is_online,
+            'last_seen_at' => $user->last_seen_at ? $user->last_seen_at->toISOString() : null,
+        ];
     }
 }

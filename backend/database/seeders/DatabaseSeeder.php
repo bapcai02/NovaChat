@@ -15,7 +15,10 @@ class DatabaseSeeder extends Seeder
         $this->call([
             UserSeeder::class,
             ChannelSeeder::class,
+            ChannelMemberSeeder::class,
             MessageSeeder::class,
+            MessageReactionSeeder::class,
+            DirectMessageSeeder::class,
         ]);
     }
 }

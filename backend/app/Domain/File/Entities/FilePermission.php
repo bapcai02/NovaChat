@@ -2,6 +2,8 @@
 
 namespace App\Domain\File\Entities;
 
+use App\Domain\User\Entities\User;
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 

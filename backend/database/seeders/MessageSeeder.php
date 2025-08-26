@@ -23,19 +23,26 @@ class MessageSeeder extends Seeder
             return;
         }
 
-        // Sample messages for general channel
+        // Sample messages for general channel with rich metadata
         $generalMessages = [
             [
                 'content' => 'Welcome everyone to NovaChat! 🎉',
                 'user_id' => 1, // Admin
                 'type' => 'text',
                 'created_at' => now()->subDays(2)->subHours(2),
+                'metadata' => [
+                    'reactions' => [ ['emoji' => '👍', 'count' => 3] ],
+                    'read_by' => [1,2,3,4],
+                ],
             ],
             [
                 'content' => 'Thanks for the welcome! Excited to be here.',
                 'user_id' => 2, // John Doe
                 'type' => 'text',
                 'created_at' => now()->subDays(2)->subHours(1)->subMinutes(30),
+                'metadata' => [
+                    'reactions' => [ ['emoji' => '🎉', 'count' => 1] ],
+                ],
             ],
             [
                 'content' => 'This looks great! The UI is really clean.',
@@ -60,6 +67,28 @@ class MessageSeeder extends Seeder
                 'user_id' => 6, // Emily Davis
                 'type' => 'text',
                 'created_at' => now()->subDays(1)->subHours(2)->subMinutes(45),
+            ],
+            [
+                'content' => 'Uploading latest mockups and docs.',
+                'user_id' => 2,
+                'type' => 'file',
+                'created_at' => now()->subDays(1)->subHours(2),
+                'metadata' => [
+                    'attachments' => [[
+                        'type' => 'file', 'url' => '#', 'name' => 'spec-v2.pdf', 'size' => '2.4 MB'
+                    ]],
+                    'reactions' => [ ['emoji' => '📄', 'count' => 1] ],
+                ],
+            ],
+            [
+                'content' => 'audio:mock-url',
+                'user_id' => 3,
+                'type' => 'system', // keep type allowed, put details in metadata
+                'created_at' => now()->subDays(1)->subHours(1)->subMinutes(30),
+                'metadata' => [
+                    'type' => 'voice',
+                    'duration' => 14,
+                ],
             ],
         ];
 
@@ -151,9 +180,11 @@ class MessageSeeder extends Seeder
 
         // Create messages for general channel
         foreach ($generalMessages as $messageData) {
+            $meta = isset($messageData['metadata']) ? $messageData['metadata'] : [];
+            unset($messageData['metadata']);
             Message::create(array_merge($messageData, [
                 'channel_id' => $generalChannel->id,
-                'metadata' => json_encode([]),
+                'metadata' => $meta,
                 'updated_at' => $messageData['created_at'],
             ]));
         }
@@ -162,7 +193,7 @@ class MessageSeeder extends Seeder
         foreach ($randomMessages as $messageData) {
             Message::create(array_merge($messageData, [
                 'channel_id' => $randomChannel->id,
-                'metadata' => json_encode([]),
+                'metadata' => $messageData['metadata'] ?? [],
                 'updated_at' => $messageData['created_at'],
             ]));
         }
@@ -171,9 +202,38 @@ class MessageSeeder extends Seeder
         foreach ($developmentMessages as $messageData) {
             Message::create(array_merge($messageData, [
                 'channel_id' => $developmentChannel->id,
-                'metadata' => json_encode([]),
+                'metadata' => $messageData['metadata'] ?? [],
                 'updated_at' => $messageData['created_at'],
             ]));
+        }
+
+        // Generate additional mixed messages for general channel
+        for ($i = 0; $i < 25; $i++) {
+            $meta = [];
+            $type = 'text';
+            if ($i % 5 === 0) {
+                $type = 'file';
+                $meta['attachments'] = [[ 'type' => 'file', 'url' => '#', 'name' => 'file-'.$i.'.txt', 'size' => rand(1,5).'.0 MB' ]];
+            } elseif ($i % 6 === 0) {
+                $type = 'system';
+                $meta['type'] = 'voice';
+                $meta['duration'] = 8 + ($i % 12);
+            }
+            $meta['reactions'] = $i % 3 === 0 ? [[ 'emoji' => '👍', 'count' => 1 + ($i % 4) ]] : [];
+            $meta['read_by'] = [1,2,3,4];
+
+            Message::create([
+                'channel_id' => $generalChannel->id,
+                'user_id' => 1 + ($i % 6),
+                'parent_id' => null,
+                'content' => $type === 'system' ? 'audio:mock-url' : 'Seeded message #'.($i+1).' with rich metadata',
+                'type' => $type,
+                'metadata' => $meta,
+                'is_edited' => false,
+                'is_pinned' => false,
+                'created_at' => now()->subMinutes(120 - $i),
+                'updated_at' => now()->subMinutes(120 - $i),
+            ]);
         }
 
         $this->command->info('Messages seeded successfully!');
