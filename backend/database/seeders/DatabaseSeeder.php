@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             MessageSeeder::class,
             MessageReactionSeeder::class,
             DirectMessageSeeder::class,
+            ThreadReplySeeder::class,
         ]);
     }
 }

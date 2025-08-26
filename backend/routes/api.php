@@ -8,6 +8,7 @@ use App\Interfaces\Http\Controllers\ConversationController;
 use App\Interfaces\Http\Controllers\UserController as InterfaceUserController;
 use App\Interfaces\Http\Controllers\ChannelMessageController;
 use App\Interfaces\Http\Controllers\ConversationMessageController;
+use App\Interfaces\Http\Controllers\ThreadController;
 
 /*
 |--------------------------------------------------------------------------
@@ -50,5 +51,9 @@ Route::middleware('auth:api')->group(function () {
     // Messages (fake lists)
     Route::get('channels/{channelId}/messages', [ChannelMessageController::class, 'index']);
     Route::get('conversations/{conversationId}/messages', [ConversationMessageController::class, 'index']);
+
+    // Thread replies
+    Route::get('messages/{messageId}/replies', [ThreadController::class, 'index']);
+    Route::post('messages/{messageId}/replies', [ThreadController::class, 'store']);
 
 });
