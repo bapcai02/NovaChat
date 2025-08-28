@@ -70,4 +70,27 @@ class ChannelRepository implements ChannelRepositoryInterface
 
         return $message ? (array) $message : null;
     }
+
+    public function createChannel(array $data, int $createdBy): array
+    {
+        $channelId = DB::table('channels')->insertGetId([
+            'name' => $data['name'],
+            'display_name' => $data['display_name'] ?? $data['name'],
+            'description' => $data['description'] ?? '',
+            'is_private' => $data['is_private'] ?? false,
+            'created_by' => $createdBy,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // Add creator as member
+        DB::table('channel_members')->insert([
+            'channel_id' => $channelId,
+            'user_id' => $createdBy,
+            'role' => 'admin',
+            'joined_at' => now(),
+        ]);
+
+        return $this->getChannelById($channelId);
+    }
 }

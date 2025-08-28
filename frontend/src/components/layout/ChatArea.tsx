@@ -16,11 +16,20 @@ import { cn } from '@/lib/utils'
 interface ChatAreaProps {
   onToggleRightSidebar: () => void
   onThreadSelect: (messageId: string, messageContent: string) => void
+  selectedChat: { type: 'channel' | 'conversation', id: number, title: string } | null
 }
 
-export const ChatArea: React.FC<ChatAreaProps> = ({ onToggleRightSidebar, onThreadSelect }) => {
-  const [currentChannel] = useState('general')
+import { api } from '@/services/api'
+
+export const ChatArea: React.FC<ChatAreaProps> = ({ onToggleRightSidebar, onThreadSelect, selectedChat }) => {
+  const [currentChannel, setCurrentChannel] = useState('general')
   const [isMuted, setIsMuted] = useState(false)
+  useEffect(() => {
+    if (selectedChat) {
+      setCurrentChannel(selectedChat.title)
+    }
+  }, [selectedChat])
+
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isNotificationCenterOpen, setIsNotificationCenterOpen] = useState(false)
   const [notificationCount, setNotificationCount] = useState(2)
@@ -185,7 +194,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onToggleRightSidebar, onThre
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto min-h-0 scrollbar-thin scrollbar-thumb-[hsl(var(--chat-border))] scrollbar-track-transparent hover:scrollbar-thumb-[hsl(var(--chat-text-muted))]">
-        <MessageList onThreadSelect={onThreadSelect} />
+        <MessageList onThreadSelect={onThreadSelect} selectedChat={selectedChat ? { type: selectedChat.type, id: selectedChat.id } : null} />
       </div>
 
       {/* Input Area */}

@@ -153,7 +153,7 @@ export default function RegisterPage() {
                       required
                       value={formData.name}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none transition-colors duration-300 bg-transparent"
+                      className="w-full px-4 py-3 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none transition-colors duration-300 bg-transparent text-gray-800 placeholder-gray-500"
                       placeholder="Enter your name"
                     />
                     <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
@@ -177,7 +177,7 @@ export default function RegisterPage() {
                       required
                       value={formData.username}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none transition-colors duration-300 bg-transparent"
+                      className="w-full px-4 py-3 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none transition-colors duration-300 bg-transparent text-gray-800 placeholder-gray-500"
                       placeholder="Choose a username"
                     />
                     <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
@@ -201,7 +201,7 @@ export default function RegisterPage() {
                       required
                       value={formData.email}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none transition-colors duration-300 bg-transparent"
+                      className="w-full px-4 py-3 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none transition-colors duration-300 bg-transparent text-gray-800 placeholder-gray-500"
                       placeholder="Enter your email"
                     />
                     <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
@@ -225,7 +225,7 @@ export default function RegisterPage() {
                       required
                       value={formData.password}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none transition-colors duration-300 bg-transparent"
+                      className="w-full px-4 py-3 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none transition-colors duration-300 bg-transparent text-gray-800 placeholder-gray-500"
                       placeholder="Create a password (min 8 characters)"
                     />
                     <button
@@ -260,7 +260,7 @@ export default function RegisterPage() {
                       required
                       value={formData.password_confirmation}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none transition-colors duration-300 bg-transparent"
+                      className="w-full px-4 py-3 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none transition-colors duration-300 bg-transparent text-gray-800 placeholder-gray-500"
                       placeholder="Confirm your password"
                     />
                     <button

@@ -6,6 +6,7 @@ import { Input } from './input'
 import { Avatar } from './avatar'
 import { Badge } from './badge'
 import { cn } from '@/lib/utils'
+import { api } from '@/services/api'
 
 interface SearchResult {
   id: string
@@ -40,63 +41,6 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onRes
   const [selectedIndex, setSelectedIndex] = useState(-1)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  // Mock search results
-  const mockResults: SearchResult[] = [
-    {
-      id: '1',
-      type: 'message',
-      title: 'Welcome to NovaChat!',
-      content: 'Hey everyone! Welcome to **NovaChat**! 🚀 This is going to be an *amazing* place for our team to collaborate.',
-      author: 'John Doe',
-      timestamp: '10:30 AM',
-      channel: 'general',
-      reactions: 5
-    },
-    {
-      id: '2',
-      type: 'message',
-      title: 'Performance improvements',
-      content: 'Great work everyone! I can see the progress we\'ve made. The new interface looks much cleaner.',
-      author: 'Sarah Wilson',
-      timestamp: '10:40 AM',
-      channel: 'general',
-      reactions: 2
-    },
-    {
-      id: '3',
-      type: 'channel',
-      title: 'general',
-      content: 'General discussion for the team',
-      author: '3 members',
-      timestamp: 'Public channel'
-    },
-    {
-      id: '4',
-      type: 'user',
-      title: 'John Doe',
-      content: 'Online • Last seen 2 minutes ago',
-      avatar: 'JD'
-    },
-    {
-      id: '5',
-      type: 'file',
-      title: 'design-mockups-v2.pdf',
-      content: '2.4 MB • Uploaded by Mike Johnson',
-      author: 'Mike Johnson',
-      timestamp: '10:35 AM',
-      channel: 'general'
-    },
-    {
-      id: '6',
-      type: 'message',
-      title: 'API integration help',
-      content: 'Yes, please include the analytics. Also, can someone help me with the API integration? I\'m getting a `404 error`.',
-      author: 'Mike Johnson',
-      timestamp: '10:50 AM',
-      channel: 'general',
-      reactions: 1
-    }
-  ]
 
   // Filter options
   const filterOptions: { value: SearchFilter; label: string; icon: string }[] = [
@@ -131,24 +75,30 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onRes
   }, [searchQuery, activeFilter, timeFilter])
 
   const performSearch = async () => {
+    if (!searchQuery.trim()) {
+      setResults([])
+      return
+    }
+
     setIsLoading(true)
     
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 300))
-    
-    // Filter results based on query and filters
-    const filteredResults = mockResults.filter(result => {
-      const matchesQuery = result.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          result.content?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          result.author?.toLowerCase().includes(searchQuery.toLowerCase())
+    try {
+      const params = new URLSearchParams({
+        q: searchQuery.trim(),
+        type: activeFilter,
+        time: timeFilter,
+      })
+
+      const response = await api.get(`/search?${params}`)
+      const searchResults = response.data?.data || []
       
-      const matchesFilter = activeFilter === 'all' || result.type === activeFilter
-      
-      return matchesQuery && matchesFilter
-    })
-    
-    setResults(filteredResults)
-    setIsLoading(false)
+      setResults(searchResults)
+    } catch (error) {
+      console.error('Search failed:', error)
+      setResults([])
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleSearch = (query: string) => {
@@ -343,9 +293,9 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onRes
                           {result.channel && (
                             <span>#{result.channel}</span>
                           )}
-                          {result.timestamp && (
-                            <span>{result.timestamp}</span>
-                          )}
+                                                  {result.timestamp && (
+                          <span>{new Date(result.timestamp).toLocaleString()}</span>
+                        )}
                           {result.reactions && (
                             <span>💬 {result.reactions}</span>
                           )}

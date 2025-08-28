@@ -8,4 +8,5 @@ interface ChannelRepositoryInterface
     public function getChannelById(int $id): ?array;
     public function getChannelMembers(int $channelId): array;
     public function getLastMessage(int $channelId): ?array;
+    public function createChannel(array $data, int $createdBy): array;
 }

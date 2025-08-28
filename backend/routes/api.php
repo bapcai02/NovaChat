@@ -40,8 +40,9 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
     });
     
-    // Channels (fake list)
+    // Channels
     Route::get('channels', [InterfaceChannelController::class, 'index']);
+    Route::post('channels', [InterfaceChannelController::class, 'store']);
 
     // Conversations (fake list)
     Route::get('conversations', [ConversationController::class, 'index']);

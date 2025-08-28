@@ -22,4 +22,9 @@ class ChannelApplicationService
     {
         return $this->channelRepository->getChannelById($id);
     }
+
+    public function createChannel(array $data, int $createdBy): array
+    {
+        return $this->channelRepository->createChannel($data, $createdBy);
+    }
 }

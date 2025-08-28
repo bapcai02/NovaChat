@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ThreadMessageInput } from './ThreadMessageInput'
 import { cn } from '@/lib/utils'
+import { api } from '@/services/api'
 
 interface RightSidebarProps {
   onClose: () => void
@@ -38,38 +39,37 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({ onClose, mode, onMod
     content: string
     author: string
     timestamp: string
-  }>>([
-    {
-      id: '1',
-      content: 'Great idea! I\'m excited to see how this develops. 🎉',
-      author: 'Jane Smith',
-      timestamp: '1h'
-    },
-    {
-      id: '2',
-      content: 'I\'ll start working on the implementation today.',
-      author: 'Mike Johnson',
-      timestamp: '45m'
-    },
-    {
-      id: '3',
-      content: 'Perfect! Let me know if you need help with the design specs.',
-      author: 'Sarah Wilson',
-      timestamp: '30m'
-    },
-    {
-      id: '4',
-      content: 'I can help with testing once it\'s ready! 🧪',
-      author: 'Alex Brown',
-      timestamp: '15m'
-    },
-    {
-      id: '5',
-      content: 'Thanks everyone! I\'ll keep you all updated. 🚀',
-      author: 'John Doe',
-      timestamp: '5m'
+  }>>([])
+  const [isLoadingReplies, setIsLoadingReplies] = useState(false)
+  const [repliesError, setRepliesError] = useState<string | null>(null)
+
+  React.useEffect(() => {
+    const loadReplies = async () => {
+      if (mode !== 'thread' || !selectedThread?.messageId) {
+        setThreadReplies([])
+        return
+      }
+      try {
+        setIsLoadingReplies(true)
+        setRepliesError(null)
+        const res = await api.get<any[]>(`/messages/${selectedThread.messageId}/replies`)
+        const data = Array.isArray(res.data?.data) ? res.data.data : []
+        const mapped = data.map((r: any, idx: number) => ({
+          id: String(r.id ?? idx),
+          content: r.content ?? '',
+          author: r.author?.name ?? 'User',
+          timestamp: r.timestamp ? new Date(r.timestamp).toLocaleTimeString() : '',
+        }))
+        setThreadReplies(mapped)
+      } catch (e: any) {
+        console.error('Failed to load replies', e)
+        setRepliesError('Failed to load replies')
+      } finally {
+        setIsLoadingReplies(false)
+      }
     }
-  ])
+    loadReplies()
+  }, [mode, selectedThread?.messageId])
 
   const getStatusColor = (status: Member['status']) => {
     switch (status) {
@@ -92,14 +92,21 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({ onClose, mode, onMod
     return <Badge variant={config.variant} className="text-xs">{config.text}</Badge>
   }
 
-  const handleThreadMessageSend = (message: string) => {
-    const newReply = {
-      id: Date.now().toString(),
-      content: message,
-      author: 'You',
-      timestamp: 'now'
+  const handleThreadMessageSend = async (message: string) => {
+    if (!selectedThread?.messageId) return
+    try {
+      const res = await api.post(`/messages/${selectedThread.messageId}/replies`, { content: message })
+      const r: any = res.data?.data
+      const newReply = {
+        id: String(r?.id ?? Date.now()),
+        content: r?.content ?? message,
+        author: r?.author?.name ?? 'You',
+        timestamp: r?.timestamp ? new Date(r.timestamp).toLocaleTimeString() : 'now'
+      }
+      setThreadReplies(prev => [...prev, newReply])
+    } catch (e) {
+      console.error('Failed to post reply', e)
     }
-    setThreadReplies(prev => [...prev, newReply])
   }
 
   return (
@@ -186,10 +193,13 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({ onClose, mode, onMod
             {/* Thread Replies */}
             <div className="space-y-3">
               <div className="text-xs text-[hsl(var(--chat-text-muted))] font-medium">
-                {threadReplies.length} {threadReplies.length === 1 ? 'reply' : 'replies'}
+                {isLoadingReplies ? 'Loading replies…' : `${threadReplies.length} ${threadReplies.length === 1 ? 'reply' : 'replies'}`}
               </div>
               
               <div className="space-y-2">
+                {repliesError && (
+                  <div className="text-xs text-red-400">{repliesError}</div>
+                )}
                 {threadReplies.map((reply) => (
                   <div key={reply.id} className="flex space-x-2">
                     <Avatar fallback={reply.author} size="sm" className="w-5 h-5 text-xs" />

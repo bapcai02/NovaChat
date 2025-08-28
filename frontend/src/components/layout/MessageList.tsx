@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useEffect, useRef, useState } from 'react'
+import { api } from '@/services/api'
 import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { EmojiPicker } from '@/components/ui/emoji-picker'
@@ -226,20 +227,57 @@ const mockMessages: Message[] = [
 
 interface MessageListProps {
   onThreadSelect: (messageId: string, messageContent: string) => void
+  selectedChat?: { type: 'channel' | 'conversation', id: number } | null
 }
 
-export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect }) => {
+export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, selectedChat }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [showReactionPicker, setShowReactionPicker] = useState<string | null>(null)
   const [showAnalytics, setShowAnalytics] = useState<string | null>(null)
+  const [messages, setMessages] = useState<typeof mockMessages>([] as any)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
 
   useEffect(() => {
-    scrollToBottom()
-  }, [])
+    if (messages.length > 0) {
+      scrollToBottom()
+    }
+  }, [messages])
+
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        if (!selectedChat) {
+          setMessages([] as any)
+          return
+        }
+        const url = selectedChat.type === 'channel'
+          ? `/channels/${selectedChat.id}/messages`
+          : `/conversations/${selectedChat.id}/messages`
+        const res = await api.get<any[]>(url)
+        const data = Array.isArray(res.data?.data) ? res.data.data : []
+        // Map backend shape to frontend mock shape minimally for render
+        const mapped = data.map((m: any, idx: number) => ({
+          id: String(m.id ?? idx),
+          content: m.type === 'voice' ? '' : (m.content || ''),
+          type: m.type === 'voice' ? 'voice' : undefined,
+          audioUrl: m.type === 'voice' ? 'data:audio/webm;base64,' : undefined,
+          duration: m.duration,
+          author: { name: m.sender?.name || 'User', username: (m.sender?.name || 'user').toLowerCase() },
+          timestamp: new Date(m.created_at).toLocaleTimeString(),
+          reactions: (m.reactions || []).map((r: any) => ({ emoji: r.emoji, count: r.count || 1, users: [] })),
+          attachments: (m.attachments || []).map((a: any) => ({ type: a.type || 'file', url: a.url || '#', name: a.name || 'file', size: a.size })),
+        })) as any
+        setMessages(mapped)
+        setTimeout(scrollToBottom, 0)
+      } catch (e) {
+        console.error('Failed to load messages', e)
+      }
+    }
+    fetchMessages()
+  }, [selectedChat])
 
   const handleThreadClick = (messageId: string, messageContent: string) => {
     onThreadSelect(messageId, messageContent)
@@ -255,9 +293,20 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect }) => {
     setShowReactionPicker(null)
   }
 
+  if (!selectedChat) {
+    return (
+      <div className="h-full w-full flex items-center justify-center text-[hsl(var(--chat-text-muted))]">
+        <div className="text-center">
+          <div className="text-2xl mb-2">Welcome to NovaChat</div>
+          <div className="text-sm">Select a channel or conversation to start chatting</div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="p-4 space-y-3">
-      {mockMessages.map((message, index) => (
+      {messages.map((message, index) => (
         <div key={message.id} className="message-enter">
           <div className="flex space-x-3 group hover:bg-[hsl(var(--chat-message-hover))] rounded-lg p-1.5 -m-1.5 transition-colors duration-200">
             <Avatar 
@@ -459,10 +508,10 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect }) => {
       </div>
       
       {/* Read Receipts for last message */}
-      {mockMessages.length > 0 && (
+      {messages.length > 0 && (
         <div className="px-4 py-2">
           <ReadReceipts
-            users={mockMessages[0].readBy || []}
+            users={(messages as any)[0].readBy || []}
             totalRecipients={15}
             compact={true}
           />
@@ -474,20 +523,20 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect }) => {
         <MessageAnalytics
           message={{
             id: showAnalytics,
-            content: mockMessages.find(m => m.id === showAnalytics)?.content || '',
-            author: mockMessages.find(m => m.id === showAnalytics)?.author || { name: '', username: '' },
-            timestamp: mockMessages.find(m => m.id === showAnalytics)?.timestamp || '',
-            readBy: mockMessages.find(m => m.id === showAnalytics)?.readBy || [],
-            reactions: mockMessages.find(m => m.id === showAnalytics)?.reactions || [],
-            replies: mockMessages.find(m => m.id === showAnalytics)?.thread?.participants.map((p, i) => ({
+            content: messages.find(m => m.id === showAnalytics)?.content || '',
+            author: messages.find(m => m.id === showAnalytics)?.author || { name: '', username: '' },
+            timestamp: messages.find(m => m.id === showAnalytics)?.timestamp || '',
+            readBy: (messages as any).find(m => m.id === showAnalytics)?.readBy || [],
+            reactions: messages.find(m => m.id === showAnalytics)?.reactions || [],
+            replies: (messages as any).find(m => m.id === showAnalytics)?.thread?.participants.map((p: string, i: number) => ({
               id: i.toString(),
               content: `Reply from ${p}`,
               author: { name: p, username: p.toLowerCase().replace(' ', '') },
               timestamp: '2 minutes ago'
             })) || [],
-            views: mockMessages.find(m => m.id === showAnalytics)?.views || 0,
-            shares: mockMessages.find(m => m.id === showAnalytics)?.shares || 0,
-            bookmarks: mockMessages.find(m => m.id === showAnalytics)?.bookmarks || 0
+            views: (messages as any).find(m => m.id === showAnalytics)?.views || 0,
+            shares: (messages as any).find(m => m.id === showAnalytics)?.shares || 0,
+            bookmarks: (messages as any).find(m => m.id === showAnalytics)?.bookmarks || 0
           }}
           isOpen={!!showAnalytics}
           onClose={() => setShowAnalytics(null)}

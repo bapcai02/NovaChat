@@ -13,6 +13,7 @@ import { useAppSelector } from '@/hooks/useAppSelector'
 import { useAppDispatch } from '@/hooks/useAppDispatch'
 import { fetchChannels } from '@/store/slices/channelSlice'
 import { fetchUsers } from '@/store/slices/userSlice'
+import { api } from '@/services/api'
 
 interface Channel {
   id: string
@@ -34,11 +35,40 @@ const mockChannels: Channel[] = [
   { id: '6', name: 'Mike Johnson', type: 'direct', unreadCount: 0 },
 ]
 
-export const Sidebar: React.FC = () => {
+interface ApiChannel {
+  id: number
+  name: string
+  display_name: string
+  description?: string
+  is_private: boolean
+  members_count: number
+  unread_count: number
+  last_message_preview?: string
+  updated_at: string
+}
+
+interface Conversation {
+  id: number
+  type: 'dm' | 'group'
+  title: string
+  avatar: string | null
+  unread_count: number
+  last_message_preview?: string
+  updated_at: string
+}
+
+interface SidebarProps {
+  onSelectChat?: (chat: { type: 'channel' | 'conversation', id: number, title: string }) => void
+}
+
+export const Sidebar: React.FC<SidebarProps> = ({ onSelectChat }) => {
   const [activeChannel, setActiveChannel] = useState('1')
   const [showDirectMessages, setShowDirectMessages] = useState(true)
   const [isCreateChannelOpen, setIsCreateChannelOpen] = useState(false)
   const [isCreateDirectMessageOpen, setIsCreateDirectMessageOpen] = useState(false)
+  const [apiChannels, setApiChannels] = useState<ApiChannel[] | null>(null)
+  const [conversations, setConversations] = useState<Conversation[] | null>(null)
+  const [loadingLists, setLoadingLists] = useState(false)
   
   const dispatch = useAppDispatch()
   const { user } = useAppSelector((state) => state.auth)
@@ -50,6 +80,28 @@ export const Sidebar: React.FC = () => {
     dispatch(fetchChannels())
     dispatch(fetchUsers())
   }, [dispatch])
+
+  useEffect(() => {
+    // Fetch backend fake lists using shared api client (handles baseURL + auth token)
+    const fetchLists = async () => {
+      try {
+        setLoadingLists(true)
+        const [chRes, convRes] = await Promise.all([
+          api.get<ApiChannel[]>('/channels'),
+          api.get<Conversation[]>('/conversations'),
+        ])
+        setApiChannels(Array.isArray(chRes.data?.data) ? chRes.data.data : [])
+        setConversations(Array.isArray(convRes.data?.data) ? convRes.data.data : [])
+      } catch (err) {
+        console.error('Failed to fetch lists', err)
+        setApiChannels([])
+        setConversations([])
+      } finally {
+        setLoadingLists(false)
+      }
+    }
+    fetchLists()
+  }, [])
 
   return (
     <div className="w-56 flex-shrink-0 bg-[hsl(217.2_32.6%_17.5%)] flex flex-col overflow-hidden">
@@ -118,22 +170,25 @@ export const Sidebar: React.FC = () => {
           </div>
           
           <div className="space-y-0.5">
-            {mockChannels.filter(c => c.type === 'channel').map((channel) => (
+            {(apiChannels ?? []).map((channel) => (
               <button
                 key={channel.id}
-                onClick={() => setActiveChannel(channel.id)}
+                onClick={() => {
+                  setActiveChannel(String(channel.id))
+                  onSelectChat?.({ type: 'channel', id: channel.id, title: channel.display_name || channel.name })
+                }}
                 className={cn(
                   "w-full flex items-center space-x-2 px-2 py-1.5 rounded-md text-left transition-colors duration-200",
-                  activeChannel === channel.id
+                  activeChannel === String(channel.id)
                     ? "bg-[hsl(var(--chat-accent-light))] text-[hsl(var(--chat-accent))]"
                     : "hover:bg-[hsl(var(--chat-message-hover))] text-[hsl(var(--chat-text))]"
                 )}
               >
                 <span className="text-[hsl(var(--chat-text-muted))] text-sm">#</span>
-                <span className="flex-1 truncate text-xs">{channel.name}</span>
-                {channel.unreadCount && channel.unreadCount > 0 && (
+                <span className="flex-1 truncate text-xs">{channel.display_name || channel.name}</span>
+                {channel.unread_count && channel.unread_count > 0 && (
                   <Badge variant="default" className="ml-auto text-xs h-4 px-1.5">
-                    {channel.unreadCount}
+                    {channel.unread_count}
                   </Badge>
                 )}
               </button>
@@ -173,26 +228,29 @@ export const Sidebar: React.FC = () => {
           
           {showDirectMessages && (
             <div className="space-y-0.5">
-              {mockChannels.filter(c => c.type === 'direct').map((channel) => (
+              {(conversations ?? []).map((conv) => (
                 <button
-                  key={channel.id}
-                  onClick={() => setActiveChannel(channel.id)}
+                  key={conv.id}
+                  onClick={() => {
+                    setActiveChannel(String(conv.id))
+                    onSelectChat?.({ type: 'conversation', id: conv.id, title: conv.title })
+                  }}
                   className={cn(
                     "w-full flex items-center space-x-2 px-2 py-1.5 rounded-md text-left transition-colors duration-200",
-                    activeChannel === channel.id
+                    activeChannel === String(conv.id)
                       ? "bg-[hsl(var(--chat-accent-light))] text-[hsl(var(--chat-accent))]"
                       : "hover:bg-[hsl(var(--chat-message-hover))] text-[hsl(var(--chat-text))]"
                   )}
                 >
                   <Avatar 
-                    fallback={channel.name} 
+                    fallback={conv.title} 
                     size="sm"
                     className="w-5 h-5 text-xs"
                   />
-                  <span className="flex-1 truncate text-xs">{channel.name}</span>
-                  {channel.unreadCount && channel.unreadCount > 0 && (
+                  <span className="flex-1 truncate text-xs">{conv.title}</span>
+                  {conv.unread_count && conv.unread_count > 0 && (
                     <Badge variant="default" className="ml-auto text-xs h-4 px-1.5">
-                      {channel.unreadCount}
+                      {conv.unread_count}
                     </Badge>
                   )}
                 </button>
@@ -206,10 +264,18 @@ export const Sidebar: React.FC = () => {
       <CreateChannelModal
         isOpen={isCreateChannelOpen}
         onClose={() => setIsCreateChannelOpen(false)}
-        onCreateChannel={(channelData) => {
-          console.log('Creating channel:', channelData)
-          // TODO: Implement channel creation
-          setIsCreateChannelOpen(false)
+        onChannelCreated={(newChannel) => {
+          console.log('Channel created:', newChannel)
+          // Refresh the channels list
+          const fetchLists = async () => {
+            try {
+              const chRes = await api.get<ApiChannel[]>('/channels')
+              setApiChannels(Array.isArray(chRes.data?.data) ? chRes.data.data : [])
+            } catch (err) {
+              console.error('Failed to refresh channels', err)
+            }
+          }
+          fetchLists()
         }}
       />
 
