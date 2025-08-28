@@ -186,8 +186,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onSelectChat }) => {
               >
                 <span className="text-[hsl(var(--chat-text-muted))] text-sm">#</span>
                 <span className="flex-1 truncate text-xs">{channel.display_name || channel.name}</span>
-                {channel.unread_count && channel.unread_count > 0 && (
-                  <Badge variant="default" className="ml-auto text-xs h-4 px-1.5">
+                {channel.unread_count > 0 && (
+                  <Badge variant="default" className="ml-auto text-[10px] h-3.5 px-1 rounded-full min-w-[14px] flex items-center justify-center">
                     {channel.unread_count}
                   </Badge>
                 )}
@@ -248,8 +248,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onSelectChat }) => {
                     className="w-5 h-5"
                   />
                   <span className="flex-1 truncate text-xs">{conv.title}</span>
-                  {conv.unread_count && conv.unread_count > 0 && (
-                    <Badge variant="default" className="ml-auto text-xs h-4 px-1.5">
+                  {conv.unread_count > 0 && (
+                    <Badge variant="default" className="ml-auto text-[10px] h-3.5 px-1 rounded-full min-w-[14px] flex items-center justify-center">
                       {conv.unread_count}
                     </Badge>
                   )}

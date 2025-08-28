@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAppSelector } from '@/hooks/useAppSelector'
 import { useAppDispatch } from '@/hooks/useAppDispatch'
 import { verifyToken, getCurrentUser } from '@/store/slices/authSlice'
+import { LoadingScreen } from '@/components/ui/loading-screen'
 
 interface AuthGuardProps {
   children: React.ReactNode
@@ -18,18 +19,28 @@ export function AuthGuard({ children, requireAuth = true }: AuthGuardProps) {
   const [isChecking, setIsChecking] = useState(true)
 
   useEffect(() => {
+    const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+    const delayMs = (() => {
+      const v = Number(process.env.NEXT_PUBLIC_LOADING_DELAY_MS)
+      if (Number.isFinite(v) && v > 0) return v
+      // Default slow loading to help visualize UI
+      return 1200
+    })()
+
     const checkAuth = async () => {
       const token = localStorage.getItem('auth_token')
       
       // If no token and auth is required, redirect to login
       if (!token && requireAuth) {
         router.push('/login')
+        await delay(delayMs)
         setIsChecking(false)
         return
       }
 
       // If no token and auth is not required, allow access
       if (!token && !requireAuth) {
+        await delay(delayMs)
         setIsChecking(false)
         return
       }
@@ -51,6 +62,7 @@ export function AuthGuard({ children, requireAuth = true }: AuthGuardProps) {
         }
       }
 
+      await delay(delayMs)
       setIsChecking(false)
     }
 
@@ -71,14 +83,7 @@ export function AuthGuard({ children, requireAuth = true }: AuthGuardProps) {
 
   // Show loading while checking authentication
   if (isLoading || isChecking) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
-          <p className="text-white">Loading...</p>
-        </div>
-      </div>
-    )
+    return <LoadingScreen />
   }
 
   // Block rendering while we determine and trigger redirects
