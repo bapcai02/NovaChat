@@ -149,10 +149,11 @@ const userSlice = createSlice({
       })
       .addCase(fetchUsers.fulfilled, (state, action: PayloadAction<{ users: User[]; hasMore: boolean; currentPage: number }>) => {
         state.isLoading = false
+        const fetchedUsers = action.payload?.users ?? []
         if (action.payload.currentPage === 1) {
-          state.users = action.payload.users
+          state.users = fetchedUsers
         } else {
-          state.users.push(...action.payload.users)
+          state.users.push(...fetchedUsers)
         }
         state.hasMore = action.payload.hasMore
         state.currentPage = action.payload.currentPage
@@ -229,10 +230,11 @@ const userSlice = createSlice({
       })
       .addCase(searchUsers.fulfilled, (state, action: PayloadAction<{ users: User[]; hasMore: boolean; currentPage: number }>) => {
         state.isLoading = false
+        const fetchedUsers = action.payload?.users ?? []
         if (action.payload.currentPage === 1) {
-          state.users = action.payload.users
+          state.users = fetchedUsers
         } else {
-          state.users.push(...action.payload.users)
+          state.users.push(...fetchedUsers)
         }
         state.hasMore = action.payload.hasMore
         state.currentPage = action.payload.currentPage

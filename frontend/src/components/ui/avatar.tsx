@@ -13,10 +13,10 @@ export interface AvatarProps extends React.HTMLAttributes<HTMLDivElement> {
 const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
   ({ className, src, alt, fallback, size = "md", ...props }, ref) => {
     const sizeClasses = {
-      sm: "w-8 h-8 text-xs",
-      md: "w-10 h-10 text-sm",
-      lg: "w-12 h-12 text-base",
-      xl: "w-16 h-16 text-lg",
+      sm: "w-8 h-8 text-[10px]",
+      md: "w-10 h-10 text-xs",
+      lg: "w-12 h-12 text-sm",
+      xl: "w-16 h-16 text-base",
     }
 
     const gradientClasses = {

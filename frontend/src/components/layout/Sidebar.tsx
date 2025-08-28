@@ -245,7 +245,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onSelectChat }) => {
                   <Avatar 
                     fallback={conv.title} 
                     size="sm"
-                    className="w-5 h-5 text-xs"
+                    className="w-5 h-5"
                   />
                   <span className="flex-1 truncate text-xs">{conv.title}</span>
                   {conv.unread_count && conv.unread_count > 0 && (

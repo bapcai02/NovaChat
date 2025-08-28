@@ -57,6 +57,18 @@ export function AuthGuard({ children, requireAuth = true }: AuthGuardProps) {
     checkAuth()
   }, [dispatch, isAuthenticated, requireAuth, router])
 
+  // Post-check redirects must happen in an effect to avoid updating router during render
+  useEffect(() => {
+    if (isLoading || isChecking) return
+    if (requireAuth && !isAuthenticated) {
+      router.push('/login')
+      return
+    }
+    if (!requireAuth && isAuthenticated) {
+      router.replace('/chat')
+    }
+  }, [isAuthenticated, isLoading, isChecking, requireAuth, router])
+
   // Show loading while checking authentication
   if (isLoading || isChecking) {
     return (
@@ -69,16 +81,9 @@ export function AuthGuard({ children, requireAuth = true }: AuthGuardProps) {
     )
   }
 
-  // If auth is required but user is not authenticated, don't render children
-  if (requireAuth && !isAuthenticated) {
-    return null
-  }
-
-  // If auth is not required and user is authenticated, redirect to chat
-  if (!requireAuth && isAuthenticated) {
-    router.push('/chat')
-    return null
-  }
+  // Block rendering while we determine and trigger redirects
+  if (requireAuth && !isAuthenticated) return null
+  if (!requireAuth && isAuthenticated) return null
 
   return <>{children}</>
 }

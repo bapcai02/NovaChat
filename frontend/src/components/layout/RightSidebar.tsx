@@ -202,7 +202,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({ onClose, mode, onMod
                 )}
                 {threadReplies.map((reply) => (
                   <div key={reply.id} className="flex space-x-2">
-                    <Avatar fallback={reply.author} size="sm" className="w-5 h-5 text-xs" />
+                    <Avatar fallback={reply.author} size="sm" className="w-5 h-5" />
                     <div className="flex-1">
                       <div className="flex items-center space-x-1 mb-1">
                         <span className="text-xs font-medium">{reply.author}</span>
@@ -293,7 +293,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({ onClose, mode, onMod
                     <Avatar 
                       fallback={member.name} 
                       size="sm"
-                      className="w-6 h-6 text-xs"
+                      className="w-6 h-6"
                     />
                     <div className={cn(
                       "absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-[hsl(var(--chat-sidebar))]",
