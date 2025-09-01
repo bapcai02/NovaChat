@@ -7,6 +7,8 @@ import { VoiceRecorder } from '@/components/ui/voice-recorder'
 import { TypingIndicator } from '@/components/ui/typing-indicator'
 import { MessageRenderer } from '@/components/ui/message-renderer'
 import { cn } from '@/lib/utils'
+import { useAppSelector } from '@/hooks/useAppSelector'
+import { api } from '@/services/api'
 
 // Message formatting utilities
 const formatText = (text: string, format: 'bold' | 'italic' | 'code' | 'strike') => {
@@ -21,9 +23,15 @@ const formatText = (text: string, format: 'bold' | 'italic' | 'code' | 'strike')
   return `${prefix}${text}${suffix}`
 }
 
-export const MessageInput: React.FC = () => {
+interface MessageInputProps {
+  roomId?: string
+  onMessageSent?: () => void
+}
+
+export const MessageInput: React.FC<MessageInputProps> = ({ roomId = '1', onMessageSent }) => {
   const [message, setMessage] = useState('')
   const [isTyping, setIsTyping] = useState(false)
+  const [isSending, setIsSending] = useState(false)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [showVoiceRecorder, setShowVoiceRecorder] = useState(false)
   const [typingUsers, setTypingUsers] = useState<Array<{
@@ -34,13 +42,31 @@ export const MessageInput: React.FC = () => {
   }>>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  
+  const { user } = useAppSelector(state => state.auth)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (message.trim()) {
-      console.log('Sending message:', message)
-      setMessage('')
-      setIsTyping(false)
+    if (message.trim() && !isSending && user) {
+      setIsSending(true)
+      try {
+        console.log('Sending message to room:', roomId)
+        const response = await api.post('/messages', {
+          roomId,
+          senderId: user.id.toString(),
+          content: message.trim()
+        })
+        
+        console.log('Message sent successfully:', response.data)
+        setMessage('')
+        setIsTyping(false)
+        onMessageSent?.()
+      } catch (error) {
+        console.error('Failed to send message:', error)
+        // TODO: Show error notification
+      } finally {
+        setIsSending(false)
+      }
     }
   }
 
@@ -297,10 +323,10 @@ export const MessageInput: React.FC = () => {
             
             <Button
               type="submit"
-              disabled={!message.trim()}
+              disabled={!message.trim() || isSending}
               className={cn(
                 "h-8 px-3 text-xs transition-all duration-200",
-                message.trim()
+                message.trim() && !isSending
                   ? "chat-button"
                   : "bg-[hsl(var(--chat-message-hover))] text-[hsl(var(--chat-text-muted))] cursor-not-allowed"
               )}

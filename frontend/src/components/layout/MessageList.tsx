@@ -10,6 +10,7 @@ import { ReadReceipts } from '@/components/ui/read-receipts'
 import { MessageAnalytics } from '@/components/ui/message-analytics'
 import { MessageRenderer } from '@/components/ui/message-renderer'
 import { cn } from '@/lib/utils'
+import { getEcho } from '@/lib/echo'
 
 interface Message {
   id: string
@@ -246,6 +247,58 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, select
     }
   }, [messages])
 
+  // WebSocket connection and subscription
+  useEffect(() => {
+    if (!selectedChat) return
+
+    const roomId = selectedChat.id.toString()
+    console.log('Setting up WebSocket for room:', roomId)
+
+    try {
+      const echo = getEcho()
+      
+      // Subscribe to private channel
+      const channel = echo.private(`chat.${roomId}`)
+      
+      // Listen for ChatMessageSent events
+      channel.listen('.ChatMessageSent', (event: any) => {
+        console.log('Received WebSocket message:', event)
+        
+        const newMessage = {
+          id: event.messageId,
+          content: event.content,
+          type: 'text',
+          author: { 
+            name: `User ${event.senderId}`, 
+            username: `user${event.senderId}` 
+          },
+          timestamp: new Date(event.createdAt).toLocaleTimeString(),
+          reactions: [],
+          attachments: [],
+        }
+        
+        setMessages(prev => [...prev, newMessage])
+        setTimeout(scrollToBottom, 100)
+      })
+
+      // Connection status
+      echo.connector.pusher.connection.bind('connected', () => {
+        console.log('WebSocket connected for room:', roomId)
+      })
+
+      echo.connector.pusher.connection.bind('disconnected', () => {
+        console.log('WebSocket disconnected for room:', roomId)
+      })
+
+      return () => {
+        console.log('Cleaning up WebSocket for room:', roomId)
+        channel.unsubscribe()
+      }
+    } catch (error) {
+      console.error('Failed to setup WebSocket:', error)
+    }
+  }, [selectedChat])
+
   useEffect(() => {
     const fetchMessages = async () => {
       try {
@@ -253,27 +306,45 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, select
           setMessages([] as any)
           return
         }
-        const url = selectedChat.type === 'channel'
-          ? `/channels/${selectedChat.id}/messages`
-          : `/conversations/${selectedChat.id}/messages`
-        const res = await api.get<any[]>(url)
+        
+        console.log('Fetching messages for:', selectedChat)
+        const roomId = selectedChat.id.toString()
+        const res = await api.get<any[]>(`/messages/${roomId}`)
         const data = Array.isArray(res.data?.data) ? res.data.data : []
-        // Map backend shape to frontend mock shape minimally for render
+        
+        console.log('Loaded messages:', data.length)
+        
+        // Map backend shape to frontend shape
         const mapped = data.map((m: any, idx: number) => ({
           id: String(m.id ?? idx),
           content: m.type === 'voice' ? '' : (m.content || ''),
           type: m.type === 'voice' ? 'voice' : undefined,
           audioUrl: m.type === 'voice' ? 'data:audio/webm;base64,' : undefined,
           duration: m.duration,
-          author: { name: m.sender?.name || 'User', username: (m.sender?.name || 'user').toLowerCase() },
+          author: { 
+            name: m.sender?.name || 'User', 
+            username: (m.sender?.username || 'user').toLowerCase() 
+          },
           timestamp: new Date(m.created_at).toLocaleTimeString(),
-          reactions: (m.reactions || []).map((r: any) => ({ emoji: r.emoji, count: r.count || 1, users: [] })),
-          attachments: (m.attachments || []).map((a: any) => ({ type: a.type || 'file', url: a.url || '#', name: a.name || 'file', size: a.size })),
+          reactions: (m.reactions || []).map((r: any) => ({ 
+            emoji: r.emoji, 
+            count: r.count || 1, 
+            users: [] 
+          })),
+          attachments: (m.attachments || []).map((a: any) => ({ 
+            type: a.type || 'file', 
+            url: a.url || '#', 
+            name: a.name || 'file', 
+            size: a.size 
+          })),
         })) as any
+        
         setMessages(mapped)
         setTimeout(scrollToBottom, 0)
       } catch (e) {
         console.error('Failed to load messages', e)
+        // Fallback to empty array
+        setMessages([] as any)
       }
     }
     fetchMessages()

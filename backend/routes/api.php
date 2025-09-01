@@ -10,6 +10,7 @@ use App\Interfaces\Http\Controllers\ChannelMessageController;
 use App\Interfaces\Http\Controllers\ConversationMessageController;
 use App\Interfaces\Http\Controllers\ThreadController;
 use App\Interfaces\Http\Controllers\SearchController;
+use App\Http\Controllers\MessageController;
 
 /*
 |--------------------------------------------------------------------------
@@ -65,4 +66,12 @@ Route::middleware('auth:api')->group(function () {
     Route::get('search/users', [SearchController::class, 'searchUsers']);
     Route::get('search/files', [SearchController::class, 'searchFiles']);
 
+    // Realtime chat message
+    Route::post('messages', [MessageController::class, 'store']);
+    Route::get('messages/{roomId}', [MessageController::class, 'index']);
+
 });
+
+// Test route for messages (temporary)
+Route::get('/test/messages/{roomId}', [MessageController::class, 'index']);
+Route::post('/test/messages', [MessageController::class, 'store']);

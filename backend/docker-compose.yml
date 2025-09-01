@@ -53,6 +53,8 @@ services:
     volumes:
       - ./:/var/www/html
     command: php artisan websockets:serve
+    ports:
+      - "6001:6001"
     depends_on:
       - redis
       - app

@@ -199,7 +199,13 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onToggleRightSidebar, onThre
 
       {/* Input Area */}
                   <div className="bg-[hsl(217.2_32.6%_17.5%)] p-3 flex-shrink-0">
-        <MessageInput />
+        <MessageInput 
+          roomId={selectedChat?.id?.toString() ?? '1'} 
+          onMessageSent={() => {
+            // Trigger message list refresh
+            console.log('Message sent, should refresh message list')
+          }}
+        />
       </div>
     </div>
   )
