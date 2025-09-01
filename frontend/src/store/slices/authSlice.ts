@@ -99,12 +99,27 @@ const authSlice = createSlice({
       state.user = action.payload
       state.isAuthenticated = true
     },
+    loadUserFromStorage: (state) => {
+      if (typeof window !== 'undefined') {
+        const token = localStorage.getItem('auth_token')
+        const userStr = localStorage.getItem('user')
+        if (token && userStr) {
+          try {
+            state.user = JSON.parse(userStr)
+            state.token = token
+            state.isAuthenticated = true
+          } catch (error) {
+            console.error('Failed to parse user from localStorage:', error)
+          }
+        }
+      }
+    },
     updateUser: (state, action: PayloadAction<Partial<User>>) => {
       if (state.user) {
         state.user = { ...state.user, ...action.payload }
         localStorage.setItem('user', JSON.stringify(state.user))
       }
-    },
+    }
   },
   extraReducers: (builder) => {
     // Login
@@ -203,5 +218,5 @@ const authSlice = createSlice({
   },
 })
 
-export const { clearError, setUser, updateUser } = authSlice.actions
+export const { clearError, setUser, updateUser, loadUserFromStorage } = authSlice.actions
 export default authSlice.reducer

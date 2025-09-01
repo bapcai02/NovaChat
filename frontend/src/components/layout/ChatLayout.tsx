@@ -9,7 +9,12 @@ export const ChatLayout: React.FC = () => {
   const [isRightSidebarOpen, setIsRightSidebarOpen] = React.useState(true)
   const [selectedThread, setSelectedThread] = React.useState<{messageId: string, messageContent: string} | null>(null)
   const [sidebarMode, setSidebarMode] = React.useState<'info' | 'thread'>('info')
-  const [selectedChat, setSelectedChat] = React.useState<{ type: 'channel' | 'conversation', id: number, title: string } | null>(null)
+  const [selectedChat, setSelectedChat] = React.useState<{ type: 'channel' | 'conversation', id: number, title: string } | null>({ type: 'channel', id: 3, title: 'general' })
+
+  const handleChatSelect = (chat: { type: 'channel' | 'conversation', id: number, title: string }) => {
+    console.log('ChatLayout - selecting chat:', chat)
+    setSelectedChat(chat)
+  }
 
   const handleThreadSelect = (messageId: string, messageContent: string) => {
     setSelectedThread({messageId, messageContent})
@@ -35,7 +40,7 @@ export const ChatLayout: React.FC = () => {
   return (
     <div className="h-full w-full flex bg-[hsl(222.2_84%_4.9%)] text-[hsl(210_40%_98%)] overflow-hidden">
       {/* Left Sidebar */}
-      <Sidebar onSelectChat={(chat) => setSelectedChat(chat)} />
+      <Sidebar onSelectChat={handleChatSelect} />
       
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col min-w-0">

@@ -8,8 +8,10 @@ import { TypingIndicator } from '@/components/ui/typing-indicator'
 import { MessageRenderer } from '@/components/ui/message-renderer'
 import { cn } from '@/lib/utils'
 import { useAppSelector } from '@/hooks/useAppSelector'
+import { useAppDispatch } from '@/hooks/useAppDispatch'
 import { api } from '@/services/api'
 import { userStatusService } from '@/services/userStatusService'
+import { loadUserFromStorage, setUser } from '@/store/slices/authSlice'
 
 // Message formatting utilities
 const formatText = (text: string, format: 'bold' | 'italic' | 'code' | 'strike') => {
@@ -47,13 +49,32 @@ export const MessageInput: React.FC<MessageInputProps> = ({ roomId = '1', onMess
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   
   const { user } = useAppSelector(state => state.auth)
+  const dispatch = useAppDispatch()
+
+  // Auto load user from localStorage on mount
+  useEffect(() => {
+    if (!user && typeof window !== 'undefined') {
+      const token = localStorage.getItem('auth_token')
+      const userStr = localStorage.getItem('user')
+      if (token && userStr) {
+        try {
+          const userData = JSON.parse(userStr)
+          dispatch(setUser(userData))
+          console.log('Auto-loaded user from localStorage:', userData)
+        } catch (error) {
+          console.error('Failed to parse user from localStorage:', error)
+        }
+      }
+    }
+  }, [user, dispatch])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    console.log('handleSubmit - user:', user, 'message:', message.trim())
     if (message.trim() && !isSending && user) {
       setIsSending(true)
       try {
-        console.log('Sending message to room:', roomId)
+        console.log('Sending message to API...')
         const response = await api.post('/messages', {
           roomId,
           senderId: user.id.toString(),
@@ -61,15 +82,40 @@ export const MessageInput: React.FC<MessageInputProps> = ({ roomId = '1', onMess
         })
         
         console.log('Message sent successfully:', response.data)
+        
+        // Show success feedback
+        const submitButton = document.querySelector('button[type="submit"]')
+        if (submitButton) {
+          const originalText = submitButton.innerHTML
+          submitButton.innerHTML = '✓ Sent'
+          submitButton.classList.add('bg-green-600')
+          setTimeout(() => {
+            submitButton.innerHTML = originalText
+            submitButton.classList.remove('bg-green-600')
+          }, 2000)
+        }
+        
         setMessage('')
         setIsTyping(false)
         onMessageSent?.()
-      } catch (error) {
+        
+        // Force refresh message list after sending
+        setTimeout(() => {
+          console.log('Triggering message list refresh...')
+          onMessageSent?.()
+        }, 100)
+      } catch (error: any) {
         console.error('Failed to send message:', error)
         // TODO: Show error notification
       } finally {
         setIsSending(false)
       }
+    } else {
+      console.log('Cannot send - conditions not met:', {
+        hasMessage: !!message.trim(),
+        isSending,
+        hasUser: !!user
+      })
     }
   }
 

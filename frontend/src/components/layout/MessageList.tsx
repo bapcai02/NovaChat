@@ -232,9 +232,10 @@ const mockMessages: Message[] = [
 interface MessageListProps {
   onThreadSelect: (messageId: string, messageContent: string) => void
   selectedChat?: { type: 'channel' | 'conversation', id: number } | null
+  refreshTrigger?: number
 }
 
-export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, selectedChat }) => {
+export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, selectedChat, refreshTrigger }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [showReactionPicker, setShowReactionPicker] = useState<string | null>(null)
   const [showAnalytics, setShowAnalytics] = useState<string | null>(null)
@@ -286,7 +287,12 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, select
           attachments: [],
         }
         
-        setMessages(prev => [...prev, newMessage])
+        console.log('Adding new message to list:', newMessage)
+        setMessages(prev => {
+          const updated = [...prev, newMessage]
+          console.log('Updated messages list:', updated.length, 'messages')
+          return updated
+        })
         setTimeout(scrollToBottom, 100)
       })
 
@@ -333,17 +339,19 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, select
   useEffect(() => {
     const fetchMessages = async () => {
       try {
+        console.log('fetchMessages - selectedChat:', selectedChat)
         if (!selectedChat) {
+          console.log('No selectedChat, setting empty messages')
           setMessages([] as any)
           return
         }
         
-        console.log('Fetching messages for:', selectedChat)
         const roomId = selectedChat.id.toString()
+        console.log('Fetching messages for room:', roomId)
         const res = await api.get<any[]>(`/messages/${roomId}`)
         const data = Array.isArray(res.data?.data) ? res.data.data : []
-        
-        console.log('Loaded messages:', data.length)
+        console.log('Fetched messages:', data.length, 'messages')
+        console.log('Latest message:', data[data.length - 1])
         
         // Map backend shape to frontend shape
         const mapped = data.map((m: any, idx: number) => ({
@@ -379,7 +387,7 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, select
       }
     }
     fetchMessages()
-  }, [selectedChat])
+  }, [selectedChat, refreshTrigger])
 
   const handleThreadClick = (messageId: string, messageContent: string) => {
     onThreadSelect(messageId, messageContent)
@@ -474,6 +482,7 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, select
 
   return (
     <div className="p-4 space-y-3">
+      {console.log('Rendering messages:', messages.length, 'messages')}
       {messages.map((message, index) => (
         <div key={message.id} className="message-enter">
           <div className="flex space-x-3 group hover:bg-[hsl(var(--chat-message-hover))] rounded-lg p-1.5 -m-1.5 transition-colors duration-200">

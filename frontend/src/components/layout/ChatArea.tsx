@@ -23,6 +23,10 @@ import { api } from '@/services/api'
 
 export const ChatArea: React.FC<ChatAreaProps> = ({ onToggleRightSidebar, onThreadSelect, selectedChat }) => {
   const [currentChannel, setCurrentChannel] = useState('general')
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
+  
+  // Default selectedChat for testing if none is provided
+  const defaultSelectedChat = selectedChat || { type: 'channel' as const, id: 3, title: 'general' }
   const [isMuted, setIsMuted] = useState(false)
   useEffect(() => {
     if (selectedChat) {
@@ -194,16 +198,20 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onToggleRightSidebar, onThre
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto min-h-0 scrollbar-thin scrollbar-thumb-[hsl(var(--chat-border))] scrollbar-track-transparent hover:scrollbar-thumb-[hsl(var(--chat-text-muted))]">
-        <MessageList onThreadSelect={onThreadSelect} selectedChat={selectedChat ? { type: selectedChat.type, id: selectedChat.id } : null} />
+        <MessageList 
+          onThreadSelect={onThreadSelect} 
+          selectedChat={defaultSelectedChat ? { type: defaultSelectedChat.type, id: defaultSelectedChat.id } : null}
+          refreshTrigger={refreshTrigger}
+        />
       </div>
 
       {/* Input Area */}
                   <div className="bg-[hsl(217.2_32.6%_17.5%)] p-3 flex-shrink-0">
         <MessageInput 
-          roomId={selectedChat?.id?.toString() ?? '1'} 
+          roomId={defaultSelectedChat?.id?.toString() ?? '3'} 
           onMessageSent={() => {
             // Trigger message list refresh
-            console.log('Message sent, should refresh message list')
+            setRefreshTrigger(prev => prev + 1)
           }}
         />
       </div>

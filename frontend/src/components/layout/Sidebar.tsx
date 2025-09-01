@@ -62,7 +62,14 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ onSelectChat }) => {
-  const [activeChannel, setActiveChannel] = useState('1')
+  const [activeChannel, setActiveChannel] = useState('3') // Default to general channel
+  
+  // Debug: log when onSelectChat is called
+  const handleSelectChat = (chat: { type: 'channel' | 'conversation', id: number, title: string }) => {
+    console.log('Sidebar - selecting chat:', chat)
+    setActiveChannel(chat.id.toString())
+    onSelectChat?.(chat)
+  }
   const [showDirectMessages, setShowDirectMessages] = useState(true)
   const [isCreateChannelOpen, setIsCreateChannelOpen] = useState(false)
   const [isCreateDirectMessageOpen, setIsCreateDirectMessageOpen] = useState(false)
@@ -175,12 +182,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ onSelectChat }) => {
                 key={channel.id}
                 onClick={() => {
                   setActiveChannel(String(channel.id))
-                  onSelectChat?.({ type: 'channel', id: channel.id, title: channel.display_name || channel.name })
+                  handleSelectChat({ type: 'channel', id: channel.id, title: channel.display_name || channel.name })
                 }}
                 className={cn(
-                  "w-full flex items-center space-x-2 px-2 py-1.5 rounded-md text-left transition-colors duration-200",
+                  "w-full flex items-center space-x-2 px-2 py-1.5 rounded-md text-left transition-colors duration-200 relative",
                   activeChannel === String(channel.id)
-                    ? "bg-[hsl(var(--chat-accent-light))] text-[hsl(var(--chat-accent))]"
+                    ? "bg-[hsl(var(--chat-accent-light))] text-[hsl(var(--chat-accent))] font-semibold border-l-2 border-[hsl(var(--chat-accent))]"
                     : "hover:bg-[hsl(var(--chat-message-hover))] text-[hsl(var(--chat-text))]"
                 )}
               >
@@ -233,12 +240,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ onSelectChat }) => {
                   key={conv.id}
                   onClick={() => {
                     setActiveChannel(String(conv.id))
-                    onSelectChat?.({ type: 'conversation', id: conv.id, title: conv.title })
+                    handleSelectChat({ type: 'conversation', id: conv.id, title: conv.title })
                   }}
                   className={cn(
-                    "w-full flex items-center space-x-2 px-2 py-1.5 rounded-md text-left transition-colors duration-200",
+                    "w-full flex items-center space-x-2 px-2 py-1.5 rounded-md text-left transition-colors duration-200 relative",
                     activeChannel === String(conv.id)
-                      ? "bg-[hsl(var(--chat-accent-light))] text-[hsl(var(--chat-accent))]"
+                      ? "bg-[hsl(var(--chat-accent-light))] text-[hsl(var(--chat-accent))] font-semibold border-l-2 border-[hsl(var(--chat-accent))]"
                       : "hover:bg-[hsl(var(--chat-message-hover))] text-[hsl(var(--chat-text))]"
                   )}
                 >

@@ -10,7 +10,7 @@ let echo: any | null = null
 export const getEcho = (): any => {
   if (echo) return echo
 
-  const key = (process.env.NEXT_PUBLIC_PUSHER_APP_KEY || process.env.NEXT_PUBLIC_PUSHER_KEY || 'app-key') as string
+  const key = (process.env.NEXT_PUBLIC_PUSHER_APP_KEY || process.env.NEXT_PUBLIC_PUSHER_KEY || 'localkey') as string
   const cluster = (process.env.NEXT_PUBLIC_PUSHER_APP_CLUSTER || process.env.NEXT_PUBLIC_WS_CLUSTER || 'mt1') as string
   const host = process.env.NEXT_PUBLIC_WS_HOST || 'localhost'
   const port = Number(process.env.NEXT_PUBLIC_WS_PORT || 6001)
