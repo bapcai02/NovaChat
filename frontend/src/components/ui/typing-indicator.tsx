@@ -1,7 +1,7 @@
 "use client"
 
-import React, { useState, useEffect } from 'react'
-import { Avatar } from './avatar'
+import React from 'react'
+import { Avatar } from '@/components/ui/avatar'
 import { cn } from '@/lib/utils'
 
 interface TypingUser {
@@ -17,34 +17,22 @@ interface TypingIndicatorProps {
 }
 
 export const TypingIndicator: React.FC<TypingIndicatorProps> = ({ users, className }) => {
-  const [dotAnimation, setDotAnimation] = useState(0)
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setDotAnimation(prev => (prev + 1) % 3)
-    }, 500)
-
-    return () => clearInterval(interval)
-  }, [])
-
   if (users.length === 0) return null
 
   const getTypingText = () => {
     if (users.length === 1) {
-      return `${users[0].name} is typing`
+      return `${users[0].name} is typing...`
     } else if (users.length === 2) {
-      return `${users[0].name} and ${users[1].name} are typing`
-    } else if (users.length === 3) {
-      return `${users[0].name}, ${users[1].name}, and ${users[2].name} are typing`
+      return `${users[0].name} and ${users[1].name} are typing...`
     } else {
-      return `${users[0].name} and ${users.length - 1} others are typing`
+      return `${users[0].name} and ${users.length - 1} others are typing...`
     }
   }
 
   return (
-    <div className={cn("flex items-center space-x-2 p-2 text-xs text-[hsl(var(--chat-text-muted))]", className)}>
-      {/* User Avatars */}
-      <div className="flex -space-x-1">
+    <div className={cn("flex items-center space-x-3 p-3", className)}>
+      {/* User avatars */}
+      <div className="flex -space-x-2">
         {users.slice(0, 3).map((user, index) => (
           <Avatar
             key={user.id}
@@ -54,35 +42,22 @@ export const TypingIndicator: React.FC<TypingIndicatorProps> = ({ users, classNa
           />
         ))}
         {users.length > 3 && (
-          <div className="w-6 h-6 bg-[hsl(var(--chat-accent))] rounded-full border-2 border-[hsl(var(--chat-bg))] flex items-center justify-center text-xs text-white font-medium">
+          <div className="w-8 h-8 bg-[hsl(var(--chat-text-muted))] rounded-full border-2 border-[hsl(var(--chat-bg))] flex items-center justify-center text-xs text-white">
             +{users.length - 3}
           </div>
         )}
       </div>
 
-      {/* Typing Text */}
-      <span className="flex-1">{getTypingText()}</span>
-
-      {/* Animated Dots */}
-      <div className="flex items-center space-x-1">
-        <div
-          className={cn(
-            "w-1 h-1 bg-[hsl(var(--chat-text-muted))] rounded-full transition-all duration-300",
-            dotAnimation >= 0 && "animate-pulse"
-          )}
-        />
-        <div
-          className={cn(
-            "w-1 h-1 bg-[hsl(var(--chat-text-muted))] rounded-full transition-all duration-300",
-            dotAnimation >= 1 && "animate-pulse"
-          )}
-        />
-        <div
-          className={cn(
-            "w-1 h-1 bg-[hsl(var(--chat-text-muted))] rounded-full transition-all duration-300",
-            dotAnimation >= 2 && "animate-pulse"
-          )}
-        />
+      {/* Typing indicator */}
+      <div className="flex-1">
+        <div className="text-xs text-[hsl(var(--chat-text-muted))] mb-1">
+          {getTypingText()}
+        </div>
+        <div className="flex space-x-1">
+          <div className="typing-dot w-2 h-2 bg-[hsl(var(--chat-text-muted))] rounded-full animate-bounce"></div>
+          <div className="typing-dot w-2 h-2 bg-[hsl(var(--chat-text-muted))] rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+          <div className="typing-dot w-2 h-2 bg-[hsl(var(--chat-text-muted))] rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+        </div>
       </div>
     </div>
   )

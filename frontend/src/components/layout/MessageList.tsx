@@ -11,6 +11,9 @@ import { MessageAnalytics } from '@/components/ui/message-analytics'
 import { MessageRenderer } from '@/components/ui/message-renderer'
 import { cn } from '@/lib/utils'
 import { getEcho } from '@/lib/echo'
+import { MessageReactions } from '@/components/ui/message-reactions'
+import { MessageEditor } from '@/components/ui/message-editor'
+import { TypingIndicator } from '@/components/ui/typing-indicator'
 
 interface Message {
   id: string
@@ -364,6 +367,72 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, select
     setShowReactionPicker(null)
   }
 
+  const handleReactionAdd = (messageId: string, emoji: string) => {
+    console.log(`Adding reaction ${emoji} to message ${messageId}`)
+    // TODO: Call API to add reaction
+    setMessages(prev => prev.map(msg => {
+      if (msg.id === messageId) {
+        const existingReaction = msg.reactions?.find(r => r.emoji === emoji)
+        if (existingReaction) {
+          return {
+            ...msg,
+            reactions: msg.reactions?.map(r => 
+              r.emoji === emoji 
+                ? { ...r, count: r.count + 1, isReacted: true }
+                : r
+            )
+          }
+        } else {
+          return {
+            ...msg,
+            reactions: [...(msg.reactions || []), { emoji, count: 1, users: [], isReacted: true }]
+          }
+        }
+      }
+      return msg
+    }))
+  }
+
+  const handleReactionRemove = (messageId: string, emoji: string) => {
+    console.log(`Removing reaction ${emoji} from message ${messageId}`)
+    // TODO: Call API to remove reaction
+    setMessages(prev => prev.map(msg => {
+      if (msg.id === messageId) {
+        return {
+          ...msg,
+          reactions: msg.reactions?.map(r => 
+            r.emoji === emoji 
+              ? { ...r, count: Math.max(0, r.count - 1), isReacted: false }
+              : r
+          ).filter(r => r.count > 0)
+        }
+      }
+      return msg
+    }))
+  }
+
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null)
+
+  const handleEditMessage = (messageId: string, newContent: string) => {
+    console.log(`Editing message ${messageId}: ${newContent}`)
+    // TODO: Call API to update message
+    setMessages(prev => prev.map(msg => {
+      if (msg.id === messageId) {
+        return {
+          ...msg,
+          content: newContent,
+          isEdited: true
+        }
+      }
+      return msg
+    }))
+    setEditingMessageId(null)
+  }
+
+  const handleCancelEdit = () => {
+    setEditingMessageId(null)
+  }
+
   if (!selectedChat) {
     return (
       <div className="h-full w-full flex items-center justify-center text-[hsl(var(--chat-text-muted))]">
@@ -407,7 +476,15 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, select
               </div>
               
                                    {/* Message Content */}
-              {message.type === 'voice' ? (
+              {editingMessageId === message.id ? (
+                <MessageEditor
+                  messageId={message.id}
+                  initialContent={message.content}
+                  onSave={handleEditMessage}
+                  onCancel={handleCancelEdit}
+                  className="mb-1"
+                />
+              ) : message.type === 'voice' ? (
                 <div className="mb-1">
                   <VoicePlayer
                     audioUrl={message.audioUrl}
@@ -450,19 +527,13 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, select
               )}
               
               {/* Reactions */}
-              {message.reactions && message.reactions.length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-2">
-                  {message.reactions.map((reaction, idx) => (
-                    <button
-                      key={idx}
-                      className="flex items-center space-x-1 px-2 py-1 bg-[hsl(var(--chat-message-bg))] border border-[hsl(var(--chat-border))] rounded-full hover:bg-[hsl(var(--chat-message-hover))] transition-colors text-xs"
-                    >
-                      <span>{reaction.emoji}</span>
-                      <span className="text-[hsl(var(--chat-text-muted))]">{reaction.count}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
+              <MessageReactions
+                reactions={message.reactions || []}
+                messageId={message.id}
+                onReactionAdd={handleReactionAdd}
+                onReactionRemove={handleReactionRemove}
+                className="mt-2"
+              />
 
               {/* Thread Summary */}
               {message.thread && (
@@ -542,6 +613,16 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, select
                   </svg>
                   <span className="text-xs">Reply</span>
                 </button>
+                <button 
+                  onClick={() => setEditingMessageId(message.id)}
+                  className="flex items-center space-x-1 px-2 py-1 hover:bg-[hsl(var(--chat-message-hover))] rounded text-[hsl(var(--chat-text-muted))] hover:text-[hsl(var(--chat-text))] transition-colors"
+                  title="Edit message"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  <span className="text-xs">Edit</span>
+                </button>
                 <button className="p-1 hover:bg-[hsl(var(--chat-message-hover))] rounded text-[hsl(var(--chat-text-muted))] hover:text-[hsl(var(--chat-text))] transition-colors">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
@@ -563,20 +644,12 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, select
       ))}
       
       {/* Typing indicator */}
-      <div className="flex space-x-3">
-        <Avatar fallback="Someone" size="md" className="flex-shrink-0" />
-        <div className="flex-1">
-          <div className="flex items-baseline space-x-2 mb-1">
-            <span className="font-semibold text-[hsl(var(--chat-text))]">Someone</span>
-            <span className="text-xs text-[hsl(var(--chat-text-muted))]">typing...</span>
-          </div>
-          <div className="flex space-x-1">
-            <div className="typing-dot w-2 h-2 bg-[hsl(var(--chat-text-muted))] rounded-full"></div>
-            <div className="typing-dot w-2 h-2 bg-[hsl(var(--chat-text-muted))] rounded-full"></div>
-            <div className="typing-dot w-2 h-2 bg-[hsl(var(--chat-text-muted))] rounded-full"></div>
-          </div>
-        </div>
-      </div>
+      <TypingIndicator
+        users={[
+          { id: '1', name: 'John Doe', username: 'johndoe' },
+          { id: '2', name: 'Jane Smith', username: 'janesmith' }
+        ]}
+      />
       
       {/* Read Receipts for last message */}
       {messages.length > 0 && (
