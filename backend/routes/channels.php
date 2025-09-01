@@ -21,3 +21,8 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
 Broadcast::channel('chat.{roomId}', function ($user, $roomId) {
     return !is_null($user);
 });
+
+// User status channel
+Broadcast::channel('user.status.{userId}', function ($user, $userId) {
+    return (int) $user->id === (int) $userId;
+});

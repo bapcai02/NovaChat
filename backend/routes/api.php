@@ -11,6 +11,7 @@ use App\Interfaces\Http\Controllers\ConversationMessageController;
 use App\Interfaces\Http\Controllers\ThreadController;
 use App\Interfaces\Http\Controllers\SearchController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\UserStatusController;
 
 /*
 |--------------------------------------------------------------------------
@@ -69,6 +70,12 @@ Route::middleware('auth:api')->group(function () {
     // Realtime chat message
     Route::post('messages', [MessageController::class, 'store']);
     Route::get('messages/{roomId}', [MessageController::class, 'index']);
+
+    // User status and typing
+    Route::post('user/status', [UserStatusController::class, 'updateStatus']);
+    Route::post('user/typing/start', [UserStatusController::class, 'startTyping']);
+    Route::post('user/typing/stop', [UserStatusController::class, 'stopTyping']);
+    Route::get('user/online', [UserStatusController::class, 'getOnlineUsers']);
 
 });
 

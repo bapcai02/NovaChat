@@ -9,6 +9,7 @@ import { MessageRenderer } from '@/components/ui/message-renderer'
 import { cn } from '@/lib/utils'
 import { useAppSelector } from '@/hooks/useAppSelector'
 import { api } from '@/services/api'
+import { userStatusService } from '@/services/userStatusService'
 
 // Message formatting utilities
 const formatText = (text: string, format: 'bold' | 'italic' | 'code' | 'strike') => {
@@ -40,6 +41,8 @@ export const MessageInput: React.FC<MessageInputProps> = ({ roomId = '1', onMess
     username: string
     avatar?: string
   }>>([])
+  const [isLocalTyping, setIsLocalTyping] = useState(false)
+  const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   
@@ -77,23 +80,61 @@ export const MessageInput: React.FC<MessageInputProps> = ({ roomId = '1', onMess
     }
   }
 
-  // Simulate typing indicator for demo
-  useEffect(() => {
-    const mockTypingUsers = [
-      { id: '1', name: 'Jane Smith', username: 'janesmith' },
-      { id: '2', name: 'Mike Johnson', username: 'mikejohnson' }
-    ]
+  // Handle typing events
+  const handleTyping = async () => {
+    if (!user) return
 
-    const interval = setInterval(() => {
-      if (Math.random() > 0.7) {
-        setTypingUsers(mockTypingUsers.slice(0, Math.floor(Math.random() * 3)))
-      } else {
-        setTypingUsers([])
+    if (!isLocalTyping) {
+      setIsLocalTyping(true)
+      try {
+        await userStatusService.startTyping(roomId)
+      } catch (error) {
+        console.error('Failed to send typing event:', error)
       }
-    }, 3000)
+    }
 
-    return () => clearInterval(interval)
-  }, [])
+    // Clear existing timeout
+    if (typingTimeout) {
+      clearTimeout(typingTimeout)
+    }
+
+    // Set new timeout to stop typing
+    const timeout = setTimeout(async () => {
+      setIsLocalTyping(false)
+      try {
+        await userStatusService.stopTyping(roomId)
+      } catch (error) {
+        console.error('Failed to send stop typing event:', error)
+      }
+    }, 3000) // Stop typing after 3 seconds of inactivity
+
+    setTypingTimeout(timeout)
+  }
+
+  const handleStopTyping = async () => {
+    if (!user || !isLocalTyping) return
+
+    setIsLocalTyping(false)
+    if (typingTimeout) {
+      clearTimeout(typingTimeout)
+      setTypingTimeout(null)
+    }
+
+    try {
+      await userStatusService.stopTyping(roomId)
+    } catch (error) {
+      console.error('Failed to send stop typing event:', error)
+    }
+  }
+
+  // Cleanup typing timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (typingTimeout) {
+        clearTimeout(typingTimeout)
+      }
+    }
+  }, [typingTimeout])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     // Formatting shortcuts (only when not in input)
@@ -284,9 +325,11 @@ export const MessageInput: React.FC<MessageInputProps> = ({ roomId = '1', onMess
               onChange={(e) => {
                 setMessage(e.target.value)
                 setIsTyping(e.target.value.length > 0)
+                handleTyping() // Send typing event
               }}
               onKeyPress={handleKeyPress}
               onKeyDown={handleKeyDown}
+              onBlur={handleStopTyping} // Stop typing when focus is lost
               placeholder="Type your message..."
               className="w-full min-h-[20px] max-h-32 resize-none bg-transparent border-none outline-none text-[hsl(var(--chat-text))] placeholder-[hsl(var(--chat-text-muted))] text-xs leading-relaxed"
               rows={1}

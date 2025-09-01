@@ -5,6 +5,7 @@ import { Avatar } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ThreadMessageInput } from './ThreadMessageInput'
+import { OnlineUsers } from '@/components/ui/online-users'
 import { cn } from '@/lib/utils'
 import { api } from '@/services/api'
 
@@ -110,9 +111,9 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({ onClose, mode, onMod
   }
 
   return (
-            <div className="w-96 flex-shrink-0 bg-[hsl(217.2_32.6%_17.5%)] flex flex-col overflow-hidden">
-              {/* Header */}
-        <div className="p-3 flex-shrink-0">
+    <div className="w-96 flex-shrink-0 bg-[hsl(217.2_32.6%_17.5%)] flex flex-col overflow-hidden">
+      {/* Header */}
+      <div className="p-3 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             {mode === 'thread' && (
@@ -275,57 +276,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({ onClose, mode, onMod
             </div>
           </div>
         ) : mode === 'info' && activeTab === 'members' ? (
-          <div className="p-3 space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold">Members ({mockMembers.length})</h3>
-              <Button variant="outline" size="sm" className="h-6 text-xs px-2">
-                <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                Invite
-              </Button>
-            </div>
-            
-            <div className="space-y-1">
-              {mockMembers.map((member) => (
-                <div key={member.id} className="flex items-center space-x-2 p-1.5 rounded-md hover:bg-[hsl(var(--chat-message-hover))] transition-colors">
-                  <div className="relative">
-                    <Avatar 
-                      fallback={member.name} 
-                      size="sm"
-                      className="w-6 h-6"
-                    />
-                    <div className={cn(
-                      "absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-[hsl(var(--chat-sidebar))]",
-                      getStatusColor(member.status)
-                    )} />
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center space-x-1">
-                      <span className="text-xs font-medium truncate">{member.name}</span>
-                      {getRoleBadge(member.role)}
-                    </div>
-                    <div className="flex items-center space-x-1 text-xs text-[hsl(var(--chat-text-muted))]">
-                      <span>@{member.username}</span>
-                      {member.lastSeen && (
-                        <>
-                          <span>•</span>
-                          <span>{member.lastSeen}</span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <Button variant="ghost" size="icon" className="h-5 w-5">
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                    </svg>
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </div>
+          <OnlineUsers roomId="1" />
         ) : mode === 'info' && activeTab === 'files' ? (
           <div className="p-4 space-y-4">
             <div className="flex items-center justify-between">

@@ -239,6 +239,12 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, select
   const [showReactionPicker, setShowReactionPicker] = useState<string | null>(null)
   const [showAnalytics, setShowAnalytics] = useState<string | null>(null)
   const [messages, setMessages] = useState<typeof mockMessages>([] as any)
+  const [typingUsers, setTypingUsers] = useState<Array<{
+    id: string
+    name: string
+    username: string
+    avatar?: string
+  }>>([])
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -282,6 +288,28 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, select
         
         setMessages(prev => [...prev, newMessage])
         setTimeout(scrollToBottom, 100)
+      })
+
+      // Listen for UserTyping events
+      channel.listen('.UserTyping', (event: any) => {
+        console.log('User started typing:', event)
+        setTypingUsers(prev => {
+          const existingUser = prev.find(u => u.id === event.userId)
+          if (!existingUser) {
+            return [...prev, {
+              id: event.userId,
+              name: event.userName,
+              username: event.userName
+            }]
+          }
+          return prev
+        })
+      })
+
+      // Listen for UserStoppedTyping events
+      channel.listen('.UserStoppedTyping', (event: any) => {
+        console.log('User stopped typing:', event)
+        setTypingUsers(prev => prev.filter(u => u.id !== event.userId))
       })
 
       // Connection status
@@ -644,12 +672,11 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, select
       ))}
       
       {/* Typing indicator */}
-      <TypingIndicator
-        users={[
-          { id: '1', name: 'John Doe', username: 'johndoe' },
-          { id: '2', name: 'Jane Smith', username: 'janesmith' }
-        ]}
-      />
+      {typingUsers.length > 0 && (
+        <TypingIndicator
+          users={typingUsers}
+        />
+      )}
       
       {/* Read Receipts for last message */}
       {messages.length > 0 && (
