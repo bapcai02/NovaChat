@@ -26,3 +26,9 @@ Broadcast::channel('chat.{roomId}', function ($user, $roomId) {
 Broadcast::channel('user.status.{userId}', function ($user, $userId) {
     return (int) $user->id === (int) $userId;
 });
+
+
+
+
+
+

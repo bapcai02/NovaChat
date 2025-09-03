@@ -55,14 +55,25 @@ class MessageController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        Log::info('MessageController@store called with data:', $request->all());
+        
         $data = $request->validate([
             'roomId' => 'required|string',
             'senderId' => 'required|string',
             'content' => 'required|string',
         ]);
 
+        Log::info('MessageController@store validation passed:', $data);
+
         try {
             $createdAt = Carbon::now()->format('Y-m-d H:i:s');
+            Log::info('MessageController@store inserting message to database:', [
+                'channel_id' => $data['roomId'],
+                'user_id' => $data['senderId'],
+                'content' => $data['content'],
+                'created_at' => $createdAt
+            ]);
+            
             $messageId = (string) DB::table('messages')->insertGetId([
                 'channel_id' => $data['roomId'], // Use channel_id instead of room_id
                 'user_id' => $data['senderId'], // Use user_id instead of sender_id
@@ -76,6 +87,8 @@ class MessageController extends Controller
                 'updated_at' => $createdAt,
             ]);
 
+            Log::info('MessageController@store message saved successfully with ID:', ['messageId' => $messageId]);
+
             $payload = [
                 'roomId' => (string) $data['roomId'],
                 'messageId' => (string) $messageId,
@@ -84,14 +97,20 @@ class MessageController extends Controller
                 'createdAt' => (string) $createdAt,
             ];
 
+            Log::info('MessageController@store broadcasting event with payload:', $payload);
             broadcast(new ChatMessageSent($payload))->toOthers();
+            Log::info('MessageController@store broadcast event sent successfully');
 
+            Log::info('MessageController@store returning success response');
             return response()->json([
                 'success' => true,
                 'data' => $payload,
             ], 201);
         } catch (\Throwable $e) {
-            Log::error('MessageController@store failed: ' . $e->getMessage());
+            Log::error('MessageController@store failed: ' . $e->getMessage(), [
+                'exception' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to send message',

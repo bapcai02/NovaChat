@@ -266,13 +266,17 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, select
 
     try {
       const echo = getEcho()
+      console.log('Echo instance:', echo)
+      console.log('Echo connection state:', echo.connector.pusher.connection.state)
       
       // Subscribe to private channel
       const channel = echo.private(`chat.${roomId}`)
+      console.log('Channel subscription created for:', `chat.${roomId}`)
       
       // Listen for ChatMessageSent events
+      console.log('Setting up listener for .ChatMessageSent event')
       channel.listen('.ChatMessageSent', (event: any) => {
-        console.log('Received WebSocket message:', event)
+        console.log('🎉 RECEIVED WebSocket message:', event)
         
         const newMessage = {
           id: event.messageId,

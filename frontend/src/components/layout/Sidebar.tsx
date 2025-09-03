@@ -62,13 +62,30 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ onSelectChat }) => {
-  const [activeChannel, setActiveChannel] = useState('3') // Default to general channel
+  const [activeChannel, setActiveChannel] = useState<string | null>('3') // Default to general channel
+  const [activeConversation, setActiveConversation] = useState<string | null>(null)
   
-  // Debug: log when onSelectChat is called
-  const handleSelectChat = (chat: { type: 'channel' | 'conversation', id: number, title: string }) => {
-    console.log('Sidebar - selecting chat:', chat)
-    setActiveChannel(chat.id.toString())
-    onSelectChat?.(chat)
+  // Separate handlers for channels and conversations
+  const handleSelectChannel = (channel: { id: number, name: string, display_name?: string }) => {
+    console.log('Sidebar - selecting channel:', channel)
+    setActiveChannel(channel.id.toString())
+    setActiveConversation(null) // Clear conversation selection
+    onSelectChat?.({ 
+      type: 'channel', 
+      id: channel.id, 
+      title: channel.display_name || channel.name 
+    })
+  }
+
+  const handleSelectConversation = (conv: { id: number, title: string }) => {
+    console.log('Sidebar - selecting conversation:', conv)
+    setActiveConversation(conv.id.toString())
+    setActiveChannel(null) // Clear channel selection
+    onSelectChat?.({ 
+      type: 'conversation', 
+      id: conv.id, 
+      title: conv.title 
+    })
   }
   const [showDirectMessages, setShowDirectMessages] = useState(true)
   const [isCreateChannelOpen, setIsCreateChannelOpen] = useState(false)
@@ -180,18 +197,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ onSelectChat }) => {
             {(apiChannels ?? []).map((channel) => (
               <button
                 key={channel.id}
-                onClick={() => {
-                  setActiveChannel(String(channel.id))
-                  handleSelectChat({ type: 'channel', id: channel.id, title: channel.display_name || channel.name })
-                }}
+                onClick={() => handleSelectChannel(channel)}
                 className={cn(
                   "w-full flex items-center space-x-2 px-2 py-1.5 rounded-md text-left transition-colors duration-200 relative",
-                  activeChannel === String(channel.id)
-                    ? "bg-[hsl(var(--chat-accent-light))] text-[hsl(var(--chat-accent))] font-semibold border-l-2 border-[hsl(var(--chat-accent))]"
+                  activeChannel === String(channel.id) && activeConversation === null
+                    ? "bg-blue-100 text-blue-700 font-semibold border-l-2 border-blue-500"
                     : "hover:bg-[hsl(var(--chat-message-hover))] text-[hsl(var(--chat-text))]"
                 )}
               >
-                <span className="text-[hsl(var(--chat-text-muted))] text-sm">#</span>
+                <span className="text-blue-500 text-sm">#</span>
                 <span className="flex-1 truncate text-xs">{channel.display_name || channel.name}</span>
                 {channel.unread_count > 0 && (
                   <Badge variant="default" className="ml-auto text-[10px] h-3.5 px-1 rounded-full min-w-[14px] flex items-center justify-center">
@@ -238,14 +252,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ onSelectChat }) => {
               {(conversations ?? []).map((conv) => (
                 <button
                   key={conv.id}
-                  onClick={() => {
-                    setActiveChannel(String(conv.id))
-                    handleSelectChat({ type: 'conversation', id: conv.id, title: conv.title })
-                  }}
+                  onClick={() => handleSelectConversation(conv)}
                   className={cn(
                     "w-full flex items-center space-x-2 px-2 py-1.5 rounded-md text-left transition-colors duration-200 relative",
-                    activeChannel === String(conv.id)
-                      ? "bg-[hsl(var(--chat-accent-light))] text-[hsl(var(--chat-accent))] font-semibold border-l-2 border-[hsl(var(--chat-accent))]"
+                    activeConversation === String(conv.id) && activeChannel === null
+                      ? "bg-green-100 text-green-700 font-semibold border-l-2 border-green-500"
                       : "hover:bg-[hsl(var(--chat-message-hover))] text-[hsl(var(--chat-text))]"
                   )}
                 >
@@ -254,7 +265,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onSelectChat }) => {
                     size="sm"
                     className="w-5 h-5"
                   />
-                  <span className="flex-1 truncate text-xs">{conv.title}</span>
+                  <span className="flex-1 truncate text-xs">
+                    <span className="text-green-600 font-medium">[DM]</span> {conv.title}
+                  </span>
                   {conv.unread_count > 0 && (
                     <Badge variant="default" className="ml-auto text-[10px] h-3.5 px-1 rounded-full min-w-[14px] flex items-center justify-center">
                       {conv.unread_count}
