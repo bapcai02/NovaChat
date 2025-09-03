@@ -4,13 +4,17 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use App\Domain\User\Repositories\UserRepositoryInterface;
-use App\Domain\User\Repositories\UserRepository;
+use App\Infrastructure\Repositories\UserRepository;
 use App\Domain\Channel\Repositories\ChannelRepositoryInterface;
 use App\Domain\Channel\Repositories\ChannelRepository;
 use App\Domain\Message\Repositories\ConversationRepositoryInterface;
 use App\Domain\Message\Repositories\ConversationRepository;
 use App\Domain\Message\Repositories\ThreadRepositoryInterface;
 use App\Domain\Message\Repositories\ThreadRepository;
+use App\Domain\Message\Repositories\MessageRepositoryInterface;
+use App\Infrastructure\Repositories\MessageRepository;
+use App\Domain\Team\Repositories\TeamRepositoryInterface;
+use App\Infrastructure\Repositories\TeamRepository;
 use App\Domain\Search\Repositories\SearchRepositoryInterface;
 use App\Domain\Search\Repositories\SearchRepository;
 
@@ -25,6 +29,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(ChannelRepositoryInterface::class, ChannelRepository::class);
         $this->app->bind(ConversationRepositoryInterface::class, ConversationRepository::class);
         $this->app->bind(ThreadRepositoryInterface::class, ThreadRepository::class);
+        $this->app->bind(MessageRepositoryInterface::class, MessageRepository::class);
+        $this->app->bind(TeamRepositoryInterface::class, TeamRepository::class);
         $this->app->bind(SearchRepositoryInterface::class, SearchRepository::class);
     }
 

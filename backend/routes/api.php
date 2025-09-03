@@ -10,9 +10,9 @@ use App\Interfaces\Http\Controllers\ChannelMessageController;
 use App\Interfaces\Http\Controllers\ConversationMessageController;
 use App\Interfaces\Http\Controllers\ThreadController;
 use App\Interfaces\Http\Controllers\SearchController;
-use App\Http\Controllers\MessageController;
-use App\Http\Controllers\UserStatusController;
-use App\Http\Controllers\TeamController;
+use App\Interfaces\Http\Controllers\MessageController;
+use App\Interfaces\Http\Controllers\UserStatusController;
+use App\Interfaces\Http\Controllers\TeamController;
 
 /*
 |--------------------------------------------------------------------------

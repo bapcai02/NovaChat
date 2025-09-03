@@ -2,120 +2,93 @@
 
 namespace App\Domain\Message\Entities;
 
-use App\Domain\User\Entities\User;
-
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
-
-use App\Domain\Channel\Entities\Channel;
-use App\Domain\Message\Entities\Message;
-use App\Domain\Message\Entities\MessageReaction;
-use App\Domain\Message\Entities\MessageAttachment;
-use App\Domain\Message\Entities\MessageEdit;
-use App\Domain\Message\Entities\Mention;
-use App\Domain\File\Entities\File;
-
-
-class Message extends Model
+class Message
 {
-    use HasFactory, SoftDeletes;
+    public function __construct(
+        private int $id,
+        private int $userId,
+        private string $content,
+        private string $type = 'text',
+        private ?int $channelId = null,
+        private ?int $conversationId = null,
+        private ?int $parentId = null,
+        private ?string $metadata = null,
+        private bool $isEdited = false,
+        private ?string $editedAt = null,
+        private bool $isPinned = false,
+        private bool $isDeleted = false,
+        private string $createdAt,
+        private string $updatedAt
+    ) {}
 
-    protected $fillable = [
-        'channel_id',
-        'user_id',
-        'parent_id',
-        'content',
-        'type',
-        'metadata',
-        'is_edited',
-        'edited_at',
-        'is_pinned',
-        'is_deleted',
-    ];
-
-    protected $casts = [
-        'metadata' => 'array',
-        'is_edited' => 'boolean',
-        'edited_at' => 'datetime',
-        'is_pinned' => 'boolean',
-        'is_deleted' => 'boolean',
-    ];
-
-    // Relationships
-    public function channel()
+    public function getId(): int
     {
-        return $this->belongsTo(App\Domain\Channel\Entities\Channel::class);
+        return $this->id;
     }
 
-    public function user()
+    public function getUserId(): int
     {
-        return $this->belongsTo(User::class);
+        return $this->userId;
     }
 
-    public function parent()
+    public function getContent(): string
     {
-        return $this->belongsTo(Message::class, 'parent_id');
+        return $this->content;
     }
 
-    public function replies()
+    public function getType(): string
     {
-        return $this->hasMany(Message::class, 'parent_id');
+        return $this->type;
     }
 
-    public function reactions()
+    public function getChannelId(): ?int
     {
-        return $this->hasMany(MessageReaction::class);
+        return $this->channelId;
     }
 
-    public function files()
+    public function getConversationId(): ?int
     {
-        return $this->hasMany(File::class);
+        return $this->conversationId;
     }
 
-    public function attachments()
+    public function getParentId(): ?int
     {
-        return $this->hasMany(MessageAttachment::class);
+        return $this->parentId;
     }
 
-    public function edits()
+    public function getMetadata(): ?string
     {
-        return $this->hasMany(MessageEdit::class);
+        return $this->metadata;
     }
 
-    public function mentions()
+    public function isEdited(): bool
     {
-        return $this->hasMany(Mention::class);
+        return $this->isEdited;
     }
 
-    // Scopes
-    public function scopeByChannel($query, $channelId)
+    public function getEditedAt(): ?string
     {
-        return $query->where('channel_id', $channelId);
+        return $this->editedAt;
     }
 
-    public function scopeByUser($query, $userId)
+    public function isPinned(): bool
     {
-        return $query->where('user_id', $userId);
+        return $this->isPinned;
     }
 
-    public function scopePinned($query)
+    public function isDeleted(): bool
     {
-        return $query->where('is_pinned', true);
+        return $this->isDeleted;
     }
 
-    public function scopeNotDeleted($query)
+    public function getCreatedAt(): string
     {
-        return $query->where('is_deleted', false);
+        return $this->createdAt;
     }
 
-    public function scopeThreadReplies($query)
+    public function getUpdatedAt(): string
     {
-        return $query->whereNotNull('parent_id');
+        return $this->updatedAt;
     }
 
-    public function scopeMainMessages($query)
-    {
-        return $query->whereNull('parent_id');
-    }
 }

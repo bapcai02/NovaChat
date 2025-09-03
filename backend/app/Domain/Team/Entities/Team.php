@@ -2,110 +2,75 @@
 
 namespace App\Domain\Team\Entities;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
-
-use User;
-use App\Domain\Team\Entities\TeamMember;
-use App\Domain\Channel\Entities\Channel;
-use App\Domain\Team\Entities\Invitation;
-use App\Domain\Integration\Entities\Webhook;
-
-
-class Team extends Model
+class Team
 {
-    use HasFactory, SoftDeletes;
+    public function __construct(
+        private int $id,
+        private string $name,
+        private ?string $description = null,
+        private ?string $avatar = null,
+        private ?string $domain = null,
+        private ?string $settings = null,
+        private bool $isPublic = false,
+        private bool $isArchived = false,
+        private int $createdBy,
+        private string $createdAt,
+        private string $updatedAt
+    ) {}
 
-    protected $fillable = [
-        'name',
-        'display_name',
-        'description',
-        'avatar',
-        'domain',
-        'settings',
-        'is_public',
-        'is_archived',
-        'owner_id',
-    ];
-
-    protected $casts = [
-        'settings' => 'array',
-        'is_public' => 'boolean',
-        'is_archived' => 'boolean',
-    ];
-
-    // Relationships
-    public function owner()
+    public function getId(): int
     {
-        return $this->belongsTo(App\Domain\User\Entities\User::class, 'owner_id');
+        return $this->id;
     }
 
-    public function members()
+    public function getName(): string
     {
-        return $this->hasMany(TeamMember::class);
+        return $this->name;
     }
 
-    public function channels()
+    public function getDescription(): ?string
     {
-        return $this->hasMany(Channel::class);
+        return $this->description;
     }
 
-    public function users()
+    public function getAvatar(): ?string
     {
-        return $this->belongsToMany(User::class, 'team_members');
+        return $this->avatar;
     }
 
-    public function webhooks()
+    public function getDomain(): ?string
     {
-        return $this->hasMany(Webhook::class);
+        return $this->domain;
     }
 
-    public function invitations()
+    public function getSettings(): ?string
     {
-        return $this->morphMany(Invitation::class, 'invitable');
+        return $this->settings;
     }
 
-    // Scopes
-    public function scopePublic($query)
+    public function isPublic(): bool
     {
-        return $query->where('is_public', true);
+        return $this->isPublic;
     }
 
-    public function scopePrivate($query)
+    public function isArchived(): bool
     {
-        return $query->where('is_public', false);
+        return $this->isArchived;
     }
 
-    public function scopeActive($query)
+    public function getCreatedBy(): int
     {
-        return $query->where('is_archived', false);
+        return $this->createdBy;
     }
 
-    public function scopeByDomain($query, $domain)
+    public function getCreatedAt(): string
     {
-        return $query->where('domain', $domain);
+        return $this->createdAt;
     }
 
-    // Helper methods
-    public function isMember($userId)
+    public function getUpdatedAt(): string
     {
-        return $this->members()->where('user_id', $userId)->exists();
+        return $this->updatedAt;
     }
 
-    public function getMemberRole($userId)
-    {
-        $member = $this->members()->where('user_id', $userId)->first();
-        return $member ? $member->role : null;
-    }
-
-    public function getMemberCount()
-    {
-        return $this->members()->where('status', 'active')->count();
-    }
-
-    public function getChannelCount()
-    {
-        return $this->channels()->where('is_archived', false)->count();
-    }
 }

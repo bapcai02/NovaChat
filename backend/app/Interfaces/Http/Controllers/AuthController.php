@@ -6,16 +6,20 @@ use App\Http\Controllers\Controller;
 use App\Application\Services\AuthApplicationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use App\Interfaces\Request\AuthRequest;
 
 class AuthController extends Controller
 {
-    public function __construct(private AuthApplicationService $authApp)
+    private AuthApplicationService $authApp;
+
+    public function __construct(AuthApplicationService $authApp)
     {
+        $this->authApp = $authApp;
     }
 
-    public function register(Request $request): JsonResponse
+    public function register(AuthRequest $request): JsonResponse
     {
-        [$ok, $code, $payload] = $this->authApp->register($request->all());
+        [$ok, $code, $payload] = $this->authApp->register($request->validated());
         return response()->json([
             'success' => $ok,
             'data' => $ok ? [
@@ -27,9 +31,9 @@ class AuthController extends Controller
         ], $code);
     }
 
-    public function login(Request $request): JsonResponse
+    public function login(AuthRequest $request): JsonResponse
     {
-        [$ok, $code, $payload] = $this->authApp->login($request->all());
+        [$ok, $code, $payload] = $this->authApp->login($request->validated());
         return response()->json([
             'success' => $ok,
             'data' => $ok ? [

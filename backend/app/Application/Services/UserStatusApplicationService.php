@@ -1,34 +1,31 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Application\Services;
 
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
+use App\Domain\User\Repositories\UserRepositoryInterface;
 use App\Domain\User\Events\UserStatusChanged;
 use App\Domain\Message\Events\UserTyping;
 use App\Domain\Message\Events\UserStoppedTyping;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
-class UserStatusController extends Controller
+class UserStatusApplicationService
 {
-    public function updateStatus(Request $request): JsonResponse
+    private UserRepositoryInterface $userRepository;
+
+    public function __construct(UserRepositoryInterface $userRepository)
     {
-        $data = $request->validate([
-            'status' => 'required|string|in:online,away,busy,offline',
-            'statusMessage' => 'nullable|string|max:100',
-            'roomId' => 'required|string'
-        ]);
+        $this->userRepository = $userRepository;
+    }
 
+    /**
+     * Update user status
+     */
+    public function updateStatus(int $userId, array $data): array
+    {
         try {
-            $user = Auth::user();
-            if (!$user) {
-                return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
-            }
-
             // Update user status in database
-            DB::table('users')->where('id', $user->id)->update([
+            DB::table('users')->where('id', $userId)->update([
                 'is_online' => $data['status'] === 'online',
                 'status_message' => $data['statusMessage'] ?? ucfirst($data['status']),
                 'last_seen_at' => now(),
@@ -37,7 +34,7 @@ class UserStatusController extends Controller
 
             // Update or create user_statuses record
             DB::table('user_statuses')->updateOrInsert(
-                ['user_id' => $user->id],
+                ['user_id' => $userId],
                 [
                     'status' => $data['status'],
                     'status_message' => $data['statusMessage'] ?? ucfirst($data['status']),
@@ -46,110 +43,115 @@ class UserStatusController extends Controller
                 ]
             );
 
+            // Get user info for broadcast
+            $user = $this->userRepository->findById($userId);
+            if (!$user) {
+                return ['success' => false, 'message' => 'User not found'];
+            }
+
             // Broadcast status change
             $payload = [
-                'userId' => (string) $user->id,
+                'userId' => (string) $userId,
                 'roomId' => $data['roomId'],
                 'status' => $data['status'],
                 'statusMessage' => $data['statusMessage'] ?? ucfirst($data['status']),
-                'userName' => $user->name,
-                'userName' => $user->username,
+                'userName' => $user->getName(),
+                'username' => $user->getUsername(),
                 'timestamp' => now()->toISOString()
             ];
 
             broadcast(new UserStatusChanged($payload))->toOthers();
 
-            return response()->json([
+            return [
                 'success' => true,
                 'data' => $payload
-            ]);
+            ];
 
         } catch (\Throwable $e) {
-            Log::error('UserStatusController@updateStatus failed: ' . $e->getMessage());
-            return response()->json([
+            Log::error('UserStatusApplicationService@updateStatus failed: ' . $e->getMessage());
+            return [
                 'success' => false,
                 'message' => 'Failed to update status'
-            ], 500);
+            ];
         }
     }
 
-    public function startTyping(Request $request): JsonResponse
+    /**
+     * Start typing indicator
+     */
+    public function startTyping(int $userId, string $roomId): array
     {
-        $data = $request->validate([
-            'roomId' => 'required|string'
-        ]);
-
         try {
-            $user = Auth::user();
+            $user = $this->userRepository->findById($userId);
             if (!$user) {
-                return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+                return ['success' => false, 'message' => 'User not found'];
             }
 
             $payload = [
-                'roomId' => $data['roomId'],
-                'userId' => (string) $user->id,
-                'userName' => $user->name,
-                'userName' => $user->username,
+                'roomId' => $roomId,
+                'userId' => (string) $userId,
+                'userName' => $user->getName(),
+                'username' => $user->getUsername(),
                 'timestamp' => now()->toISOString()
             ];
 
             broadcast(new UserTyping($payload))->toOthers();
 
-            return response()->json([
+            return [
                 'success' => true,
                 'data' => $payload
-            ]);
+            ];
 
         } catch (\Throwable $e) {
-            Log::error('UserStatusController@startTyping failed: ' . $e->getMessage());
-            return response()->json([
+            Log::error('UserStatusApplicationService@startTyping failed: ' . $e->getMessage());
+            return [
                 'success' => false,
                 'message' => 'Failed to send typing event'
-            ], 500);
+            ];
         }
     }
 
-    public function stopTyping(Request $request): JsonResponse
+    /**
+     * Stop typing indicator
+     */
+    public function stopTyping(int $userId, string $roomId): array
     {
-        $data = $request->validate([
-            'roomId' => 'required|string'
-        ]);
-
         try {
-            $user = Auth::user();
+            $user = $this->userRepository->findById($userId);
             if (!$user) {
-                return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+                return ['success' => false, 'message' => 'User not found'];
             }
 
             $payload = [
-                'roomId' => $data['roomId'],
-                'userId' => (string) $user->id,
-                'userName' => $user->name,
-                'userName' => $user->username,
+                'roomId' => $roomId,
+                'userId' => (string) $userId,
+                'userName' => $user->getName(),
+                'username' => $user->getUsername(),
                 'timestamp' => now()->toISOString()
             ];
 
             broadcast(new UserStoppedTyping($payload))->toOthers();
 
-            return response()->json([
+            return [
                 'success' => true,
                 'data' => $payload
-            ]);
+            ];
 
         } catch (\Throwable $e) {
-            Log::error('UserStatusController@stopTyping failed: ' . $e->getMessage());
-            return response()->json([
+            Log::error('UserStatusApplicationService@stopTyping failed: ' . $e->getMessage());
+            return [
                 'success' => false,
                 'message' => 'Failed to send stop typing event'
-            ], 500);
+            ];
         }
     }
 
-    public function getOnlineUsers(Request $request): JsonResponse
+    /**
+     * Get online users
+     */
+    public function getOnlineUsers(): array
     {
         try {
-            $roomId = $request->query('roomId', '1');
-            
             // Get online users from database
             $onlineUsers = DB::table('users')
                 ->where('is_online', true)
@@ -167,17 +169,17 @@ class UserStatusController extends Controller
                     ];
                 });
 
-            return response()->json([
+            return [
                 'success' => true,
                 'data' => $onlineUsers
-            ]);
+            ];
 
         } catch (\Throwable $e) {
-            Log::error('UserStatusController@getOnlineUsers failed: ' . $e->getMessage());
-            return response()->json([
+            Log::error('UserStatusApplicationService@getOnlineUsers failed: ' . $e->getMessage());
+            return [
                 'success' => false,
                 'message' => 'Failed to get online users'
-            ], 500);
+            ];
         }
     }
 }
