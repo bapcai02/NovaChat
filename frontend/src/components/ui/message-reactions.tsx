@@ -38,7 +38,6 @@ export const MessageReactions: React.FC<MessageReactionsProps> = ({
     } else {
       onReactionAdd?.(messageId, emoji)
     }
-    setShowReactionPicker(false)
   }
 
   const handleQuickReaction = (emoji: string) => {
@@ -46,7 +45,7 @@ export const MessageReactions: React.FC<MessageReactionsProps> = ({
   }
 
   return (
-    <div className={cn("hidden group-hover:flex items-center space-x-1", className)}>
+    <div className={cn("flex items-center space-x-1", className)}>
       {/* Existing reactions */}
       {reactions.map((reaction, index) => (
         <button

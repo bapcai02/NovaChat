@@ -75,6 +75,10 @@ Route::middleware('auth:api')->group(function () {
     // Realtime chat message
     Route::post('messages', [MessageController::class, 'store']);
     Route::get('messages/{roomId}', [MessageController::class, 'index']);
+    
+    // Message reactions
+    Route::post('messages/{messageId}/reactions', [MessageController::class, 'addReaction']);
+    Route::delete('messages/{messageId}/reactions/{emoji}', [MessageController::class, 'removeReaction']);
 
     // User status and typing
     Route::post('user/status', [UserStatusController::class, 'updateStatus']);

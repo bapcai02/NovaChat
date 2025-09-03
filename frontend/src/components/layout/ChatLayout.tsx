@@ -9,7 +9,7 @@ export const ChatLayout: React.FC = () => {
   const [isRightSidebarOpen, setIsRightSidebarOpen] = React.useState(true)
   const [selectedThread, setSelectedThread] = React.useState<{messageId: string, messageContent: string} | null>(null)
   const [sidebarMode, setSidebarMode] = React.useState<'info' | 'thread'>('info')
-  const [selectedChat, setSelectedChat] = React.useState<{ type: 'channel' | 'conversation', id: number, title: string } | null>({ type: 'channel', id: 3, title: 'general' })
+  const [selectedChat, setSelectedChat] = React.useState<{ type: 'channel' | 'conversation', id: number, title: string } | null>(null)
 
   const handleChatSelect = (chat: { type: 'channel' | 'conversation', id: number, title: string }) => {
     setSelectedChat(chat)

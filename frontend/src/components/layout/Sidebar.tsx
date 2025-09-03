@@ -72,7 +72,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onSelectChat }) => {
   const [teams, setTeams] = useState<Team[]>([])
   const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null)
 
-  const [activeChannel, setActiveChannel] = useState<string | null>('3') // Default to general channel
+  const [activeChannel, setActiveChannel] = useState<string | null>(null) // No default selection
   const [activeConversation, setActiveConversation] = useState<string | null>(null)
   
   // Separate handlers for channels and conversations

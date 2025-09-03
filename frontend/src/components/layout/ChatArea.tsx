@@ -26,8 +26,8 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onToggleRightSidebar, onThre
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   const messagesContainerRef = React.useRef<HTMLDivElement>(null)
   
-  // Default selectedChat for testing if none is provided
-  const defaultSelectedChat = selectedChat || { type: 'channel' as const, id: 3, title: 'general' }
+  // No default selectedChat - user must select manually
+  const defaultSelectedChat = selectedChat
   const [isMuted, setIsMuted] = useState(false)
   useEffect(() => {
     if (selectedChat) {
@@ -199,24 +199,36 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onToggleRightSidebar, onThre
 
       {/* Messages (ivory background only for chat content) */}
       <div ref={messagesContainerRef} className="flex-1 overflow-y-auto min-h-0 bg-[#faf7f2] scrollbar-thin scrollbar-thumb-[hsl(var(--chat-border))] scrollbar-track-transparent hover:scrollbar-thumb-[hsl(var(--chat-text-muted))]">
-        <MessageList 
-          onThreadSelect={onThreadSelect} 
-          selectedChat={defaultSelectedChat ? { type: defaultSelectedChat.type, id: defaultSelectedChat.id } : null}
-          refreshTrigger={refreshTrigger}
-          scrollContainerRef={messagesContainerRef}
-        />
+        {defaultSelectedChat ? (
+          <MessageList 
+            onThreadSelect={onThreadSelect} 
+            selectedChat={{ type: defaultSelectedChat.type, id: defaultSelectedChat.id }}
+            refreshTrigger={refreshTrigger}
+            scrollContainerRef={messagesContainerRef}
+          />
+        ) : (
+          <div className="flex-1 flex items-center justify-center text-neutral-500">
+            <div className="text-center">
+              <div className="text-6xl mb-4">💬</div>
+              <h2 className="text-xl font-semibold mb-2">Welcome to NovaChat</h2>
+              <p className="text-sm">Select a channel or conversation to start chatting</p>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Input Area */}
-                  <div className="bg-[hsl(217.2_32.6%_17.5%)] p-3 flex-shrink-0">
-        <MessageInput 
-          roomId={defaultSelectedChat?.id?.toString() ?? '3'} 
-          onMessageSent={() => {
-            // Trigger message list refresh
-            setRefreshTrigger(prev => prev + 1)
-          }}
-        />
-      </div>
+      {/* Input Area - only show when chat is selected */}
+      {defaultSelectedChat && (
+        <div className="bg-[hsl(217.2_32.6%_17.5%)] p-3 flex-shrink-0">
+          <MessageInput 
+            roomId={defaultSelectedChat.id.toString()} 
+            onMessageSent={() => {
+              // Trigger message list refresh
+              setRefreshTrigger(prev => prev + 1)
+            }}
+          />
+        </div>
+      )}
     </div>
   )
 }

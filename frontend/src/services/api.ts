@@ -36,6 +36,7 @@ apiClient.interceptors.response.use(
     // Handle 401 Unauthorized - but don't redirect automatically
     // Let the components handle the redirect
     if (error.response?.status === 401) {
+      console.log('Token invalid, clearing localStorage')
       localStorage.removeItem('auth_token')
       localStorage.removeItem('user')
       // Don't redirect here, let the component handle it

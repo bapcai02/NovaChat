@@ -54,6 +54,7 @@ interface MessageListProps {
 
 export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, selectedChat, refreshTrigger, scrollContainerRef }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const channelRef = useRef<any>(null)
   const [showReactionPicker, setShowReactionPicker] = useState<string | null>(null)
   const [showAnalytics, setShowAnalytics] = useState<string | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
@@ -97,6 +98,7 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, select
         ? `chat.dm.${roomId}`
         : `chat.channel.${roomId}`
       const channel = echo.private(channelName)
+      channelRef.current = channel
       
       // Listen for ChatMessageSent events
       channel.listen('.ChatMessageSent', (event: any) => {        
@@ -140,6 +142,109 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, select
       // Listen for UserStoppedTyping events
       channel.listen('.UserStoppedTyping', (event: any) => {
         setTypingUsers(prev => prev.filter(u => u.id !== event.userId))
+      })
+
+      // Client whispers for reactions (WS-only UI sync)
+      channel.listenForWhisper('reaction:add', (data: any) => {
+        setMessages(prev => prev.map(msg => {
+          if (msg.id === data.messageId) {
+            const existingReactions = msg.reactions || []
+            const existing = existingReactions.find(r => r.emoji === data.emoji)
+            if (existing) {
+              return {
+                ...msg,
+                reactions: existingReactions.map(r => r.emoji === data.emoji ? { ...r, count: r.count + 1 } : r)
+              }
+            }
+            return { ...msg, reactions: [...existingReactions, { emoji: data.emoji, count: 1, users: [] }] }
+          }
+          return msg
+        }))
+      })
+
+      channel.listenForWhisper('reaction:remove', (data: any) => {
+        setMessages(prev => prev.map(msg => {
+          if (msg.id === data.messageId) {
+            const existingReactions = msg.reactions || []
+            const existing = existingReactions.find(r => r.emoji === data.emoji)
+            if (!existing) return msg
+            if (existing.count > 1) {
+              return {
+                ...msg,
+                reactions: existingReactions.map(r => r.emoji === data.emoji ? { ...r, count: r.count - 1 } : r)
+              }
+            }
+            return { ...msg, reactions: existingReactions.filter(r => r.emoji !== data.emoji) }
+          }
+          return msg
+        }))
+      })
+
+      // Listen for reaction added
+      channel.listen('.MessageReactionAdded', (data: any) => {
+        console.log('Received reaction added:', data)
+        setMessages(prev => 
+          prev.map(msg => {
+            if (msg.id === data.messageId) {
+              const existingReactions = msg.reactions || []
+              const existingReaction = existingReactions.find(r => r.emoji === data.emoji)
+              
+              if (existingReaction) {
+                // If reaction exists, increment count
+                return {
+                  ...msg,
+                  reactions: existingReactions.map(r => 
+                    r.emoji === data.emoji 
+                      ? { ...r, count: r.count + 1, isReacted: data.userId === '1' }
+                      : r
+                  )
+                }
+              } else {
+                // If reaction doesn't exist, add new one
+                return {
+                  ...msg,
+                  reactions: [
+                    ...existingReactions,
+                    { emoji: data.emoji, count: 1, users: ['User ' + data.userId], isReacted: data.userId === '1' }
+                  ]
+                }
+              }
+            }
+            return msg
+          })
+        )
+      })
+
+      // Listen for reaction removed
+      channel.listen('.MessageReactionRemoved', (data: any) => {
+        console.log('Received reaction removed:', data)
+        setMessages(prev => 
+          prev.map(msg => {
+            if (msg.id === data.messageId) {
+              const existingReactions = msg.reactions || []
+              const existingReaction = existingReactions.find(r => r.emoji === data.emoji)
+              
+              if (existingReaction && existingReaction.count > 1) {
+                // If reaction exists and count > 1, decrement count
+                return {
+                  ...msg,
+                  reactions: existingReactions.map(r => 
+                    r.emoji === data.emoji 
+                      ? { ...r, count: r.count - 1, isReacted: false }
+                      : r
+                  )
+                }
+              } else if (existingReaction && existingReaction.count === 1) {
+                // If reaction exists and count = 1, remove it
+                return {
+                  ...msg,
+                  reactions: existingReactions.filter(r => r.emoji !== data.emoji)
+                }
+              }
+            }
+            return msg
+          })
+        )
       })
 
       // Connection status
@@ -271,51 +376,82 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, select
     onThreadSelect(messageId, messageContent)
   }
 
-  const handleReactionSelect = (messageId: string, emoji: string) => {
-    // TODO: Add reaction to message
+  const handleReactionSelect = async (messageId: string, emoji: string) => {
+    // Optimistic local update
+    setMessages(prev => prev.map(msg => {
+      if (msg.id === messageId) {
+        const existingReactions = msg.reactions || []
+        const existing = existingReactions.find(r => r.emoji === emoji)
+        if (existing) {
+          return {
+            ...msg,
+            reactions: existingReactions.map(r => r.emoji === emoji ? { ...r, count: r.count + 1 } : r)
+          }
+        }
+        return { ...msg, reactions: [...existingReactions, { emoji, count: 1, users: [] }] }
+      }
+      return msg
+    }))
+
+    // Save to database via API (for persistence)
+    try {
+      await api.post(`/messages/${messageId}/reactions`, { emoji })
+    } catch (error) {
+      console.error('Failed to save reaction to database:', error)
+    }
+
+    // Whisper to others via WS for real-time sync
+    try { channelRef.current?.whisper('reaction:add', { messageId, emoji }) } catch {}
+
     setShowReactionPicker(null)
   }
 
-  const handleReactionAdd = (messageId: string, emoji: string) => {
-    // TODO: Call API to add reaction
+  const handleReactionAdd = async (messageId: string, emoji: string) => {
+    // Optimistic local update
     setMessages(prev => prev.map(msg => {
       if (msg.id === messageId) {
-        const existingReaction = msg.reactions?.find(r => r.emoji === emoji)
-        if (existingReaction) {
-          return {
-            ...msg,
-            reactions: msg.reactions?.map(r => 
-              r.emoji === emoji 
-                ? { ...r, count: r.count + 1, isReacted: true }
-                : r
-            )
-          }
-        } else {
-          return {
-            ...msg,
-            reactions: [...(msg.reactions || []), { emoji, count: 1, users: [], isReacted: true }]
-          }
+        const existing = msg.reactions?.find(r => r.emoji === emoji)
+        if (existing) {
+          return { ...msg, reactions: msg.reactions?.map(r => r.emoji === emoji ? { ...r, count: r.count + 1 } : r) }
         }
+        return { ...msg, reactions: [...(msg.reactions || []), { emoji, count: 1, users: [] }] }
       }
       return msg
     }))
+    
+    // Save to database via API (for persistence)
+    try {
+      await api.post(`/messages/${messageId}/reactions`, { emoji })
+    } catch (error) {
+      console.error('Failed to save reaction to database:', error)
+    }
+    
+    try { channelRef.current?.whisper('reaction:add', { messageId, emoji }) } catch {}
   }
 
-  const handleReactionRemove = (messageId: string, emoji: string) => {
-    // TODO: Call API to remove reaction
+  const handleReactionRemove = async (messageId: string, emoji: string) => {
+    // Optimistic local update
     setMessages(prev => prev.map(msg => {
       if (msg.id === messageId) {
-        return {
-          ...msg,
-          reactions: msg.reactions?.map(r => 
-            r.emoji === emoji 
-              ? { ...r, count: Math.max(0, r.count - 1), isReacted: false }
-              : r
-          ).filter(r => r.count > 0)
+        const reactions = msg.reactions || []
+        const target = reactions.find(r => r.emoji === emoji)
+        if (!target) return msg
+        if (target.count > 1) {
+          return { ...msg, reactions: reactions.map(r => r.emoji === emoji ? { ...r, count: r.count - 1 } : r) }
         }
+        return { ...msg, reactions: reactions.filter(r => r.emoji !== emoji) }
       }
       return msg
     }))
+    
+    // Save to database via API (for persistence)
+    try {
+      await api.delete(`/messages/${messageId}/reactions/${encodeURIComponent(emoji)}`)
+    } catch (error) {
+      console.error('Failed to remove reaction from database:', error)
+    }
+    
+    try { channelRef.current?.whisper('reaction:remove', { messageId, emoji }) } catch {}
   }
 
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null)
@@ -520,9 +656,9 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, select
                         </div>
                         
                         <div className="grid grid-cols-8 gap-2 max-h-64 overflow-y-auto">
-                          {['😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '🙃', '😉', '😊', '😇', '🥰', '😍', '🤩', '😘', '😗', '😚', '😙', '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭', '🤫', '🤔', '🤐', '🤨', '😐', '😑', '😶', '😏', '😒', '🙄', '😬', '🤥', '😔', '😪', '🤤', '😴', '😷', '🤒', '🤕', '🤢', '🤮', '🤧', '🥵', '🥶', '🥴', '😵', '🤯', '🤠', '🥳', '😎', '🤓', '🧐', '👍', '👎', '👌', '✌️', '🤞', '🤟', '🤘', '🤙', '👈', '👉', '👆', '👇', '☝️', '✋', '🤚', '🖐', '🖖', '👋', '🤝', '👏', '🙌', '👐', '🤲', '🤜', '🤛', '✊', '👊', '👎', '👌', '✌️', '🤞', '🤟', '🤘', '🤙', '👈', '👉', '👆', '👇', '☝️', '✋', '🤚', '🖐', '🖖', '👋', '🤝', '👏', '🙌', '👐', '🤲', '🤜', '🤛', '✊', '👊'].map((emoji) => (
+                          {['😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '🙃', '😉', '😊', '😇', '🥰', '😍', '🤩', '😘', '😗', '😚', '😙', '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭', '🤫', '🤔', '🤐', '🤨', '😐', '😑', '😶', '😏', '😒', '🙄', '😬', '🤥', '😔', '😪', '🤤', '😴', '😷', '🤒', '🤕', '🤢', '🤮', '🤧', '🥵', '🥶', '🥴', '😵', '🤯', '🤠', '🥳', '😎', '🤓', '🧐', '👍', '👎', '👌', '✌️', '🤞', '🤟', '🤘', '🤙', '👈', '👉', '👆', '👇', '☝️', '✋', '🤚', '🖐', '🖖', '👋', '🤝', '👏', '🙌', '👐', '🤲', '🤜', '🤛', '✊', '👊'].filter((emoji, index, arr) => arr.indexOf(emoji) === index).map((emoji, index) => (
                             <button
-                              key={emoji}
+                              key={`${emoji}-${index}`}
                               onClick={() => {
                                 handleReactionSelect(message.id, emoji)
                                 setShowReactionPicker(null)
