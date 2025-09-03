@@ -15,6 +15,11 @@ import { fetchChannels } from '@/store/slices/channelSlice'
 import { fetchUsers } from '@/store/slices/userSlice'
 import { api } from '@/services/api'
 
+interface Team {
+  id: number
+  name: string
+}
+
 interface Channel {
   id: string
   name: string
@@ -62,6 +67,12 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ onSelectChat }) => {
+  // Teams (temporary static until API ready)
+  const [teams] = useState<Team[]>([
+    { id: 1, name: 'Nova Team' },
+  ])
+  const [selectedTeamId, setSelectedTeamId] = useState<number>(1)
+
   const [activeChannel, setActiveChannel] = useState<string | null>('3') // Default to general channel
   const [activeConversation, setActiveConversation] = useState<string | null>(null)
   
@@ -173,6 +184,31 @@ export const Sidebar: React.FC<SidebarProps> = ({ onSelectChat }) => {
         </div>
       </div>
 
+      {/* Teams Section */}
+      <div className="px-3 flex-shrink-0">
+        <div className="mb-2">
+          <h2 className="text-xs font-semibold text-[hsl(var(--chat-text-muted))] uppercase tracking-wider">Teams</h2>
+        </div>
+        <div className="space-y-1 mb-3">
+          {teams.map((team) => (
+            <button
+              key={team.id}
+              onClick={() => setSelectedTeamId(team.id)}
+              className={cn(
+                "w-full flex items-center space-x-2 px-2 py-1.5 rounded-md text-left transition-colors duration-200",
+                selectedTeamId === team.id
+                  ? "bg-purple-100 text-purple-700 font-semibold border-l-2 border-purple-500"
+                  : "hover:bg-[hsl(var(--chat-message-hover))] text-[hsl(var(--chat-text))]"
+              )}
+              title={team.name}
+            >
+              <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+              <span className="flex-1 truncate text-xs">{team.name}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Channels Section */}
       <div className="flex-1 overflow-y-auto min-h-0">
         <div className="p-3">
@@ -266,7 +302,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onSelectChat }) => {
                     className="w-5 h-5"
                   />
                   <span className="flex-1 truncate text-xs">
-                    <span className="text-green-600 font-medium">[DM]</span> {conv.title}
+                    {conv.title}
                   </span>
                   {conv.unread_count > 0 && (
                     <Badge variant="default" className="ml-auto text-[10px] h-3.5 px-1 rounded-full min-w-[14px] flex items-center justify-center">

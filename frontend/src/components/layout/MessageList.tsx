@@ -270,8 +270,11 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, select
       console.log('Echo connection state:', echo.connector.pusher.connection.state)
       
       // Subscribe to private channel
-      const channel = echo.private(`chat.${roomId}`)
-      console.log('Channel subscription created for:', `chat.${roomId}`)
+      const channelName = selectedChat?.type === 'conversation' || selectedChat?.type === 'direct'
+        ? `chat.dm.${roomId}`
+        : `chat.channel.${roomId}`
+      const channel = echo.private(channelName)
+      console.log('Channel subscription created for:', channelName)
       
       // Listen for ChatMessageSent events
       console.log('Setting up listener for .ChatMessageSent event')
@@ -351,8 +354,9 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, select
         }
         
         const roomId = selectedChat.id.toString()
+        const type = selectedChat.type === 'conversation' ? 'direct' : (selectedChat.type || 'channel')
         console.log('Fetching messages for room:', roomId)
-        const res = await api.get<any[]>(`/messages/${roomId}`)
+        const res = await api.get<any[]>(`/messages/${roomId}`, { params: { type } })
         const data = Array.isArray(res.data?.data) ? res.data.data : []
         console.log('Fetched messages:', data.length, 'messages')
         console.log('Latest message:', data[data.length - 1])

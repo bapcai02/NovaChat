@@ -14,7 +14,7 @@ class ChatMessageSent implements ShouldBroadcast
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     /**
-     * @var array{roomId:string,messageId:string,senderId:string,content:string,createdAt:string}
+     * @var array{roomType?:string,roomId:string,messageId:string,senderId:string,content:string,createdAt:string}
      */
     public array $payload;
 
@@ -26,9 +26,13 @@ class ChatMessageSent implements ShouldBroadcast
 
     public function broadcastOn(): array
     {
-        $channel = 'chat.' . $this->payload['roomId'];
-        Log::info('ChatMessageSent broadcasting on channel:', $channel);
-        return [new PrivateChannel($channel)];
+        $roomType = $this->payload['roomType'] ?? 'channel';
+        $channelName = $roomType === 'direct'
+            ? 'chat.dm.' . $this->payload['roomId']
+            : 'chat.channel.' . $this->payload['roomId'];
+
+        Log::info('ChatMessageSent broadcasting on channel:', ['name' => $channelName, 'roomType' => $roomType]);
+        return [new PrivateChannel($channelName)];
     }
 
     public function broadcastAs(): string

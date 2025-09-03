@@ -28,10 +28,11 @@ const formatText = (text: string, format: 'bold' | 'italic' | 'code' | 'strike')
 
 interface MessageInputProps {
   roomId?: string
+  type?: 'channel' | 'direct' | 'conversation'
   onMessageSent?: () => void
 }
 
-export const MessageInput: React.FC<MessageInputProps> = ({ roomId = '1', onMessageSent }) => {
+export const MessageInput: React.FC<MessageInputProps> = ({ roomId = '1', type = 'channel', onMessageSent }) => {
   const [message, setMessage] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [isSending, setIsSending] = useState(false)
@@ -76,6 +77,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({ roomId = '1', onMess
       try {
         console.log('Sending message to API...')
         const response = await api.post('/messages', {
+          type: type === 'conversation' ? 'direct' : type,
           roomId,
           senderId: user.id.toString(),
           content: message.trim()
