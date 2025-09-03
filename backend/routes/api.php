@@ -12,6 +12,7 @@ use App\Interfaces\Http\Controllers\ThreadController;
 use App\Interfaces\Http\Controllers\SearchController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\UserStatusController;
+use App\Http\Controllers\TeamController;
 
 /*
 |--------------------------------------------------------------------------
@@ -45,6 +46,10 @@ Route::middleware('auth:api')->group(function () {
     // Channels
     Route::get('channels', [InterfaceChannelController::class, 'index']);
     Route::post('channels', [InterfaceChannelController::class, 'store']);
+
+    // Teams
+    Route::get('teams', [TeamController::class, 'index']);
+    Route::post('teams', [TeamController::class, 'store']);
 
     // Conversations (fake list)
     Route::get('conversations', [ConversationController::class, 'index']);
