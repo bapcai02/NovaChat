@@ -8,7 +8,6 @@ export default function WebSocketTestPage() {
   const [isConnected, setIsConnected] = useState(false)
 
   useEffect(() => {
-    console.log('Setting up WebSocket test...')
     
     try {
       const echo = getEcho()
@@ -18,19 +17,16 @@ export default function WebSocketTestPage() {
       
       // Listen for ChatMessageSent events
       channel.listen('.ChatMessageSent', (event: any) => {
-        console.log('Received WebSocket message:', event)
         setMessages(prev => [...prev, `New message: ${event.content}`])
       })
 
       // Connection status
       echo.connector.pusher.connection.bind('connected', () => {
-        console.log('WebSocket connected!')
         setIsConnected(true)
         setMessages(prev => [...prev, 'Connected to WebSocket'])
       })
 
       echo.connector.pusher.connection.bind('disconnected', () => {
-        console.log('WebSocket disconnected!')
         setIsConnected(false)
         setMessages(prev => [...prev, 'Disconnected from WebSocket'])
       })
@@ -41,7 +37,6 @@ export default function WebSocketTestPage() {
       })
 
       return () => {
-        console.log('Cleaning up WebSocket test...')
         channel.unsubscribe()
       }
     } catch (error) {
@@ -65,10 +60,8 @@ export default function WebSocketTestPage() {
       })
       
       const data = await response.json()
-      console.log('Message sent:', data)
       setMessages(prev => [...prev, `Message sent: ${data.data.content}`])
     } catch (error) {
-      console.error('Failed to send message:', error)
       setMessages(prev => [...prev, `Send error: ${error}`])
     }
   }

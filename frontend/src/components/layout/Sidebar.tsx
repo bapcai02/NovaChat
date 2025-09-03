@@ -77,7 +77,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onSelectChat }) => {
   
   // Separate handlers for channels and conversations
   const handleSelectChannel = (channel: { id: number, name: string, display_name?: string }) => {
-    console.log('Sidebar - selecting channel:', channel)
     setActiveChannel(channel.id.toString())
     setActiveConversation(null) // Clear conversation selection
     onSelectChat?.({ 
@@ -88,7 +87,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onSelectChat }) => {
   }
 
   const handleSelectConversation = (conv: { id: number, title: string }) => {
-    console.log('Sidebar - selecting conversation:', conv)
     setActiveConversation(conv.id.toString())
     setActiveChannel(null) // Clear channel selection
     onSelectChat?.({ 
@@ -127,7 +125,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onSelectChat }) => {
           setSelectedTeamId(list[0].id)
         }
       } catch (err) {
-        console.error('Failed to fetch teams', err)
         setTeams([])
       }
     }
@@ -144,7 +141,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onSelectChat }) => {
         setApiChannels(Array.isArray(chRes.data?.data) ? chRes.data.data : [])
         setConversations(Array.isArray(convRes.data?.data) ? convRes.data.data : [])
       } catch (err) {
-        console.error('Failed to fetch lists', err)
         setApiChannels([])
         setConversations([])
       } finally {
@@ -350,7 +346,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onSelectChat }) => {
         isOpen={isCreateChannelOpen}
         onClose={() => setIsCreateChannelOpen(false)}
         onChannelCreated={(newChannel) => {
-          console.log('Channel created:', newChannel)
           // Refresh the channels list
           const fetchLists = async () => {
             try {
@@ -369,7 +364,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onSelectChat }) => {
         isOpen={isCreateDirectMessageOpen}
         onClose={() => setIsCreateDirectMessageOpen(false)}
         onStartConversation={(userId, userData) => {
-          console.log('Starting conversation with:', userData)
           // TODO: Implement direct message creation
           setIsCreateDirectMessageOpen(false)
         }}

@@ -14,16 +14,12 @@ export default function TestChatPage() {
 
     setLoading(true)
     try {
-      console.log('Sending test message:', message)
-      console.log('Token:', typeof window !== 'undefined' ? localStorage.getItem('auth_token') : 'Server-side')
-      
       const response = await api.post('/messages', {
         roomId: '1',
         senderId: '13', // Hardcoded for test
         content: message.trim()
       })
       
-      console.log('Response:', response.data)
       setResponse(JSON.stringify(response.data, null, 2))
       setMessage('')
     } catch (error: any) {

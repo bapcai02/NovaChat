@@ -16,6 +16,9 @@ class MessageController extends Controller
     {
         try {
             $type = $request->query('type', 'channel');
+            $limit = (int) $request->query('limit', 50);
+            $limit = $limit > 0 && $limit <= 100 ? $limit : 50;
+            $beforeId = $request->query('beforeId');
 
             $query = DB::table('messages');
 
@@ -30,10 +33,20 @@ class MessageController extends Controller
                 $query->where('channel_id', $roomId);
             }
 
-            $messages = $query
-                ->orderBy('created_at', 'asc')
-                ->limit(100)
-                ->get()
+            if ($beforeId) {
+                $query->where('id', '<', (int) $beforeId);
+            }
+
+            // Fetch newest first for efficiency, then reverse to chronological order for UI
+            $rows = $query
+                ->orderBy('id', 'desc')
+                ->limit($limit)
+                ->get();
+
+            $hasMore = $rows->count() === $limit;
+
+            $messages = $rows
+                ->reverse() // chronological order ascending
                 ->map(function ($message) {
                     return [
                         'id' => $message->id,
@@ -57,6 +70,11 @@ class MessageController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => $messages,
+                'meta' => [
+                    'hasMore' => $hasMore,
+                    'nextBeforeId' => $rows->count() > 0 ? $rows->last()->id : null,
+                    'count' => $messages->count(),
+                ],
             ]);
         } catch (\Throwable $e) {
             Log::error('MessageController@index failed: ' . $e->getMessage());

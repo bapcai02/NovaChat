@@ -12,7 +12,6 @@ export const ChatLayout: React.FC = () => {
   const [selectedChat, setSelectedChat] = React.useState<{ type: 'channel' | 'conversation', id: number, title: string } | null>({ type: 'channel', id: 3, title: 'general' })
 
   const handleChatSelect = (chat: { type: 'channel' | 'conversation', id: number, title: string }) => {
-    console.log('ChatLayout - selecting chat:', chat)
     setSelectedChat(chat)
   }
 

@@ -103,7 +103,6 @@ export const MessageInput: React.FC<MessageInputProps> = ({ roomId = '1', type =
         
         // Force refresh message list after sending
         setTimeout(() => {
-          console.log('Triggering message list refresh...')
           onMessageSent?.()
         }, 100)
       } catch (error: any) {
