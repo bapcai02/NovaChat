@@ -49,9 +49,10 @@ interface MessageListProps {
   onThreadSelect: (messageId: string, messageContent: string) => void
   selectedChat?: { type: 'channel' | 'conversation', id: number } | null
   refreshTrigger?: number
+  scrollContainerRef?: React.RefObject<HTMLDivElement>
 }
 
-export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, selectedChat, refreshTrigger }) => {
+export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, selectedChat, refreshTrigger, scrollContainerRef }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [showReactionPicker, setShowReactionPicker] = useState<string | null>(null)
   const [showAnalytics, setShowAnalytics] = useState<string | null>(null)
@@ -69,8 +70,16 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, select
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
 
+  const isNearBottom = (): boolean => {
+    const el = scrollContainerRef?.current
+    if (!el) return true
+    const distance = el.scrollHeight - (el.scrollTop + el.clientHeight)
+    return distance < 80
+  }
+
+  // Only autoscroll if user is already near bottom
   useEffect(() => {
-    if (messages.length > 0) {
+    if (messages.length > 0 && isNearBottom()) {
       scrollToBottom()
     }
   }, [messages])
@@ -103,12 +112,14 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, select
           reactions: [],
           attachments: [],
         }
-        
-        setMessages(prev => {
-          const updated = [...prev, newMessage]
-          return updated
-        })
-        setTimeout(scrollToBottom, 100)
+        const el = scrollContainerRef?.current
+        const nearBottom = (() => {
+          if (!el) return true
+          const distance = el.scrollHeight - (el.scrollTop + el.clientHeight)
+          return distance < 80
+        })()
+        setMessages(prev => [...prev, newMessage])
+        if (nearBottom) setTimeout(scrollToBottom, 100)
       })
 
       // Listen for UserTyping events
@@ -169,7 +180,7 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, select
         // Map backend shape to frontend shape
         const mapped = data.map((m: any, idx: number) => ({
           id: String(m.id ?? idx),
-          content: m.type === 'voice' ? '' : (m.content || ''),
+          content: m.type === 'voice' ? '' : String(m.content ?? m.text ?? ''),
           type: m.type === 'voice' ? 'voice' : undefined,
           audioUrl: m.type === 'voice' ? 'data:audio/webm;base64,' : undefined,
           duration: m.duration,
@@ -190,11 +201,9 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, select
             size: a.size 
           })),
         })) as any
-        
         setMessages(mapped)
         setTimeout(scrollToBottom, 0)
       } catch (e) {
-        console.error('Failed to load messages', e)
         // Fallback to empty array
         setMessages([] as any)
       }
@@ -202,7 +211,57 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, select
     fetchMessages()
   }, [selectedChat, refreshTrigger])
 
-  // TODO: Re-enable infinite scroll after stabilizing basic render
+  // Infinite scroll on outer container
+  useEffect(() => {
+    const el = scrollContainerRef?.current
+    if (!el) return
+    let loading = false
+    const onScroll = async () => {
+      if (el.scrollTop <= 50 && hasMore && !loading && selectedChat) {
+        loading = true
+        setIsTopLoading(true)
+        try {
+          const roomId = selectedChat.id.toString()
+          const type = selectedChat.type === 'conversation' ? 'direct' : (selectedChat.type || 'channel')
+          const res = await api.get<any[]>(`/messages/${roomId}`, { params: { type, limit: 50, beforeId } })
+          const raw = (res.data as any)?.data
+          const data = Array.isArray(raw) ? raw : Object.values(raw || {})
+          const meta = (res.data as any)?.meta || {}
+
+          const mapped = data.map((m: any, idx: number) => ({
+            id: String(m.id ?? `tmp-${Date.now()}-${idx}`),
+            content: m.type === 'voice' ? '' : String(m.content ?? m.text ?? ''),
+            author: { name: m.sender?.name || 'User', username: (m.sender?.username || 'user').toLowerCase() },
+            timestamp: new Date(m.created_at).toLocaleTimeString(),
+            reactions: (m.reactions || []).map((r: any) => ({ emoji: r.emoji, count: r.count || 1, users: [] })),
+            attachments: (m.attachments || []).map((a: any) => ({ type: a.type || 'file', url: a.url || '#', name: a.name || 'file', size: a.size })),
+          })) as any
+
+          const prevHeight = el.scrollHeight
+          setMessages(prev => {
+            const existing = new Set(prev.map((p: any) => String(p.id)))
+            const dedup = (mapped as any[]).filter(m => !existing.has(String(m.id)))
+            return [...dedup, ...prev]
+          })
+          setHasMore(!!meta.hasMore)
+          setBeforeId(meta.nextBeforeId ?? (mapped.length ? mapped[0].id : beforeId))
+          setTimeout(() => {
+            const newHeight = el.scrollHeight
+            el.scrollTop = newHeight - prevHeight
+          }, 0)
+        } catch (e) {
+          setHasMore(false)
+        } finally {
+          setIsTopLoading(false)
+          loading = false
+        }
+      }
+    }
+    el.addEventListener('scroll', onScroll)
+    return () => el.removeEventListener('scroll', onScroll)
+  }, [scrollContainerRef?.current, hasMore, beforeId, selectedChat])
+
+  const [isTopLoading, setIsTopLoading] = useState(false)
 
   const handleThreadClick = (messageId: string, messageContent: string) => {
     onThreadSelect(messageId, messageContent)
@@ -292,10 +351,15 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, select
   }
 
   return (
-    <div className="p-4 space-y-3 text-neutral-900">
+    <div className="p-4 space-y-2 text-neutral-900">
+      {isTopLoading && (
+        <div className="flex items-center justify-center text-xs text-neutral-500 py-2">
+          Loading older messages...
+        </div>
+      )}
       {messages.map((message, index) => (
         <div key={message.id} className="message-enter">
-          <div className="flex space-x-3 group hover:bg-[hsl(var(--chat-message-hover))] rounded-lg p-1.5 -m-1.5 transition-colors duration-200">
+          <div className="flex space-x-3 group hover:bg-neutral-50 rounded-lg p-1.5 -m-1.5 transition-colors duration-200">
             <Avatar 
               fallback={message.author.name} 
               size="md"
@@ -304,14 +368,14 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, select
             
             <div className="flex-1 min-w-0">
               <div className="flex items-baseline space-x-2 mb-0.5">
-                <span className="text-xs font-semibold text-[hsl(var(--chat-text))] hover:underline cursor-pointer">
+                <span className="text-xs font-semibold text-neutral-900 hover:underline cursor-pointer">
                   {message.author.name}
                 </span>
-                <span className="text-xs text-[hsl(var(--chat-text-muted))]">
+                <span className="text-xs text-neutral-500">
                   {message.timestamp}
                 </span>
                 {message.isEdited && (
-                  <span className="text-xs text-[hsl(var(--chat-text-muted))] italic">
+                  <span className="text-xs text-neutral-500 italic">
                     (edited)
                   </span>
                 )}
@@ -341,8 +405,8 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, select
                   />
                 </div>
               ) : (
-                <div className="mb-1">
-                  <MessageRenderer content={message.content} />
+                <div className="mb-0.5 text-neutral-900">
+                  <p className="whitespace-pre-wrap text-[13px] leading-relaxed">{message.content}</p>
                 </div>
               )}
               
@@ -350,22 +414,22 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, select
               {message.attachments && message.attachments.length > 0 && (
                 <div className="mt-2 space-y-1">
                   {message.attachments.map((attachment, idx) => (
-                    <div key={idx} className="flex items-center space-x-3 p-3 bg-[hsl(var(--chat-message-bg))] border border-[hsl(var(--chat-border))] rounded-lg hover:bg-[hsl(var(--chat-message-hover))] transition-colors cursor-pointer">
-                      <div className="w-10 h-10 bg-[hsl(var(--chat-accent-light))] rounded-lg flex items-center justify-center">
+                    <div key={idx} className="flex items-center space-x-3 p-3 bg-neutral-50 border border-neutral-200 rounded-lg hover:bg-neutral-100 transition-colors cursor-pointer">
+                      <div className="w-10 h-10 bg-neutral-200 rounded-lg flex items-center justify-center">
                         {attachment.type === 'image' ? (
-                          <svg className="w-5 h-5 text-[hsl(var(--chat-accent))]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-5 h-5 text-[#1d74f5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                           </svg>
                         ) : (
-                          <svg className="w-5 h-5 text-[hsl(var(--chat-accent))]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-5 h-5 text-[#1d74f5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                           </svg>
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium truncate">{attachment.name}</p>
+                        <p className="text-xs font-medium truncate text-neutral-900">{attachment.name}</p>
                         {attachment.size && (
-                          <p className="text-xs text-[hsl(var(--chat-text-muted))]">{attachment.size}</p>
+                          <p className="text-xs text-neutral-500">{attachment.size}</p>
                         )}
                       </div>
                     </div>

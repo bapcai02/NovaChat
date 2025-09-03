@@ -24,6 +24,7 @@ import { api } from '@/services/api'
 export const ChatArea: React.FC<ChatAreaProps> = ({ onToggleRightSidebar, onThreadSelect, selectedChat }) => {
   const [currentChannel, setCurrentChannel] = useState('general')
   const [refreshTrigger, setRefreshTrigger] = useState(0)
+  const messagesContainerRef = React.useRef<HTMLDivElement>(null)
   
   // Default selectedChat for testing if none is provided
   const defaultSelectedChat = selectedChat || { type: 'channel' as const, id: 3, title: 'general' }
@@ -197,11 +198,12 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onToggleRightSidebar, onThre
       ))}
 
       {/* Messages (ivory background only for chat content) */}
-      <div className="flex-1 overflow-y-auto min-h-0 bg-[#faf7f2] scrollbar-thin scrollbar-thumb-[hsl(var(--chat-border))] scrollbar-track-transparent hover:scrollbar-thumb-[hsl(var(--chat-text-muted))]">
+      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto min-h-0 bg-[#faf7f2] scrollbar-thin scrollbar-thumb-[hsl(var(--chat-border))] scrollbar-track-transparent hover:scrollbar-thumb-[hsl(var(--chat-text-muted))]">
         <MessageList 
           onThreadSelect={onThreadSelect} 
           selectedChat={defaultSelectedChat ? { type: defaultSelectedChat.type, id: defaultSelectedChat.id } : null}
           refreshTrigger={refreshTrigger}
+          scrollContainerRef={messagesContainerRef}
         />
       </div>
 

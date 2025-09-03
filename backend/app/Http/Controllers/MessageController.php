@@ -65,7 +65,8 @@ class MessageController extends Controller
                         'reactions' => [],
                         'read_by' => [],
                     ];
-                });
+                })
+                ->values();
 
             return response()->json([
                 'success' => true,
