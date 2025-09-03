@@ -461,7 +461,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({ roomId = '1', type =
       </div>
 
       {/* Additional info */}
-      <div className="flex items-center justify-between text-xs text-[hsl(var(--chat-text-muted))] px-1">
+      <div className="flex items-center justify-between text-xs text-neutral-500 px-1">
         <div className="flex items-center space-x-4">
           <span>Press Enter to send, Shift+Enter for new line</span>
           {isTyping && <span className="flex items-center space-x-1">

@@ -196,8 +196,8 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onToggleRightSidebar, onThre
         />
       ))}
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto min-h-0 scrollbar-thin scrollbar-thumb-[hsl(var(--chat-border))] scrollbar-track-transparent hover:scrollbar-thumb-[hsl(var(--chat-text-muted))]">
+      {/* Messages (ivory background only for chat content) */}
+      <div className="flex-1 overflow-y-auto min-h-0 bg-[#faf7f2] scrollbar-thin scrollbar-thumb-[hsl(var(--chat-border))] scrollbar-track-transparent hover:scrollbar-thumb-[hsl(var(--chat-text-muted))]">
         <MessageList 
           onThreadSelect={onThreadSelect} 
           selectedChat={defaultSelectedChat ? { type: defaultSelectedChat.type, id: defaultSelectedChat.id } : null}

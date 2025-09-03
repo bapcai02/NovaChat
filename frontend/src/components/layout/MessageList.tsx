@@ -489,7 +489,7 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, select
   }
 
   return (
-    <div className="p-4 space-y-3">
+    <div className="p-4 space-y-3 text-neutral-900">
       {console.log('Rendering messages:', messages.length, 'messages')}
       {messages.map((message, index) => (
         <div key={message.id} className="message-enter">
