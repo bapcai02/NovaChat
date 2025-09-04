@@ -9,6 +9,7 @@ use App\Http\Controllers\SearchController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\UserStatusController;
 use App\Http\Controllers\TeamController;
+use App\Http\Controllers\UserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -53,6 +54,7 @@ Route::middleware('auth:api')->group(function () {
     Route::get('conversations', [ConversationController::class, 'index']);
 
     // Users & legacy list endpoints will be re-added with new controllers
+    Route::get('users', [UserController::class, 'index']);
 
     // Thread replies
     Route::get('messages/{messageId}/replies', [\App\Http\Controllers\ThreadController::class, 'index']);

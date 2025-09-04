@@ -45,14 +45,12 @@ class MessageService
                 'created_at' => $createdAt,
                 'updated_at' => $createdAt,
             ];
-            if ($type === 'direct') {
-                if (Schema::hasColumn('messages', 'conversation_id')) {
-                    $insert['conversation_id'] = $data['roomId'];
-                } else {
-                    $insert['channel_id'] = $data['roomId'];
-                }
+            if ($type === 'direct' || $type === 'team') {
+                $insert['conversation_id'] = $data['roomId'];
+                $insert['channel_id'] = null;
             } else {
                 $insert['channel_id'] = $data['roomId'];
+                $insert['conversation_id'] = null;
             }
             $message = $this->messages->create($insert);
             $payload = [

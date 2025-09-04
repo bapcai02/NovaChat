@@ -5,6 +5,7 @@ namespace App\Repositories\Eloquent;
 use App\Repositories\Contracts\MessageRepositoryInterface;
 use App\Models\Message;
 use App\Models\MessageReaction;
+use App\Models\DirectMessage;
 use Illuminate\Support\Facades\Schema;
 
 class EloquentMessageRepository implements MessageRepositoryInterface
@@ -17,25 +18,30 @@ class EloquentMessageRepository implements MessageRepositoryInterface
 
     public function getForRoom(string $roomId, string $type = 'channel', int $limit = 50, ?int $beforeId = null, ?int $userId = null): array
     {
-        $query = Message::query();
-        if ($type === 'direct') {
-            if (Schema::hasColumn('messages', 'conversation_id')) {
-                $query->where('conversation_id', $roomId);
-            } else {
-                $query->where('channel_id', $roomId);
-            }
+        $query = Message::query()->with('user');
+        
+        if ($type === 'direct' || $type === 'team') {
+            $query->where('conversation_id', $roomId);
         } else {
             $query->where('channel_id', $roomId);
         }
+        
         if ($beforeId) {
             $query->where('id', '<', (int) $beforeId);
         }
+        
         $rows = $query->orderByDesc('id')->limit($limit)->get();
+        
         return $rows->map(function ($row) use ($userId) {
             return [
                 'id' => $row->id,
                 'room_id' => $row->channel_id ?? $row->conversation_id ?? null,
-                'sender' => [ 'id' => $row->user_id ],
+                'sender' => [
+                    'id' => $row->user->id,
+                    'name' => $row->user->name,
+                    'username' => $row->user->username,
+                    'avatar' => $row->user->avatar,
+                ],
                 'content' => $row->content,
                 'type' => $row->type ?? 'text',
                 'created_at' => $row->created_at,
