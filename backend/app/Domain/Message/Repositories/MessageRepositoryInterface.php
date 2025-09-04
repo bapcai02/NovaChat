@@ -14,7 +14,7 @@ interface MessageRepositoryInterface
     /**
      * Get messages for a room with pagination
      */
-    public function getMessagesForRoom(string $roomId, string $type = 'channel', int $limit = 50, ?int $beforeId = null): array;
+    public function getMessagesForRoom(string $roomId, string $type = 'channel', int $limit = 50, ?int $beforeId = null, ?int $userId = null): array;
 
     /**
      * Store a new message

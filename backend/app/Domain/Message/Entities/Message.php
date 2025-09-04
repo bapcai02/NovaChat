@@ -4,22 +4,52 @@ namespace App\Domain\Message\Entities;
 
 class Message
 {
+    private int $id;
+    private int $userId;
+    private string $content;
+    private string $type;
+    private ?int $channelId;
+    private ?int $conversationId;
+    private ?int $parentId;
+    private ?string $metadata;
+    private bool $isEdited;
+    private ?string $editedAt;
+    private bool $isPinned;
+    private bool $isDeleted;
+    private string $createdAt;
+    private string $updatedAt;
+
     public function __construct(
-        private int $id,
-        private int $userId,
-        private string $content,
-        private string $type = 'text',
-        private ?int $channelId = null,
-        private ?int $conversationId = null,
-        private ?int $parentId = null,
-        private ?string $metadata = null,
-        private bool $isEdited = false,
-        private ?string $editedAt = null,
-        private bool $isPinned = false,
-        private bool $isDeleted = false,
-        private string $createdAt,
-        private string $updatedAt
-    ) {}
+        int $id,
+        int $userId,
+        string $content,
+        string $type = 'text',
+        ?int $channelId = null,
+        ?int $conversationId = null,
+        ?int $parentId = null,
+        ?string $metadata = null,
+        bool $isEdited = false,
+        ?string $editedAt = null,
+        bool $isPinned = false,
+        bool $isDeleted = false,
+        string $createdAt,
+        string $updatedAt
+    ) {
+        $this->id = $id;
+        $this->userId = $userId;
+        $this->content = $content;
+        $this->type = $type;
+        $this->channelId = $channelId;
+        $this->conversationId = $conversationId;
+        $this->parentId = $parentId;
+        $this->metadata = $metadata;
+        $this->isEdited = $isEdited;
+        $this->editedAt = $editedAt;
+        $this->isPinned = $isPinned;
+        $this->isDeleted = $isDeleted;
+        $this->createdAt = $createdAt;
+        $this->updatedAt = $updatedAt;
+    }
 
     public function getId(): int
     {

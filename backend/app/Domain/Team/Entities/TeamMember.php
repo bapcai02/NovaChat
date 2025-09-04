@@ -3,12 +3,9 @@
 namespace App\Domain\Team\Entities;
 
 use App\Domain\User\Entities\User;
-
+use App\Domain\Team\Entities\Team;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-
-use User;
-use App\Domain\Team\Entities\Team;
 
 
 class TeamMember extends Model
@@ -35,7 +32,7 @@ class TeamMember extends Model
     // Relationships
     public function team()
     {
-        return $this->belongsTo(App\Domain\Team\Entities\Team::class);
+        return $this->belongsTo(Team::class);
     }
 
     public function user()

@@ -247,6 +247,24 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, select
         )
       })
 
+      // Listen for message edited
+      channel.listen('.MessageEdited', (data: any) => {
+        console.log('Received message edited:', data)
+        setMessages(prev => 
+          prev.map(msg => {
+            if (msg.id === data.messageId) {
+              return {
+                ...msg,
+                content: data.content,
+                isEdited: true,
+                editedAt: data.editedAt
+              }
+            }
+            return msg
+          })
+        )
+      })
+
       // Connection status
       echo.connector.pusher.connection.bind('connected', () => {
         console.log('WebSocket connected for room:', roomId)
@@ -308,6 +326,12 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, select
         })) as any
         setMessages(mapped)
         setTimeout(scrollToBottom, 0)
+        
+        // Update bookmark status from backend response
+        const bookmarkedIds = data
+          .filter((m: any) => m.is_bookmarked)
+          .map((m: any) => String(m.id))
+        setBookmarkedMessages(new Set(bookmarkedIds))
       } catch (e) {
         // Fallback to empty array
         setMessages([] as any)
@@ -348,6 +372,17 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, select
             const dedup = (mapped as any[]).filter(m => !existing.has(String(m.id)))
             return [...dedup, ...prev]
           })
+          
+          // Update bookmark status for new messages
+          const newBookmarkedIds = data
+            .filter((m: any) => m.is_bookmarked)
+            .map((m: any) => String(m.id))
+          setBookmarkedMessages(prev => {
+            const newSet = new Set(prev)
+            newBookmarkedIds.forEach(id => newSet.add(id))
+            return newSet
+          })
+          
           setHasMore(!!meta.hasMore)
           setBeforeId(meta.nextBeforeId ?? (mapped.length ? mapped[0].id : beforeId))
           setTimeout(() => {
@@ -455,24 +490,75 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, select
   }
 
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null)
+  const [bookmarkedMessages, setBookmarkedMessages] = useState<Set<string>>(new Set())
 
-  const handleEditMessage = (messageId: string, newContent: string) => {
-    // TODO: Call API to update message
-    setMessages(prev => prev.map(msg => {
-      if (msg.id === messageId) {
-        return {
-          ...msg,
-          content: newContent,
-          isEdited: true
-        }
+  const handleEditMessage = async (messageId: string, newContent: string) => {
+    try {
+      // Call API to update message
+      const response = await api.put(`/messages/${messageId}`, {
+        content: newContent
+      })
+
+      if (response.data.success) {
+        // Update local state
+        setMessages(prev => prev.map(msg => {
+          if (msg.id === messageId) {
+            return {
+              ...msg,
+              content: newContent,
+              isEdited: true,
+              editedAt: new Date().toISOString()
+            }
+          }
+          return msg
+        }))
+        setEditingMessageId(null)
+      } else {
+        console.error('Failed to edit message:', response.data.message)
+        // TODO: Show error toast
       }
-      return msg
-    }))
-    setEditingMessageId(null)
+    } catch (error) {
+      console.error('Failed to edit message:', error)
+      // TODO: Show error toast
+    }
   }
 
   const handleCancelEdit = () => {
     setEditingMessageId(null)
+  }
+
+  const handleBookmarkMessage = async (messageId: string) => {
+    try {
+      const response = await api.post(`/messages/${messageId}/bookmark`)
+      if (response.data.success) {
+        setBookmarkedMessages(prev => new Set([...prev, messageId]))
+      }
+    } catch (error) {
+      console.error('Failed to bookmark message:', error)
+    }
+  }
+
+  const handleRemoveBookmark = async (messageId: string) => {
+    try {
+      const response = await api.delete(`/messages/${messageId}/bookmark`)
+      if (response.data.success) {
+        setBookmarkedMessages(prev => {
+          const newSet = new Set(prev)
+          newSet.delete(messageId)
+          return newSet
+        })
+      }
+    } catch (error) {
+      console.error('Failed to remove bookmark:', error)
+    }
+  }
+
+  const toggleBookmark = async (messageId: string) => {
+    if (bookmarkedMessages.has(messageId)) {
+      await handleRemoveBookmark(messageId)
+    } else {
+      await handleBookmarkMessage(messageId)
+    }
   }
 
   if (!selectedChat) {
@@ -693,8 +779,16 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, select
                   </svg>
                   <span className="text-xs">Edit</span>
                 </button>
-                <button className="p-1 hover:bg-[hsl(var(--chat-message-hover))] rounded text-[hsl(var(--chat-text-muted))] hover:text-[hsl(var(--chat-text))] transition-colors">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button 
+                  onClick={() => toggleBookmark(message.id)}
+                  className={`p-1 hover:bg-[hsl(var(--chat-message-hover))] rounded transition-colors ${
+                    bookmarkedMessages.has(message.id) 
+                      ? 'text-yellow-500 hover:text-yellow-600' 
+                      : 'text-[hsl(var(--chat-text-muted))] hover:text-[hsl(var(--chat-text))]'
+                  }`}
+                  title={bookmarkedMessages.has(message.id) ? "Remove bookmark" : "Bookmark message"}
+                >
+                  <svg className="w-4 h-4" fill={bookmarkedMessages.has(message.id) ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                   </svg>
                 </button>

@@ -55,17 +55,17 @@ export const MessageEditor: React.FC<MessageEditorProps> = ({
   }
 
   return (
-    <div className={cn("space-y-2", className)}>
+    <div className={cn("space-y-2 bg-white p-3 rounded-lg border border-gray-200", className)}>
       <Textarea
         ref={textareaRef}
         value={content}
         onChange={(e) => setContent(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder="Edit your message..."
-        className="min-h-[60px] resize-none"
+        className="min-h-[60px] resize-none bg-white text-gray-900 border-gray-300 focus:border-blue-500"
       />
       <div className="flex items-center justify-between">
-        <div className="text-xs text-[hsl(var(--chat-text-muted))]">
+        <div className="text-xs text-gray-500">
           Press Enter to save, Esc to cancel
         </div>
         <div className="flex items-center space-x-2">
@@ -74,6 +74,7 @@ export const MessageEditor: React.FC<MessageEditorProps> = ({
             size="sm"
             onClick={onCancel}
             disabled={isSubmitting}
+            className="bg-white text-gray-600 hover:text-gray-800 hover:bg-gray-50 border border-gray-300"
           >
             Cancel
           </Button>
@@ -81,6 +82,7 @@ export const MessageEditor: React.FC<MessageEditorProps> = ({
             size="sm"
             onClick={handleSave}
             disabled={isSubmitting || content.trim() === initialContent.trim()}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
           >
             {isSubmitting ? 'Saving...' : 'Save'}
           </Button>

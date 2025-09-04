@@ -25,9 +25,11 @@ use App\Interfaces\Http\Controllers\TeamController;
 |
 */
 
-// Public routes (no authentication required)
-Route::post('/auth/register', [AuthController::class, 'register']);
-Route::post('/auth/login', [AuthController::class, 'login']);
+// Public routes (no authentication required) - with rate limiting
+Route::middleware('throttle:auth')->group(function () {
+    Route::post('/auth/register', [AuthController::class, 'register']);
+    Route::post('/auth/login', [AuthController::class, 'login']);
+});
 
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
@@ -72,13 +74,24 @@ Route::middleware('auth:api')->group(function () {
     Route::get('search/users', [SearchController::class, 'searchUsers']);
     Route::get('search/files', [SearchController::class, 'searchFiles']);
 
-    // Realtime chat message
-    Route::post('messages', [MessageController::class, 'store']);
-    Route::get('messages/{roomId}', [MessageController::class, 'index']);
-    
-    // Message reactions
-    Route::post('messages/{messageId}/reactions', [MessageController::class, 'addReaction']);
-    Route::delete('messages/{messageId}/reactions/{emoji}', [MessageController::class, 'removeReaction']);
+    // Realtime chat message - with rate limiting
+    Route::middleware('throttle:messages')->group(function () {
+        Route::post('messages', [MessageController::class, 'store']);
+        Route::get('messages/{roomId}', [MessageController::class, 'index']);
+        
+        // Message reactions
+        Route::post('messages/{messageId}/reactions', [MessageController::class, 'addReaction']);
+        Route::delete('messages/{messageId}/reactions/{emoji}', [MessageController::class, 'removeReaction']);
+        
+        // Message editing
+        Route::put('messages/{messageId}', [MessageController::class, 'edit']);
+        
+        // Message bookmarks
+        Route::post('messages/{messageId}/bookmark', [MessageController::class, 'bookmark']);
+        Route::delete('messages/{messageId}/bookmark', [MessageController::class, 'removeBookmark']);
+        Route::get('messages/{messageId}/bookmark', [MessageController::class, 'isBookmarked']);
+        Route::get('bookmarks', [MessageController::class, 'getBookmarks']);
+    });
 
     // User status and typing
     Route::post('user/status', [UserStatusController::class, 'updateStatus']);
@@ -88,6 +101,4 @@ Route::middleware('auth:api')->group(function () {
 
 });
 
-// Test route for messages (temporary)
-Route::get('/test/messages/{roomId}', [MessageController::class, 'index']);
-Route::post('/test/messages', [MessageController::class, 'store']);
+// Test routes removed to prevent rate limiting issues

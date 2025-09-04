@@ -114,12 +114,17 @@ class TeamRepository implements TeamRepositoryInterface
     private function mapToEntity($data): Team
     {
         return new Team(
-            id: $data->id,
-            name: $data->name,
-            description: $data->description,
-            createdBy: $data->created_by,
-            createdAt: $data->created_at,
-            updatedAt: $data->updated_at
+            $data->id,
+            $data->name,
+            $data->description,
+            $data->avatar ?? null,
+            $data->domain ?? null,
+            $data->settings ?? null,
+            $data->is_public ?? false,
+            $data->is_archived ?? false,
+            $data->created_by,
+            $data->created_at,
+            $data->updated_at
         );
     }
 }

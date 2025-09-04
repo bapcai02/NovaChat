@@ -4,21 +4,49 @@ namespace App\Domain\User\Entities;
 
 class UserDDD
 {
+    private int $id;
+    private string $name;
+    private string $email;
+    private string $username;
+    private ?string $emailVerifiedAt;
+    private ?string $password;
+    private ?string $avatar;
+    private ?string $status;
+    private ?string $statusMessage;
+    private ?string $timezone;
+    private ?string $language;
+    private ?string $createdAt;
+    private ?string $updatedAt;
+
     public function __construct(
-        private int $id,
-        private string $name,
-        private string $email,
-        private string $username,
-        private ?string $emailVerifiedAt = null,
-        private ?string $password = null,
-        private ?string $avatar = null,
-        private ?string $status = null,
-        private ?string $statusMessage = null,
-        private ?string $timezone = null,
-        private ?string $language = null,
-        private ?string $createdAt = null,
-        private ?string $updatedAt = null
-    ) {}
+        int $id,
+        string $name,
+        string $email,
+        string $username,
+        ?string $emailVerifiedAt = null,
+        ?string $password = null,
+        ?string $avatar = null,
+        ?string $status = null,
+        ?string $statusMessage = null,
+        ?string $timezone = null,
+        ?string $language = null,
+        ?string $createdAt = null,
+        ?string $updatedAt = null
+    ) {
+        $this->id = $id;
+        $this->name = $name;
+        $this->email = $email;
+        $this->username = $username;
+        $this->emailVerifiedAt = $emailVerifiedAt;
+        $this->password = $password;
+        $this->avatar = $avatar;
+        $this->status = $status;
+        $this->statusMessage = $statusMessage;
+        $this->timezone = $timezone;
+        $this->language = $language;
+        $this->createdAt = $createdAt;
+        $this->updatedAt = $updatedAt;
+    }
 
     public function getId(): int
     {

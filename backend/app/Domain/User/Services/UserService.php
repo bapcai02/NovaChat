@@ -84,7 +84,7 @@ class UserService
         try {
             $user = $this->userRepository->findById($userId);
             if ($user) {
-                $this->userRepository->updateStatus($user, $user->status);
+                $this->userRepository->updateStatus($user, $user->getStatus() ?? 'online');
                 return true;
             }
             return false;

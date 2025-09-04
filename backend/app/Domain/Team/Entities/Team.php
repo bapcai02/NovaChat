@@ -4,19 +4,43 @@ namespace App\Domain\Team\Entities;
 
 class Team
 {
+    private int $id;
+    private string $name;
+    private ?string $description;
+    private ?string $avatar;
+    private ?string $domain;
+    private ?string $settings;
+    private bool $isPublic;
+    private bool $isArchived;
+    private int $createdBy;
+    private string $createdAt;
+    private string $updatedAt;
+
     public function __construct(
-        private int $id,
-        private string $name,
-        private ?string $description = null,
-        private ?string $avatar = null,
-        private ?string $domain = null,
-        private ?string $settings = null,
-        private bool $isPublic = false,
-        private bool $isArchived = false,
-        private int $createdBy,
-        private string $createdAt,
-        private string $updatedAt
-    ) {}
+        int $id,
+        string $name,
+        ?string $description = null,
+        ?string $avatar = null,
+        ?string $domain = null,
+        ?string $settings = null,
+        bool $isPublic = false,
+        bool $isArchived = false,
+        int $createdBy,
+        string $createdAt,
+        string $updatedAt
+    ) {
+        $this->id = $id;
+        $this->name = $name;
+        $this->description = $description;
+        $this->avatar = $avatar;
+        $this->domain = $domain;
+        $this->settings = $settings;
+        $this->isPublic = $isPublic;
+        $this->isArchived = $isArchived;
+        $this->createdBy = $createdBy;
+        $this->createdAt = $createdAt;
+        $this->updatedAt = $updatedAt;
+    }
 
     public function getId(): int
     {

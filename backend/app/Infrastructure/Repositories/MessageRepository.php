@@ -15,7 +15,7 @@ class MessageRepository implements MessageRepositoryInterface
         return $data ? $this->mapToEntity($data) : null;
     }
 
-    public function getMessagesForRoom(string $roomId, string $type = 'channel', int $limit = 50, ?int $beforeId = null): array
+    public function getMessagesForRoom(string $roomId, string $type = 'channel', int $limit = 50, ?int $beforeId = null, ?int $userId = null): array
     {
         $query = DB::table('messages');
 
@@ -33,8 +33,17 @@ class MessageRepository implements MessageRepositoryInterface
             $query->where('id', '<', (int) $beforeId);
         }
 
+        // Join with bookmarks table to get bookmark status
+        if ($userId) {
+            $query->leftJoin('bookmarks', function ($join) use ($userId) {
+                $join->on('messages.id', '=', 'bookmarks.message_id')
+                     ->where('bookmarks.user_id', '=', $userId);
+            })
+            ->select('messages.*', 'bookmarks.id as bookmark_id');
+        }
+
         $rows = $query
-            ->orderBy('id', 'desc')
+            ->orderBy('messages.id', 'desc')
             ->limit($limit)
             ->get();
 
@@ -55,6 +64,7 @@ class MessageRepository implements MessageRepositoryInterface
                 'attachments' => [],
                 'reactions' => $this->getMessageReactions($message->id),
                 'read_by' => [],
+                'is_bookmarked' => !empty($message->bookmark_id),
             ];
         })->reverse()->values()->toArray();
     }
@@ -107,14 +117,20 @@ class MessageRepository implements MessageRepositoryInterface
     private function mapToEntity($data): Message
     {
         return new Message(
-            id: $data->id,
-            userId: $data->user_id,
-            content: $data->content,
-            type: $data->type ?? 'text',
-            channelId: $data->channel_id ?? null,
-            conversationId: $data->conversation_id ?? null,
-            createdAt: $data->created_at,
-            updatedAt: $data->updated_at
+            $data->id,
+            $data->user_id,
+            $data->content,
+            $data->type ?? 'text',
+            $data->channel_id ?? null,
+            $data->conversation_id ?? null,
+            $data->parent_id ?? null,
+            $data->metadata ?? null,
+            $data->is_edited ?? false,
+            $data->edited_at ?? null,
+            $data->is_pinned ?? false,
+            $data->is_deleted ?? false,
+            $data->created_at,
+            $data->updated_at
         );
     }
 }

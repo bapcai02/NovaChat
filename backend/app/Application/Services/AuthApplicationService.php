@@ -11,10 +11,14 @@ use Illuminate\Support\Facades\Validator;
 
 class AuthApplicationService
 {
-    public function __construct(
-        protected UserRepositoryInterface $users,
-        protected UserService $userService
-    ) {}
+    private UserRepositoryInterface $users;
+    private UserService $userService;
+
+    public function __construct(UserRepositoryInterface $users, UserService $userService)
+    {
+        $this->users = $users;
+        $this->userService = $userService;
+    }
 
     public function register(array $input): array
     {
@@ -63,7 +67,7 @@ class AuthApplicationService
             return [false, 401, ['message' => 'Invalid credentials']];
         }
 
-        $user = $this->users->findByEmail($input['email']);
+        $user = User::where('email', $input['email'])->first();
         if (!$user) {
             return [false, 404, ['message' => 'User not found']];
         }
@@ -83,10 +87,12 @@ class AuthApplicationService
 
     public function logout(): array
     {
+        /** @var User $user */
         $user = Auth::user();
         if ($user) {
             $this->userService->updateUserStatus($user->id, 'offline');
             $this->userService->updateLastSeen($user->id);
+            // Revoke all tokens for the user
             $user->tokens()->each(function ($token) {
                 $token->revoke();
             });
@@ -97,9 +103,14 @@ class AuthApplicationService
 
     public function refresh(): array
     {
+        /** @var User $user */
         $user = Auth::user();
-        request()->user()->token()->revoke();
-        $token = $user->createToken('auth_token')->accessToken;
+        if ($user) {
+            request()->user()->token()->revoke();
+            $token = $user->createToken('auth_token')->accessToken;
+        } else {
+            return [false, 401, ['message' => 'User not authenticated']];
+        }
 
         return [true, 200, [
             'token' => $token,
