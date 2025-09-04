@@ -18,13 +18,58 @@ class EloquentMessageRepository implements MessageRepositoryInterface
 
     public function getForRoom(string $roomId, string $type = 'channel', int $limit = 50, ?int $beforeId = null, ?int $userId = null): array
     {
-        $query = Message::query()->with('user');
-        
-        if ($type === 'direct' || $type === 'team') {
-            $query->where('conversation_id', $roomId);
-        } else {
-            $query->where('channel_id', $roomId);
+        // For direct messages, use DirectMessage model
+        if ($type === 'direct') {
+            $query = \App\Models\DirectMessage::query()->with(['sender', 'receiver']);
+            
+            if (str_starts_with($roomId, 'direct_')) {
+                $peerId = (int) str_replace('direct_', '', $roomId);
+                $query->where(function ($q) use ($userId, $peerId) {
+                    $q->where('sender_id', $userId)->where('receiver_id', $peerId);
+                })->orWhere(function ($q) use ($userId, $peerId) {
+                    $q->where('sender_id', $peerId)->where('receiver_id', $userId);
+                });
+            } else {
+                // Legacy: roomId is peer user ID
+                $query->where(function ($q) use ($userId, $roomId) {
+                    $q->where('sender_id', $userId)->where('receiver_id', $roomId);
+                })->orWhere(function ($q) use ($userId, $roomId) {
+                    $q->where('sender_id', $roomId)->where('receiver_id', $userId);
+                });
+            }
+            
+            if ($beforeId) {
+                $query->where('id', '<', (int) $beforeId);
+            }
+            
+            $rows = $query->orderByDesc('id')->limit($limit)->get();
+            
+            return $rows->map(function ($row) use ($userId) {
+                return [
+                    'id' => $row->id,
+                    'room_id' => null,
+                    'sender' => [
+                        'id' => $row->sender->id,
+                        'name' => $row->sender->name,
+                        'username' => $row->sender->username,
+                        'avatar' => $row->sender->avatar,
+                    ],
+                    'content' => $row->content,
+                    'type' => $row->type ?? 'text',
+                    'created_at' => $row->created_at,
+                    'is_edited' => false,
+                    'is_pinned' => false,
+                    'attachments' => [],
+                    'reactions' => [],
+                    'read_by' => [],
+                    'is_bookmarked' => false,
+                ];
+            })->reverse()->values()->toArray();
         }
+        
+        // For channel/team messages, use Message model
+        $query = Message::query()->with('user');
+        $query->where('channel_id', $roomId);
         
         if ($beforeId) {
             $query->where('id', '<', (int) $beforeId);
@@ -35,7 +80,7 @@ class EloquentMessageRepository implements MessageRepositoryInterface
         return $rows->map(function ($row) use ($userId) {
             return [
                 'id' => $row->id,
-                'room_id' => $row->channel_id ?? $row->conversation_id ?? null,
+                'room_id' => $row->channel_id,
                 'sender' => [
                     'id' => $row->user->id,
                     'name' => $row->user->name,

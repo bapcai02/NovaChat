@@ -45,14 +45,23 @@ class MessageService
                 'created_at' => $createdAt,
                 'updated_at' => $createdAt,
             ];
-            if ($type === 'direct' || $type === 'team') {
-                $insert['conversation_id'] = $data['roomId'];
-                $insert['channel_id'] = null;
+            if ($type === 'direct') {
+                // Store in direct_messages table
+                $directMessage = \App\Models\DirectMessage::create([
+                    'sender_id' => (int)$data['senderId'],
+                    'receiver_id' => (int)$data['roomId'],
+                    'content' => (string)$data['content'],
+                    'type' => 'text',
+                    'metadata' => [],
+                ]);
+                $message = (object) [
+                    'id' => $directMessage->id,
+                ];
             } else {
+                // Store in messages table for channel/team
                 $insert['channel_id'] = $data['roomId'];
-                $insert['conversation_id'] = null;
+                $message = $this->messages->create($insert);
             }
-            $message = $this->messages->create($insert);
             $payload = [
                 'roomType' => $type,
                 'roomId' => (string) $data['roomId'],

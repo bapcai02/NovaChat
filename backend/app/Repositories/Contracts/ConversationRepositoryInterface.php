@@ -5,11 +5,13 @@ namespace App\Repositories\Contracts;
 interface ConversationRepositoryInterface
 {
     public function getUserConversations(int $userId): array;
-    public function getConversationMessages(int $userId, int $conversationId): array;
-    public function createDirectConversation(int $userId1, int $userId2, ?string $name = null): array;
-    public function createTeamConversation(int $teamId, array $userIds, ?string $name = null): array;
-    public function addMemberToConversation(int $conversationId, int $userId): bool;
-    public function removeMemberFromConversation(int $conversationId, int $userId): bool;
+    public function getMessages(int $conversationId, int $limit = 50, ?int $beforeId = null, ?int $userId = null): array;
+    public function create(array $data): array;
+    public function findById(int $id): ?array;
+    public function addMember(int $conversationId, int $userId): bool;
+    public function removeMember(int $conversationId, int $userId): bool;
+    public function isMember(int $conversationId, int $userId): bool;
+    public function canManageMembers(int $conversationId, int $userId): bool;
 }
 
 

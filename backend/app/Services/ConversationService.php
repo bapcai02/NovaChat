@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Repositories\Contracts\ConversationRepositoryInterface;
+use Illuminate\Support\Facades\Log;
 
 class ConversationService
 {
@@ -12,33 +13,95 @@ class ConversationService
 
     public function getUserConversations(int $userId): array
     {
-        return $this->conversations->getUserConversations($userId);
+        try {
+            $conversations = $this->conversations->getUserConversations($userId);
+            return ['success' => true, 'data' => $conversations];
+        } catch (\Throwable $e) {
+            Log::error('ConversationService@getUserConversations failed: ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Failed to load conversations'];
+        }
     }
 
-    public function getConversationMessages(int $userId, int $conversationId): array
+    public function createConversation(array $data): array
     {
-        return $this->conversations->getConversationMessages($userId, $conversationId);
+        try {
+            $conversation = $this->conversations->create($data);
+            return ['success' => true, 'data' => $conversation];
+        } catch (\Throwable $e) {
+            Log::error('ConversationService@createConversation failed: ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Failed to create conversation'];
+        }
     }
 
-    public function createDirectConversation(int $userId1, int $userId2, ?string $name = null): array
+    public function getConversation(int $conversationId, int $userId): array
     {
-        return $this->conversations->createDirectConversation($userId1, $userId2, $name);
+        try {
+            $conversation = $this->conversations->findById($conversationId);
+            if (!$conversation) {
+                return ['success' => false, 'message' => 'Conversation not found'];
+            }
+
+            // Check if user is member
+            $isMember = $this->conversations->isMember($conversationId, $userId);
+            if (!$isMember) {
+                return ['success' => false, 'message' => 'Access denied'];
+            }
+
+            return ['success' => true, 'data' => $conversation];
+        } catch (\Throwable $e) {
+            Log::error('ConversationService@getConversation failed: ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Failed to load conversation'];
+        }
     }
 
-    public function createTeamConversation(int $teamId, array $userIds, ?string $name = null): array
+    public function getConversationMessages(int $conversationId, int $userId, int $limit = 50, ?int $beforeId = null): array
     {
-        return $this->conversations->createTeamConversation($teamId, $userIds, $name);
+        try {
+            // Check if user is member
+            $isMember = $this->conversations->isMember($conversationId, $userId);
+            if (!$isMember) {
+                return ['success' => false, 'message' => 'Access denied'];
+            }
+
+            $messages = $this->conversations->getMessages($conversationId, $limit, $beforeId, $userId);
+            return ['success' => true, 'data' => $messages];
+        } catch (\Throwable $e) {
+            Log::error('ConversationService@getConversationMessages failed: ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Failed to load messages'];
+        }
     }
 
-    public function addMemberToConversation(int $conversationId, int $userId): bool
+    public function addMember(int $conversationId, int $userId, int $requesterId): array
     {
-        return $this->conversations->addMemberToConversation($conversationId, $userId);
+        try {
+            // Check if requester has permission
+            $canManage = $this->conversations->canManageMembers($conversationId, $requesterId);
+            if (!$canManage) {
+                return ['success' => false, 'message' => 'Permission denied'];
+            }
+
+            $result = $this->conversations->addMember($conversationId, $userId);
+            return ['success' => $result, 'message' => $result ? 'Member added successfully' : 'Failed to add member'];
+        } catch (\Throwable $e) {
+            Log::error('ConversationService@addMember failed: ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Failed to add member'];
+        }
     }
 
-    public function removeMemberFromConversation(int $conversationId, int $userId): bool
+    public function removeMember(int $conversationId, int $userId, int $requesterId): array
     {
-        return $this->conversations->removeMemberFromConversation($conversationId, $userId);
+        try {
+            // Check if requester has permission
+            $canManage = $this->conversations->canManageMembers($conversationId, $requesterId);
+            if (!$canManage) {
+                return ['success' => false, 'message' => 'Permission denied'];
+            }
+
+            $result = $this->conversations->removeMember($conversationId, $userId);
+            return ['success' => $result, 'message' => $result ? 'Member removed successfully' : 'Failed to remove member'];
+        } catch (\Throwable $e) {
+            Log::error('ConversationService@removeMember failed: ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Failed to remove member'];
+        }
     }
 }
-
-

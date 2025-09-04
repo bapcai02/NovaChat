@@ -9,6 +9,18 @@ class Bookmark extends Model
     protected $fillable = [
         'user_id', 'message_id', 'note', 'tags'
     ];
+
+    protected $casts = [
+        'tags' => 'array',
+    ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function message()
+    {
+        return $this->belongsTo(Message::class);
+    }
 }
-
-

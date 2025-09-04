@@ -7,18 +7,25 @@ use Illuminate\Database\Eloquent\Model;
 class Channel extends Model
 {
     protected $fillable = [
-        'name', 'display_name', 'description', 'is_private', 'created_by'
+        'name', 'description', 'slug', 'team_id', 'is_private'
     ];
+
+    protected $casts = [
+        'is_private' => 'boolean',
+    ];
+
+    public function team()
+    {
+        return $this->belongsTo(Team::class);
+    }
 
     public function messages()
     {
         return $this->hasMany(Message::class);
     }
 
-    public function members()
+    public function conversations()
     {
-        return $this->belongsToMany(User::class, 'channel_members');
+        return $this->hasMany(Conversation::class);
     }
 }
-
-

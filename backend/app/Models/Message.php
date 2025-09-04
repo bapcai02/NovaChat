@@ -7,15 +7,17 @@ use Illuminate\Database\Eloquent\Model;
 class Message extends Model
 {
     protected $fillable = [
-        'user_id', 'channel_id', 'conversation_id', 'parent_id', 'content', 'type', 'metadata',
-        'is_edited', 'edited_at', 'is_pinned', 'is_deleted'
+        'user_id', 'conversation_id', 'channel_id', 'parent_id', 'content', 'type', 'metadata',
+        'is_edited', 'edited_at', 'is_pinned', 'is_deleted', 'deleted_at'
     ];
 
     protected $casts = [
+        'metadata' => 'array',
         'is_edited' => 'boolean',
         'is_pinned' => 'boolean',
         'is_deleted' => 'boolean',
         'edited_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
 
     public function user()

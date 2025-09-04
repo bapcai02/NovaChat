@@ -52,6 +52,11 @@ Route::middleware('auth:api')->group(function () {
 
     // Conversations
     Route::get('conversations', [ConversationController::class, 'index']);
+    Route::post('conversations', [ConversationController::class, 'store']);
+    Route::get('conversations/{conversationId}', [ConversationController::class, 'show']);
+    Route::get('conversations/{conversationId}/messages', [ConversationController::class, 'getMessages']);
+    Route::post('conversations/{conversationId}/members', [ConversationController::class, 'addMember']);
+    Route::delete('conversations/{conversationId}/members/{userId}', [ConversationController::class, 'removeMember']);
 
     // Users & legacy list endpoints will be re-added with new controllers
     Route::get('users', [UserController::class, 'index']);
