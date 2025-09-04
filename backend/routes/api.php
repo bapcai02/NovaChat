@@ -2,17 +2,13 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Interfaces\Http\Controllers\AuthController;
-use App\Interfaces\Http\Controllers\ChannelController as InterfaceChannelController;
-use App\Interfaces\Http\Controllers\ConversationController;
-use App\Interfaces\Http\Controllers\UserController as InterfaceUserController;
-use App\Interfaces\Http\Controllers\ChannelMessageController;
-use App\Interfaces\Http\Controllers\ConversationMessageController;
-use App\Interfaces\Http\Controllers\ThreadController;
-use App\Interfaces\Http\Controllers\SearchController;
-use App\Interfaces\Http\Controllers\MessageController;
-use App\Interfaces\Http\Controllers\UserStatusController;
-use App\Interfaces\Http\Controllers\TeamController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ChannelController;
+use App\Http\Controllers\ConversationController;
+use App\Http\Controllers\SearchController;
+use App\Http\Controllers\MessageController;
+use App\Http\Controllers\UserStatusController;
+use App\Http\Controllers\TeamController;
 
 /*
 |--------------------------------------------------------------------------
@@ -46,26 +42,21 @@ Route::middleware('auth:api')->group(function () {
     });
     
     // Channels
-    Route::get('channels', [InterfaceChannelController::class, 'index']);
-    Route::post('channels', [InterfaceChannelController::class, 'store']);
+    Route::get('channels', [ChannelController::class, 'index']);
+    Route::post('channels', [ChannelController::class, 'store']);
 
     // Teams
     Route::get('teams', [TeamController::class, 'index']);
     Route::post('teams', [TeamController::class, 'store']);
 
-    // Conversations (fake list)
+    // Conversations
     Route::get('conversations', [ConversationController::class, 'index']);
 
-    // Users (fake list)
-    Route::get('users', [InterfaceUserController::class, 'index']);
-
-    // Messages (fake lists)
-    Route::get('channels/{channelId}/messages', [ChannelMessageController::class, 'index']);
-    Route::get('conversations/{conversationId}/messages', [ConversationMessageController::class, 'index']);
+    // Users & legacy list endpoints will be re-added with new controllers
 
     // Thread replies
-    Route::get('messages/{messageId}/replies', [ThreadController::class, 'index']);
-    Route::post('messages/{messageId}/replies', [ThreadController::class, 'store']);
+    Route::get('messages/{messageId}/replies', [\App\Http\Controllers\ThreadController::class, 'index']);
+    Route::post('messages/{messageId}/replies', [\App\Http\Controllers\ThreadController::class, 'store']);
 
     // Search
     Route::get('search', [SearchController::class, 'search']);
