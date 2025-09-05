@@ -39,13 +39,13 @@ const MessageBubble = ({
   onRemoveBookmark 
 }: MessageBubbleProps) => {
   const isOwn = currentUser?.id === message.user_id
-  const sender = message.user || { name: 'Unknown', avatar: undefined }
+  const sender = message.sender || message.user || { name: 'Unknown', avatar: undefined }
   
   const handleReaction = (emoji: string) => {
     if (isOwn) return
     
     const hasReacted = message.reactions?.some(r => 
-      r.emoji === emoji && r.user_id === currentUser?.id
+      r.emoji === emoji && (r.users?.includes(currentUser?.id || 0) || r.user_id === currentUser?.id)
     )
     
     if (hasReacted) {
@@ -68,7 +68,7 @@ const MessageBubble = ({
       id: message.id.toString(),
       content: message.content,
       sender: sender.name || 'Unknown',
-      timestamp: new Date(message.created_at).toLocaleTimeString()
+      timestamp: new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     })
   }
 
@@ -102,7 +102,7 @@ const MessageBubble = ({
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span className="font-medium">{sender.name}</span>
             <span>•</span>
-            <span>{new Date(message.created_at).toLocaleTimeString()}</span>
+            <span>{new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
           </div>
         )}
 
@@ -189,7 +189,7 @@ const MessageBubble = ({
                   handleReaction(reaction.emoji)
                 }}
               >
-                {reaction.emoji} {reaction.user_id === currentUser?.id ? '✓' : ''}
+                {reaction.emoji} {reaction.count && reaction.count > 0 ? reaction.count : ''} {reaction.users?.includes(currentUser?.id || 0) || reaction.user_id === currentUser?.id ? '✓' : ''}
               </Button>
             ))}
           </div>
@@ -198,7 +198,7 @@ const MessageBubble = ({
         {/* Timestamp for own messages */}
         {isOwn && (
           <div className="text-xs text-muted-foreground">
-            {new Date(message.created_at).toLocaleTimeString()}
+            {new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </div>
         )}
       </div>

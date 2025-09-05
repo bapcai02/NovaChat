@@ -107,9 +107,11 @@ export default function ModernSidebar({
                     <Users className="h-4 w-4 text-muted-foreground group-hover:text-foreground" />
                     <span className="text-sm font-medium group-hover:text-primary">{team.name}</span>
                   </div>
-                  <Badge variant="secondary" className="text-xs font-medium">
-                    {team.members_count || 0}
-                  </Badge>
+                  {(team.members_count ?? 0) > 0 && (
+                    <Badge variant="secondary" className="text-[10px] font-medium flex-shrink-0 ml-2 h-5 px-1.5 min-w-[18px] flex items-center justify-center">
+                      {team.members_count}
+                    </Badge>
+                  )}
                 </button>
               ))}
             </div>
@@ -135,8 +137,8 @@ export default function ModernSidebar({
                     <Hash className="h-4 w-4 text-muted-foreground group-hover:text-foreground" />
                     <span className="text-sm font-medium group-hover:text-primary">{conversation.title}</span>
                   </div>
-                  {conversation.unread_count && conversation.unread_count > 0 && (
-                    <Badge variant="destructive" className="text-xs font-bold">
+                  {(conversation.unread_count ?? 0) > 0 && (
+                    <Badge variant="destructive" className="text-[10px] font-bold flex-shrink-0 ml-2 h-5 px-1.5 min-w-[18px] flex items-center justify-center">
                       {conversation.unread_count}
                     </Badge>
                   )}
@@ -183,14 +185,17 @@ export default function ModernSidebar({
                           {conversation.title || otherUser?.name || 'Unknown User'}
                         </p>
                         {conversation.last_message && (
-                          <p className="text-xs text-muted-foreground truncate">
-                            {conversation.last_message.content}
+                          <p className="text-xs text-muted-foreground truncate max-w-[200px]" title={conversation.last_message.content}>
+                            {conversation.last_message.content.length > 50 
+                              ? `${conversation.last_message.content.substring(0, 50)}...` 
+                              : conversation.last_message.content
+                            }
                           </p>
                         )}
                       </div>
                     </div>
-                    {conversation.unread_count && conversation.unread_count > 0 && (
-                      <Badge variant="destructive" className="text-xs font-bold">
+                    {(conversation.unread_count ?? 0) > 0 && (
+                      <Badge variant="destructive" className="text-[10px] font-bold flex-shrink-0 ml-2 h-5 px-1.5 min-w-[18px] flex items-center justify-center">
                         {conversation.unread_count}
                       </Badge>
                     )}

@@ -9,6 +9,11 @@ interface MessageRepositoryInterface
     public function create(array $data): object;
     public function addReaction(int $messageId, int $userId, string $emoji): array;
     public function removeReaction(int $messageId, int $userId, string $emoji): bool;
+    public function isBookmarked(int $messageId, int $userId): bool;
+    public function createBookmark(int $messageId, int $userId, ?string $note = null): array;
+    public function removeBookmark(int $messageId, int $userId): bool;
+    public function getUserBookmarks(int $userId): array;
+    public function edit(int $messageId, string $content): array;
 }
 
 

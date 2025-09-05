@@ -208,7 +208,7 @@ export default function ModernChatMessages({
         id: message.id.toString(),
         content: message.content,
         sender: sender.name || 'Unknown',
-        timestamp: new Date(message.created_at).toLocaleTimeString()
+        timestamp: new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       })
     }
 

@@ -5,6 +5,8 @@ namespace App\Repositories\Eloquent;
 use App\Repositories\Contracts\MessageRepositoryInterface;
 use App\Models\Message;
 use App\Models\MessageReaction;
+use App\Models\Bookmark;
+use Illuminate\Support\Facades\DB;
 
 class EloquentMessageRepository implements MessageRepositoryInterface
 {
@@ -16,25 +18,10 @@ class EloquentMessageRepository implements MessageRepositoryInterface
 
     public function getForRoom(string $roomId, string $type = 'channel', int $limit = 50, ?int $beforeId = null, ?int $userId = null): array
     {
-        // For direct messages, use DirectMessage model
+        // For direct messages, use Message model with conversation
         if ($type === 'direct') {
-            $query = \App\Models\DirectMessage::query()->with(['sender', 'receiver']);
-            
-            if (str_starts_with($roomId, 'direct_')) {
-                $peerId = (int) str_replace('direct_', '', $roomId);
-                $query->where(function ($q) use ($userId, $peerId) {
-                    $q->where('sender_id', $userId)->where('receiver_id', $peerId);
-                })->orWhere(function ($q) use ($userId, $peerId) {
-                    $q->where('sender_id', $peerId)->where('receiver_id', $userId);
-                });
-            } else {
-                // Legacy: roomId is peer user ID
-                $query->where(function ($q) use ($userId, $roomId) {
-                    $q->where('sender_id', $userId)->where('receiver_id', $roomId);
-                })->orWhere(function ($q) use ($userId, $roomId) {
-                    $q->where('sender_id', $roomId)->where('receiver_id', $userId);
-                });
-            }
+            $query = Message::query()->with('user');
+            $query->where('conversation_id', $roomId);
             
             if ($beforeId) {
                 $query->where('id', '<', (int) $beforeId);
@@ -45,22 +32,22 @@ class EloquentMessageRepository implements MessageRepositoryInterface
             return $rows->map(function ($row) use ($userId) {
                 return [
                     'id' => $row->id,
-                    'room_id' => null,
+                    'room_id' => $row->conversation_id,
                     'sender' => [
-                        'id' => $row->sender->id,
-                        'name' => $row->sender->name,
-                        'username' => $row->sender->username,
-                        'avatar' => $row->sender->avatar,
+                        'id' => $row->user->id,
+                        'name' => $row->user->name,
+                        'username' => $row->user->username,
+                        'avatar' => $row->user->avatar,
                     ],
                     'content' => $row->content,
                     'type' => $row->type ?? 'text',
                     'created_at' => $row->created_at,
-                    'is_edited' => false,
-                    'is_pinned' => false,
+                    'is_edited' => (bool) $row->is_edited,
+                    'is_pinned' => (bool) $row->is_pinned,
                     'attachments' => [],
-                    'reactions' => [],
+                    'reactions' => $this->getMessageReactions($row->id),
                     'read_by' => [],
-                    'is_bookmarked' => false,
+                    'is_bookmarked' => $userId ? Bookmark::where('user_id', $userId)->where('message_id', $row->id)->exists() : false,
                 ];
             })->reverse()->values()->toArray();
         }
@@ -93,7 +80,7 @@ class EloquentMessageRepository implements MessageRepositoryInterface
                 'attachments' => [],
                 'reactions' => $this->getMessageReactions($row->id),
                 'read_by' => [],
-                'is_bookmarked' => $userId ? \App\Models\Bookmark::where('user_id', $userId)->where('message_id', $row->id)->exists() : false,
+                'is_bookmarked' => $userId ? Bookmark::where('user_id', $userId)->where('message_id', $row->id)->exists() : false,
             ];
         })->reverse()->values()->toArray();
     }
@@ -122,9 +109,53 @@ class EloquentMessageRepository implements MessageRepositoryInterface
             ->delete() > 0;
     }
 
+    public function isBookmarked(int $messageId, int $userId): bool
+    {
+        return Bookmark::where('message_id', $messageId)
+            ->where('user_id', $userId)
+            ->exists();
+    }
+
+    public function createBookmark(int $messageId, int $userId, ?string $note = null): array
+    {
+        $bookmark = Bookmark::create([
+            'message_id' => $messageId,
+            'user_id' => $userId,
+            'note' => $note,
+        ]);
+        return $bookmark->toArray();
+    }
+
+    public function removeBookmark(int $messageId, int $userId): bool
+    {
+        return Bookmark::where('message_id', $messageId)
+            ->where('user_id', $userId)
+            ->delete() > 0;
+    }
+
+    public function getUserBookmarks(int $userId): array
+    {
+        return Bookmark::with('message.user')
+            ->where('user_id', $userId)
+            ->orderByDesc('created_at')
+            ->get()
+            ->toArray();
+    }
+
+    public function edit(int $messageId, string $content): array
+    {
+        $message = Message::findOrFail($messageId);
+        $message->update([
+            'content' => $content,
+            'is_edited' => true,
+            'edited_at' => now(),
+        ]);
+        return $message->fresh()->toArray();
+    }
+
     private function getMessageReactions(int $messageId): array
     {
-        return MessageReaction::select('emoji', \DB::raw('COUNT(*) as count'))
+        return MessageReaction::select('emoji', DB::raw('COUNT(*) as count'))
             ->where('message_id', $messageId)
             ->groupBy('emoji')
             ->get()

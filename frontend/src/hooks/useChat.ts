@@ -69,18 +69,26 @@ export interface Message {
   metadata?: any
   created_at: string
   updated_at: string
+  edited_at?: string
+  is_edited?: boolean
+  is_pinned?: boolean
+  is_deleted?: boolean
   user?: User
+  sender?: User
   reactions?: MessageReaction[]
   is_bookmarked?: boolean
   thread_messages_count?: number
+  replies_count?: number
 }
 
 export interface MessageReaction {
-  id: number
-  message_id: number
-  user_id: number
+  id?: number
+  message_id?: number
+  user_id?: number
   emoji: string
-  created_at: string
+  count?: number
+  users?: number[]
+  created_at?: string
   user?: User
 }
 
