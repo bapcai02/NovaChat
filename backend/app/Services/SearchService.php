@@ -6,8 +6,11 @@ use App\Repositories\Contracts\SearchRepositoryInterface;
 
 class SearchService
 {
-    public function __construct(private SearchRepositoryInterface $search)
+    private SearchRepositoryInterface $search;
+
+    public function __construct(SearchRepositoryInterface $search)
     {
+        $this->search = $search;
     }
 
     public function search(string $query, array $filters = []): array

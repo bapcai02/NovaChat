@@ -6,8 +6,11 @@ use App\Repositories\Contracts\UserRepositoryInterface;
 
 class UserService
 {
-    public function __construct(private UserRepositoryInterface $users)
+    private UserRepositoryInterface $users;
+
+    public function __construct(UserRepositoryInterface $users)
     {
+        $this->users = $users;
     }
 
     public function getAllUsers(int $perPage = 100): array

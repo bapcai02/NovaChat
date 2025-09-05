@@ -6,8 +6,11 @@ use App\Repositories\Contracts\ChannelRepositoryInterface;
 
 class ChannelService
 {
-    public function __construct(private ChannelRepositoryInterface $channels)
+    private ChannelRepositoryInterface $channels;
+
+    public function __construct(ChannelRepositoryInterface $channels)
     {
+        $this->channels = $channels;
     }
 
     public function getAllChannels(): array

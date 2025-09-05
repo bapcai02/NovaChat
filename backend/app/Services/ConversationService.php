@@ -7,8 +7,11 @@ use Illuminate\Support\Facades\Log;
 
 class ConversationService
 {
-    public function __construct(private ConversationRepositoryInterface $conversations)
+    private ConversationRepositoryInterface $conversations;
+
+    public function __construct(ConversationRepositoryInterface $conversations)
     {
+        $this->conversations = $conversations;
     }
 
     public function getUserConversations(int $userId): array

@@ -6,8 +6,11 @@ use App\Repositories\Contracts\ThreadRepositoryInterface;
 
 class ThreadService
 {
-    public function __construct(private ThreadRepositoryInterface $threads)
+    private ThreadRepositoryInterface $threads;
+
+    public function __construct(ThreadRepositoryInterface $threads)
     {
+        $this->threads = $threads;
     }
 
     public function getReplies(int $messageId): array
