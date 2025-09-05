@@ -5,8 +5,6 @@ namespace App\Repositories\Eloquent;
 use App\Repositories\Contracts\MessageRepositoryInterface;
 use App\Models\Message;
 use App\Models\MessageReaction;
-use App\Models\DirectMessage;
-use Illuminate\Support\Facades\Schema;
 
 class EloquentMessageRepository implements MessageRepositoryInterface
 {
