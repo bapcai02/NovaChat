@@ -112,7 +112,11 @@ const mockMessages: Message[] = [
   }
 ]
 
-export default function ModernChatMessages() {
+interface ModernChatMessagesProps {
+  onOpenThread?: (message: { id: string; content: string; sender: string; timestamp: string }) => void
+}
+
+export default function ModernChatMessages({ onOpenThread }: ModernChatMessagesProps) {
   const [messages, setMessages] = useState<Message[]>(mockMessages)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -230,7 +234,11 @@ export default function ModernChatMessages() {
               variant="ghost"
               size="sm"
               className="h-6 w-6 p-0 hover:bg-muted"
-              onClick={() => addReaction(message.id, '👍')}
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                addReaction(message.id, '👍')
+              }}
             >
               <Smile className="h-3 w-3" />
             </Button>
@@ -238,7 +246,11 @@ export default function ModernChatMessages() {
               variant="ghost"
               size="sm"
               className="h-6 w-6 p-0 hover:bg-muted"
-              onClick={() => addReaction(message.id, '❤️')}
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                addReaction(message.id, '❤️')
+              }}
             >
               <Heart className="h-3 w-3" />
             </Button>
@@ -246,6 +258,16 @@ export default function ModernChatMessages() {
               variant="ghost"
               size="sm"
               className="h-6 w-6 p-0 hover:bg-muted"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                onOpenThread?.({
+                  id: message.id,
+                  content: message.content,
+                  sender: message.sender.name,
+                  timestamp: message.timestamp
+                })
+              }}
             >
               <Reply className="h-3 w-3" />
             </Button>

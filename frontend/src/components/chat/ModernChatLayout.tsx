@@ -1,11 +1,12 @@
 "use client"
 
 import React, { useState } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import ModernSidebar from './ModernSidebar'
 import ModernChatHeader from './ModernChatHeader'
 import ModernChatMessages from './ModernChatMessages'
 import ModernChatInput from './ModernChatInput'
+import ModernThreadChat from './ModernThreadChat'
 
 interface ChatLayoutProps {
   className?: string
@@ -23,6 +24,14 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
     isMuted: false,
     isPinned: false
   })
+
+  const [showThread, setShowThread] = useState(false)
+  const [threadMessage, setThreadMessage] = useState<{
+    id: string
+    content: string
+    sender: string
+    timestamp: string
+  } | null>(null)
 
   const handleSendMessage = (content: string, attachments?: any[]) => {
     console.log('Sending message:', content, attachments)
@@ -65,6 +74,16 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
   const handleSettings = () => {
     console.log('Settings clicked')
     // Implement settings logic here
+  }
+
+  const handleOpenThread = (message: { id: string; content: string; sender: string; timestamp: string }) => {
+    setThreadMessage(message)
+    setShowThread(true)
+  }
+
+  const handleCloseThread = () => {
+    setShowThread(false)
+    setThreadMessage(null)
   }
 
   return (
@@ -113,7 +132,7 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
           transition={{ duration: 0.3, delay: 0.2 }}
           className="flex-1 min-h-0"
         >
-          <ModernChatMessages />
+          <ModernChatMessages onOpenThread={handleOpenThread} />
         </motion.div>
 
         {/* Chat input */}
@@ -129,6 +148,24 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
           />
         </motion.div>
       </div>
+
+      {/* Thread Chat */}
+      <AnimatePresence>
+        {showThread && threadMessage && (
+          <motion.div
+            initial={{ x: 400, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 400, opacity: 0 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+            className="w-96 flex-shrink-0"
+          >
+            <ModernThreadChat
+              parentMessage={threadMessage}
+              onClose={handleCloseThread}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
