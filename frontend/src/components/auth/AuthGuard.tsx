@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAppSelector } from '@/hooks/useAppSelector'
 import { useAppDispatch } from '@/hooks/useAppDispatch'
 import { verifyToken, getCurrentUser } from '@/store/slices/authSlice'
-import { LoadingScreen } from '@/components/ui/loading-screen'
+import ModernLoadingScreen from './ModernLoadingScreen'
 
 interface AuthGuardProps {
   children: React.ReactNode
@@ -83,7 +83,7 @@ export function AuthGuard({ children, requireAuth = true }: AuthGuardProps) {
 
   // Show loading while checking authentication
   if (isLoading || isChecking) {
-    return <LoadingScreen />
+    return <ModernLoadingScreen message="Authenticating..." />
   }
 
   // Block rendering while we determine and trigger redirects
