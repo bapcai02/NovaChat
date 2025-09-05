@@ -9,7 +9,7 @@ import { MessageRenderer } from '@/components/ui/message-renderer'
 import { cn } from '@/lib/utils'
 import { useAppSelector } from '@/hooks/useAppSelector'
 import { useAppDispatch } from '@/hooks/useAppDispatch'
-import { api } from '@/services/api'
+import { apiService } from '@/services/api'
 import { userStatusService } from '@/services/userStatusService'
 import { loadUserFromStorage, setUser } from '@/store/slices/authSlice'
 

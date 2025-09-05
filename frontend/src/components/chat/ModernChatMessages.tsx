@@ -112,12 +112,29 @@ const mockMessages: Message[] = [
   }
 ]
 
+import { Message, User } from '@/hooks/useChat'
+
 interface ModernChatMessagesProps {
+  messages: Message[]
+  currentUser: User | null
   onOpenThread?: (message: { id: string; content: string; sender: string; timestamp: string }) => void
+  onAddReaction?: (messageId: number, emoji: string) => void
+  onRemoveReaction?: (messageId: number, emoji: string) => void
+  onBookmark?: (messageId: number, note?: string) => void
+  onRemoveBookmark?: (messageId: number) => void
+  isLoading?: boolean
 }
 
-export default function ModernChatMessages({ onOpenThread }: ModernChatMessagesProps) {
-  const [messages, setMessages] = useState<Message[]>(mockMessages)
+export default function ModernChatMessages({ 
+  messages, 
+  currentUser, 
+  onOpenThread, 
+  onAddReaction, 
+  onRemoveReaction, 
+  onBookmark, 
+  onRemoveBookmark, 
+  isLoading 
+}: ModernChatMessagesProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const scrollToBottom = () => {
@@ -152,7 +169,50 @@ export default function ModernChatMessages({ onOpenThread }: ModernChatMessagesP
     }))
   }
 
-  const MessageBubble = ({ message }: { message: Message }) => (
+  const MessageBubble = ({ 
+    message, 
+    currentUser, 
+    onOpenThread, 
+    onAddReaction, 
+    onRemoveReaction, 
+    onBookmark, 
+    onRemoveBookmark 
+  }: MessageBubbleProps) => {
+    const isOwn = currentUser?.id === message.user_id
+    const sender = message.user || { name: 'Unknown', avatar: undefined }
+    
+    const handleReaction = (emoji: string) => {
+      if (isOwn) return
+      
+      const hasReacted = message.reactions?.some(r => 
+        r.emoji === emoji && r.user_id === currentUser?.id
+      )
+      
+      if (hasReacted) {
+        onRemoveReaction?.(message.id, emoji)
+      } else {
+        onAddReaction?.(message.id, emoji)
+      }
+    }
+
+    const handleBookmark = () => {
+      if (message.is_bookmarked) {
+        onRemoveBookmark?.(message.id)
+      } else {
+        onBookmark?.(message.id)
+      }
+    }
+
+    const handleReply = () => {
+      onOpenThread?.({
+        id: message.id.toString(),
+        content: message.content,
+        sender: sender.name || 'Unknown',
+        timestamp: new Date(message.created_at).toLocaleTimeString()
+      })
+    }
+
+    return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -343,12 +403,44 @@ export default function ModernChatMessages({ onOpenThread }: ModernChatMessagesP
     </motion.div>
   )
 
+  if (isLoading) {
+    return (
+      <div className="flex-1 overflow-hidden">
+        <div className="h-full flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading messages...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="flex-1 overflow-hidden">
       <div className="h-full overflow-y-auto p-4 space-y-4">
-        {messages.map((message) => (
-          <MessageBubble key={message.id} message={message} />
-        ))}
+        {messages.length === 0 ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <MessageCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground">No messages yet</p>
+              <p className="text-sm text-muted-foreground">Start the conversation!</p>
+            </div>
+          </div>
+        ) : (
+          messages.map((message) => (
+            <MessageBubble 
+              key={message.id} 
+              message={message} 
+              currentUser={currentUser}
+              onOpenThread={onOpenThread}
+              onAddReaction={onAddReaction}
+              onRemoveReaction={onRemoveReaction}
+              onBookmark={onBookmark}
+              onRemoveBookmark={onRemoveBookmark}
+            />
+          ))
+        )}
         <div ref={messagesEndRef} />
       </div>
     </div>

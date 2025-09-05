@@ -27,6 +27,21 @@ class ChannelService
     {
         return $this->channels->create($data, $createdBy);
     }
+
+    public function updateChannel(int $id, array $data): array
+    {
+        return $this->channels->update($id, $data);
+    }
+
+    public function deleteChannel(int $id): bool
+    {
+        return $this->channels->delete($id);
+    }
+
+    public function getChannelsByTeam(int $teamId): array
+    {
+        return $this->channels->getByTeam($teamId);
+    }
 }
 
 

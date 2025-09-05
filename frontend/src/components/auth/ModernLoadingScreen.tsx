@@ -99,27 +99,41 @@ export default function ModernLoadingScreen({ message = "Loading..." }: ModernLo
 
         {/* Floating Particles */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {[...Array(20)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute w-1 h-1 bg-white/30 rounded-full"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-              }}
-              animate={{
-                y: [0, -100],
-                opacity: [0, 1, 0],
-                scale: [0, 1, 0]
-              }}
-              transition={{
-                duration: 3 + Math.random() * 2,
-                repeat: Infinity,
-                delay: Math.random() * 2,
-                ease: "easeOut"
-              }}
-            />
-          ))}
+          {[...Array(20)].map((_, i) => {
+            // Use fixed positions to avoid hydration mismatch
+            const positions = [
+              { left: 26, top: 9 }, { left: 97, top: 46 }, { left: 87, top: 92 },
+              { left: 56, top: 11 }, { left: 45, top: 76 }, { left: 34, top: 54 },
+              { left: 98, top: 50 }, { left: 70, top: 26 }, { left: 51, top: 14 },
+              { left: 17, top: 45 }, { left: 87, top: 62 }, { left: 32, top: 7 },
+              { left: 29, top: 26 }, { left: 8, top: 50 }, { left: 6, top: 17 },
+              { left: 25, top: 42 }, { left: 58, top: 15 }, { left: 1, top: 69 },
+              { left: 38, top: 10 }, { left: 29, top: 66 }
+            ]
+            const pos = positions[i] || { left: 50, top: 50 }
+            
+            return (
+              <motion.div
+                key={i}
+                className="absolute w-1 h-1 bg-white/30 rounded-full"
+                style={{
+                  left: `${pos.left}%`,
+                  top: `${pos.top}%`,
+                }}
+                animate={{
+                  y: [0, -100],
+                  opacity: [0, 1, 0],
+                  scale: [0, 1, 0]
+                }}
+                transition={{
+                  duration: 3 + (i % 3) * 0.5,
+                  repeat: Infinity,
+                  delay: (i % 4) * 0.5,
+                  ease: "easeOut"
+                }}
+              />
+            )
+          })}
         </div>
 
         {/* Gradient Background Animation */}

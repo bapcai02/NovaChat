@@ -1,98 +1,278 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
-
-// API Configuration
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
 
-// Create axios instance
-const apiClient: AxiosInstance = axios.create({
-  baseURL: API_BASE_URL,
-  timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-  },
-})
+class ApiService {
+  private baseURL: string
+  private token: string | null = null
 
-// Request interceptor to add auth token
-apiClient.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('auth_token')
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
-    }
-    return config
-  },
-  (error) => {
-    return Promise.reject(error)
+  constructor() {
+    this.baseURL = API_BASE_URL
+    this.token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
   }
-)
 
-// Response interceptor to handle errors
-apiClient.interceptors.response.use(
-  (response: AxiosResponse) => {
-    return response
-  },
-  (error) => {
-    // Handle 401 Unauthorized - but don't redirect automatically
-    // Let the components handle the redirect
-    if (error.response?.status === 401) {
-      console.log('Token invalid, clearing localStorage')
-      localStorage.removeItem('auth_token')
-      localStorage.removeItem('user')
-      // Don't redirect here, let the component handle it
+  private getHeaders(): HeadersInit {
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
     }
-    return Promise.reject(error)
+
+    if (this.token) {
+      headers.Authorization = `Bearer ${this.token}`
+    }
+
+    return headers
   }
-)
 
-// API Response types
-export interface ApiResponse<T = any> {
-  success: boolean
-  data: T
-  message: string
+  private async request<T>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<T> {
+    const url = `${this.baseURL}${endpoint}`
+    
+    const config: RequestInit = {
+      ...options,
+      headers: {
+        ...this.getHeaders(),
+        ...options.headers,
+      },
+    }
+
+    try {
+      const response = await fetch(url, config)
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`)
+      }
+
+      return await response.json()
+    } catch (error) {
+      console.error('API request failed:', error)
+      throw error
+    }
+  }
+
+  // Auth endpoints
+  async login(email: string, password: string) {
+    return this.request('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    })
+  }
+
+  async register(data: {
+    name: string
+    email: string
+    username: string
+    password: string
+    password_confirmation: string
+  }) {
+    return this.request('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async logout() {
+    return this.request('/auth/logout', {
+      method: 'POST',
+    })
+  }
+
+  async getCurrentUser() {
+    return this.request('/auth/me')
+  }
+
+  // Teams endpoints
+  async getTeams() {
+    return this.request('/teams')
+  }
+
+  async createTeam(data: { name: string; description?: string; is_private?: boolean }) {
+    return this.request('/teams', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async getTeam(teamId: string) {
+    return this.request(`/teams/${teamId}`)
+  }
+
+  async updateTeam(teamId: string, data: { name?: string; description?: string; is_private?: boolean }) {
+    return this.request(`/teams/${teamId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async deleteTeam(teamId: string) {
+    return this.request(`/teams/${teamId}`, {
+      method: 'DELETE',
+    })
+  }
+
+  // Channels endpoints
+  async getChannels(teamId: string) {
+    return this.request(`/teams/${teamId}/channels`)
+  }
+
+  async createChannel(teamId: string, data: { name: string; description?: string; is_private?: boolean }) {
+    return this.request(`/teams/${teamId}/channels`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async getChannel(teamId: string, channelId: string) {
+    return this.request(`/teams/${teamId}/channels/${channelId}`)
+  }
+
+  async updateChannel(teamId: string, channelId: string, data: { name?: string; description?: string; is_private?: boolean }) {
+    return this.request(`/teams/${teamId}/channels/${channelId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async deleteChannel(teamId: string, channelId: string) {
+    return this.request(`/teams/${teamId}/channels/${channelId}`, {
+      method: 'DELETE',
+    })
+  }
+
+  // Conversations endpoints
+  async getConversations() {
+    return this.request('/conversations')
+  }
+
+  async getConversation(conversationId: string) {
+    return this.request(`/conversations/${conversationId}`)
+  }
+
+  async createDirectConversation(userId: string) {
+    return this.request('/conversations', {
+      method: 'POST',
+      body: JSON.stringify({
+        type: 'direct',
+        participant_id: userId,
+      }),
+    })
+  }
+
+  async addMemberToConversation(conversationId: string, userId: string) {
+    return this.request(`/conversations/${conversationId}/members`, {
+      method: 'POST',
+      body: JSON.stringify({ user_id: userId }),
+    })
+  }
+
+  async removeMemberFromConversation(conversationId: string, userId: string) {
+    return this.request(`/conversations/${conversationId}/members/${userId}`, {
+      method: 'DELETE',
+    })
+  }
+
+  // Messages endpoints
+  async getMessages(conversationId: string, page: number = 1, perPage: number = 50) {
+    return this.request(`/conversations/${conversationId}/messages?page=${page}&per_page=${perPage}`)
+  }
+
+  async sendMessage(conversationId: string, content: string, type: string = 'text', metadata?: any) {
+    return this.request(`/conversations/${conversationId}/messages`, {
+      method: 'POST',
+      body: JSON.stringify({
+        content,
+        type,
+        metadata,
+      }),
+    })
+  }
+
+  async editMessage(messageId: string, content: string) {
+    return this.request(`/messages/${messageId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ content }),
+    })
+  }
+
+  async deleteMessage(messageId: string) {
+    return this.request(`/messages/${messageId}`, {
+      method: 'DELETE',
+    })
+  }
+
+  async addReaction(messageId: string, emoji: string) {
+    return this.request(`/messages/${messageId}/reactions`, {
+      method: 'POST',
+      body: JSON.stringify({ emoji }),
+    })
+  }
+
+  async removeReaction(messageId: string, emoji: string) {
+    return this.request(`/messages/${messageId}/reactions`, {
+      method: 'DELETE',
+      body: JSON.stringify({ emoji }),
+    })
+  }
+
+  async bookmarkMessage(messageId: string, note?: string) {
+    return this.request(`/messages/${messageId}/bookmark`, {
+      method: 'POST',
+      body: JSON.stringify({ note }),
+    })
+  }
+
+  async removeBookmark(messageId: string) {
+    return this.request(`/messages/${messageId}/bookmark`, {
+      method: 'DELETE',
+    })
+  }
+
+  async getBookmarks() {
+    return this.request('/messages/bookmarks')
+  }
+
+  // Search endpoints
+  async searchMessages(query: string, conversationId?: string) {
+    const params = new URLSearchParams({ q: query })
+    if (conversationId) {
+      params.append('conversation_id', conversationId)
+    }
+    return this.request(`/search/messages?${params}`)
+  }
+
+  async searchUsers(query: string) {
+    return this.request(`/search/users?q=${encodeURIComponent(query)}`)
+  }
+
+  async searchConversations(query: string) {
+    return this.request(`/search/conversations?q=${encodeURIComponent(query)}`)
+  }
+
+  // User status endpoints
+  async updateUserStatus(status: 'online' | 'offline' | 'away' | 'busy', statusMessage?: string) {
+    return this.request('/user/status', {
+      method: 'PUT',
+      body: JSON.stringify({ status, status_message: statusMessage }),
+    })
+  }
+
+  async getOnlineUsers() {
+    return this.request('/user/online')
+  }
+
+  // Thread endpoints
+  async getThreadMessages(messageId: string, page: number = 1, perPage: number = 20) {
+    return this.request(`/messages/${messageId}/thread?page=${page}&per_page=${perPage}`)
+  }
+
+  async sendThreadMessage(messageId: string, content: string) {
+    return this.request(`/messages/${messageId}/thread`, {
+      method: 'POST',
+      body: JSON.stringify({ content }),
+    })
+  }
 }
 
-export interface PaginatedResponse<T> {
-  data: T[]
-  current_page: number
-  last_page: number
-  per_page: number
-  total: number
-}
-
-// API Error type
-export interface ApiError {
-  message: string
-  errors?: Record<string, string[]>
-  status?: number
-}
-
-// Generic API methods
-export const api = {
-  // GET request
-  get: <T = any>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<ApiResponse<T>>> => {
-    return apiClient.get(url, config)
-  },
-
-  // POST request
-  post: <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<AxiosResponse<ApiResponse<T>>> => {
-    return apiClient.post(url, data, config)
-  },
-
-  // PUT request
-  put: <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<AxiosResponse<ApiResponse<T>>> => {
-    return apiClient.put(url, data, config)
-  },
-
-  // PATCH request
-  patch: <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<AxiosResponse<ApiResponse<T>>> => {
-    return apiClient.patch(url, data, config)
-  },
-
-  // DELETE request
-  delete: <T = any>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<ApiResponse<T>>> => {
-    return apiClient.delete(url, config)
-  },
-}
-
-export default apiClient
+export const apiService = new ApiService()
+export default apiService

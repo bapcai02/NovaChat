@@ -29,6 +29,41 @@ class EloquentChannelRepository implements ChannelRepositoryInterface
         ]);
         return $channel->toArray();
     }
+
+    public function update(int $id, array $data): array
+    {
+        $channel = Channel::find($id);
+        if (!$channel) {
+            return null;
+        }
+        
+        $channel->update([
+            'name' => $data['name'] ?? $channel->name,
+            'display_name' => $data['display_name'] ?? $channel->display_name,
+            'description' => $data['description'] ?? $channel->description,
+            'is_private' => isset($data['is_private']) ? (bool)$data['is_private'] : $channel->is_private,
+        ]);
+        
+        return $channel->toArray();
+    }
+
+    public function delete(int $id): bool
+    {
+        $channel = Channel::find($id);
+        if (!$channel) {
+            return false;
+        }
+        
+        return $channel->delete();
+    }
+
+    public function getByTeam(int $teamId): array
+    {
+        return Channel::where('team_id', $teamId)
+            ->orderBy('name', 'asc')
+            ->get()
+            ->toArray();
+    }
 }
 
 

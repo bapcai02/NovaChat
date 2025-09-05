@@ -5,7 +5,7 @@ import { Button } from './button'
 import { Input } from './input'
 import { Textarea } from './textarea'
 import { Switch } from './switch'
-import { api } from '@/services/api'
+import { apiService } from '@/services/api'
 
 interface CreateChannelModalProps {
   isOpen: boolean

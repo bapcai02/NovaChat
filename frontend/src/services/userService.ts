@@ -1,4 +1,4 @@
-import { api, PaginatedResponse } from './api'
+import { apiService } from './api'
 import { User } from './authService'
 
 // User types

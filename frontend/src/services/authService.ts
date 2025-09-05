@@ -1,4 +1,4 @@
-import { api, ApiResponse } from './api'
+import { apiService } from './api'
 
 // Auth types
 export interface LoginCredentials {
@@ -43,20 +43,20 @@ export interface RefreshTokenResponse {
 export const authService = {
   // Login user
   login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
-    const response = await api.post<AuthResponse>('/auth/login', credentials)
-    return response.data.data
+    const response = await apiService.login(credentials.email, credentials.password)
+    return response.data
   },
 
   // Register user
   register: async (data: RegisterData): Promise<AuthResponse> => {
-    const response = await api.post<AuthResponse>('/auth/register', data)
-    return response.data.data
+    const response = await apiService.register(data)
+    return response.data
   },
 
   // Logout user
   logout: async (): Promise<void> => {
     try {
-      await api.post('/auth/logout')
+      await apiService.logout()
     } catch (error) {
       // Even if logout fails, clear local storage
       console.error('Logout error:', error)
@@ -68,20 +68,20 @@ export const authService = {
 
   // Get current user
   getCurrentUser: async (): Promise<User> => {
-    const response = await api.get<User>('/auth/me')
-    return response.data.data
+    const response = await apiService.getCurrentUser()
+    return response.data
   },
 
   // Refresh token
   refreshToken: async (): Promise<RefreshTokenResponse> => {
-    const response = await api.post<RefreshTokenResponse>('/auth/refresh')
-    return response.data.data
+    // Note: refresh token endpoint not implemented in apiService yet
+    throw new Error('Refresh token not implemented')
   },
 
   // Verify token
   verifyToken: async (): Promise<boolean> => {
     try {
-      await api.get('/auth/me')
+      await apiService.getCurrentUser()
       return true
     } catch (error) {
       return false

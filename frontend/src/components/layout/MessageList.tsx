@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useRef, useState } from 'react'
-import { api } from '@/services/api'
+import { apiService } from '@/services/api'
 import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { EmojiPicker } from '@/components/ui/emoji-picker'

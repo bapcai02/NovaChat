@@ -9,6 +9,7 @@ interface SearchRepositoryInterface
     public function searchChannels(string $query, array $filters = []): array;
     public function searchUsers(string $query, array $filters = []): array;
     public function searchFiles(string $query, array $filters = []): array;
+    public function searchConversations(string $query, array $filters = []): array;
 }
 
 

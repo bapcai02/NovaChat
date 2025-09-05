@@ -1,4 +1,4 @@
-import { api } from './api'
+import { apiService } from './api'
 
 export interface UserStatus {
   userId: string
@@ -31,35 +31,52 @@ export interface OnlineUser {
 export const userStatusService = {
   // Update user status
   updateStatus: async (status: string, statusMessage?: string, roomId: string = '1'): Promise<UserStatus> => {
-    const response = await api.post<UserStatus>('/user/status', {
-      status,
+    await apiService.updateUserStatus(status as any, statusMessage)
+    return {
+      userId: 'current-user',
+      roomId,
+      status: status as any,
       statusMessage,
-      roomId
-    })
-    return response.data.data
+      userName: 'Current User',
+      timestamp: new Date().toISOString()
+    }
   },
 
   // Start typing
   startTyping: async (roomId: string = '1'): Promise<TypingEvent> => {
-    const response = await api.post<TypingEvent>('/user/typing/start', {
-      roomId
-    })
-    return response.data.data
+    // Note: Typing events not implemented in apiService yet
+    console.log('Start typing in room:', roomId)
+    return {
+      roomId,
+      userId: 'current-user',
+      userName: 'Current User',
+      timestamp: new Date().toISOString()
+    }
   },
 
   // Stop typing
   stopTyping: async (roomId: string = '1'): Promise<TypingEvent> => {
-    const response = await api.post<TypingEvent>('/user/typing/stop', {
-      roomId
-    })
-    return response.data.data
+    // Note: Typing events not implemented in apiService yet
+    console.log('Stop typing in room:', roomId)
+    return {
+      roomId,
+      userId: 'current-user',
+      userName: 'Current User',
+      timestamp: new Date().toISOString()
+    }
   },
 
   // Get online users
   getOnlineUsers: async (roomId: string = '1'): Promise<OnlineUser[]> => {
-    const response = await api.get<OnlineUser[]>('/user/online', {
-      params: { roomId }
-    })
-    return response.data.data
+    const response = await apiService.getOnlineUsers()
+    return response.data.map(user => ({
+      id: user.id.toString(),
+      name: user.name,
+      username: user.username,
+      avatar: user.avatar,
+      status: user.status || 'online',
+      statusMessage: user.status_message,
+      lastSeenAt: user.last_seen_at || new Date().toISOString()
+    }))
   }
 }

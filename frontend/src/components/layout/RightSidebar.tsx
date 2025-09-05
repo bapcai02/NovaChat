@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { ThreadMessageInput } from './ThreadMessageInput'
 import { OnlineUsers } from '@/components/ui/online-users'
 import { cn } from '@/lib/utils'
-import { api } from '@/services/api'
+import { apiService } from '@/services/api'
 
 interface RightSidebarProps {
   onClose: () => void

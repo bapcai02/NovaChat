@@ -69,6 +69,15 @@ class SearchController extends Controller
             return $this->successResponse($results, 'File search completed successfully');
         }, 'File search completed', 'File search failed');
     }
+
+    public function searchConversations(SearchBasicRequest $request): JsonResponse
+    {
+        return $this->executeInTransactionWithResponse(function () use ($request) {
+            $validated = $request->validated();
+            $results = $this->search->searchConversations($validated['q']);
+            return $this->successResponse($results, 'Conversation search completed successfully');
+        }, 'Conversation search completed', 'Conversation search failed');
+    }
 }
 
 

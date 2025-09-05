@@ -50,6 +50,12 @@ class EloquentSearchRepository implements SearchRepositoryInterface
         return File::where('name', 'like', "%$query%")
             ->orderByDesc('id')->limit(50)->get()->toArray();
     }
+
+    public function searchConversations(string $query, array $filters = []): array
+    {
+        return \App\Models\Conversation::where('name', 'like', "%$query%")
+            ->orderByDesc('id')->limit(50)->get()->toArray();
+    }
 }
 
 

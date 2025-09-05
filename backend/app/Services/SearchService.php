@@ -42,6 +42,12 @@ class SearchService
         if (trim($query) === '') { return []; }
         return $this->search->searchFiles($query, $filters);
     }
+
+    public function searchConversations(string $query, array $filters = []): array
+    {
+        if (trim($query) === '') { return []; }
+        return $this->search->searchConversations($query, $filters);
+    }
 }
 
 

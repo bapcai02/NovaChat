@@ -2,9 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAppSelector } from '@/hooks/useAppSelector'
-import { useAppDispatch } from '@/hooks/useAppDispatch'
-import { verifyToken, getCurrentUser } from '@/store/slices/authSlice'
+import { useAuth } from '@/contexts/AuthContext'
 import ModernLoadingScreen from './ModernLoadingScreen'
 
 interface AuthGuardProps {
@@ -14,8 +12,7 @@ interface AuthGuardProps {
 
 export function AuthGuard({ children, requireAuth = true }: AuthGuardProps) {
   const router = useRouter()
-  const dispatch = useAppDispatch()
-  const { isAuthenticated, isLoading, user } = useAppSelector((state) => state.auth)
+  const { isAuthenticated, isLoading, user } = useAuth()
   const [isChecking, setIsChecking] = useState(true)
 
   useEffect(() => {
@@ -28,67 +25,47 @@ export function AuthGuard({ children, requireAuth = true }: AuthGuardProps) {
     })()
 
     const checkAuth = async () => {
-      const token = localStorage.getItem('auth_token')
-      
-      // If no token and auth is required, redirect to login
-      if (!token && requireAuth) {
-        router.push('/login')
+      try {
+        // Wait for auth state to be determined
         await delay(delayMs)
-        setIsChecking(false)
-        return
-      }
-
-      // If no token and auth is not required, allow access
-      if (!token && !requireAuth) {
-        await delay(delayMs)
-        setIsChecking(false)
-        return
-      }
-
-      // If we have a token but not authenticated, verify it
-      if (token && !isAuthenticated) {
-        try {
-          await dispatch(verifyToken()).unwrap()
-          await dispatch(getCurrentUser()).unwrap()
-        } catch (error) {
-          console.error('Auth verification failed:', error)
-          // Clear invalid token
-          localStorage.removeItem('auth_token')
-          localStorage.removeItem('user')
-          
-          if (requireAuth) {
-            router.push('/login')
-          }
+        
+        if (requireAuth && !isAuthenticated) {
+          router.push('/login')
+          return
         }
+        
+        if (!requireAuth && isAuthenticated) {
+          router.push('/chat')
+          return
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error)
+        if (requireAuth) {
+          router.push('/login')
+        }
+      } finally {
+        setIsChecking(false)
       }
-
-      await delay(delayMs)
-      setIsChecking(false)
     }
 
-    checkAuth()
-  }, [dispatch, isAuthenticated, requireAuth, router])
-
-  // Post-check redirects must happen in an effect to avoid updating router during render
-  useEffect(() => {
-    if (isLoading || isChecking) return
-    if (requireAuth && !isAuthenticated) {
-      router.push('/login')
-      return
+    if (!isLoading) {
+      checkAuth()
     }
-    if (!requireAuth && isAuthenticated) {
-      router.replace('/chat')
-    }
-  }, [isAuthenticated, isLoading, isChecking, requireAuth, router])
+  }, [isAuthenticated, isLoading, requireAuth, router])
 
-  // Show loading while checking authentication
+  // Show loading while checking auth
   if (isLoading || isChecking) {
     return <ModernLoadingScreen message="Authenticating..." />
   }
 
-  // Block rendering while we determine and trigger redirects
-  if (requireAuth && !isAuthenticated) return null
-  if (!requireAuth && isAuthenticated) return null
+  // Don't render children if auth requirements not met
+  if (requireAuth && !isAuthenticated) {
+    return null
+  }
+
+  if (!requireAuth && isAuthenticated) {
+    return null
+  }
 
   return <>{children}</>
 }

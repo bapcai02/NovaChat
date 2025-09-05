@@ -13,7 +13,7 @@ import { useAppSelector } from '@/hooks/useAppSelector'
 import { useAppDispatch } from '@/hooks/useAppDispatch'
 import { fetchChannels } from '@/store/slices/channelSlice'
 import { fetchUsers } from '@/store/slices/userSlice'
-import { api } from '@/services/api'
+import { apiService } from '@/services/api'
 import { CreateTeamModal } from '@/components/ui/create-team-modal'
 
 interface Team {

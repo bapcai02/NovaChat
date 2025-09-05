@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from 'react'
-import { api } from '@/services/api'
+import { apiService } from '@/services/api'
 
 export default function TestChatPage() {
   const [message, setMessage] = useState('')

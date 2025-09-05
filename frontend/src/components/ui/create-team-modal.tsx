@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useMemo, useState } from 'react'
-import { api } from '@/services/api'
+import { apiService } from '@/services/api'
 import { Button } from './button'
 
 interface CreateTeamModalProps {

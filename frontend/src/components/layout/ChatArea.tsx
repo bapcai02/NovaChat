@@ -19,7 +19,7 @@ interface ChatAreaProps {
   selectedChat: { type: 'channel' | 'conversation', id: number, title: string } | null
 }
 
-import { api } from '@/services/api'
+import { apiService } from '@/services/api'
 
 export const ChatArea: React.FC<ChatAreaProps> = ({ onToggleRightSidebar, onThreadSelect, selectedChat }) => {
   const [currentChannel, setCurrentChannel] = useState('general')

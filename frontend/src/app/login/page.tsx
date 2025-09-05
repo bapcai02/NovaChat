@@ -2,9 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAppSelector } from '@/hooks/useAppSelector'
-import { useAppDispatch } from '@/hooks/useAppDispatch'
-import { login, clearError } from '@/store/slices/authSlice'
+import { useAuth } from '@/contexts/AuthContext'
 import { AuthGuard } from '@/components/auth/AuthGuard'
 import ModernAuthLayout from '@/components/auth/ModernAuthLayout'
 import ModernLoadingScreen from '@/components/auth/ModernLoadingScreen'
@@ -12,80 +10,78 @@ import ModernLoadingScreen from '@/components/auth/ModernLoadingScreen'
 export default function LoginPage() {
   const [showForgotPassword, setShowForgotPassword] = useState(false)
   const [forgotPasswordSuccess, setForgotPasswordSuccess] = useState(false)
-  const router = useRouter()
-  const dispatch = useAppDispatch()
-  const { isLoading, error, isAuthenticated } = useAppSelector((state) => state.auth)
   const [isInitialLoading, setIsInitialLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
+  const { login, isLoading, isAuthenticated } = useAuth()
 
   useEffect(() => {
-    dispatch(clearError())
     // Simulate initial loading
     const timer = setTimeout(() => {
       setIsInitialLoading(false)
     }, 1500)
     
     return () => clearTimeout(timer)
-  }, [dispatch])
+  }, [])
 
   const handleLogin = async (data: { email: string; password: string }) => {
     try {
-      await dispatch(login(data)).unwrap()
-      // Show loading while redirecting to chat
+      setError(null)
+      await login(data.email, data.password)
       setIsInitialLoading(true)
-      router.push('/chat')
-    } catch (error) {
-      console.error('Login failed:', error)
+      setTimeout(() => {
+        router.push('/chat')
+      }, 1000)
+    } catch (error: any) {
+      setError(error.message || 'Login failed')
     }
   }
 
-  const handleRegister = async (data: { name: string; email: string; username: string; password: string; confirmPassword: string }) => {
+  const handleRegister = async (data: {
+    name: string
+    email: string
+    username: string
+    password: string
+    password_confirmation: string
+  }) => {
     try {
-      // Implement register logic here
-      console.log('Register data:', data)
-      // For now, just redirect to login
-      router.push('/login')
-    } catch (error) {
-      console.error('Register failed:', error)
+      setError(null)
+      await login(data.email, data.password) // For now, just login after register
+      setIsInitialLoading(true)
+      setTimeout(() => {
+        router.push('/chat')
+      }, 1000)
+    } catch (error: any) {
+      setError(error.message || 'Registration failed')
     }
   }
 
-  const handleForgotPassword = async (email: string) => {
+  const handleForgotPassword = async (data: { email: string }) => {
     try {
-      // Implement forgot password logic here
-      console.log('Forgot password for:', email)
+      setError(null)
+      // TODO: Implement forgot password API call
+      console.log('Forgot password for:', data.email)
       setForgotPasswordSuccess(true)
-    } catch (error) {
-      console.error('Forgot password failed:', error)
+    } catch (error: any) {
+      setError(error.message || 'Failed to send reset email')
     }
   }
 
-  // Show loading screen during initial load
   if (isInitialLoading) {
     return <ModernLoadingScreen message="Welcome to NovaChat..." />
   }
 
-  if (showForgotPassword) {
-    return (
-      <AuthGuard requireAuth={false}>
-        <ModernForgotPasswordForm
-          onSubmit={handleForgotPassword}
-          onBackToLogin={() => setShowForgotPassword(false)}
-          isLoading={isLoading}
-          error={error}
-          success={forgotPasswordSuccess}
-        />
-      </AuthGuard>
-    )
-  }
-
   return (
-    <AuthGuard requireAuth={false}>
+    <AuthGuard>
       <ModernAuthLayout
+        showForgotPassword={showForgotPassword}
+        forgotPasswordSuccess={forgotPasswordSuccess}
+        onToggleForgotPassword={() => setShowForgotPassword(!showForgotPassword)}
         onLogin={handleLogin}
         onRegister={handleRegister}
-        isLoading={isLoading}
+        onForgotPassword={handleForgotPassword}
         error={error}
-        onForgotPassword={() => setShowForgotPassword(true)}
+        isLoading={isLoading}
       />
     </AuthGuard>
   )

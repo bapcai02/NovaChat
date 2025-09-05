@@ -28,6 +28,17 @@ class EloquentUserRepository implements UserRepositoryInterface
         return User::where('username', $username)->first();
     }
 
+    public function update(int $id, array $data)
+    {
+        $user = User::find($id);
+        if (!$user) {
+            return null;
+        }
+        
+        $user->update($data);
+        return $user;
+    }
+
     public function save($user): void
     {
         if ($user instanceof User) {
@@ -69,6 +80,14 @@ class EloquentUserRepository implements UserRepositoryInterface
     public function findOnlineUsers(): array
     {
         return User::where('is_online', true)->get()->toArray();
+    }
+
+    public function getOnlineUsers(): array
+    {
+        return User::where('is_online', true)
+            ->select('id', 'name', 'email', 'username', 'avatar', 'is_online', 'status_message', 'last_seen_at')
+            ->get()
+            ->toArray();
     }
 
     public function findActiveUsers(): array

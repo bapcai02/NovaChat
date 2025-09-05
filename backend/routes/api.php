@@ -45,16 +45,25 @@ Route::middleware('auth:api')->group(function () {
     // Channels
     Route::get('channels', [ChannelController::class, 'index']);
     Route::post('channels', [ChannelController::class, 'store']);
+    Route::get('channels/{channelId}', [ChannelController::class, 'show']);
+    Route::put('channels/{channelId}', [ChannelController::class, 'update']);
+    Route::delete('channels/{channelId}', [ChannelController::class, 'destroy']);
 
     // Teams
     Route::get('teams', [TeamController::class, 'index']);
     Route::post('teams', [TeamController::class, 'store']);
+    Route::get('teams/{teamId}', [TeamController::class, 'show']);
+    Route::put('teams/{teamId}', [TeamController::class, 'update']);
+    Route::delete('teams/{teamId}', [TeamController::class, 'destroy']);
+    Route::get('teams/{teamId}/channels', [ChannelController::class, 'getTeamChannels']);
+    Route::post('teams/{teamId}/channels', [ChannelController::class, 'store']);
 
     // Conversations
     Route::get('conversations', [ConversationController::class, 'index']);
     Route::post('conversations', [ConversationController::class, 'store']);
     Route::get('conversations/{conversationId}', [ConversationController::class, 'show']);
     Route::get('conversations/{conversationId}/messages', [ConversationController::class, 'getMessages']);
+    Route::post('conversations/{conversationId}/messages', [MessageController::class, 'store']);
     Route::post('conversations/{conversationId}/members', [ConversationController::class, 'addMember']);
     Route::delete('conversations/{conversationId}/members/{userId}', [ConversationController::class, 'removeMember']);
 
@@ -64,12 +73,15 @@ Route::middleware('auth:api')->group(function () {
     // Thread replies
     Route::get('messages/{messageId}/replies', [\App\Http\Controllers\ThreadController::class, 'index']);
     Route::post('messages/{messageId}/replies', [\App\Http\Controllers\ThreadController::class, 'store']);
+    Route::get('messages/{messageId}/thread', [\App\Http\Controllers\ThreadController::class, 'index']);
+    Route::post('messages/{messageId}/thread', [\App\Http\Controllers\ThreadController::class, 'store']);
 
     // Search
     Route::get('search', [SearchController::class, 'search']);
     Route::get('search/messages', [SearchController::class, 'searchMessages']);
     Route::get('search/channels', [SearchController::class, 'searchChannels']);
     Route::get('search/users', [SearchController::class, 'searchUsers']);
+    Route::get('search/conversations', [SearchController::class, 'searchConversations']);
     Route::get('search/files', [SearchController::class, 'searchFiles']);
 
     // Realtime chat message - with rate limiting
