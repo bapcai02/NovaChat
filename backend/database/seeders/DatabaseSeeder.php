@@ -13,13 +13,6 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            UserSeeder::class,
-            ChannelSeeder::class,
-            ChannelMemberSeeder::class,
-            MessageSeeder::class,
-            MessageReactionSeeder::class,
-            DirectMessageSeeder::class,
-            ThreadReplySeeder::class,
         ]);
     }
 }
