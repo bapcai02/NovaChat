@@ -19,64 +19,103 @@ class AuthController extends Controller
 
     public function register(RegisterRequest $request): JsonResponse
     {
-        $validated = $request->validated();
-        [$ok, $code, $payload] = $this->authApp->register($validated);
-        return response()->json([
-            'success' => $ok,
-            'data' => $ok ? [
+        return $this->executeInTransactionWithResponse(function () use ($request) {
+            $validated = $request->validated();
+            [$ok, $code, $payload] = $this->authApp->register($validated);
+            
+            if (!$ok) {
+                return $this->errorResponse(
+                    $payload['message'] ?? 'Registration failed',
+                    $payload['errors'] ?? null,
+                    $code
+                );
+            }
+            
+            return $this->createdResponse([
                 'user' => $payload['user'] ?? null,
                 'token' => $payload['token'] ?? null,
                 'token_type' => $payload['token_type'] ?? 'Bearer'
-            ] : ($payload['errors'] ?? null),
-            'message' => $payload['message'] ?? ''
-        ], $code);
+            ], $payload['message'] ?? 'User registered successfully');
+        }, 'Registration completed', 'Registration failed');
     }
 
     public function login(LoginRequest $request): JsonResponse
     {
-        $validated = $request->validated();
-        [$ok, $code, $payload] = $this->authApp->login($validated);
-        return response()->json([
-            'success' => $ok,
-            'data' => $ok ? [
+        return $this->executeInTransactionWithResponse(function () use ($request) {
+            $validated = $request->validated();
+            [$ok, $code, $payload] = $this->authApp->login($validated);
+            
+            if (!$ok) {
+                return $this->errorResponse(
+                    $payload['message'] ?? 'Login failed',
+                    $payload['errors'] ?? null,
+                    $code
+                );
+            }
+            
+            return $this->successResponse([
                 'user' => $payload['user'] ?? null,
                 'token' => $payload['token'] ?? null,
                 'token_type' => $payload['token_type'] ?? 'Bearer'
-            ] : ($payload['errors'] ?? null),
-            'message' => $payload['message'] ?? ''
-        ], $code);
+            ], $payload['message'] ?? 'Login successful');
+        }, 'Login completed', 'Login failed');
     }
 
     public function logout(Request $request): JsonResponse
     {
-        [$ok, $code, $payload] = $this->authApp->logout();
-        return response()->json([
-            'success' => $ok,
-            'message' => $payload['message'] ?? ''
-        ], $code);
+        return $this->executeInTransactionWithResponse(function () {
+            [$ok, $code, $payload] = $this->authApp->logout();
+            
+            if (!$ok) {
+                return $this->errorResponse(
+                    $payload['message'] ?? 'Logout failed',
+                    null,
+                    $code
+                );
+            }
+            
+            return $this->successResponse(null, $payload['message'] ?? 'Logout successful');
+        }, 'Logout completed', 'Logout failed');
     }
 
     public function refresh(Request $request): JsonResponse
     {
-        [$ok, $code, $payload] = $this->authApp->refresh();
-        return response()->json([
-            'success' => $ok,
-            'data' => [
+        return $this->executeInTransactionWithResponse(function () {
+            [$ok, $code, $payload] = $this->authApp->refresh();
+            
+            if (!$ok) {
+                return $this->errorResponse(
+                    $payload['message'] ?? 'Token refresh failed',
+                    null,
+                    $code
+                );
+            }
+            
+            return $this->successResponse([
                 'token' => $payload['token'] ?? null,
                 'token_type' => $payload['token_type'] ?? 'Bearer'
-            ],
-            'message' => $payload['message'] ?? ''
-        ], $code);
+            ], $payload['message'] ?? 'Token refreshed successfully');
+        }, 'Token refresh completed', 'Token refresh failed');
     }
 
     public function me(Request $request): JsonResponse
     {
-        [$ok, $code, $payload] = $this->authApp->me();
-        return response()->json([
-            'success' => $ok,
-            'data' => $payload['user'] ?? null,
-            'message' => $payload['message'] ?? ''
-        ], $code);
+        return $this->executeInTransactionWithResponse(function () {
+            [$ok, $code, $payload] = $this->authApp->me();
+            
+            if (!$ok) {
+                return $this->errorResponse(
+                    $payload['message'] ?? 'Failed to get user info',
+                    null,
+                    $code
+                );
+            }
+            
+            return $this->successResponse(
+                $payload['user'] ?? null,
+                $payload['message'] ?? 'User info retrieved successfully'
+            );
+        }, 'User info retrieved', 'Failed to get user info');
     }
 }
 

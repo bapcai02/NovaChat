@@ -18,20 +18,43 @@ class TeamController extends Controller
 
     public function index(): JsonResponse
     {
-        $userId = (int) Auth::id();
-        $result = $this->teams->getTeamsForUser($userId);
-        return response()->json($result, $result['success'] ? 200 : 500);
+        return $this->executeInTransactionWithResponse(function () {
+            $userId = (int) Auth::id();
+            $result = $this->teams->getTeamsForUser($userId);
+            
+            if (!$result['success']) {
+                return $this->errorResponse(
+                    $result['message'] ?? 'Failed to retrieve teams',
+                    $result['errors'] ?? null,
+                    $result['code'] ?? 500
+                );
+            }
+            
+            return $this->successResponse($result['data'] ?? null, 'Teams retrieved successfully');
+        }, 'Teams retrieved', 'Failed to retrieve teams');
     }
 
     public function store(TeamRequest $request): JsonResponse
     {
         $user = Auth::user();
         if (!$user) {
-            return response()->json(['success' => false, 'message' => 'Unauthenticated'], 401);
+            return $this->unauthorizedResponse('Unauthenticated');
         }
-        $validated = $request->validated();
-        $result = $this->teams->createTeam($validated, (int)$user->id);
-        return response()->json($result, $result['success'] ? 201 : 500);
+
+        return $this->executeInTransactionWithResponse(function () use ($request, $user) {
+            $validated = $request->validated();
+            $result = $this->teams->createTeam($validated, (int)$user->id);
+            
+            if (!$result['success']) {
+                return $this->errorResponse(
+                    $result['message'] ?? 'Failed to create team',
+                    $result['errors'] ?? null,
+                    $result['code'] ?? 500
+                );
+            }
+            
+            return $this->createdResponse($result['data'] ?? null, $result['message'] ?? 'Team created successfully');
+        }, 'Team created', 'Failed to create team');
     }
 }
 

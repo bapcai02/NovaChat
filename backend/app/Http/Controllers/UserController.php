@@ -16,8 +16,10 @@ class UserController extends Controller
 
     public function index(): JsonResponse
     {
-        $data = $this->users->getAllUsers(100);
-        return response()->json(['data' => $data]);
+        return $this->executeInTransactionWithResponse(function () {
+            $data = $this->users->getAllUsers(100);
+            return $this->successResponse($data, 'Users retrieved successfully');
+        }, 'Users retrieved', 'Failed to retrieve users');
     }
 }
 

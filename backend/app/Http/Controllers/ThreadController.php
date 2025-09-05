@@ -19,25 +19,30 @@ class ThreadController extends Controller
 
     public function index(int $messageId): JsonResponse
     {
-        $replies = $this->threads->getReplies($messageId);
-        return response()->json(['success' => true, 'data' => $replies]);
+        return $this->executeInTransactionWithResponse(function () use ($messageId) {
+            $replies = $this->threads->getReplies($messageId);
+            return $this->successResponse($replies, 'Thread replies retrieved successfully');
+        }, 'Thread replies retrieved', 'Failed to retrieve thread replies');
     }
 
     public function store(int $messageId, ThreadRequest $request): JsonResponse
     {
         $user = Auth::user();
         if (!$user) {
-            return response()->json(['success' => false, 'message' => 'Unauthenticated'], 401);
+            return $this->unauthorizedResponse('Unauthenticated');
         }
-        $validated = $request->validated();
-        $reply = $this->threads->addReply(
-            $messageId,
-            (int)$user->id,
-            $validated['content'],
-            $validated['type'] ?? 'text',
-            $validated['metadata'] ?? []
-        );
-        return response()->json(['success' => true, 'data' => $reply], 201);
+
+        return $this->executeInTransactionWithResponse(function () use ($messageId, $request, $user) {
+            $validated = $request->validated();
+            $reply = $this->threads->addReply(
+                $messageId,
+                (int)$user->id,
+                $validated['content'],
+                $validated['type'] ?? 'text',
+                $validated['metadata'] ?? []
+            );
+            return $this->createdResponse($reply, 'Reply added successfully');
+        }, 'Reply added', 'Failed to add reply');
     }
 }
 

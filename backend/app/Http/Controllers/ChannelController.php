@@ -19,19 +19,24 @@ class ChannelController extends Controller
 
     public function index(): JsonResponse
     {
-        $data = $this->channels->getAllChannels();
-        return response()->json(['success' => true, 'data' => $data]);
+        return $this->executeInTransactionWithResponse(function () {
+            $data = $this->channels->getAllChannels();
+            return $this->successResponse($data, 'Channels retrieved successfully');
+        }, 'Channels retrieved', 'Failed to retrieve channels');
     }
 
     public function store(ChannelRequest $request): JsonResponse
     {
         $user = Auth::user();
         if (!$user) {
-            return response()->json(['success' => false, 'message' => 'Unauthenticated'], 401);
+            return $this->unauthorizedResponse('Unauthenticated');
         }
-        $validated = $request->validated();
-        $result = $this->channels->createChannel($validated, (int) $user->id);
-        return response()->json(['success' => true, 'data' => $result], 201);
+
+        return $this->executeInTransactionWithResponse(function () use ($request, $user) {
+            $validated = $request->validated();
+            $result = $this->channels->createChannel($validated, (int) $user->id);
+            return $this->createdResponse($result, 'Channel created successfully');
+        }, 'Channel created', 'Failed to create channel');
     }
 }
 

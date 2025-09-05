@@ -20,39 +20,86 @@ class UserStatusController extends Controller
     {
         $user = Auth::user();
         if (!$user) {
-            return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+            return $this->unauthorizedResponse('Unauthorized');
         }
-        $data = $request->validated();
-        $result = $this->status->updateStatus((int)$user->id, $data);
-        return response()->json($result, $result['success'] ? 200 : 500);
+
+        return $this->executeInTransactionWithResponse(function () use ($request, $user) {
+            $data = $request->validated();
+            $result = $this->status->updateStatus((int)$user->id, $data);
+            
+            if (!$result['success']) {
+                return $this->errorResponse(
+                    $result['message'] ?? 'Failed to update status',
+                    $result['errors'] ?? null,
+                    $result['code'] ?? 500
+                );
+            }
+            
+            return $this->updatedResponse($result['data'] ?? null, $result['message'] ?? 'Status updated successfully');
+        }, 'Status updated', 'Failed to update status');
     }
 
     public function startTyping(UserStatusRequest $request): JsonResponse
     {
         $user = Auth::user();
         if (!$user) {
-            return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+            return $this->unauthorizedResponse('Unauthorized');
         }
-        $data = $request->validated();
-        $result = $this->status->startTyping((int)$user->id, $data['roomId']);
-        return response()->json($result, $result['success'] ? 200 : 500);
+
+        return $this->executeInTransactionWithResponse(function () use ($request, $user) {
+            $data = $request->validated();
+            $result = $this->status->startTyping((int)$user->id, $data['roomId']);
+            
+            if (!$result['success']) {
+                return $this->errorResponse(
+                    $result['message'] ?? 'Failed to start typing',
+                    $result['errors'] ?? null,
+                    $result['code'] ?? 500
+                );
+            }
+            
+            return $this->successResponse($result['data'] ?? null, $result['message'] ?? 'Typing started successfully');
+        }, 'Typing started', 'Failed to start typing');
     }
 
     public function stopTyping(UserStatusRequest $request): JsonResponse
     {
         $user = Auth::user();
         if (!$user) {
-            return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+            return $this->unauthorizedResponse('Unauthorized');
         }
-        $data = $request->validated();
-        $result = $this->status->stopTyping((int)$user->id, $data['roomId']);
-        return response()->json($result, $result['success'] ? 200 : 500);
+
+        return $this->executeInTransactionWithResponse(function () use ($request, $user) {
+            $data = $request->validated();
+            $result = $this->status->stopTyping((int)$user->id, $data['roomId']);
+            
+            if (!$result['success']) {
+                return $this->errorResponse(
+                    $result['message'] ?? 'Failed to stop typing',
+                    $result['errors'] ?? null,
+                    $result['code'] ?? 500
+                );
+            }
+            
+            return $this->successResponse($result['data'] ?? null, $result['message'] ?? 'Typing stopped successfully');
+        }, 'Typing stopped', 'Failed to stop typing');
     }
 
     public function getOnlineUsers(): JsonResponse
     {
-        $result = $this->status->getOnlineUsers();
-        return response()->json($result, $result['success'] ? 200 : 500);
+        return $this->executeInTransactionWithResponse(function () {
+            $result = $this->status->getOnlineUsers();
+            
+            if (!$result['success']) {
+                return $this->errorResponse(
+                    $result['message'] ?? 'Failed to retrieve online users',
+                    $result['errors'] ?? null,
+                    $result['code'] ?? 500
+                );
+            }
+            
+            return $this->successResponse($result['data'] ?? null, 'Online users retrieved successfully');
+        }, 'Online users retrieved', 'Failed to retrieve online users');
     }
 }
 
