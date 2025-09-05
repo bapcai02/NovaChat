@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ThreadRequest;
 use App\Services\ThreadService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -9,8 +10,11 @@ use Illuminate\Support\Facades\Auth;
 
 class ThreadController extends Controller
 {
-    public function __construct(private ThreadService $threads)
+    private ThreadService $threads;
+
+    public function __construct(ThreadService $threads)
     {
+        $this->threads = $threads;
     }
 
     public function index(int $messageId): JsonResponse
@@ -19,17 +23,13 @@ class ThreadController extends Controller
         return response()->json(['success' => true, 'data' => $replies]);
     }
 
-    public function store(int $messageId, Request $request): JsonResponse
+    public function store(int $messageId, ThreadRequest $request): JsonResponse
     {
         $user = Auth::user();
         if (!$user) {
             return response()->json(['success' => false, 'message' => 'Unauthenticated'], 401);
         }
-        $validated = $request->validate([
-            'content' => 'required|string',
-            'type' => 'nullable|string|in:text,voice,image,file',
-            'metadata' => 'array'
-        ]);
+        $validated = $request->validated();
         $reply = $this->threads->addReply(
             $messageId,
             (int)$user->id,

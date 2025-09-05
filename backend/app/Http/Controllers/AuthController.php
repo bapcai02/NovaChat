@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\LoginRequest;
+use App\Http\Requests\RegisterRequest;
 use App\Services\AuthService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -15,14 +17,9 @@ class AuthController extends Controller
         $this->authApp = $authApp;
     }
 
-    public function register(Request $request): JsonResponse
+    public function register(RegisterRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255',
-            'username' => 'required|string|max:50',
-            'password' => 'required|string|min:8|confirmed',
-        ]);
+        $validated = $request->validated();
         [$ok, $code, $payload] = $this->authApp->register($validated);
         return response()->json([
             'success' => $ok,
@@ -35,12 +32,9 @@ class AuthController extends Controller
         ], $code);
     }
 
-    public function login(Request $request): JsonResponse
+    public function login(LoginRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'email' => 'required|string|email',
-            'password' => 'required|string',
-        ]);
+        $validated = $request->validated();
         [$ok, $code, $payload] = $this->authApp->login($validated);
         return response()->json([
             'success' => $ok,

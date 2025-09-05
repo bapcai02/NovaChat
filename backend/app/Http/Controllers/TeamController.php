@@ -9,8 +9,11 @@ use Illuminate\Support\Facades\Auth;
 
 class TeamController extends Controller
 {
-    public function __construct(private TeamService $teams)
+    private TeamService $teams;
+
+    public function __construct(TeamService $teams)
     {
+        $this->teams = $teams;
     }
 
     public function index(): JsonResponse

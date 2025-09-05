@@ -13,8 +13,11 @@ use Illuminate\Support\Facades\Auth;
 
 class MessageController extends Controller
 {
-    public function __construct(private MessageService $messages)
+    private MessageService $messages;
+
+    public function __construct(MessageService $messages)
     {
+        $this->messages = $messages;
     }
 
     public function index(Request $request, string $roomId): JsonResponse

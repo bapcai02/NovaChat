@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\AddMemberRequest;
+use App\Http\Requests\ConversationRequest;
 use App\Services\ConversationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -9,8 +11,11 @@ use Illuminate\Support\Facades\Auth;
 
 class ConversationController extends Controller
 {
-    public function __construct(private ConversationService $conversations)
+    private ConversationService $conversations;
+
+    public function __construct(ConversationService $conversations)
     {
+        $this->conversations = $conversations;
     }
 
     public function index(Request $request): JsonResponse
@@ -24,23 +29,14 @@ class ConversationController extends Controller
         return response()->json(['success' => true, 'data' => $conversations]);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(ConversationRequest $request): JsonResponse
     {
         $user = Auth::user();
         if (!$user) {
             return response()->json(['success' => false, 'message' => 'Unauthenticated'], 401);
         }
 
-        $request->validate([
-            'type' => 'required|string|in:direct,channel,team',
-            'name' => 'nullable|string|max:255',
-            'team_id' => 'nullable|integer|exists:teams,id',
-            'channel_id' => 'nullable|integer|exists:channels,id',
-            'user_ids' => 'nullable|array',
-            'user_ids.*' => 'integer|exists:users,id',
-        ]);
-
-        $data = $request->only(['type', 'name', 'team_id', 'channel_id', 'user_ids']);
+        $data = $request->validated();
         $data['creator_id'] = $user->id;
 
         $result = $this->conversations->createConversation($data);
@@ -72,18 +68,15 @@ class ConversationController extends Controller
         return response()->json($messages);
     }
 
-    public function addMember(Request $request, int $conversationId): JsonResponse
+    public function addMember(AddMemberRequest $request, int $conversationId): JsonResponse
     {
         $user = Auth::user();
         if (!$user) {
             return response()->json(['success' => false, 'message' => 'Unauthenticated'], 401);
         }
 
-        $request->validate([
-            'user_id' => 'required|integer|exists:users,id',
-        ]);
-
-        $result = $this->conversations->addMember($conversationId, $request->user_id, $user->id);
+        $validated = $request->validated();
+        $result = $this->conversations->addMember($conversationId, $validated['user_id'], $user->id);
         return response()->json($result, $result['success'] ? 200 : 500);
     }
 

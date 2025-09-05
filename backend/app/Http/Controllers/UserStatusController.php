@@ -9,8 +9,11 @@ use Illuminate\Support\Facades\Auth;
 
 class UserStatusController extends Controller
 {
-    public function __construct(private UserStatusService $status)
+    private UserStatusService $status;
+
+    public function __construct(UserStatusService $status)
     {
+        $this->status = $status;
     }
 
     public function updateStatus(UserStatusRequest $request): JsonResponse

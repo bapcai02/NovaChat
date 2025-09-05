@@ -1,0 +1,52 @@
+<?php
+
+namespace App\Http\Requests;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class SearchRequest extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     */
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     */
+    public function rules(): array
+    {
+        return [
+            'q' => 'required|string|min:1|max:255',
+            'type' => 'nullable|string|in:all,messages,channels,users,files',
+            'time' => 'nullable|string|in:all,today,week,month,year',
+            'channel_id' => 'nullable|integer|exists:channels,id',
+        ];
+    }
+
+    /**
+     * Get custom messages for validator errors.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'q.required' => 'Từ khóa tìm kiếm là bắt buộc.',
+            'q.string' => 'Từ khóa tìm kiếm phải là chuỗi ký tự.',
+            'q.min' => 'Từ khóa tìm kiếm phải có ít nhất 1 ký tự.',
+            'q.max' => 'Từ khóa tìm kiếm không được vượt quá 255 ký tự.',
+            'type.string' => 'Loại tìm kiếm phải là chuỗi ký tự.',
+            'type.in' => 'Loại tìm kiếm phải là all, messages, channels, users hoặc files.',
+            'time.string' => 'Thời gian phải là chuỗi ký tự.',
+            'time.in' => 'Thời gian phải là all, today, week, month hoặc year.',
+            'channel_id.integer' => 'Channel ID phải là số nguyên.',
+            'channel_id.exists' => 'Channel không tồn tại.',
+        ];
+    }
+}

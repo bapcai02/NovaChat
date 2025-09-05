@@ -7,8 +7,11 @@ use Illuminate\Http\JsonResponse;
 
 class UserController extends Controller
 {
-    public function __construct(private UserService $users)
+    private UserService $users;
+
+    public function __construct(UserService $users)
     {
+        $this->users = $users;
     }
 
     public function index(): JsonResponse
