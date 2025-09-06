@@ -78,11 +78,11 @@ export default function WebSocketTestPage() {
       sender_id: 1
     }
 
-    console.log('Sending client-client-send-message via WebSocket:', messageData)
+    console.log('Sending client-send-message via WebSocket:', messageData)
 
     try {
       echo.private('chat.dm.1')
-        .whisper('client-client-send-message', messageData)
+        .whisper('client-send-message', messageData)
       
       console.log('Client message sent successfully')
       setInputMessage('')
@@ -127,7 +127,7 @@ export default function WebSocketTestPage() {
             onClick={sendClientMessage}
             className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500"
           >
-            Send (client-client-send-message)
+            Send (client-send-message)
           </button>
         </div>
       </div>

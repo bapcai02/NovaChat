@@ -1,5 +1,12 @@
 // Common types used across the application
 
+// WebSocket Echo types
+declare global {
+  interface Window {
+    Echo: any
+  }
+}
+
 // User types
 export interface User {
   id: number

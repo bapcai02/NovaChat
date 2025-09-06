@@ -35,6 +35,11 @@ export const getEcho = (): any => {
     }
   })
 
+  // Assign to window for global access
+  if (typeof window !== 'undefined') {
+    window.Echo = echo
+  }
+
   try {
     const p = (echo as any).connector?.pusher
     if (p) {

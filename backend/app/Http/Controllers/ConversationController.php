@@ -78,7 +78,7 @@ class ConversationController extends Controller
         }, 'Conversation retrieved', 'Failed to retrieve conversation');
     }
 
-    public function getMessages(Request $request, int $conversationId): JsonResponse
+    public function getMessages(Request $request, $conversationId): JsonResponse
     {
         $user = Auth::user();
         if (!$user) {
@@ -86,6 +86,7 @@ class ConversationController extends Controller
         }
 
         return $this->executeInTransactionWithResponse(function () use ($request, $conversationId, $user) {
+            $conversationId = (int) $conversationId;
             $limit = $request->query('limit', 50);
             $beforeId = $request->query('before_id');
 

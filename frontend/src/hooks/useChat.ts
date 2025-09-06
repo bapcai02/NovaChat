@@ -360,24 +360,17 @@ export function useChat() {
         
         console.log('Message data for WebSocket:', messageData)
         
-        // Send via API instead of WebSocket whisper
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/websocket/client-message`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-          },
-          body: JSON.stringify(messageData)
-        })
-
-        if (response.ok) {
-          const result = await response.json()
-          console.log('Message sent via API successfully:', result)
+        // Send via WebSocket Echo
+        const echo = getEcho()
+        if (echo) {
+          echo.private(`chat.dm.${conversationId}`)
+            .whisper('client-send-message', messageData)
+          console.log('Message sent via WebSocket Echo')
         } else {
-          console.error('Failed to send message via API:', response.status, response.statusText)
+          console.warn('WebSocket Echo not available')
         }
       } catch (error) {
-        console.error('Failed to send message via API:', error)
+        console.error('Failed to send message via WebSocket:', error)
       }
       
       console.log('sendMessage completed successfully')
