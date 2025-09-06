@@ -11,7 +11,9 @@ import {
   Image, 
   File,
   X,
-  Plus
+  Plus,
+  Video,
+  Calendar
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -127,7 +129,7 @@ export default function ModernChatInput({
   }, [message])
 
   return (
-    <div className="border-t border-border bg-card">
+    <div className="border-t border-gray-100 bg-white">
       {/* Attachments preview */}
       <AnimatePresence>
         {attachments.length > 0 && (
@@ -135,7 +137,7 @@ export default function ModernChatInput({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="p-4 border-b border-border"
+            className="p-4 border-b border-gray-100"
           >
             <div className="flex flex-wrap gap-2">
               {attachments.map((attachment) => (
@@ -151,7 +153,7 @@ export default function ModernChatInput({
                       <img
                         src={attachment.preview}
                         alt={attachment.name}
-                        className="h-20 w-20 object-cover rounded-lg border border-border"
+                        className="h-20 w-20 object-cover rounded-lg border border-gray-200"
                       />
                       <Button
                         variant="destructive"
@@ -163,13 +165,13 @@ export default function ModernChatInput({
                       </Button>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-2 p-2 bg-muted rounded-lg border border-border">
+                    <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
                       {getFileIcon(attachment.type)}
                       <div className="min-w-0">
-                        <p className="text-sm font-medium truncate max-w-32">
+                        <p className="text-sm font-semibold truncate max-w-32 text-gray-800">
                           {attachment.name}
                         </p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs text-gray-500">
                           {formatFileSize(attachment.size)}
                         </p>
                       </div>
@@ -198,7 +200,7 @@ export default function ModernChatInput({
             <Button
               variant="ghost"
               size="sm"
-              className="h-9 w-9 p-0"
+              className="h-8 w-8 p-0 hover:bg-gray-200 text-gray-600 hover:text-gray-800"
               onClick={() => fileInputRef.current?.click()}
               disabled={disabled}
             >
@@ -207,11 +209,27 @@ export default function ModernChatInput({
             <Button
               variant="ghost"
               size="sm"
-              className="h-9 w-9 p-0"
+              className="h-8 w-8 p-0 hover:bg-gray-200 text-gray-600 hover:text-gray-800"
               onClick={() => imageInputRef.current?.click()}
               disabled={disabled}
             >
-              <Image className="h-4 w-4" />
+              <Mic className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 hover:bg-gray-200 text-gray-600 hover:text-gray-800"
+              disabled={disabled}
+            >
+              <Video className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 hover:bg-gray-200 text-gray-600 hover:text-gray-800"
+              disabled={disabled}
+            >
+              <Calendar className="h-4 w-4" />
             </Button>
           </div>
 
@@ -224,85 +242,26 @@ export default function ModernChatInput({
               onKeyDown={handleKeyDown}
               placeholder={placeholder}
               disabled={disabled}
-              className="min-h-[44px] max-h-32 resize-none pr-12"
+              className="min-h-[40px] max-h-28 resize-none pr-12 bg-gray-50 border border-gray-200 hover:border-gray-300 focus:ring-1 focus:ring-blue-400 focus:border-blue-400 text-sm text-gray-800 placeholder-gray-500 transition-all duration-200 rounded-lg"
               rows={1}
             />
             
             {/* Character count */}
             {message.length > maxLength * 0.8 && (
-              <div className="absolute bottom-1 right-12 text-xs text-muted-foreground">
+              <div className="absolute bottom-1 right-12 text-xs text-gray-500">
                 {message.length}/{maxLength}
               </div>
             )}
           </div>
 
-          {/* Action buttons */}
-          <div className="flex items-center gap-1">
-            {/* Emoji picker */}
-            <div className="relative">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-9 w-9 p-0"
-                onClick={() => setShowEmojis(!showEmojis)}
-                disabled={disabled}
-              >
-                <Smile className="h-4 w-4" />
-              </Button>
-              
-              <AnimatePresence>
-                {showEmojis && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.8, y: 10 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.8, y: 10 }}
-                    className="absolute bottom-full right-0 mb-2 p-3 bg-popover border border-border rounded-lg shadow-lg z-50"
-                  >
-                    <div className="grid grid-cols-5 gap-2">
-                      {emojis.map((emoji) => (
-                        <Button
-                          key={emoji}
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 text-lg hover:bg-muted"
-                          onClick={() => handleEmojiSelect(emoji)}
-                        >
-                          {emoji}
-                        </Button>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Voice recording */}
-            <Button
-              variant="ghost"
-              size="sm"
-              className={cn(
-                "h-9 w-9 p-0",
-                isRecording && "text-destructive"
-              )}
-              onClick={() => setIsRecording(!isRecording)}
-              disabled={disabled}
-            >
-              {isRecording ? (
-                <MicOff className="h-4 w-4" />
-              ) : (
-                <Mic className="h-4 w-4" />
-              )}
-            </Button>
-
-            {/* Send button */}
-            <Button
-              onClick={handleSend}
-              disabled={disabled || (!message.trim() && attachments.length === 0)}
-              className="h-9 w-9 p-0"
-            >
-              <Send className="h-4 w-4" />
-            </Button>
-          </div>
+          {/* Send button */}
+          <Button
+            onClick={handleSend}
+            disabled={disabled || (!message.trim() && attachments.length === 0)}
+            className="h-8 w-8 p-0 bg-blue-500 hover:bg-blue-600 text-white rounded-full"
+          >
+            <Send className="h-4 w-4" />
+          </Button>
         </div>
 
         {/* Typing indicator */}
@@ -311,7 +270,7 @@ export default function ModernChatInput({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
-            className="mt-2 text-xs text-muted-foreground"
+            className="mt-2 text-xs text-gray-500"
           >
             You are typing...
           </motion.div>

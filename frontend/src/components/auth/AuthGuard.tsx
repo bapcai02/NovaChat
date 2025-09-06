@@ -55,7 +55,7 @@ export function AuthGuard({ children, requireAuth = true }: AuthGuardProps) {
 
   // Show loading while checking auth
   if (isLoading || isChecking) {
-    return <ModernLoadingScreen message="Authenticating..." />
+    return <ModernLoadingScreen />
   }
 
   // Don't render children if auth requirements not met

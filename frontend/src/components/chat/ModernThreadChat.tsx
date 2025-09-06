@@ -167,12 +167,12 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex gap-3 group"
+      className="flex gap-2 group"
     >
       {/* Avatar */}
       <Avatar className="h-6 w-6 flex-shrink-0">
         <AvatarImage src={message.sender.avatar} />
-        <AvatarFallback className="text-xs">
+        <AvatarFallback className="text-xs font-semibold bg-gradient-to-br from-blue-500 to-purple-600 text-white">
           {message.sender.name.split(' ').map(n => n[0]).join('')}
         </AvatarFallback>
       </Avatar>
@@ -180,7 +180,7 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
       {/* Message content */}
       <div className="flex-1 min-w-0">
         {/* Sender name and timestamp */}
-        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+        <div className="flex items-center gap-1 text-xs text-gray-500 mb-1">
           <span className="font-medium">{message.sender.name}</span>
           <span>{message.timestamp}</span>
           {message.isEdited && (
@@ -190,65 +190,65 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
 
         {/* Message bubble */}
         <div className="relative group">
-          <div className="px-3 py-2 bg-muted text-foreground rounded-lg max-w-full group-hover:shadow-md transition-shadow duration-200">
-            <div className="whitespace-pre-wrap break-words">
+          <div className="px-3 py-2 bg-gray-100 text-gray-800 rounded-lg max-w-full group-hover:shadow-md transition-shadow duration-200">
+            <div className="whitespace-pre-wrap break-words text-sm">
               {message.content}
             </div>
 
             {/* Message actions */}
-            <div className="absolute top-0 right-0 flex items-center gap-1 p-1 bg-background border border-border rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 -translate-y-full">
+            <div className="absolute top-0 right-0 flex items-center gap-1 p-2 bg-gray-800 border border-gray-700 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 -translate-y-full z-10">
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-6 w-6 p-0 hover:bg-muted"
+                className="h-7 w-7 p-0 hover:bg-gray-700 text-white hover:text-white"
                 onClick={(e) => {
                   e.preventDefault()
                   e.stopPropagation()
                   addReaction(message.id, '👍')
                 }}
               >
-                <Smile className="h-3 w-3" />
+                <Smile className="h-4 w-4" />
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-6 w-6 p-0 hover:bg-muted"
+                className="h-7 w-7 p-0 hover:bg-gray-700 text-white hover:text-white"
                 onClick={(e) => {
                   e.preventDefault()
                   e.stopPropagation()
                   addReaction(message.id, '❤️')
                 }}
               >
-                <Heart className="h-3 w-3" />
+                <Heart className="h-4 w-4" />
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-muted">
-                    <MoreHorizontal className="h-3 w-3" />
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0 hover:bg-gray-700 text-white hover:text-white">
+                    <MoreHorizontal className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem>
+                <DropdownMenuContent align="end" className="bg-gray-800 border-gray-700 z-20">
+                  <DropdownMenuItem className="text-gray-200 hover:bg-gray-700 hover:text-white">
                     <Copy className="mr-2 h-4 w-4" />
                     Copy
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
+                  <DropdownMenuItem className="text-gray-200 hover:bg-gray-700 hover:text-white">
                     <Reply className="mr-2 h-4 w-4" />
                     Reply
                   </DropdownMenuItem>
                   {message.isOwn && (
-                    <DropdownMenuItem>
+                    <DropdownMenuItem className="text-gray-200 hover:bg-gray-700 hover:text-white">
                       <Edit3 className="mr-2 h-4 w-4" />
                       Edit
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem className="text-destructive">
+                  <DropdownMenuItem className="text-red-400 hover:bg-red-900/20 hover:text-red-300">
                     <Flag className="mr-2 h-4 w-4" />
                     Report
                   </DropdownMenuItem>
                   {message.isOwn && (
-                    <DropdownMenuItem className="text-destructive">
+                    <DropdownMenuItem className="text-red-400 hover:bg-red-900/20 hover:text-red-300">
                       <Trash2 className="mr-2 h-4 w-4" />
                       Delete
                     </DropdownMenuItem>
@@ -258,20 +258,18 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
             </div>
           </div>
 
-          {/* Reactions */}
+          {/* Reactions below message bubble */}
           {message.reactions && message.reactions.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-1">
               {message.reactions.map((reaction, index) => (
-                <Button
+                <button
                   key={index}
-                  variant="outline"
-                  size="sm"
-                  className="h-6 px-2 text-xs"
+                  className="flex items-center gap-1 px-2 py-1 text-xs text-gray-600 hover:text-gray-800 transition-colors"
                   onClick={() => addReaction(message.id, reaction.emoji)}
                 >
-                  <span className="mr-1">{reaction.emoji}</span>
+                  <span>{reaction.emoji}</span>
                   <span>{reaction.count}</span>
-                </Button>
+                </button>
               ))}
             </div>
           )}
@@ -285,43 +283,43 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
       initial={{ x: 400, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: 400, opacity: 0 }}
-      className="flex flex-col h-full bg-card border-l border-border"
+      className="flex flex-col h-full bg-white border-l border-gray-200"
     >
       {/* Thread Header */}
-      <div className="p-4 border-b border-border">
-        <div className="flex items-center gap-3 mb-3">
+      <div className="p-4 border-b border-gray-100">
+        <div className="flex items-center gap-2 mb-3">
           <Button
             variant="ghost"
             size="sm"
             onClick={onClose}
-            className="h-8 w-8 p-0"
+            className="h-8 w-8 p-0 hover:bg-gray-100"
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div className="flex-1">
-            <h3 className="text-lg font-semibold">Thread</h3>
-            <p className="text-sm text-muted-foreground">
+            <h3 className="text-lg font-semibold text-gray-800">Thread</h3>
+            <p className="text-sm text-gray-500">
               {messages.length} {messages.length === 1 ? 'reply' : 'replies'}
             </p>
           </div>
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-gray-100">
             <MoreHorizontal className="h-4 w-4" />
           </Button>
         </div>
 
         {/* Parent Message */}
-        <div className="p-3 bg-muted/50 rounded-lg border-l-2 border-primary">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+        <div className="p-3 bg-gray-50 rounded-lg border-l-4 border-blue-500">
+          <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
             <span className="font-medium">{parentMessage.sender}</span>
             <span>{parentMessage.timestamp}</span>
           </div>
-          <div className="text-sm">{parentMessage.content}</div>
+          <div className="text-sm text-gray-800">{parentMessage.content}</div>
         </div>
       </div>
 
       {/* Thread Messages */}
       <div className="flex-1 overflow-hidden">
-        <div className="h-full overflow-y-auto p-4 space-y-4">
+        <div className="h-full overflow-y-auto p-4 space-y-2">
           {messages.map((message) => (
             <ThreadMessageBubble key={message.id} message={message} />
           ))}
@@ -330,7 +328,7 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
       </div>
 
       {/* Thread Input */}
-      <div className="p-4 border-t border-border">
+      <div className="p-4 border-t border-gray-100">
         <div className="flex gap-2">
           <Textarea
             value={newMessage}
@@ -344,19 +342,19 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
             }}
             onKeyDown={handleKeyDown}
             placeholder="Reply in thread..."
-            className="min-h-[40px] max-h-32 resize-none"
+            className="min-h-[40px] max-h-28 resize-none bg-gray-50 border-gray-200 focus:ring-2 focus:ring-blue-500 text-sm text-gray-800 placeholder-gray-500"
             rows={1}
           />
           <Button
             onClick={handleSendMessage}
             disabled={!newMessage.trim()}
-            className="h-10 w-10 p-0"
+            className="h-8 w-8 p-0 bg-blue-500 hover:bg-blue-600 text-white rounded-full"
           >
             <Send className="h-4 w-4" />
           </Button>
         </div>
         {isTyping && (
-          <div className="mt-2 text-xs text-muted-foreground">
+          <div className="mt-2 text-xs text-gray-500">
             You are typing...
           </div>
         )}

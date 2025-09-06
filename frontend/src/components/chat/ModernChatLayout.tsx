@@ -42,6 +42,46 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
     timestamp: string
   } | null>(null)
 
+  // Helper function to get conversation display name
+  const getConversationDisplayName = (conversation: any) => {
+    if (!conversation) return 'Select a conversation'
+    
+    if (conversation.type === 'direct') {
+      const otherUser = conversation.other_member || conversation.members?.find(
+        member => member.id !== currentUser?.id
+      )
+      return otherUser?.name || conversation.title || 'Direct Message'
+    }
+    
+    if (conversation.type === 'channel') {
+      return conversation.title || conversation.channel?.name || 'Channel'
+    }
+    
+    if (conversation.type === 'group') {
+      return conversation.title || 'Team'
+    }
+    
+    return conversation.name || conversation.title || 'Unknown'
+  }
+
+  // Helper function to get conversation avatar
+  const getConversationAvatar = (conversation: any) => {
+    if (!conversation) return null
+    
+    if (conversation.type === 'direct') {
+      const otherUser = conversation.other_member || conversation.members?.find(
+        member => member.id !== currentUser?.id
+      )
+      return otherUser?.avatar
+    }
+    
+    if (conversation.type === 'channel') {
+      return conversation.channel?.team?.owner?.avatar
+    }
+    
+    return null
+  }
+
   // Load messages when conversation changes
   useEffect(() => {
     if (currentConversation) {
@@ -112,7 +152,7 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
   // Show loading if no conversation selected
   if (!currentConversation) {
     return (
-      <div className={`flex h-screen bg-background text-foreground ${className || ''}`}>
+      <div className={`flex h-screen bg-gray-50 text-gray-900 ${className || ''}`}>
         <motion.div
           initial={{ x: -300, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
@@ -129,12 +169,28 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
             currentUser={currentUser}
           />
         </motion.div>
-        <div className="flex-1 flex items-center justify-center">
+        <div className="flex-1 flex items-center justify-center bg-white">
           <div className="text-center">
-            <h2 className="text-2xl font-semibold text-muted-foreground mb-2">
-              Welcome to NovaChat
-            </h2>
-            <p className="text-muted-foreground">
+            <div className="flex flex-col items-center justify-center gap-3 mb-6">
+              <div className="relative">
+                <div className="h-16 w-16 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-2xl">
+                  <div className="relative">
+                    <div className="w-10 h-10 border-3 border-white rounded-full"></div>
+                    <div className="absolute top-1.5 left-1.5 w-7 h-7 bg-white rounded-full opacity-90"></div>
+                    <div className="absolute top-3 left-3 w-4 h-4 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full"></div>
+                  </div>
+                </div>
+                <div className="absolute -top-2 -right-2 w-4 h-4 bg-green-500 rounded-full border-3 border-white shadow-lg"></div>
+                <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-yellow-400 rounded-full border-2 border-white"></div>
+              </div>
+              <div className="text-center">
+                <h2 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-1">
+                  Nova Chat
+                </h2>
+                <p className="text-sm font-medium text-gray-500">Modern Communication</p>
+              </div>
+            </div>
+            <p className="text-lg text-gray-500">
               Select a conversation to start chatting
             </p>
           </div>
@@ -144,7 +200,7 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
   }
 
   return (
-    <div className={`flex h-screen bg-background text-foreground ${className || ''}`}>
+    <div className={`flex h-screen bg-gray-50 text-gray-900 ${className || ''}`}>
       {/* Sidebar */}
       <motion.div
         initial={{ x: -300, opacity: 0 }}
@@ -164,7 +220,7 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
       </motion.div>
 
       {/* Main chat area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 bg-white">
         {/* Chat header */}
         <motion.div
           initial={{ y: -50, opacity: 0 }}
@@ -172,12 +228,12 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
           transition={{ duration: 0.3, delay: 0.1 }}
         >
           <ModernChatHeader
-            channelName={currentConversation.name || currentConversation.channel?.name || 'Direct Message'}
+            channelName={getConversationDisplayName(currentConversation)}
             channelType={currentConversation.type}
             memberCount={currentConversation.members?.length || 0}
             isOnline={true}
             lastSeen="now"
-            avatar={currentConversation.channel?.team?.owner?.avatar}
+            avatar={getConversationAvatar(currentConversation)}
             isMuted={false}
             isPinned={false}
             onSearch={handleSearch}
@@ -195,7 +251,7 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3, delay: 0.2 }}
-          className="flex-1 min-h-0"
+          className="flex-1 min-h-0 bg-white"
         >
           <ModernChatMessages 
             messages={messages}
@@ -218,7 +274,7 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
           <ModernChatInput
             onSendMessage={handleSendMessage}
             onTyping={handleTyping}
-            placeholder={`Message ${currentConversation.name || currentConversation.channel?.name || 'here'}`}
+            placeholder={`Type message...`}
             disabled={isLoading}
           />
         </motion.div>

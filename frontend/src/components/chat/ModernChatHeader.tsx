@@ -96,7 +96,7 @@ export default function ModernChatHeader({
     <motion.div
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex items-center justify-between p-4 border-b border-border bg-card"
+      className="flex items-center justify-between p-4 border-b border-gray-100 bg-white"
     >
       {/* Left side - Channel info */}
       <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -104,30 +104,30 @@ export default function ModernChatHeader({
           <div className="relative">
             <Avatar className="h-10 w-10">
               <AvatarImage src={avatar} />
-              <AvatarFallback>
+              <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-sm font-semibold">
                 {channelName.split(' ').map(n => n[0]).join('')}
               </AvatarFallback>
             </Avatar>
             {isOnline && (
-              <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 bg-green-500 rounded-full border-2 border-background" />
+              <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 bg-green-500 rounded-full border-2 border-white" />
             )}
           </div>
         ) : (
-          <div className="h-10 w-10 flex items-center justify-center bg-muted rounded-lg">
+          <div className="h-10 w-10 flex items-center justify-center bg-gray-100 rounded-lg">
             {getChannelIcon()}
           </div>
         )}
         
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h2 className="text-lg font-semibold text-foreground truncate">
+            <h2 className="text-lg font-semibold text-gray-800 truncate">
               {channelType === 'channel' ? `#${channelName}` : channelName}
             </h2>
             {isPinned && (
-              <Pin className="h-4 w-4 text-muted-foreground" />
+              <Pin className="h-4 w-4 text-gray-400" />
             )}
             {isMuted && (
-              <BellOff className="h-4 w-4 text-muted-foreground" />
+              <BellOff className="h-4 w-4 text-gray-400" />
             )}
           </div>
           <p className={cn("text-sm truncate", getStatusColor())}>
@@ -138,97 +138,17 @@ export default function ModernChatHeader({
 
       {/* Right side - Actions */}
       <div className="flex items-center gap-1">
-        {/* Search */}
+        {/* Information button */}
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => {
-            setIsSearchOpen(!isSearchOpen)
-            onSearch?.()
-          }}
-          className="h-9 w-9 p-0"
+          onClick={onSettings}
+          className="h-8 w-8 p-0 hover:bg-gray-100 rounded-full"
         >
-          <Search className="h-4 w-4" />
+          <div className="h-6 w-6 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-600">
+            i
+          </div>
         </Button>
-
-        {/* Call buttons for direct messages */}
-        {channelType === 'direct' && (
-          <>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onCall}
-              className="h-9 w-9 p-0 hover:bg-green-100 hover:text-green-600 dark:hover:bg-green-900/20 dark:hover:text-green-400"
-            >
-              <Phone className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onVideoCall}
-              className="h-9 w-9 p-0 hover:bg-blue-100 hover:text-blue-600 dark:hover:bg-blue-900/20 dark:hover:text-blue-400"
-            >
-              <Video className="h-4 w-4" />
-            </Button>
-          </>
-        )}
-
-        {/* View members for channels/groups */}
-        {channelType !== 'direct' && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onViewMembers}
-            className="h-9 w-9 p-0"
-          >
-            <Users className="h-4 w-4" />
-          </Button>
-        )}
-
-        {/* More options */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuItem onClick={onToggleMute}>
-              {isMuted ? (
-                <>
-                  <Bell className="mr-2 h-4 w-4" />
-                  Unmute
-                </>
-              ) : (
-                <>
-                  <BellOff className="mr-2 h-4 w-4" />
-                  Mute
-                </>
-              )}
-            </DropdownMenuItem>
-            
-            <DropdownMenuItem onClick={onTogglePin}>
-              {isPinned ? (
-                <>
-                  <Pin className="mr-2 h-4 w-4" />
-                  Unpin
-                </>
-              ) : (
-                <>
-                  <Pin className="mr-2 h-4 w-4" />
-                  Pin
-                </>
-              )}
-            </DropdownMenuItem>
-            
-            <DropdownMenuSeparator />
-            
-            <DropdownMenuItem onClick={onSettings}>
-              <Settings className="mr-2 h-4 w-4" />
-              Settings
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
       </div>
 
       {/* Search overlay */}

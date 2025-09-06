@@ -78,15 +78,15 @@ const MessageBubble = ({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       className={cn(
-        "flex gap-3 group",
+        "flex gap-2 group mb-3",
         isOwn ? "flex-row-reverse" : "flex-row"
       )}
     >
       {/* Avatar */}
       {!isOwn && (
-        <Avatar className="h-8 w-8 flex-shrink-0">
+        <Avatar className="h-7 w-7 flex-shrink-0">
           <AvatarImage src={sender.avatar} />
-          <AvatarFallback className="text-xs">
+          <AvatarFallback className="text-xs bg-gradient-to-br from-blue-500 to-purple-600 text-white">
             {sender.name?.split(' ').map(n => n[0]).join('') || 'U'}
           </AvatarFallback>
         </Avatar>
@@ -99,7 +99,7 @@ const MessageBubble = ({
       )}>
         {/* Sender name and timestamp */}
         {!isOwn && (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <div className="flex items-center gap-1 text-xs text-gray-500 mb-1">
             <span className="font-medium">{sender.name}</span>
             <span>•</span>
             <span>{new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
@@ -108,21 +108,21 @@ const MessageBubble = ({
 
         {/* Message bubble */}
         <div className={cn(
-          "relative px-4 py-2 rounded-2xl shadow-sm transition-all duration-200",
+          "relative px-3 py-2 rounded-xl shadow-sm transition-all duration-200",
           isOwn 
-            ? "bg-primary text-primary-foreground rounded-br-md" 
-            : "bg-muted text-foreground rounded-bl-md"
+            ? "bg-blue-500 text-white rounded-br-md" 
+            : "bg-gray-100 text-gray-800 rounded-bl-md"
         )}>
-          <p className="text-sm whitespace-pre-wrap break-words">
+          <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">
             {message.content}
           </p>
 
           {/* Message actions - shown on hover */}
-          <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1 bg-background border border-border rounded-lg px-2 py-1 shadow-lg">
+          <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 shadow-lg z-10">
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 w-6 p-0 hover:bg-muted"
+              className="h-7 w-7 p-0 hover:bg-gray-700 text-white hover:text-white"
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
@@ -134,7 +134,7 @@ const MessageBubble = ({
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 w-6 p-0 hover:bg-muted"
+              className="h-7 w-7 p-0 hover:bg-gray-700 text-white hover:text-white"
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
@@ -146,19 +146,19 @@ const MessageBubble = ({
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 w-6 p-0 hover:bg-muted"
+              className="h-7 w-7 p-0 hover:bg-gray-700 text-white hover:text-white"
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
                 handleReply()
               }}
             >
-              <MessageCircle className="h-3 w-3" />
+              <MessageCircle className="h-4 w-4" />
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 w-6 p-0 hover:bg-muted"
+              className="h-7 w-7 p-0 hover:bg-gray-700 text-white hover:text-white"
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
@@ -166,39 +166,45 @@ const MessageBubble = ({
               }}
             >
               {message.is_bookmarked ? (
-                <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
               ) : (
-                <Star className="h-3 w-3" />
+                <Star className="h-4 w-4 text-white" />
               )}
             </Button>
           </div>
         </div>
 
-        {/* Reactions */}
+        {/* Reactions below message bubble */}
         {message.reactions && message.reactions.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-1">
+          <div className={cn(
+            "flex flex-wrap gap-1",
+            isOwn ? "justify-end" : "justify-start"
+          )}>
             {message.reactions.map((reaction, index) => (
-              <Button
+              <button
                 key={index}
-                variant="outline"
-                size="sm"
-                className="h-6 px-2 text-xs"
+                className="flex items-center gap-1 px-2 py-1 text-xs text-gray-600 hover:text-gray-800 transition-colors"
                 onClick={(e) => {
                   e.preventDefault()
                   e.stopPropagation()
                   handleReaction(reaction.emoji)
                 }}
               >
-                {reaction.emoji} {reaction.count && reaction.count > 0 ? reaction.count : ''} {reaction.users?.includes(currentUser?.id || 0) || reaction.user_id === currentUser?.id ? '✓' : ''}
-              </Button>
+                <span>{reaction.emoji}</span>
+                <span>{reaction.count && reaction.count > 0 ? reaction.count : ''}</span>
+                {reaction.users?.includes(currentUser?.id || 0) || reaction.user_id === currentUser?.id ? (
+                  <span className="text-blue-500">✓</span>
+                ) : null}
+              </button>
             ))}
           </div>
         )}
 
         {/* Timestamp for own messages */}
         {isOwn && (
-          <div className="text-xs text-muted-foreground">
-            {new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
+            <span>{new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+            <span className="text-blue-500">✓✓</span>
           </div>
         )}
       </div>
@@ -240,14 +246,14 @@ export default function ModernChatMessages({
   }
 
   return (
-    <div className="flex-1 overflow-hidden">
-      <div className="h-full overflow-y-auto p-4 space-y-4">
+    <div className="flex-1 overflow-hidden bg-white">
+      <div className="h-full overflow-y-auto p-4 space-y-2">
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
-              <MessageCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">No messages yet</p>
-              <p className="text-sm text-muted-foreground">Start the conversation!</p>
+              <MessageCircle className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+              <p className="text-base font-medium text-gray-600 mb-1">No messages yet</p>
+              <p className="text-sm text-gray-500">Start the conversation!</p>
             </div>
           </div>
         ) : (

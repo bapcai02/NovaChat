@@ -16,22 +16,51 @@ export default function ModernLoadingScreen({ message = "Loading..." }: ModernLo
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.5, type: "spring", stiffness: 200 }}
-          className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl mb-8 shadow-2xl"
+          className="relative inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-3xl mb-8 shadow-2xl"
         >
-          <motion.span
-            className="text-3xl font-bold text-white"
+          <motion.div
+            className="relative"
             animate={{ 
-              scale: [1, 1.1, 1],
-              rotate: [0, 5, -5, 0]
+              scale: [1, 1.05, 1],
+              rotate: [0, 2, -2, 0]
+            }}
+            transition={{ 
+              duration: 3,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          >
+            <div className="w-12 h-12 border-3 border-white rounded-full"></div>
+            <div className="absolute top-2 left-2 w-8 h-8 bg-white rounded-full opacity-90"></div>
+            <div className="absolute top-4 left-4 w-4 h-4 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full"></div>
+          </motion.div>
+          
+          {/* Floating status indicators */}
+          <motion.div
+            className="absolute -top-2 -right-2 w-5 h-5 bg-green-500 rounded-full border-3 border-white shadow-lg"
+            animate={{ 
+              scale: [1, 1.2, 1],
+              opacity: [0.8, 1, 0.8]
             }}
             transition={{ 
               duration: 2,
               repeat: Infinity,
               ease: "easeInOut"
             }}
-          >
-            N
-          </motion.span>
+          />
+          <motion.div
+            className="absolute -bottom-1 -left-1 w-4 h-4 bg-yellow-400 rounded-full border-2 border-white"
+            animate={{ 
+              scale: [1, 1.1, 1],
+              opacity: [0.7, 1, 0.7]
+            }}
+            transition={{ 
+              duration: 2.5,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: 0.5
+            }}
+          />
         </motion.div>
 
         {/* Loading Spinner */}
@@ -63,9 +92,9 @@ export default function ModernLoadingScreen({ message = "Loading..." }: ModernLo
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.5 }}
-          className="text-2xl font-bold text-white mb-2"
+          className="text-3xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-2"
         >
-          NovaChat
+          Nova Chat
         </motion.h2>
 
         <motion.p
