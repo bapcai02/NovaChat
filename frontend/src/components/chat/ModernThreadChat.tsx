@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useRef, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { 
   ArrowLeft, 
   MoreHorizontal, 
@@ -14,7 +14,10 @@ import {
   Copy,
   Flag,
   Pin,
-  Send
+  Send,
+  Paperclip,
+  Image,
+  X
 } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -28,6 +31,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
+import EmojiPicker from 'emoji-picker-react'
 
 interface ThreadMessage {
   id: string
@@ -103,20 +107,40 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
   const [newMessage, setNewMessage] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [showEmojis, setShowEmojis] = useState(false)
+  const [attachments, setAttachments] = useState<any[]>([])
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const emojiPickerRef = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const imageInputRef = useRef<HTMLInputElement>(null)
 
-  const emojis = ['😀', '😂', '😍', '🤔', '👍', '👎', '❤️', '🎉', '🔥', '💯']
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
+
+  // Click outside to close emoji picker
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
+        setShowEmojis(false)
+      }
+    }
+
+    if (showEmojis) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showEmojis])
 
   useEffect(() => {
     scrollToBottom()
   }, [messages])
 
   const handleSendMessage = () => {
-    if (newMessage.trim()) {
+    if (newMessage.trim() || attachments.length > 0) {
       const message: ThreadMessage = {
         id: Date.now().toString(),
         content: newMessage.trim(),
@@ -131,8 +155,25 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
       }
       setMessages(prev => [...prev, message])
       setNewMessage('')
+      setAttachments([])
       setIsTyping(false)
     }
+  }
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    const newAttachments = files.map(file => ({
+      id: Math.random().toString(36).substr(2, 9),
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      file: file
+    }))
+    setAttachments(prev => [...prev, ...newAttachments])
+  }
+
+  const removeAttachment = (id: string) => {
+    setAttachments(prev => prev.filter(att => att.id !== id))
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -331,8 +372,60 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
       </div>
 
       {/* Thread Input */}
-      <div className="p-4 border-t border-gray-100">
+      <div className="p-4 border-t border-gray-100 relative">
+        {/* Attachment Preview */}
+        {attachments.length > 0 && (
+          <div className="mb-3 space-y-2">
+            {attachments.map((attachment) => (
+              <div key={attachment.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">{attachment.name}</p>
+                  <p className="text-xs text-gray-500">
+                    {(attachment.size / 1024).toFixed(1)} KB
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0 hover:bg-gray-200 text-gray-500"
+                  onClick={() => removeAttachment(attachment.id)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+
         <div className="flex gap-2">
+          {/* Attachment buttons */}
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 hover:bg-gray-200 text-gray-600 hover:text-gray-800"
+              onClick={() => setShowEmojis(!showEmojis)}
+            >
+              <Smile className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 hover:bg-gray-200 text-gray-600 hover:text-gray-800"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Paperclip className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 hover:bg-gray-200 text-gray-600 hover:text-gray-800"
+              onClick={() => imageInputRef.current?.click()}
+            >
+              <Image className="h-4 w-4" />
+            </Button>
+          </div>
+
           <div className="flex-1 relative">
             <Textarea
               value={newMessage}
@@ -346,25 +439,17 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
               }}
               onKeyDown={handleKeyDown}
               placeholder="Reply in thread..."
-              className="min-h-[40px] max-h-28 resize-none bg-gray-50 border-gray-200 focus:ring-1 focus:ring-blue-400 focus:border-blue-400 focus:outline-none text-sm text-gray-800 placeholder-gray-500 transition-all duration-200 rounded-lg pr-10"
+              className="min-h-[40px] max-h-28 resize-none bg-gray-50 border-gray-200 focus:ring-1 focus:ring-blue-400 focus:border-blue-400 focus:outline-none text-sm text-gray-800 placeholder-gray-500 transition-all duration-200 rounded-lg"
               style={{
                 border: '1px solid #e5e7eb',
                 boxShadow: 'none'
               }}
               rows={1}
             />
-            <Button
-              variant="ghost"
-              size="sm"
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-gray-200 text-gray-600"
-              onClick={() => setShowEmojis(!showEmojis)}
-            >
-              <Smile className="h-4 w-4" />
-            </Button>
           </div>
           <Button
             onClick={handleSendMessage}
-            disabled={!newMessage.trim()}
+            disabled={!newMessage.trim() && attachments.length === 0}
             className="h-8 w-8 p-0 bg-blue-500 hover:bg-blue-600 text-white rounded-full flex items-center justify-center"
           >
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -373,35 +458,58 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
           </Button>
         </div>
         {/* Emoji Picker */}
-        {showEmojis && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            className="mt-2 p-3 bg-white border border-gray-200 rounded-lg shadow-lg"
-          >
-            <div className="grid grid-cols-5 gap-2">
-              {emojis.map((emoji, index) => (
-                <button
-                  key={index}
-                  onClick={() => {
-                    setNewMessage(prev => prev + emoji)
-                    setShowEmojis(false)
-                  }}
-                  className="p-2 hover:bg-gray-100 rounded-lg text-lg transition-colors"
-                >
-                  {emoji}
-                </button>
-              ))}
-            </div>
-          </motion.div>
-        )}
+        <AnimatePresence>
+          {showEmojis && (
+            <motion.div
+              ref={emojiPickerRef}
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+              className="absolute bottom-full left-0 mb-2 z-50"
+              style={{ position: 'absolute', bottom: '100%', left: '0', marginBottom: '8px' }}
+            >
+              <EmojiPicker
+                onEmojiClick={(emojiData) => {
+                  setNewMessage(prev => prev + emojiData.emoji)
+                  setShowEmojis(false)
+                }}
+                width={320}
+                height={300}
+                searchDisabled={false}
+                skinTonesDisabled={false}
+                previewConfig={{
+                  showPreview: false
+                }}
+                searchPlaceHolder="Search emojis..."
+                theme="light"
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {isTyping && (
           <div className="mt-2 text-xs text-gray-500">
             You are typing...
           </div>
         )}
+
+        {/* Hidden file inputs */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          className="hidden"
+          onChange={handleFileSelect}
+        />
+        <input
+          ref={imageInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          className="hidden"
+          onChange={handleFileSelect}
+        />
       </div>
     </motion.div>
   )

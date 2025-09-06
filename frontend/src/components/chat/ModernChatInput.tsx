@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import EmojiPicker from 'emoji-picker-react'
 
 interface Attachment {
   id: string
@@ -36,7 +37,6 @@ interface ChatInputProps {
   maxLength?: number
 }
 
-const emojis = ['😀', '😂', '😍', '🤔', '👍', '👎', '❤️', '🎉', '🔥', '💯']
 
 export default function ModernChatInput({
   onSendMessage,
@@ -53,6 +53,7 @@ export default function ModernChatInput({
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const imageInputRef = useRef<HTMLInputElement>(null)
+  const emojiPickerRef = useRef<HTMLDivElement>(null)
 
   const handleSend = () => {
     if (message.trim() || attachments.length > 0) {
@@ -86,10 +87,28 @@ export default function ModernChatInput({
     }
   }
 
-  const handleEmojiSelect = (emoji: string) => {
-    setMessage(prev => prev + emoji)
+  const handleEmojiSelect = (emojiData: any) => {
+    setMessage(prev => prev + emojiData.emoji)
+    setShowEmojis(false)
     textareaRef.current?.focus()
   }
+
+  // Click outside to close emoji picker
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
+        setShowEmojis(false)
+      }
+    }
+
+    if (showEmojis) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showEmojis])
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
@@ -193,7 +212,7 @@ export default function ModernChatInput({
       </AnimatePresence>
 
       {/* Main input area */}
-      <div className="p-4">
+      <div className="p-4 relative">
         <div className="flex items-end gap-2">
           {/* Attachment buttons */}
           <div className="flex items-center gap-1">
@@ -201,7 +220,10 @@ export default function ModernChatInput({
               variant="ghost"
               size="sm"
               className="h-8 w-8 p-0 hover:bg-gray-200 text-gray-600 hover:text-gray-800"
-              onClick={() => setShowEmojis(!showEmojis)}
+              onClick={() => {
+                console.log('Emoji button clicked, showEmojis:', !showEmojis)
+                setShowEmojis(!showEmojis)
+              }}
               disabled={disabled}
             >
               <Smile className="h-4 w-4" />
@@ -222,23 +244,7 @@ export default function ModernChatInput({
               onClick={() => imageInputRef.current?.click()}
               disabled={disabled}
             >
-              <Mic className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0 hover:bg-gray-200 text-gray-600 hover:text-gray-800"
-              disabled={disabled}
-            >
-              <Video className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0 hover:bg-gray-200 text-gray-600 hover:text-gray-800"
-              disabled={disabled}
-            >
-              <Calendar className="h-4 w-4" />
+              <Image className="h-4 w-4" />
             </Button>
           </div>
 
@@ -280,29 +286,32 @@ export default function ModernChatInput({
         </div>
 
         {/* Emoji Picker */}
-        {showEmojis && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            className="mt-2 p-3 bg-white border border-gray-200 rounded-lg shadow-lg"
-          >
-            <div className="grid grid-cols-5 gap-2">
-              {emojis.map((emoji, index) => (
-                <button
-                  key={index}
-                  onClick={() => {
-                    handleEmojiSelect(emoji)
-                    setShowEmojis(false)
-                  }}
-                  className="p-2 hover:bg-gray-100 rounded-lg text-lg transition-colors"
-                >
-                  {emoji}
-                </button>
-              ))}
-            </div>
-          </motion.div>
-        )}
+        <AnimatePresence>
+          {showEmojis && (
+            <motion.div
+              ref={emojiPickerRef}
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+              className="absolute bottom-full left-0 mb-2 z-50"
+              style={{ position: 'absolute', bottom: '100%', left: '0', marginBottom: '8px' }}
+            >
+              <EmojiPicker
+                onEmojiClick={handleEmojiSelect}
+                width={320}
+                height={300}
+                searchDisabled={false}
+                skinTonesDisabled={false}
+                previewConfig={{
+                  showPreview: false
+                }}
+                searchPlaceHolder="Search emojis..."
+                theme="light"
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Typing indicator */}
         {isTyping && (
