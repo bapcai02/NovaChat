@@ -163,7 +163,11 @@ export default function ModernChatHeader({
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search messages..."
-              className="pl-10"
+              className="pl-10 focus:ring-1 focus:ring-blue-400 focus:border-blue-400 focus:outline-none transition-all duration-200"
+              style={{
+                border: '1px solid #e5e7eb',
+                boxShadow: 'none'
+              }}
               autoFocus
               onBlur={() => setIsSearchOpen(false)}
             />

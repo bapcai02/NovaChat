@@ -276,3 +276,22 @@ html.dark body {
 .chat-button {
   @apply bg-[hsl(var(--chat-accent))] text-[hsl(var(--chat-accent-foreground))] hover:bg-[hsl(var(--chat-accent-light))];
 }
+
+/* Fix input/textarea focus styles globally */
+input:focus,
+textarea:focus {
+  outline: none !important;
+  box-shadow: 0 0 0 1px #60a5fa !important;
+  border-color: #60a5fa !important;
+}
+
+input,
+textarea {
+  border: 1px solid #e5e7eb !important;
+  box-shadow: none !important;
+}
+
+input:hover,
+textarea:hover {
+  border-color: #d1d5db !important;
+}

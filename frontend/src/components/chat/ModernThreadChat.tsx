@@ -102,7 +102,10 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
   const [messages, setMessages] = useState<ThreadMessage[]>(mockThreadMessages)
   const [newMessage, setNewMessage] = useState('')
   const [isTyping, setIsTyping] = useState(false)
+  const [showEmojis, setShowEmojis] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  const emojis = ['😀', '😂', '😍', '🤔', '👍', '👎', '❤️', '🎉', '🔥', '💯']
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -330,29 +333,70 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
       {/* Thread Input */}
       <div className="p-4 border-t border-gray-100">
         <div className="flex gap-2">
-          <Textarea
-            value={newMessage}
-            onChange={(e) => {
-              setNewMessage(e.target.value)
-              if (e.target.value.trim() && !isTyping) {
-                setIsTyping(true)
-              } else if (!e.target.value.trim() && isTyping) {
-                setIsTyping(false)
-              }
-            }}
-            onKeyDown={handleKeyDown}
-            placeholder="Reply in thread..."
-            className="min-h-[40px] max-h-28 resize-none bg-gray-50 border-gray-200 focus:ring-2 focus:ring-blue-500 text-sm text-gray-800 placeholder-gray-500"
-            rows={1}
-          />
+          <div className="flex-1 relative">
+            <Textarea
+              value={newMessage}
+              onChange={(e) => {
+                setNewMessage(e.target.value)
+                if (e.target.value.trim() && !isTyping) {
+                  setIsTyping(true)
+                } else if (!e.target.value.trim() && isTyping) {
+                  setIsTyping(false)
+                }
+              }}
+              onKeyDown={handleKeyDown}
+              placeholder="Reply in thread..."
+              className="min-h-[40px] max-h-28 resize-none bg-gray-50 border-gray-200 focus:ring-1 focus:ring-blue-400 focus:border-blue-400 focus:outline-none text-sm text-gray-800 placeholder-gray-500 transition-all duration-200 rounded-lg pr-10"
+              style={{
+                border: '1px solid #e5e7eb',
+                boxShadow: 'none'
+              }}
+              rows={1}
+            />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-gray-200 text-gray-600"
+              onClick={() => setShowEmojis(!showEmojis)}
+            >
+              <Smile className="h-4 w-4" />
+            </Button>
+          </div>
           <Button
             onClick={handleSendMessage}
             disabled={!newMessage.trim()}
-            className="h-8 w-8 p-0 bg-blue-500 hover:bg-blue-600 text-white rounded-full"
+            className="h-8 w-8 p-0 bg-blue-500 hover:bg-blue-600 text-white rounded-full flex items-center justify-center"
           >
-            <Send className="h-4 w-4" />
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+            </svg>
           </Button>
         </div>
+        {/* Emoji Picker */}
+        {showEmojis && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            className="mt-2 p-3 bg-white border border-gray-200 rounded-lg shadow-lg"
+          >
+            <div className="grid grid-cols-5 gap-2">
+              {emojis.map((emoji, index) => (
+                <button
+                  key={index}
+                  onClick={() => {
+                    setNewMessage(prev => prev + emoji)
+                    setShowEmojis(false)
+                  }}
+                  className="p-2 hover:bg-gray-100 rounded-lg text-lg transition-colors"
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
         {isTyping && (
           <div className="mt-2 text-xs text-gray-500">
             You are typing...

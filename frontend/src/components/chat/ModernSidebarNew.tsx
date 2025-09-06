@@ -18,7 +18,15 @@ import {
   Grid3X3,
   Maximize2,
   HelpCircle,
-  Calendar
+  Calendar,
+  Building2,
+  Briefcase,
+  Users2,
+  Shield,
+  Zap,
+  Heart,
+  Target,
+  Rocket
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -49,6 +57,42 @@ export default function ModernSidebar({
   currentUser
 }: ModernSidebarProps) {
   const [searchQuery, setSearchQuery] = useState('')
+
+  // Get team icon based on team name or index
+  const getTeamIcon = (teamName: string, index: number) => {
+    const icons = [Building2, Briefcase, Users2, Shield, Zap, Heart, Target, Rocket]
+    const iconIndex = index % icons.length
+    const IconComponent = icons[iconIndex]
+    return <IconComponent className="h-4 w-4 text-white" />
+  }
+
+  // Get team gradient based on index
+  const getTeamGradient = (index: number) => {
+    const gradients = [
+      'from-blue-500 to-purple-600',
+      'from-green-500 to-teal-600', 
+      'from-orange-500 to-red-600',
+      'from-purple-500 to-pink-600',
+      'from-cyan-500 to-blue-600',
+      'from-emerald-500 to-green-600',
+      'from-rose-500 to-pink-600',
+      'from-indigo-500 to-purple-600'
+    ]
+    return gradients[index % gradients.length]
+  }
+
+  // Get channel icon based on channel name
+  const getChannelIcon = (channelName: string) => {
+    const name = channelName.toLowerCase()
+    if (name.includes('general') || name.includes('main')) return <Hash className="h-4 w-4 text-gray-600" />
+    if (name.includes('random') || name.includes('fun')) return <Zap className="h-4 w-4 text-gray-600" />
+    if (name.includes('announce') || name.includes('news')) return <Bell className="h-4 w-4 text-gray-600" />
+    if (name.includes('help') || name.includes('support')) return <HelpCircle className="h-4 w-4 text-gray-600" />
+    if (name.includes('dev') || name.includes('development')) return <Rocket className="h-4 w-4 text-gray-600" />
+    if (name.includes('design') || name.includes('creative')) return <Heart className="h-4 w-4 text-gray-600" />
+    if (name.includes('marketing') || name.includes('sales')) return <Target className="h-4 w-4 text-gray-600" />
+    return <Hash className="h-4 w-4 text-gray-600" />
+  }
 
   const filteredConversations = (conversations || []).filter(conv => {
     if (!searchQuery) return true
@@ -103,7 +147,11 @@ export default function ModernSidebar({
             placeholder="Search conversations..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 h-9 bg-gray-50 border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-700 placeholder-gray-500"
+            className="pl-10 h-9 bg-gray-50 border-gray-200 focus:ring-1 focus:ring-blue-400 focus:border-blue-400 focus:outline-none text-sm text-gray-700 placeholder-gray-500 transition-all duration-200"
+            style={{
+              border: '1px solid #e5e7eb',
+              boxShadow: 'none'
+            }}
           />
         </div>
       </div>
@@ -118,18 +166,18 @@ export default function ModernSidebar({
               <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Teams</span>
             </div>
             <div className="space-y-1">
-              {(teams || []).map((team) => (
+              {(teams || []).map((team, index) => (
                 <button
                   key={team.id}
                   onClick={() => onSelectConversation({ id: team.id, type: 'group', title: team.name, team_id: team.id } as any)}
                   className={cn(
                     "flex items-center justify-between w-full text-left hover:bg-gray-50 rounded-lg p-2 transition-all duration-200 group",
-                    currentConversation?.team_id === team.id && "bg-blue-50 border border-blue-200"
+                    (currentConversation?.team_id === team.id || currentConversation?.id === team.id) && "bg-gray-50 border border-gray-200"
                   )}
                 >
                   <div className="flex items-center space-x-2">
-                    <div className="h-8 w-8 flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg">
-                      <Users className="h-4 w-4 text-white" />
+                    <div className={cn("h-8 w-8 flex items-center justify-center bg-gradient-to-br rounded-lg", getTeamGradient(index))}>
+                      {getTeamIcon(team.name, index)}
                     </div>
                     <div>
                       <span className="text-sm font-medium text-gray-800 group-hover:text-blue-600">{team.name}</span>
@@ -137,7 +185,7 @@ export default function ModernSidebar({
                     </div>
                   </div>
                   {(team.members_count ?? 0) > 0 && (
-                    <Badge className="bg-blue-100 text-blue-700 text-xs font-medium px-1.5 py-0.5">
+                    <Badge className="bg-gray-100 text-gray-600 text-xs font-medium px-1.5 py-0.5">
                       {team.members_count}
                     </Badge>
                   )}
@@ -159,12 +207,12 @@ export default function ModernSidebar({
                   onClick={() => onSelectConversation(conversation)}
                   className={cn(
                     "flex items-center justify-between w-full text-left hover:bg-gray-50 rounded-lg p-2 transition-all duration-200 group",
-                    currentConversation?.id === conversation.id && "bg-blue-50 border border-blue-200"
+                    currentConversation?.id === conversation.id && "bg-gray-50 border border-gray-200"
                   )}
                 >
                   <div className="flex items-center space-x-2">
                     <div className="h-8 w-8 flex items-center justify-center bg-gray-100 rounded-lg">
-                      <Hash className="h-4 w-4 text-gray-600" />
+                      {getChannelIcon(conversation.title)}
                     </div>
                     <div>
                       <span className="text-sm font-medium text-gray-800 group-hover:text-blue-600">{conversation.title}</span>
@@ -200,7 +248,7 @@ export default function ModernSidebar({
                     whileHover={{ backgroundColor: 'rgba(59, 130, 246, 0.05)' }}
                     className={cn(
                       "flex items-center justify-between w-full text-left hover:bg-gray-50 rounded-lg p-2 transition-all duration-200 group",
-                      currentConversation?.id === conversation.id && "bg-blue-50 border border-blue-200"
+                      currentConversation?.id === conversation.id && "bg-gray-50 border border-gray-200"
                     )}
                   >
                     <div className="flex items-center space-x-2 flex-1 min-w-0">

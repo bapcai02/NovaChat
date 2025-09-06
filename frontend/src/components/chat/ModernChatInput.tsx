@@ -201,6 +201,15 @@ export default function ModernChatInput({
               variant="ghost"
               size="sm"
               className="h-8 w-8 p-0 hover:bg-gray-200 text-gray-600 hover:text-gray-800"
+              onClick={() => setShowEmojis(!showEmojis)}
+              disabled={disabled}
+            >
+              <Smile className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 hover:bg-gray-200 text-gray-600 hover:text-gray-800"
               onClick={() => fileInputRef.current?.click()}
               disabled={disabled}
             >
@@ -242,7 +251,11 @@ export default function ModernChatInput({
               onKeyDown={handleKeyDown}
               placeholder={placeholder}
               disabled={disabled}
-              className="min-h-[40px] max-h-28 resize-none pr-12 bg-gray-50 border border-gray-200 hover:border-gray-300 focus:ring-1 focus:ring-blue-400 focus:border-blue-400 text-sm text-gray-800 placeholder-gray-500 transition-all duration-200 rounded-lg"
+              className="min-h-[40px] max-h-28 resize-none pr-12 bg-gray-50 border border-gray-200 hover:border-gray-300 focus:ring-1 focus:ring-blue-400 focus:border-blue-400 focus:outline-none text-sm text-gray-800 placeholder-gray-500 transition-all duration-200 rounded-lg"
+              style={{
+                border: '1px solid #e5e7eb',
+                boxShadow: 'none'
+              }}
               rows={1}
             />
             
@@ -258,11 +271,38 @@ export default function ModernChatInput({
           <Button
             onClick={handleSend}
             disabled={disabled || (!message.trim() && attachments.length === 0)}
-            className="h-8 w-8 p-0 bg-blue-500 hover:bg-blue-600 text-white rounded-full"
+            className="h-8 w-8 p-0 bg-blue-500 hover:bg-blue-600 text-white rounded-full flex items-center justify-center"
           >
-            <Send className="h-4 w-4" />
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+            </svg>
           </Button>
         </div>
+
+        {/* Emoji Picker */}
+        {showEmojis && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            className="mt-2 p-3 bg-white border border-gray-200 rounded-lg shadow-lg"
+          >
+            <div className="grid grid-cols-5 gap-2">
+              {emojis.map((emoji, index) => (
+                <button
+                  key={index}
+                  onClick={() => {
+                    handleEmojiSelect(emoji)
+                    setShowEmojis(false)
+                  }}
+                  className="p-2 hover:bg-gray-100 rounded-lg text-lg transition-colors"
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
 
         {/* Typing indicator */}
         {isTyping && (
