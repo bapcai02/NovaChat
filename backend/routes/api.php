@@ -91,6 +91,7 @@ Route::middleware('auth:api')->group(function () {
         
         // Message reactions
         Route::post('messages/{messageId}/reactions', [MessageController::class, 'addReaction']);
+        Route::delete('messages/{messageId}/reactions', [MessageController::class, 'removeReaction']);
         Route::delete('messages/{messageId}/reactions/{emoji}', [MessageController::class, 'removeReaction']);
         
         // Message editing

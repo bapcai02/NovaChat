@@ -30,7 +30,7 @@ class MessageService
     public function storeMessage(array $data): array
     {
         $messageData = [
-            'user_id' => $data['senderId'],
+            'user_id' => $data['user_id'],
             'content' => $data['content'],
             'type' => $data['type'] ?? 'text',
             'metadata' => $data['metadata'] ?? [],
@@ -40,20 +40,25 @@ class MessageService
 
         $message = $this->messages->create($messageData);
         
+        // Get conversation type for channel selection
+        $conversationType = 'direct'; // Default for direct messages
+        if ($message->channel_id) {
+            $conversationType = 'channel';
+        }
+        
         $payload = [
-            'roomType' => $data['type'] ?? 'channel',
-            'roomId' => (string) $data['roomId'],
-            'messageId' => (string) $message->id,
-            'senderId' => (string) $data['senderId'],
+            'conversation_id' => (string) $data['conversation_id'],
+            'type' => $conversationType,
+            'message_id' => (string) $message->id,
+            'sender_id' => (string) $data['user_id'],
             'content' => (string) $data['content'],
-            'createdAt' => $message->created_at->toISOString(),
+            'created_at' => is_string($message->created_at) ? $message->created_at : $message->created_at->toISOString(),
         ];
 
-        if (class_exists(\App\Events\MessageSent::class)) {
-            broadcast(new \App\Events\MessageSent($payload))->toOthers();
-        }
+        // Broadcast the event
+        broadcast(new \App\Events\MessageSent($payload))->toOthers();
 
-        return ['success' => true, 'data' => $payload];
+        return ['success' => true, 'data' => $message->toArray()];
     }
 
     public function addReaction(string $messageId, int $userId, string $emoji): array
@@ -65,19 +70,24 @@ class MessageService
 
         $reaction = $this->messages->addReaction((int) $messageId, $userId, $emoji);
         
+        // Get conversation type for channel selection
+        $conversationType = 'direct';
+        if (!empty($message['channel_id'])) {
+            $conversationType = 'channel';
+        }
+        
         $payload = [
-            'roomType' => !empty($message['conversation_id']) ? 'direct' : 'channel',
-            'roomId' => (string) ($message['conversation_id'] ?? $message['channel_id']),
-            'messageId' => (string) $messageId,
-            'userId' => (string) $userId,
+            'conversation_id' => (string) $message['conversation_id'],
+            'type' => $conversationType,
+            'message_id' => (string) $messageId,
+            'user_id' => (string) $userId,
             'emoji' => $emoji,
-            'reactionId' => (string) $reaction['id'],
-            'createdAt' => now()->toISOString(),
+            'reaction_id' => (string) $reaction['id'],
+            'created_at' => now()->toISOString(),
         ];
 
-        if (class_exists(\App\Events\MessageReactionAdded::class)) {
-            broadcast(new \App\Events\MessageReactionAdded($payload))->toOthers();
-        }
+        // Broadcast the event
+        broadcast(new \App\Events\ReactionAdded($payload))->toOthers();
 
         return ['success' => true, 'message' => 'Reaction added successfully', 'data' => $reaction];
     }
@@ -94,18 +104,23 @@ class MessageService
             return ['success' => false, 'message' => 'Reaction not found'];
         }
 
+        // Get conversation type for channel selection
+        $conversationType = 'direct';
+        if (!empty($message['channel_id'])) {
+            $conversationType = 'channel';
+        }
+        
         $payload = [
-            'roomType' => !empty($message['conversation_id']) ? 'direct' : 'channel',
-            'roomId' => (string) ($message['conversation_id'] ?? $message['channel_id']),
-            'messageId' => (string) $messageId,
-            'userId' => (string) $userId,
+            'conversation_id' => (string) $message['conversation_id'],
+            'type' => $conversationType,
+            'message_id' => (string) $messageId,
+            'user_id' => (string) $userId,
             'emoji' => $emoji,
-            'removedAt' => now()->toISOString(),
+            'removed_at' => now()->toISOString(),
         ];
 
-        if (class_exists(\App\Events\MessageReactionRemoved::class)) {
-            broadcast(new \App\Events\MessageReactionRemoved($payload))->toOthers();
-        }
+        // Broadcast the event
+        broadcast(new \App\Events\ReactionRemoved($payload))->toOthers();
 
         return ['success' => true, 'message' => 'Reaction removed successfully'];
     }
@@ -121,24 +136,25 @@ class MessageService
             return ['success' => false, 'message' => 'You can only edit your own messages'];
         }
 
-        $this->messages->update((int)$messageId, [
-            'content' => $newContent,
-            'is_edited' => true,
-            'edited_at' => now(),
-        ]);
+        $this->messages->edit((int)$messageId, $newContent);
 
+        // Get conversation type for channel selection
+        $conversationType = 'direct';
+        if (!empty($message['channel_id'])) {
+            $conversationType = 'channel';
+        }
+        
         $payload = [
-            'roomType' => !empty($message['conversation_id']) ? 'direct' : 'channel',
-            'roomId' => (string) ($message['conversation_id'] ?? $message['channel_id']),
-            'messageId' => (string) $messageId,
-            'userId' => (string) $userId,
+            'conversation_id' => (string) $message['conversation_id'],
+            'type' => $conversationType,
+            'message_id' => (string) $messageId,
+            'user_id' => (string) $userId,
             'content' => $newContent,
-            'editedAt' => now()->toISOString(),
+            'edited_at' => now()->toISOString(),
         ];
 
-        if (class_exists(\App\Events\MessageEdited::class)) {
-            broadcast(new \App\Events\MessageEdited($payload))->toOthers();
-        }
+        // Broadcast the event
+        broadcast(new \App\Events\MessageEdited($payload))->toOthers();
 
         return ['success' => true, 'message' => 'Message updated successfully', 'data' => $payload];
     }
@@ -150,12 +166,7 @@ class MessageService
             return ['success' => false, 'message' => 'Message already bookmarked'];
         }
 
-        $bookmark = $this->messages->createBookmark([
-            'user_id' => $userId,
-            'message_id' => (int)$messageId,
-            'note' => $note,
-            'tags' => $tags,
-        ]);
+        $bookmark = $this->messages->createBookmark((int)$messageId, $userId, $note);
 
         return ['success' => true, 'data' => $bookmark];
     }

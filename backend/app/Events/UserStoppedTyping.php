@@ -10,8 +10,11 @@ class UserStoppedTyping implements ShouldBroadcast
 {
     use InteractsWithSockets;
 
-    public function __construct(public array $payload)
+    public array $payload;
+
+    public function __construct(array $payload)
     {
+        $this->payload = $payload;
     }
 
     public function broadcastOn(): array

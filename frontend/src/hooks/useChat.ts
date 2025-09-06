@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { apiService } from '@/services/api'
+import { getEcho } from '@/lib/echo'
 
 export interface User {
   id: number
@@ -189,6 +190,8 @@ export function useChat() {
       const messagesArray = Array.isArray(messagesData) ? messagesData : []
       if (page === 1) {
         setMessages(messagesArray)
+        // Setup WebSocket subscription for new messages
+        setupWebSocketSubscription(conversationId)
       } else {
         setMessages(prev => [...messagesArray, ...prev])
       }
@@ -198,6 +201,79 @@ export function useChat() {
       setMessages([])
     } finally {
       setIsLoading(false)
+    }
+  }, [])
+
+  // Setup WebSocket subscription for real-time messages
+  const setupWebSocketSubscription = useCallback((conversationId: number) => {
+    try {
+      const echo = getEcho()
+      const channel = echo.private(`chat.dm.${conversationId}`)
+      
+      // Listen for new messages
+      channel.listen('.ChatMessageSent', (event: any) => {
+        const newMessage = {
+          id: event.message_id,
+          conversation_id: parseInt(event.conversation_id),
+          user_id: parseInt(event.sender_id),
+          content: event.content,
+          type: 'text',
+          created_at: event.created_at,
+          updated_at: event.created_at,
+          sender: {
+            id: parseInt(event.sender_id),
+            name: `User ${event.sender_id}`,
+            username: `user${event.sender_id}`,
+            avatar: undefined
+          },
+          reactions: [],
+          is_bookmarked: false
+        }
+        setMessages(prev => [...prev, newMessage])
+      })
+
+      // Listen for message edits
+      channel.listen('.ChatMessageEdited', (event: any) => {
+        setMessages(prev => prev.map(msg => 
+          msg.id === parseInt(event.message_id)
+            ? { ...msg, content: event.content, is_edited: true, edited_at: event.edited_at }
+            : msg
+        ))
+      })
+
+      // Listen for reactions
+      channel.listen('.ChatReactionAdded', (event: any) => {
+        setMessages(prev => prev.map(msg => 
+          msg.id === parseInt(event.message_id)
+            ? {
+                ...msg,
+                reactions: [...(msg.reactions || []), {
+                  emoji: event.emoji,
+                  count: 1,
+                  users: [parseInt(event.user_id)]
+                }]
+              }
+            : msg
+        ))
+      })
+
+      // Listen for reaction removals
+      channel.listen('.ChatReactionRemoved', (event: any) => {
+        setMessages(prev => prev.map(msg => 
+          msg.id === parseInt(event.message_id)
+            ? {
+                ...msg,
+                reactions: (msg.reactions || []).filter(r => r.emoji !== event.emoji)
+              }
+            : msg
+        ))
+      })
+
+      return () => {
+        channel.unsubscribe()
+      }
+    } catch (error) {
+      console.error('Failed to setup WebSocket subscription:', error)
     }
   }, [])
 
@@ -246,7 +322,31 @@ export function useChat() {
       // Update local state
       setMessages(prev => prev.map(msg => 
         msg.id === messageId 
-          ? { ...msg, reactions: [...(msg.reactions || []), { emoji, user_id: currentUser?.id || 0 }] }
+          ? { 
+              ...msg, 
+              reactions: (() => {
+                const existingReaction = (msg.reactions || []).find(r => r.emoji === emoji)
+                if (existingReaction) {
+                  // Update existing reaction
+                  return (msg.reactions || []).map(r => 
+                    r.emoji === emoji 
+                      ? {
+                          ...r,
+                          count: (r.count || 0) + 1,
+                          users: [...(r.users || []), currentUser?.id || 0]
+                        }
+                      : r
+                  )
+                } else {
+                  // Add new reaction
+                  return [...(msg.reactions || []), { 
+                    emoji, 
+                    count: 1, 
+                    users: [currentUser?.id || 0] 
+                  }]
+                }
+              })()
+            }
           : msg
       ))
     } catch (err) {
@@ -263,9 +363,15 @@ export function useChat() {
         msg.id === messageId 
           ? { 
               ...msg, 
-              reactions: (msg.reactions || []).filter(r => 
-                !(r.emoji === emoji && r.user_id === currentUser?.id)
-              )
+              reactions: (msg.reactions || []).map(r => 
+                r.emoji === emoji 
+                  ? {
+                      ...r,
+                      count: Math.max(0, (r.count || 1) - 1),
+                      users: (r.users || []).filter(userId => userId !== currentUser?.id)
+                    }
+                  : r
+              ).filter(r => (r.count || 0) > 0)
             }
           : msg
       ))

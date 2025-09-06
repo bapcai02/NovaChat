@@ -14,10 +14,9 @@ class MessageRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'roomId' => 'required',
-            'senderId' => 'required|integer',
             'content' => 'required|string',
-            'type' => 'nullable|string|in:channel,direct',
+            'type' => 'nullable|string|in:text,image,file,system',
+            'metadata' => 'nullable|array',
         ];
     }
 }

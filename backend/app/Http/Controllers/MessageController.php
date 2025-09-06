@@ -43,15 +43,17 @@ class MessageController extends Controller
         }, 'Messages retrieved', 'Failed to retrieve messages');
     }
 
-    public function store(MessageRequest $request): JsonResponse
+    public function store(MessageRequest $request, string $conversationId): JsonResponse
     {
         $user = Auth::user();
         if (!$user) {
             return $this->unauthorizedResponse('Unauthenticated');
         }
 
-        return $this->executeInTransactionWithResponse(function () use ($request) {
+        return $this->executeInTransactionWithResponse(function () use ($request, $conversationId, $user) {
             $data = $request->validated();
+            $data['conversation_id'] = (int) $conversationId;
+            $data['user_id'] = $user->id;
             $result = $this->messages->storeMessage($data);
             
             if (!$result['success']) {
@@ -90,11 +92,21 @@ class MessageController extends Controller
         }, 'Reaction added', 'Failed to add reaction');
     }
 
-    public function removeReaction(Request $request, string $messageId, string $emoji): JsonResponse
+    public function removeReaction(Request $request, string $messageId, string $emoji = null): JsonResponse
     {
         $user = Auth::user();
         if (!$user) {
             return $this->unauthorizedResponse('Unauthenticated');
+        }
+
+        // If emoji is not in URL, get it from request body
+        if (!$emoji) {
+            $data = $request->json()->all();
+            $emoji = $data['emoji'] ?? null;
+            
+            if (!$emoji) {
+                return $this->validationErrorResponse(['emoji' => ['The emoji field is required.']]);
+            }
         }
 
         return $this->executeInTransactionWithResponse(function () use ($messageId, $emoji, $user) {
