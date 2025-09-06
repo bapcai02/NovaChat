@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { apiService } from '@/services/api'
-import { getEcho } from '@/lib/echo'
+import { getWebSocketClient, WebSocketMessage } from '@/lib/websocket'
 
 export interface User {
   id: number
@@ -210,99 +210,90 @@ export function useChat() {
       console.log('=== Setting up WebSocket subscription ===')
       console.log('Conversation ID:', conversationId)
       
-      const echo = getEcho()
-      console.log('Echo instance:', echo)
+      const wsClient = getWebSocketClient()
+      console.log('WebSocket client:', wsClient)
       
-      const channel = echo.private(`chat.dm.${conversationId}`)
-      console.log('Channel created:', channel)
+      // Connect if not already connected
+      if (wsClient.getConnectionState() !== 'connected') {
+        wsClient.connect()
+      }
       
-      // Listen for new messages
-      channel.listen('.ChatMessageSent', (event: any) => {
-        console.log('=== Received ChatMessageSent event ===')
-        console.log('Event data:', event)
-        console.log('Current user ID:', currentUser?.id)
-        console.log('Event sender ID:', event.sender_id)
+      // Join conversation
+      wsClient.joinConversation(conversationId)
+      
+      // Clear existing message handlers to avoid duplicates
+      wsClient.clearMessageHandlers()
+      
+      // Listen for messages
+      wsClient.onMessage((message: WebSocketMessage) => {
+        console.log('=== Received WebSocket message ===')
+        console.log('Message:', message)
         
-        const newMessage = {
-          id: event.message_id,
-          conversation_id: parseInt(event.conversation_id),
-          user_id: parseInt(event.sender_id),
-          content: event.content,
-          type: event.type || 'text',
-          created_at: event.created_at,
-          updated_at: event.created_at,
-          sender: {
-            id: parseInt(event.sender_id),
-            name: event.sender_name || `User ${event.sender_id}`,
-            username: event.sender_username || `user${event.sender_id}`,
-            avatar: event.sender_avatar
-          },
-          reactions: [],
-          is_bookmarked: false,
-          replies_count: event.replies_count || 0
-        }
-        
-        console.log('New message object:', newMessage)
-        
-        // If it's from current user, replace optimistic update
-        if (parseInt(event.sender_id) === currentUser?.id) {
-          console.log('Replacing optimistic message with real message')
-          setMessages(prev => prev.map(msg => 
-            msg.is_optimistic && msg.user_id === parseInt(event.sender_id) && msg.content === event.content
-              ? newMessage
-              : msg
-          ))
-        } else {
-          console.log('Adding new message from other user')
-          // Add new message from other users
-          setMessages(prev => [...prev, newMessage])
-        }
-      })
-
-      // Listen for message edits
-      channel.listen('.ChatMessageEdited', (event: any) => {
-        setMessages(prev => prev.map(msg => 
-          msg.id === parseInt(event.message_id)
-            ? { ...msg, content: event.content, is_edited: true, edited_at: event.edited_at }
-            : msg
-        ))
-      })
-
-      // Listen for reactions
-      channel.listen('.ChatReactionAdded', (event: any) => {
-        setMessages(prev => prev.map(msg => 
-          msg.id === parseInt(event.message_id)
-            ? {
-                ...msg,
-                reactions: [...(msg.reactions || []), {
-                  emoji: event.emoji,
-                  count: 1,
-                  users: [parseInt(event.user_id)]
-                }]
+        if (message.type === 'message_received') {
+          const newMessage = {
+            id: Date.now(), // Temporary ID until we get real ID from DB
+            conversation_id: parseInt(message.conversation_id?.toString() || '0'),
+            user_id: parseInt(message.sender_id?.toString() || '0'),
+            content: message.content || '',
+            type: 'text',
+            created_at: message.timestamp || new Date().toISOString(),
+            updated_at: message.timestamp || new Date().toISOString(),
+            sender: {
+              id: parseInt(message.sender_id?.toString() || '0'),
+              name: `User ${message.sender_id}`,
+              username: `user${message.sender_id}`,
+              avatar: undefined
+            },
+            reactions: [],
+            is_bookmarked: false,
+            replies_count: 0
+          }
+          
+          console.log('New message object:', newMessage)
+          
+          // If it's from current user, replace optimistic update
+          if (parseInt(message.sender_id?.toString() || '0') === currentUser?.id) {
+            console.log('Replacing optimistic message with real message')
+            setMessages(prev => {
+              // Find and remove optimistic message
+              const filteredMessages = prev.filter(msg => 
+                !(msg.is_optimistic && 
+                  msg.user_id === parseInt(message.sender_id?.toString() || '0') && 
+                  msg.content === message.content)
+              )
+              
+              // Add real message
+              return [...filteredMessages, newMessage]
+            })
+          } else {
+            console.log('Adding new message from other user')
+            // Add new message from other users, but check for duplicates first
+            setMessages(prev => {
+              // Check if message already exists (by content and timestamp)
+              const exists = prev.some(msg => 
+                msg.content === newMessage.content && 
+                msg.user_id === newMessage.user_id &&
+                Math.abs(new Date(msg.created_at).getTime() - new Date(newMessage.created_at).getTime()) < 1000 // Within 1 second
+              )
+              
+              if (exists) {
+                console.log('Message already exists, skipping duplicate')
+                return prev
               }
-            : msg
-        ))
-      })
-
-      // Listen for reaction removals
-      channel.listen('.ChatReactionRemoved', (event: any) => {
-        setMessages(prev => prev.map(msg => 
-          msg.id === parseInt(event.message_id)
-            ? {
-                ...msg,
-                reactions: (msg.reactions || []).filter(r => r.emoji !== event.emoji)
-              }
-            : msg
-        ))
+              
+              return [...prev, newMessage]
+            })
+          }
+        }
       })
 
       return () => {
-        channel.unsubscribe()
+        // WebSocket client will handle cleanup
       }
     } catch (error) {
       console.error('Failed to setup WebSocket subscription:', error)
     }
-  }, [])
+  }, [currentUser])
 
   // Send message via WebSocket
   const sendMessage = useCallback(async (conversationId: number, content: string, type: string = 'text') => {
@@ -313,8 +304,8 @@ export function useChat() {
       console.log('Type:', type)
       console.log('Current user:', currentUser)
       
-      const echo = getEcho()
-      console.log('Echo instance for sending:', echo)
+      const wsClient = getWebSocketClient()
+      console.log('WebSocket client for sending:', wsClient)
       
       // Create message object for immediate UI update
       const tempMessage = {
@@ -342,33 +333,27 @@ export function useChat() {
       setMessages(prev => [...prev, tempMessage])
       console.log('Message added to UI (optimistic update)')
       
-      // Send via WebSocket Echo client-send-message
+      // Send via WebSocket
       try {
-        console.log('Attempting to send message via WebSocket Echo client-send-message:', {
+        console.log('Attempting to send message via WebSocket:', {
           conversationId,
           content,
           type,
           senderId: currentUser?.id
         })
         
-        const messageData = {
-          conversation_id: conversationId,
-          content: content,
-          type: type,
-          sender_id: currentUser?.id
+        // Connect if not already connected
+        if (wsClient.getConnectionState() !== 'connected') {
+          wsClient.connect()
         }
         
-        console.log('Message data for WebSocket:', messageData)
+        // Join conversation if not already joined
+        wsClient.joinConversation(conversationId)
         
-        // Send via WebSocket Echo
-        const echo = getEcho()
-        if (echo) {
-          echo.private(`chat.dm.${conversationId}`)
-            .whisper('client-send-message', messageData)
-          console.log('Message sent via WebSocket Echo')
-        } else {
-          console.warn('WebSocket Echo not available')
-        }
+        // Send message
+        wsClient.sendMessage(conversationId, currentUser?.id || 0, content)
+        console.log('Message sent via WebSocket')
+        
       } catch (error) {
         console.error('Failed to send message via WebSocket:', error)
       }

@@ -10,7 +10,7 @@ import { ReadReceipts } from '@/components/ui/read-receipts'
 import { MessageAnalytics } from '@/components/ui/message-analytics'
 import { MessageRenderer } from '@/components/ui/message-renderer'
 import { cn } from '@/lib/utils'
-import { getEcho } from '@/lib/echo'
+import { getWebSocketClient } from '@/lib/websocket'
 import { MessageReactions } from '@/components/ui/message-reactions'
 import { MessageEditor } from '@/components/ui/message-editor'
 import { TypingIndicator } from '@/components/ui/typing-indicator'
@@ -92,190 +92,16 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, select
     const roomId = selectedChat.id.toString()
 
     try {
-      const echo = getEcho()
-      // Subscribe to private channel
-      const channelName = selectedChat?.type === 'conversation' || selectedChat?.type === 'direct'
-        ? `chat.dm.${roomId}`
-        : `chat.channel.${roomId}`
-      const channel = echo.private(channelName)
-      channelRef.current = channel
+      // WebSocket subscription is now handled in useChat hook
+      // const wsClient = getWebSocketClient()
+      // wsClient.joinConversation(parseInt(roomId))
       
-      // Listen for ChatMessageSent events
-      channel.listen('.ChatMessageSent', (event: any) => {        
-        const newMessage = {
-          id: event.messageId,
-          content: event.content,
-          type: 'text',
-          author: { 
-            name: `User ${event.senderId}`, 
-            username: `user${event.senderId}` 
-          },
-          timestamp: new Date(event.createdAt).toLocaleTimeString(),
-          reactions: [],
-          attachments: [],
-        }
-        const el = scrollContainerRef?.current
-        const nearBottom = (() => {
-          if (!el) return true
-          const distance = el.scrollHeight - (el.scrollTop + el.clientHeight)
-          return distance < 80
-        })()
-        setMessages(prev => [...prev, newMessage])
-        if (nearBottom) setTimeout(scrollToBottom, 100)
-      })
+      // WebSocket events are now handled in useChat hook
+      // All real-time functionality is managed centrally in useChat hook
 
-      // Listen for UserTyping events
-      channel.listen('.UserTyping', (event: any) => {
-        setTypingUsers(prev => {
-          const existingUser = prev.find(u => u.id === event.userId)
-          if (!existingUser) {
-            return [...prev, {
-              id: event.userId,
-              name: event.userName,
-              username: event.userName
-            }]
-          }
-          return prev
-        })
-      })
-
-      // Listen for UserStoppedTyping events
-      channel.listen('.UserStoppedTyping', (event: any) => {
-        setTypingUsers(prev => prev.filter(u => u.id !== event.userId))
-      })
-
-      // Client whispers for reactions (WS-only UI sync)
-      channel.listenForWhisper('reaction:add', (data: any) => {
-        setMessages(prev => prev.map(msg => {
-          if (msg.id === data.messageId) {
-            const existingReactions = msg.reactions || []
-            const existing = existingReactions.find(r => r.emoji === data.emoji)
-            if (existing) {
-              return {
-                ...msg,
-                reactions: existingReactions.map(r => r.emoji === data.emoji ? { ...r, count: r.count + 1 } : r)
-              }
-            }
-            return { ...msg, reactions: [...existingReactions, { emoji: data.emoji, count: 1, users: [] }] }
-          }
-          return msg
-        }))
-      })
-
-      channel.listenForWhisper('reaction:remove', (data: any) => {
-        setMessages(prev => prev.map(msg => {
-          if (msg.id === data.messageId) {
-            const existingReactions = msg.reactions || []
-            const existing = existingReactions.find(r => r.emoji === data.emoji)
-            if (!existing) return msg
-            if (existing.count > 1) {
-              return {
-                ...msg,
-                reactions: existingReactions.map(r => r.emoji === data.emoji ? { ...r, count: r.count - 1 } : r)
-              }
-            }
-            return { ...msg, reactions: existingReactions.filter(r => r.emoji !== data.emoji) }
-          }
-          return msg
-        }))
-      })
-
-      // Listen for reaction added
-      channel.listen('.MessageReactionAdded', (data: any) => {
-        console.log('Received reaction added:', data)
-        setMessages(prev => 
-          prev.map(msg => {
-            if (msg.id === data.messageId) {
-              const existingReactions = msg.reactions || []
-              const existingReaction = existingReactions.find(r => r.emoji === data.emoji)
-              
-              if (existingReaction) {
-                // If reaction exists, increment count
-                return {
-                  ...msg,
-                  reactions: existingReactions.map(r => 
-                    r.emoji === data.emoji 
-                      ? { ...r, count: r.count + 1, isReacted: data.userId === '1' }
-                      : r
-                  )
-                }
-              } else {
-                // If reaction doesn't exist, add new one
-                return {
-                  ...msg,
-                  reactions: [
-                    ...existingReactions,
-                    { emoji: data.emoji, count: 1, users: ['User ' + data.userId], isReacted: data.userId === '1' }
-                  ]
-                }
-              }
-            }
-            return msg
-          })
-        )
-      })
-
-      // Listen for reaction removed
-      channel.listen('.MessageReactionRemoved', (data: any) => {
-        console.log('Received reaction removed:', data)
-        setMessages(prev => 
-          prev.map(msg => {
-            if (msg.id === data.messageId) {
-              const existingReactions = msg.reactions || []
-              const existingReaction = existingReactions.find(r => r.emoji === data.emoji)
-              
-              if (existingReaction && existingReaction.count > 1) {
-                // If reaction exists and count > 1, decrement count
-                return {
-                  ...msg,
-                  reactions: existingReactions.map(r => 
-                    r.emoji === data.emoji 
-                      ? { ...r, count: r.count - 1, isReacted: false }
-                      : r
-                  )
-                }
-              } else if (existingReaction && existingReaction.count === 1) {
-                // If reaction exists and count = 1, remove it
-                return {
-                  ...msg,
-                  reactions: existingReactions.filter(r => r.emoji !== data.emoji)
-                }
-              }
-            }
-            return msg
-          })
-        )
-      })
-
-      // Listen for message edited
-      channel.listen('.MessageEdited', (data: any) => {
-        console.log('Received message edited:', data)
-        setMessages(prev => 
-          prev.map(msg => {
-            if (msg.id === data.messageId) {
-              return {
-                ...msg,
-                content: data.content,
-                isEdited: true,
-                editedAt: data.editedAt
-              }
-            }
-            return msg
-          })
-        )
-      })
-
-      // Connection status
-      echo.connector.pusher.connection.bind('connected', () => {
-        console.log('WebSocket connected for room:', roomId)
-      })
-
-      echo.connector.pusher.connection.bind('disconnected', () => {
-        console.log('WebSocket disconnected for room:', roomId)
-      })
-
+      // WebSocket cleanup is handled in useChat hook
       return () => {
-        channel.unsubscribe()
+        // Cleanup handled by useChat hook
       }
     } catch (error) {
       console.error('Failed to setup WebSocket:', error)

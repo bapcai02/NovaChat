@@ -5,7 +5,7 @@ import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { userStatusService, OnlineUser } from '@/services/userStatusService'
-import { getEcho } from '@/lib/echo'
+// WebSocket functionality moved to useChat hook
 
 interface OnlineUsersProps {
   roomId?: string
@@ -32,42 +32,8 @@ export const OnlineUsers: React.FC<OnlineUsersProps> = ({ roomId = '1', classNam
   useEffect(() => {
     fetchOnlineUsers()
 
-    try {
-      const echo = getEcho()
-      const channel = echo.private(`chat.${roomId}`)
-
-      // Listen for user status changes
-      channel.listen('.UserStatusChanged', (event: any) => {
-        console.log('User status changed:', event)
-        
-        if (event.status === 'online') {
-          // Add user to online list
-          setOnlineUsers(prev => {
-            const existingUser = prev.find(u => u.id === event.userId)
-            if (!existingUser) {
-              return [...prev, {
-                id: event.userId,
-                name: event.userName,
-                username: event.userName,
-                status: event.status,
-                statusMessage: event.statusMessage,
-                lastSeenAt: event.timestamp
-              }]
-            }
-            return prev
-          })
-        } else {
-          // Remove user from online list
-          setOnlineUsers(prev => prev.filter(u => u.id !== event.userId))
-        }
-      })
-
-      return () => {
-        channel.unsubscribe()
-      }
-    } catch (error) {
-      console.error('Failed to setup WebSocket for online users:', error)
-    }
+    // WebSocket functionality moved to useChat hook
+    // Real-time status updates are handled centrally
   }, [roomId])
 
   const getStatusColor = (status: string) => {

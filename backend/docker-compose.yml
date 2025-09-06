@@ -45,19 +45,17 @@ services:
     ports:
       - "6379:6379"
 
-  websockets:
+  ws-gateway:
     build:
-      context: .
+      context: ./ws-gateway
       dockerfile: Dockerfile
-    container_name: laravel_websockets
-    volumes:
-      - ./:/var/www/html
-    command: php artisan websockets:serve
+    container_name: ws_gateway
     ports:
-      - "6001:6001"
+      - "7000:7000"
     depends_on:
       - redis
-      - app
+    environment:
+      - REDIS_URL=redis://redis:6379
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
