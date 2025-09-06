@@ -5,19 +5,13 @@ interface UIState {
   // Theme
   theme: 'light' | 'dark'
   
-  // Sidebar states
-  isLeftSidebarOpen: boolean
-  isRightSidebarOpen: boolean
   
   // Modal states
   isCreateChannelModalOpen: boolean
   isCreateDirectMessageModalOpen: boolean
   isSearchModalOpen: boolean
-  isKeyboardShortcutsModalOpen: boolean
   isMessageAnalyticsModalOpen: boolean
   isVoiceRecorderModalOpen: boolean
-  isThemeManagerModalOpen: boolean
-  isThemeCustomizerModalOpen: boolean
   
   // Chat states
   selectedThread: number | null
@@ -52,19 +46,13 @@ const initialState: UIState = {
   // Theme
   theme: typeof window !== 'undefined' ? (localStorage.getItem('theme') as 'light' | 'dark') || 'dark' : 'dark',
   
-  // Sidebar states
-  isLeftSidebarOpen: true,
-  isRightSidebarOpen: true,
   
   // Modal states
   isCreateChannelModalOpen: false,
   isCreateDirectMessageModalOpen: false,
   isSearchModalOpen: false,
-  isKeyboardShortcutsModalOpen: false,
   isMessageAnalyticsModalOpen: false,
   isVoiceRecorderModalOpen: false,
-  isThemeManagerModalOpen: false,
-  isThemeCustomizerModalOpen: false,
   
   // Chat states
   selectedThread: null,
@@ -103,19 +91,6 @@ const uiSlice = createSlice({
       }
     },
     
-    // Sidebar actions
-    toggleLeftSidebar: (state) => {
-      state.isLeftSidebarOpen = !state.isLeftSidebarOpen
-    },
-    toggleRightSidebar: (state) => {
-      state.isRightSidebarOpen = !state.isRightSidebarOpen
-    },
-    setLeftSidebarOpen: (state, action: PayloadAction<boolean>) => {
-      state.isLeftSidebarOpen = action.payload
-    },
-    setRightSidebarOpen: (state, action: PayloadAction<boolean>) => {
-      state.isRightSidebarOpen = action.payload
-    },
     
     // Modal actions
     openCreateChannelModal: (state) => {
@@ -252,11 +227,6 @@ export const {
   setTheme,
   toggleTheme,
   
-  // Sidebar
-  toggleLeftSidebar,
-  toggleRightSidebar,
-  setLeftSidebarOpen,
-  setRightSidebarOpen,
   
   // Modals
   openCreateChannelModal,

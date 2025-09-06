@@ -295,18 +295,16 @@ export default function ModernSidebar({
                             {otherUser?.name?.charAt(0) || 'U'}
                           </AvatarFallback>
                         </Avatar>
-                        {otherUser?.is_online && (
-                          <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 bg-green-500 rounded-full border-2 border-white" />
-                        )}
+                        {/* Online/Offline indicator */}
+                        <div className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white ${
+                          otherUser?.is_online ? 'bg-green-500' : 'bg-gray-400'
+                        }`} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center space-x-1">
                           <p className="text-sm font-medium text-gray-800 group-hover:text-blue-600 truncate">
                             {conversation.title || otherUser?.name || 'Unknown User'}
                           </p>
-                          {otherUser?.is_online && (
-                            <span className="text-xs text-green-600 font-medium">Active now</span>
-                          )}
                         </div>
                         {conversation.last_message && (
                           <p className="text-xs text-gray-500 truncate max-w-[180px]" title={conversation.last_message.content}>

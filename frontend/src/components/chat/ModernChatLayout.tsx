@@ -35,6 +35,7 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
   } = useChat()
 
   const [showThread, setShowThread] = useState(false)
+  const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false)
   const [threadMessage, setThreadMessage] = useState<{
     id: string
     content: string
@@ -139,6 +140,10 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
     console.log('Settings clicked')
   }
 
+  const handleToggleRightSidebar = () => {
+    setIsRightSidebarOpen(!isRightSidebarOpen)
+  }
+
   const handleOpenThread = (message: { id: string; content: string; sender: string; timestamp: string }) => {
     console.log('Opening thread for message:', message)
     setThreadMessage(message)
@@ -240,6 +245,8 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
             onToggleMute={handleToggleMute}
             onTogglePin={handleTogglePin}
             onSettings={handleSettings}
+            onToggleRightSidebar={handleToggleRightSidebar}
+            isRightSidebarOpen={isRightSidebarOpen}
           />
         </motion.div>
 
