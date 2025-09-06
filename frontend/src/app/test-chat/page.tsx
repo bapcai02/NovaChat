@@ -14,10 +14,13 @@ export default function TestChatPage() {
 
     setLoading(true)
     try {
-      const response = await api.post('/messages', {
+      const response = await apiService.request('/messages', {
+        method: 'POST',
+        body: JSON.stringify({
         roomId: '1',
         senderId: '13', // Hardcoded for test
         content: message.trim()
+        })
       })
       
       setResponse(JSON.stringify(response.data, null, 2))

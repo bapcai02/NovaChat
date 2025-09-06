@@ -69,6 +69,7 @@ Route::middleware('auth:api')->group(function () {
 
     // Users & legacy list endpoints will be re-added with new controllers
     Route::get('users', [UserController::class, 'index']);
+    Route::get('users/search', [UserController::class, 'search']);
 
     // Thread replies
     Route::get('messages/{messageId}/replies', [\App\Http\Controllers\ThreadController::class, 'index']);

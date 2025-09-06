@@ -112,10 +112,10 @@ const mockMessages: Message[] = [
   }
 ]
 
-import { Message, User } from '@/hooks/useChat'
+import { Message as ChatMessage, User } from '@/hooks/useChat'
 
 interface ModernChatMessagesProps {
-  messages: Message[]
+  messages: ChatMessage[]
   currentUser: User | null
   onOpenThread?: (message: { id: string; content: string; sender: string; timestamp: string }) => void
   onAddReaction?: (messageId: number, emoji: string) => void

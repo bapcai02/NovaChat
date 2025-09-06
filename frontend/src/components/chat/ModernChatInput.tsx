@@ -307,7 +307,7 @@ export default function ModernChatInput({
                   showPreview: false
                 }}
                 searchPlaceHolder="Search emojis..."
-                theme="light"
+                theme={"light" as any}
               />
             </motion.div>
           )}

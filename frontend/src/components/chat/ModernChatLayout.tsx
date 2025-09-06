@@ -48,7 +48,7 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
     
     if (conversation.type === 'direct') {
       const otherUser = conversation.other_member || conversation.members?.find(
-        member => member.id !== currentUser?.id
+        (member: any) => member.id !== currentUser?.id
       )
       return otherUser?.name || conversation.title || 'Direct Message'
     }
@@ -70,7 +70,7 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
     
     if (conversation.type === 'direct') {
       const otherUser = conversation.other_member || conversation.members?.find(
-        member => member.id !== currentUser?.id
+        (member: any) => member.id !== currentUser?.id
       )
       return otherUser?.avatar
     }
@@ -162,11 +162,9 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
         >
           <ModernSidebar 
             teams={teams}
-            channels={channels}
             conversations={conversations}
             currentConversation={currentConversation}
             onSelectConversation={setCurrentConversation}
-            onlineUsers={onlineUsers}
             currentUser={currentUser}
           />
         </motion.div>
@@ -211,11 +209,9 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
       >
         <ModernSidebar 
           teams={teams}
-          channels={channels}
           conversations={conversations}
           currentConversation={currentConversation}
           onSelectConversation={setCurrentConversation}
-          onlineUsers={onlineUsers}
           currentUser={currentUser}
         />
       </motion.div>

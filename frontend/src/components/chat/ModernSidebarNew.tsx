@@ -1,24 +1,17 @@
 "use client"
 
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { 
   Search, 
-  Plus, 
   Settings, 
-  LogOut, 
   Hash, 
   Users, 
   MessageCircle,
-  MoreHorizontal,
   Bell,
-  BellOff,
-  Star,
-  StarOff,
   Grid3X3,
   Maximize2,
   HelpCircle,
-  Calendar,
   Building2,
   Briefcase,
   Users2,
@@ -33,30 +26,29 @@ import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Separator } from '@/components/ui/separator'
+import { UserSearchDropdown } from '@/components/ui/user-search-dropdown'
 import { cn } from '@/lib/utils'
 import { User, Team, Channel, Conversation } from '@/hooks/useChat'
+import { UserSearchResult } from '@/services/userSearchService'
 
 interface ModernSidebarProps {
   teams: Team[]
-  channels: Channel[]
   conversations: Conversation[]
   currentConversation: Conversation | null
   onSelectConversation: (conversation: Conversation) => void
-  onlineUsers: User[]
   currentUser: User | null
 }
 
 export default function ModernSidebar({
   teams,
-  channels,
   conversations,
   currentConversation,
   onSelectConversation,
-  onlineUsers,
   currentUser
 }: ModernSidebarProps) {
   const [searchQuery, setSearchQuery] = useState('')
+  const [isUserSearchOpen, setIsUserSearchOpen] = useState(false)
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
   // Get team icon based on team name or index
   const getTeamIcon = (teamName: string, index: number) => {
@@ -94,14 +86,48 @@ export default function ModernSidebar({
     return <Hash className="h-4 w-4 text-gray-600" />
   }
 
-  const filteredConversations = (conversations || []).filter(conv => {
-    if (!searchQuery) return true
-    const name = conv.title || conv.name || conv.channel?.name || 'Direct Message'
-    return name.toLowerCase().includes(searchQuery.toLowerCase())
-  })
+  const directConversations = (conversations || []).filter(conv => conv.type === 'direct')
+  const channelConversations = (conversations || []).filter(conv => conv.type === 'channel')
 
-  const directConversations = filteredConversations.filter(conv => conv.type === 'direct')
-  const channelConversations = filteredConversations.filter(conv => conv.type === 'channel')
+  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setSearchQuery(value)
+    setIsUserSearchOpen(value.trim().length > 0)
+  }
+
+  const handleUserSelect = (user: UserSearchResult) => {
+    // Create a direct conversation with the selected user
+    const directConversation: Conversation = {
+      id: `user-${user.id}`,
+      type: 'direct',
+      title: user.name,
+      other_member: {
+        id: user.id,
+        name: user.name,
+        avatar: user.avatar,
+        is_online: user.status === 'online'
+      },
+      members: [user as User],
+      unread_count: 0
+    }
+    
+    onSelectConversation(directConversation)
+    setSearchQuery('')
+    setIsUserSearchOpen(false)
+  }
+
+  const handleSearchInputFocus = () => {
+    if (searchQuery.trim().length > 0) {
+      setIsUserSearchOpen(true)
+    }
+  }
+
+  const handleSearchInputBlur = () => {
+    // Delay closing to allow for dropdown clicks
+    setTimeout(() => {
+      setIsUserSearchOpen(false)
+    }, 150)
+  }
 
   return (
     <div className="w-full h-full bg-white border-r border-gray-200 flex flex-col">
@@ -145,14 +171,23 @@ export default function ModernSidebar({
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
-            placeholder="Search conversations..."
+            ref={searchInputRef}
+            placeholder="Search users..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={handleSearchInputChange}
+            onFocus={handleSearchInputFocus}
+            onBlur={handleSearchInputBlur}
             className="pl-10 h-9 bg-gray-50 border-gray-200 focus:ring-1 focus:ring-blue-400 focus:border-blue-400 focus:outline-none text-sm text-gray-700 placeholder-gray-500 transition-all duration-200"
             style={{
               border: '1px solid #e5e7eb',
               boxShadow: 'none'
             }}
+          />
+          <UserSearchDropdown
+            isOpen={isUserSearchOpen}
+            onClose={() => setIsUserSearchOpen(false)}
+            onUserSelect={handleUserSelect}
+            searchQuery={searchQuery}
           />
         </div>
       </div>
@@ -170,7 +205,7 @@ export default function ModernSidebar({
               {(teams || []).map((team, index) => (
                 <button
                   key={team.id}
-                  onClick={() => onSelectConversation({ id: team.id, type: 'group', title: team.name, team_id: team.id } as any)}
+                  onClick={() => onSelectConversation({ id: team.id, type: 'group', title: team.name, team_id: team.id } as Conversation)}
                   className={cn(
                     "flex items-center justify-between w-full text-left hover:bg-gray-50 rounded-lg p-2 transition-all duration-200 group",
                     (currentConversation?.team_id === team.id || currentConversation?.id === team.id) && "bg-gray-50 border border-gray-200"

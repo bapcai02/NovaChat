@@ -34,8 +34,8 @@ export default function RegisterPage() {
     router.push('/login')
   }
 
-  const handleForgotPassword = async (email: string) => {
-    console.log('Forgot password for:', email)
+  const handleForgotPassword = () => {
+    console.log('Forgot password clicked')
   }
 
   // Show loading screen during initial load
@@ -49,7 +49,7 @@ export default function RegisterPage() {
         onLogin={handleLogin}
         onRegister={handleRegister}
         isLoading={isLoading}
-        error={error}
+        error={error || undefined}
         onForgotPassword={handleForgotPassword}
       />
     </AuthGuard>
