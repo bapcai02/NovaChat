@@ -58,7 +58,7 @@ class MessageService
         // Broadcast the event
         broadcast(new \App\Events\MessageSent($payload))->toOthers();
 
-        return ['success' => true, 'data' => $message->toArray()];
+        return ['success' => true, 'data' => (array) $message];
     }
 
     public function addReaction(string $messageId, int $userId, string $emoji): array

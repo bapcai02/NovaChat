@@ -217,19 +217,31 @@ export function useChat() {
           conversation_id: parseInt(event.conversation_id),
           user_id: parseInt(event.sender_id),
           content: event.content,
-          type: 'text',
+          type: event.type || 'text',
           created_at: event.created_at,
           updated_at: event.created_at,
           sender: {
             id: parseInt(event.sender_id),
-            name: `User ${event.sender_id}`,
-            username: `user${event.sender_id}`,
-            avatar: undefined
+            name: event.sender_name || `User ${event.sender_id}`,
+            username: event.sender_username || `user${event.sender_id}`,
+            avatar: event.sender_avatar
           },
           reactions: [],
-          is_bookmarked: false
+          is_bookmarked: false,
+          replies_count: event.replies_count || 0
         }
-        setMessages(prev => [...prev, newMessage])
+        
+        // If it's from current user, replace optimistic update
+        if (parseInt(event.sender_id) === currentUser?.id) {
+          setMessages(prev => prev.map(msg => 
+            msg.is_optimistic && msg.user_id === parseInt(event.sender_id) && msg.content === event.content
+              ? newMessage
+              : msg
+          ))
+        } else {
+          // Add new message from other users
+          setMessages(prev => [...prev, newMessage])
+        }
       })
 
       // Listen for message edits
@@ -277,18 +289,74 @@ export function useChat() {
     }
   }, [])
 
-  // Send message
+  // Send message via WebSocket
   const sendMessage = useCallback(async (conversationId: number, content: string, type: string = 'text') => {
     try {
-      const response = await apiService.sendMessage(conversationId.toString(), content, type)
-      setMessages(prev => [...prev, response.data])
-      return response.data
+      const echo = getEcho()
+      
+      // Create message object for immediate UI update
+      const tempMessage = {
+        id: Date.now(), // Temporary ID
+        conversation_id: conversationId,
+        user_id: currentUser?.id || 0,
+        content: content,
+        type: type,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        sender: {
+          id: currentUser?.id || 0,
+          name: currentUser?.name || 'You',
+          username: currentUser?.username || 'you',
+          avatar: currentUser?.avatar
+        },
+        reactions: [],
+        is_bookmarked: false,
+        is_optimistic: true // Flag for optimistic update
+      }
+      
+      // Add to UI immediately (optimistic update)
+      setMessages(prev => [...prev, tempMessage])
+      
+      // Send via WebSocket whisper
+      try {
+        echo.private(`chat.dm.${conversationId}`)
+          .whisper('send-message', {
+            conversation_id: conversationId,
+            content: content,
+            type: type,
+            sender_id: currentUser?.id
+          })
+        console.log('Message sent via WebSocket whisper')
+      } catch (error) {
+        console.error('Failed to send message via WebSocket whisper:', error)
+        // Fallback to API if WebSocket fails
+        try {
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/websocket/whisper`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+            },
+            body: JSON.stringify({
+              conversation_id: conversationId,
+              content: content,
+              type: type,
+              sender_id: currentUser?.id
+            })
+          })
+          console.log('Message sent via API fallback:', await response.json())
+        } catch (apiError) {
+          console.error('API fallback also failed:', apiError)
+        }
+      }
+      
+      return tempMessage
     } catch (err) {
       setError('Failed to send message')
       console.error('Error sending message:', err)
       throw err
     }
-  }, [])
+  }, [currentUser])
 
   // Load online users
   const loadOnlineUsers = useCallback(async () => {

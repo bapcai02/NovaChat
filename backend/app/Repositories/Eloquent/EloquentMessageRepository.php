@@ -48,6 +48,7 @@ class EloquentMessageRepository implements MessageRepositoryInterface
                     'reactions' => $this->getMessageReactions($row->id),
                     'read_by' => [],
                     'is_bookmarked' => $userId ? Bookmark::where('user_id', $userId)->where('message_id', $row->id)->exists() : false,
+                    'replies_count' => $row->replies()->count(),
                 ];
             })->reverse()->values()->toArray();
         }
@@ -81,6 +82,7 @@ class EloquentMessageRepository implements MessageRepositoryInterface
                 'reactions' => $this->getMessageReactions($row->id),
                 'read_by' => [],
                 'is_bookmarked' => $userId ? Bookmark::where('user_id', $userId)->where('message_id', $row->id)->exists() : false,
+                'replies_count' => $row->replies()->count(),
             ];
         })->reverse()->values()->toArray();
     }

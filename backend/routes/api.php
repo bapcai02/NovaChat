@@ -112,4 +112,29 @@ Route::middleware('auth:api')->group(function () {
 
 });
 
+// WebSocket whisper handling
+Route::post('/websocket/whisper', function (\Illuminate\Http\Request $request) {
+    try {
+        $data = $request->all();
+        
+        // Validate required fields
+        if (!isset($data['conversation_id']) || !isset($data['content']) || !isset($data['sender_id'])) {
+            return response()->json(['error' => 'Missing required fields'], 400);
+        }
+        
+        // Fire WebSocket whisper event
+        event(new \App\Events\WebSocketWhisperEvent($data));
+        
+        return response()->json(['success' => true]);
+        
+    } catch (\Exception $e) {
+        \Log::error('WebSocket whisper error:', [
+            'error' => $e->getMessage(),
+            'data' => $request->all()
+        ]);
+        
+        return response()->json(['error' => 'Internal server error'], 500);
+    }
+})->middleware('auth:api');
+
 // Test routes removed to prevent rate limiting issues

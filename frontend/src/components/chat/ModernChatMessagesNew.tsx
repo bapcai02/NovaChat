@@ -38,11 +38,19 @@ const MessageBubble = ({
   onBookmark, 
   onRemoveBookmark 
 }: MessageBubbleProps) => {
-  const isOwn = currentUser?.id === message.user_id
+  // Check multiple possible user ID fields and handle type conversion
+  const messageUserId = message.user_id || message.sender?.id || message.user?.id
+  const currentUserId = currentUser?.id
+  
+  // Convert to same type for comparison
+  const isOwn = String(currentUserId) === String(messageUserId)
+  
+  // TEST: Force first message to be own message for testing
+  const testIsOwn = isOwn
   const sender = message.sender || message.user || { name: 'Unknown', avatar: undefined }
   
   const handleReaction = (emoji: string) => {
-    if (isOwn) return
+    if (testIsOwn) return
     
     const hasReacted = message.reactions?.some(r => 
       r.emoji === emoji && (r.users?.includes(currentUser?.id || 0) || r.user_id === currentUser?.id)
@@ -79,11 +87,11 @@ const MessageBubble = ({
       exit={{ opacity: 0, y: -20 }}
       className={cn(
         "flex gap-2 group mb-3",
-        isOwn ? "flex-row-reverse" : "flex-row"
+        testIsOwn ? "flex-row-reverse" : "flex-row"
       )}
     >
       {/* Avatar */}
-      {!isOwn && (
+      {!testIsOwn && (
         <Avatar className="h-7 w-7 flex-shrink-0">
           <AvatarImage src={sender.avatar} />
           <AvatarFallback className="text-xs bg-gradient-to-br from-blue-500 to-purple-600 text-white">
@@ -94,11 +102,11 @@ const MessageBubble = ({
 
       {/* Message content */}
       <div className={cn(
-        "flex flex-col gap-1 max-w-[70%]",
-        isOwn ? "items-end" : "items-start"
+        "flex flex-col gap-1 max-w-[70%] min-w-0",
+        testIsOwn ? "items-end" : "items-start"
       )}>
         {/* Sender name and timestamp */}
-        {!isOwn && (
+        {!testIsOwn && (
           <div className="flex items-center gap-1 text-xs text-gray-500 mb-1">
             <span className="font-medium">{sender.name}</span>
             <span>•</span>
@@ -108,8 +116,8 @@ const MessageBubble = ({
 
         {/* Message bubble */}
         <div className={cn(
-          "relative px-3 py-2 rounded-xl shadow-sm transition-all duration-200",
-          isOwn 
+          "relative px-3 py-2 rounded-xl shadow-sm transition-all duration-200 break-words",
+          testIsOwn 
             ? "bg-blue-500 text-white rounded-br-md" 
             : "bg-gray-100 text-gray-800 rounded-bl-md"
         )}>
@@ -178,25 +186,9 @@ const MessageBubble = ({
         {/* Reactions and Thread indicator below message bubble */}
         <div className={cn(
           "flex flex-wrap gap-1 items-center",
-          isOwn ? "justify-end" : "justify-start"
+          testIsOwn ? "justify-end" : "justify-start"
         )}>
-          {/* Thread indicator - TEST: Mock data for testing */}
-          <button
-            className="flex items-center gap-1 px-2 py-1 text-xs text-gray-600 hover:text-gray-800 transition-colors bg-green-100 rounded"
-            onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              onOpenThread?.({
-                id: message.id.toString(),
-                content: message.content,
-                sender: message.sender?.name || message.user?.name || 'Unknown',
-                timestamp: message.created_at
-              })
-            }}
-          >
-            <MessageCircle className="h-3 w-3" />
-            <span>{message.thread_messages_count || Math.floor(Math.random() * 5) + 1} replies</span>
-          </button>
+          {/* Thread indicator - Hidden */}
           
           {/* Reactions */}
           {message.reactions && message.reactions.length > 0 && (
@@ -223,7 +215,7 @@ const MessageBubble = ({
         </div>
 
         {/* Timestamp for own messages */}
-        {isOwn && (
+        {testIsOwn && (
           <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
             <span>{new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
             <span className="text-blue-500">✓✓</span>
@@ -269,7 +261,7 @@ export default function ModernChatMessages({
 
   return (
     <div className="flex-1 overflow-hidden bg-white">
-      <div className="h-full overflow-y-auto p-4 space-y-2">
+      <div className="h-full overflow-y-auto overflow-x-hidden p-4 space-y-2">
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
@@ -279,9 +271,9 @@ export default function ModernChatMessages({
             </div>
           </div>
         ) : (
-          messages.map((message) => (
+          messages.map((message, index) => (
             <MessageBubble 
-              key={message.id} 
+              key={message.id || `message-${index}`} 
               message={message} 
               currentUser={currentUser}
               onOpenThread={onOpenThread}

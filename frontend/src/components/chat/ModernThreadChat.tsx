@@ -33,6 +33,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 import EmojiPicker from 'emoji-picker-react'
+import { apiService } from '@/services/api'
 
 interface ThreadMessage {
   id: string
@@ -104,11 +105,12 @@ const mockThreadMessages: ThreadMessage[] = [
 ]
 
 export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatProps) {
-  const [messages, setMessages] = useState<ThreadMessage[]>(mockThreadMessages)
+  const [messages, setMessages] = useState<ThreadMessage[]>([])
   const [newMessage, setNewMessage] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [showEmojis, setShowEmojis] = useState(false)
   const [attachments, setAttachments] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const emojiPickerRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -118,6 +120,47 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
+
+  // Load thread messages from API
+  useEffect(() => {
+    const loadThreadMessages = async () => {
+      try {
+        setIsLoading(true)
+        console.log('Loading thread messages for message ID:', parentMessage.id)
+        const response = await apiService.getThreadMessages(parentMessage.id)
+        console.log('Thread API response:', response)
+        
+        // Transform API response to ThreadMessage format
+        const threadMessages: ThreadMessage[] = response.data?.map((msg: any) => ({
+          id: msg.id.toString(),
+          content: msg.content,
+          sender: {
+            id: msg.user_id?.toString() || msg.sender?.id?.toString() || 'unknown',
+            name: msg.sender?.name || msg.user?.name || 'Unknown User',
+            avatar: msg.sender?.avatar || msg.user?.avatar,
+            isOnline: msg.sender?.is_online || msg.user?.is_online || false
+          },
+          timestamp: new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          isOwn: false, // You might want to determine this based on current user
+          isEdited: msg.is_edited || false,
+          reactions: msg.reactions || [],
+          attachments: msg.attachments || []
+        })) || []
+        
+        console.log('Transformed thread messages:', threadMessages)
+        setMessages(threadMessages)
+      } catch (error) {
+        console.error('Error loading thread messages:', error)
+        setMessages([])
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    if (parentMessage.id) {
+      loadThreadMessages()
+    }
+  }, [parentMessage.id])
 
   // Click outside to close emoji picker
   useEffect(() => {
@@ -140,24 +183,51 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
     scrollToBottom()
   }, [messages])
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (newMessage.trim() || attachments.length > 0) {
-      const message: ThreadMessage = {
-        id: Date.now().toString(),
-        content: newMessage.trim(),
-        sender: {
-          id: 'current-user',
-          name: 'You',
-          avatar: 'https://ui-avatars.com/api/?name=You&background=random',
-          isOnline: true
-        },
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        isOwn: true
+      try {
+        console.log('Sending thread message:', newMessage.trim())
+        const response = await apiService.sendThreadMessage(parentMessage.id, newMessage.trim())
+        console.log('Thread message sent:', response)
+        
+        // Add the new message to the list
+        const newMessageData: ThreadMessage = {
+          id: response.data.id.toString(),
+          content: response.data.content,
+          sender: {
+            id: response.data.user_id?.toString() || 'current-user',
+            name: 'You',
+            avatar: 'https://ui-avatars.com/api/?name=You&background=random',
+            isOnline: true
+          },
+          timestamp: new Date(response.data.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          isOwn: true
+        }
+        
+        setMessages(prev => [...prev, newMessageData])
+        setNewMessage('')
+        setAttachments([])
+        setIsTyping(false)
+      } catch (error) {
+        console.error('Error sending thread message:', error)
+        // Still add to UI for better UX, but show error
+        const message: ThreadMessage = {
+          id: Date.now().toString(),
+          content: newMessage.trim(),
+          sender: {
+            id: 'current-user',
+            name: 'You',
+            avatar: 'https://ui-avatars.com/api/?name=You&background=random',
+            isOnline: true
+          },
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          isOwn: true
+        }
+        setMessages(prev => [...prev, message])
+        setNewMessage('')
+        setAttachments([])
+        setIsTyping(false)
       }
-      setMessages(prev => [...prev, message])
-      setNewMessage('')
-      setAttachments([])
-      setIsTyping(false)
     }
   }
 
@@ -365,7 +435,9 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
           {/* Thread indicator */}
           <div className="flex items-center gap-1 mt-2 text-xs text-gray-500">
             <MessageCircle className="h-3 w-3" />
-            <span>{messages.length} {messages.length === 1 ? 'reply' : 'replies'}</span>
+            <span>
+              {isLoading ? 'Loading...' : `${messages.length} ${messages.length === 1 ? 'reply' : 'replies'}`}
+            </span>
           </div>
         </div>
       </div>
@@ -373,9 +445,19 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
       {/* Thread Messages */}
       <div className="flex-1 overflow-hidden">
         <div className="h-full overflow-y-auto p-4 space-y-2">
-          {messages.map((message) => (
-            <ThreadMessageBubble key={message.id} message={message} />
-          ))}
+          {isLoading ? (
+            <div className="flex items-center justify-center h-32">
+              <div className="text-sm text-gray-500">Loading thread messages...</div>
+            </div>
+          ) : messages.length > 0 ? (
+            messages.map((message) => (
+              <ThreadMessageBubble key={message.id} message={message} />
+            ))
+          ) : (
+            <div className="flex items-center justify-center h-32">
+              <div className="text-sm text-gray-500">No replies yet</div>
+            </div>
+          )}
           <div ref={messagesEndRef} />
         </div>
       </div>

@@ -18,6 +18,15 @@ class EventServiceProvider extends ServiceProvider
         Registered::class => [
             SendEmailVerificationNotification::class,
         ],
+        'App\Events\WebSocketMessageReceived' => [
+            'App\Listeners\WebSocketMessageListener',
+        ],
+        'App\Events\WebSocketWhisperReceived' => [
+            'App\Listeners\WebSocketWhisperListener',
+        ],
+        'App\Events\WebSocketWhisperEvent' => [
+            'App\Listeners\WebSocketWhisperHandler',
+        ],
     ];
 
     /**
