@@ -77,7 +77,7 @@ export const ResponsiveLayout: React.FC<ResponsiveLayoutProps> = ({
   const shouldShowRightSidebar = breakpoint >= 'xl' || isRightSidebarOpen
 
   return (
-    <div className={cn("h-full w-full flex bg-[hsl(222.2_84%_4.9%)] text-[hsl(210_40%_98%)] overflow-hidden", className)}>
+    <div className={cn("h-full w-full flex bg-white text-gray-900 overflow-hidden", className)}>
       {/* Mobile Overlay */}
       {(isSidebarOpen || isRightSidebarOpen) && isMobile && (
         <div 

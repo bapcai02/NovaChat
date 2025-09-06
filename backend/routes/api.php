@@ -114,11 +114,7 @@ Route::middleware('auth:api')->group(function () {
 
 // WebSocket whisper handling
 Route::post('/websocket/whisper', function (\Illuminate\Http\Request $request) {
-    try {
-        \Log::info('=== WebSocket whisper API route called ===');
-        \Log::info('Request headers:', $request->headers->all());
-        \Log::info('Request data:', $request->all());
-        
+    try {        
         $data = $request->all();
         
         // Validate required fields
@@ -126,23 +122,13 @@ Route::post('/websocket/whisper', function (\Illuminate\Http\Request $request) {
             \Log::warning('Missing required fields in WebSocket whisper request:', $data);
             return response()->json(['error' => 'Missing required fields'], 400);
         }
-        
-        \Log::info('Firing WebSocket whisper event with data:', $data);
-        
+                
         // Fire WebSocket whisper event
         event(new \App\Events\WebSocketWhisperEvent($data));
-        
-        \Log::info('WebSocket whisper event fired successfully');
-        
+                
         return response()->json(['success' => true]);
         
     } catch (\Exception $e) {
-        \Log::error('WebSocket whisper error:', [
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString(),
-            'data' => $request->all()
-        ]);
-        
         return response()->json(['error' => 'Internal server error'], 500);
     }
 })->middleware('auth:api');
@@ -150,34 +136,19 @@ Route::post('/websocket/whisper', function (\Illuminate\Http\Request $request) {
 // Test route without authentication
 Route::post('/test/websocket/whisper', function (\Illuminate\Http\Request $request) {
     try {
-        \Log::info('=== Test WebSocket whisper API route called ===');
-        \Log::info('Request headers:', $request->headers->all());
-        \Log::info('Request data:', $request->all());
-        
         $data = $request->all();
         
         // Validate required fields
         if (!isset($data['conversation_id']) || !isset($data['content']) || !isset($data['sender_id'])) {
-            \Log::warning('Missing required fields in test WebSocket whisper request:', $data);
             return response()->json(['error' => 'Missing required fields'], 400);
         }
-        
-        \Log::info('Firing test WebSocket whisper event with data:', $data);
-        
+                
         // Fire WebSocket whisper event
         event(new \App\Events\WebSocketWhisperEvent($data));
-        
-        \Log::info('Test WebSocket whisper event fired successfully');
-        
+                
         return response()->json(['success' => true, 'message' => 'Test WebSocket whisper event fired']);
         
     } catch (\Exception $e) {
-        \Log::error('Test WebSocket whisper error:', [
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString(),
-            'data' => $request->all()
-        ]);
-        
         return response()->json(['error' => 'Internal server error', 'message' => $e->getMessage()], 500);
     }
 });
@@ -185,9 +156,6 @@ Route::post('/test/websocket/whisper', function (\Illuminate\Http\Request $reque
 // WebSocket client message handling (no auth required)
 Route::post('/websocket/client-message', function (\Illuminate\Http\Request $request) {
     try {
-        \Log::info('=== WebSocket client message API route called ===');
-        \Log::info('Request headers:', $request->headers->all());
-        \Log::info('Request data:', $request->all());
         
         $data = $request->all();
         
@@ -196,23 +164,13 @@ Route::post('/websocket/client-message', function (\Illuminate\Http\Request $req
             \Log::warning('Missing required fields in WebSocket client message request:', $data);
             return response()->json(['error' => 'Missing required fields'], 400);
         }
-        
-        \Log::info('Firing WebSocket client message event with data:', $data);
-        
+                
         // Fire WebSocket client message event
         event(new \App\Events\WebSocketClientMessageEvent($data));
-        
-        \Log::info('WebSocket client message event fired successfully');
-        
+                
         return response()->json(['success' => true]);
         
     } catch (\Exception $e) {
-        \Log::error('WebSocket client message error:', [
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString(),
-            'data' => $request->all()
-        ]);
-        
         return response()->json(['error' => 'Internal server error'], 500);
     }
 });
@@ -220,37 +178,21 @@ Route::post('/websocket/client-message', function (\Illuminate\Http\Request $req
 // WebSocket server message handling (no auth required)
 Route::post('/websocket/server-message', function (\Illuminate\Http\Request $request) {
     try {
-        \Log::info('=== WebSocket server message API route called ===');
-        \Log::info('Request headers:', $request->headers->all());
-        \Log::info('Request data:', $request->all());
-        
-        $data = $request->all();
-        
-        \Log::info('Firing WebSocket server message event with data:', $data);
-        
+
+        $data = $request->all();        
         // Fire WebSocket server message event
         event(new \App\Events\WebSocketServerMessageEvent($data));
-        
-        \Log::info('WebSocket server message event fired successfully');
-        
+                
         return response()->json(['success' => true]);
         
     } catch (\Exception $e) {
-        \Log::error('WebSocket server message error:', [
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString(),
-            'data' => $request->all()
-        ]);
-        
         return response()->json(['error' => 'Internal server error'], 500);
     }
 });
 
 // Test WebSocket client message
 Route::post('/test/websocket-client', function (\Illuminate\Http\Request $request) {
-    try {
-        \Log::info('=== Test WebSocket client message ===');
-        
+    try {        
         $data = [
             'event' => 'client-send-message',
             'data' => [

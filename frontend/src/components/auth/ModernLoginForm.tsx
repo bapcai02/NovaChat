@@ -83,7 +83,7 @@ export default function ModernLoginForm({
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4 overflow-y-auto">
+    <div className="min-h-screen flex items-center justify-center p-4 overflow-y-auto">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -100,15 +100,15 @@ export default function ModernLoginForm({
           >
             <span className="text-2xl font-bold text-white">N</span>
           </motion.div>
-          <h1 className="text-3xl font-bold text-white mb-2">Welcome back</h1>
-          <p className="text-slate-400">Sign in to your NovaChat account</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome back</h1>
+          <p className="text-gray-600">Sign in to your NovaChat account</p>
         </div>
 
         {/* Login Form */}
-        <Card className="backdrop-blur-sm bg-white/10 border-white/20 shadow-2xl">
+        <Card className="bg-white/80 backdrop-blur-sm border-gray-200 shadow-2xl">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl text-center text-white">Sign in</CardTitle>
-            <CardDescription className="text-center text-slate-300">
+            <CardTitle className="text-2xl text-center text-gray-900">Sign in</CardTitle>
+            <CardDescription className="text-center text-gray-600">
               Enter your credentials to access your account
             </CardDescription>
           </CardHeader>
@@ -116,11 +116,11 @@ export default function ModernLoginForm({
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Email Field */}
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium text-slate-200">
+                <Label htmlFor="email" className="text-sm font-medium text-gray-700">
                   Email address
                 </Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
                     id="email"
                     name="email"
@@ -129,8 +129,8 @@ export default function ModernLoginForm({
                     value={formData.email}
                     onChange={handleInputChange}
                     className={cn(
-                      "pl-10 bg-white/5 border-white/20 text-white placeholder:text-slate-400 focus:border-blue-400 focus:ring-blue-400/20",
-                      errors.email && "border-red-400 focus:border-red-400 focus:ring-red-400/20"
+                      "pl-10 bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500/20",
+                      errors.email && "border-red-500 focus:border-red-500 focus:ring-red-500/20"
                     )}
                     disabled={isLoading}
                   />
@@ -139,7 +139,7 @@ export default function ModernLoginForm({
                   <motion.p
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="text-sm text-red-400"
+                    className="text-sm text-red-600"
                   >
                     {errors.email}
                   </motion.p>
@@ -148,11 +148,11 @@ export default function ModernLoginForm({
 
               {/* Password Field */}
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium text-slate-200">
+                <Label htmlFor="password" className="text-sm font-medium text-gray-700">
                   Password
                 </Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
                     id="password"
                     name="password"
@@ -161,8 +161,8 @@ export default function ModernLoginForm({
                     value={formData.password}
                     onChange={handleInputChange}
                     className={cn(
-                      "pl-10 pr-10 bg-white/5 border-white/20 text-white placeholder:text-slate-400 focus:border-blue-400 focus:ring-blue-400/20",
-                      errors.password && "border-red-400 focus:border-red-400 focus:ring-red-400/20"
+                      "pl-10 pr-10 bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500/20",
+                      errors.password && "border-red-500 focus:border-red-500 focus:ring-red-500/20"
                     )}
                     disabled={isLoading}
                   />
@@ -170,7 +170,7 @@ export default function ModernLoginForm({
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute right-0 top-0 h-full px-3 text-slate-400 hover:text-white"
+                    className="absolute right-0 top-0 h-full px-3 text-gray-400 hover:text-gray-600"
                     onClick={() => setShowPassword(!showPassword)}
                     disabled={isLoading}
                   >
@@ -185,7 +185,7 @@ export default function ModernLoginForm({
                   <motion.p
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="text-sm text-red-400"
+                    className="text-sm text-red-600"
                   >
                     {errors.password}
                   </motion.p>
@@ -197,9 +197,9 @@ export default function ModernLoginForm({
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg"
+                  className="p-3 bg-red-50 border border-red-200 rounded-lg"
                 >
-                  <p className="text-sm text-red-400">{error}</p>
+                  <p className="text-sm text-red-600">{error}</p>
                 </motion.div>
               )}
 
@@ -209,16 +209,16 @@ export default function ModernLoginForm({
                   <input
                     id="remember"
                     type="checkbox"
-                    className="w-4 h-4 text-blue-600 bg-white/5 border-white/20 rounded focus:ring-blue-500 focus:ring-2"
+                    className="w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
                   />
-                  <Label htmlFor="remember" className="text-sm text-slate-300">
+                  <Label htmlFor="remember" className="text-sm text-gray-600">
                     Remember me
                   </Label>
                 </div>
                 <Button
                   type="button"
                   variant="link"
-                  className="text-sm text-blue-400 hover:text-blue-300 p-0"
+                  className="text-sm text-blue-600 hover:text-blue-500 p-0"
                   onClick={onForgotPassword}
                   disabled={isLoading}
                 >
@@ -250,17 +250,17 @@ export default function ModernLoginForm({
             <div className="space-y-4">
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
-                  <Separator className="w-full bg-white/20" />
+                  <Separator className="w-full bg-gray-200" />
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-transparent text-slate-400">Or continue with</span>
+                  <span className="px-2 bg-white text-gray-500">Or continue with</span>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <Button
                   variant="outline"
-                  className="bg-white/5 border-white/20 text-slate-300 hover:bg-white/10 hover:text-white"
+                  className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-gray-900"
                   onClick={() => handleSocialLogin('github')}
                   disabled={isLoading}
                 >
@@ -269,7 +269,7 @@ export default function ModernLoginForm({
                 </Button>
                 <Button
                   variant="outline"
-                  className="bg-white/5 border-white/20 text-slate-300 hover:bg-white/10 hover:text-white"
+                  className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-gray-900"
                   onClick={() => handleSocialLogin('google')}
                   disabled={isLoading}
                 >
@@ -281,11 +281,11 @@ export default function ModernLoginForm({
 
             {/* Switch to Register */}
             <div className="text-center">
-              <p className="text-sm text-slate-400">
+              <p className="text-sm text-gray-600">
                 Don't have an account?{' '}
                 <Button
                   variant="link"
-                  className="text-blue-400 hover:text-blue-300 p-0 font-medium"
+                  className="text-blue-600 hover:text-blue-500 p-0 font-medium"
                   onClick={onSwitchToRegister}
                   disabled={isLoading}
                 >
@@ -295,60 +295,60 @@ export default function ModernLoginForm({
             </div>
 
             {/* Demo Credentials */}
-            <div className="mt-6 p-4 bg-gray-100/50 border border-gray-300/50 rounded-lg">
+            <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <div className="flex items-center mb-3">
-                <div className="w-5 h-5 text-yellow-400 mr-2">
+                <div className="w-5 h-5 text-yellow-500 mr-2">
                   <svg fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                   </svg>
                 </div>
-                <p className="text-sm font-semibold text-slate-200">Demo Accounts</p>
+                <p className="text-sm font-semibold text-gray-800">Demo Accounts</p>
               </div>
-              <div className="space-y-2 text-xs text-slate-300">
+              <div className="space-y-2 text-xs text-gray-700">
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-400">Admin:</span>
+                  <span className="text-gray-600">Admin:</span>
                   <div className="flex items-center space-x-2">
-                    <span className="font-mono bg-slate-700 px-2 py-1 rounded text-slate-200">john@example.com</span>
+                    <span className="font-mono bg-gray-200 px-2 py-1 rounded text-gray-800">john@example.com</span>
                     <button
                       onClick={() => {
                         setFormData(prev => ({ ...prev, email: 'john@example.com', password: 'password' }))
                       }}
-                      className="text-blue-400 hover:text-blue-300 text-xs"
+                      className="text-blue-600 hover:text-blue-500 text-xs"
                     >
                       Copy
                     </button>
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-400">User 1:</span>
+                  <span className="text-gray-600">User 1:</span>
                   <div className="flex items-center space-x-2">
-                    <span className="font-mono bg-slate-700 px-2 py-1 rounded text-slate-200">jane@example.com</span>
+                    <span className="font-mono bg-gray-200 px-2 py-1 rounded text-gray-800">jane@example.com</span>
                     <button
                       onClick={() => {
                         setFormData(prev => ({ ...prev, email: 'jane@example.com', password: 'password' }))
                       }}
-                      className="text-blue-400 hover:text-blue-300 text-xs"
+                      className="text-blue-600 hover:text-blue-500 text-xs"
                     >
                       Copy
                     </button>
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-400">User 2:</span>
+                  <span className="text-gray-600">User 2:</span>
                   <div className="flex items-center space-x-2">
-                    <span className="font-mono bg-slate-700 px-2 py-1 rounded text-slate-200">mike@example.com</span>
+                    <span className="font-mono bg-gray-200 px-2 py-1 rounded text-gray-800">mike@example.com</span>
                     <button
                       onClick={() => {
                         setFormData(prev => ({ ...prev, email: 'mike@example.com', password: 'password' }))
                       }}
-                      className="text-blue-400 hover:text-blue-300 text-xs"
+                      className="text-blue-600 hover:text-blue-500 text-xs"
                     >
                       Copy
                     </button>
                   </div>
                 </div>
-                <div className="text-center text-slate-400 mt-2">
-                  Password: <span className="font-mono bg-slate-700 px-1 py-0.5 rounded">password</span>
+                <div className="text-center text-gray-600 mt-2">
+                  Password: <span className="font-mono bg-gray-200 px-1 py-0.5 rounded">password</span>
                 </div>
               </div>
             </div>
@@ -357,11 +357,11 @@ export default function ModernLoginForm({
 
         {/* Footer */}
         <div className="text-center mt-8">
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-gray-500">
             By signing in, you agree to our{' '}
-            <a href="#" className="text-blue-400 hover:text-blue-300">Terms of Service</a>
+            <a href="#" className="text-blue-600 hover:text-blue-500">Terms of Service</a>
             {' '}and{' '}
-            <a href="#" className="text-blue-400 hover:text-blue-300">Privacy Policy</a>
+            <a href="#" className="text-blue-600 hover:text-blue-500">Privacy Policy</a>
           </p>
         </div>
       </motion.div>

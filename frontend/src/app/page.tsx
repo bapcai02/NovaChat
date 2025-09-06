@@ -21,10 +21,10 @@ export default function Home() {
 
   return (
     <AuthGuard requireAuth={false}>
-      <div className="min-h-screen bg-[hsl(222.2_84%_4.9%)] flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[hsl(var(--chat-accent))] mx-auto mb-4"></div>
-          <p className="text-[hsl(210_40%_98%)]">Redirecting...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-900">Redirecting...</p>
         </div>
       </div>
     </AuthGuard>

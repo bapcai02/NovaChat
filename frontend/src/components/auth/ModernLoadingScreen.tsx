@@ -9,7 +9,7 @@ interface ModernLoadingScreenProps {
 
 export default function ModernLoadingScreen({ message = "Loading..." }: ModernLoadingScreenProps) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <div className="text-center">
         {/* Animated Logo */}
         <motion.div
@@ -107,7 +107,7 @@ export default function ModernLoadingScreen({ message = "Loading..." }: ModernLo
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.5 }}
-          className="text-3xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-2"
+          className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2"
         >
           Nova Chat
         </motion.h2>
@@ -116,7 +116,7 @@ export default function ModernLoadingScreen({ message = "Loading..." }: ModernLo
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5, duration: 0.5 }}
-          className="text-slate-300 text-lg mb-8"
+          className="text-gray-600 text-lg mb-8"
         >
           {message}
         </motion.p>
