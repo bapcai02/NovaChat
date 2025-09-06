@@ -29,6 +29,9 @@ class MessageService
 
     public function storeMessage(array $data): array
     {
+        Log::info('=== MessageService::storeMessage called ===');
+        Log::info('Input data:', $data);
+        
         $messageData = [
             'user_id' => $data['user_id'],
             'content' => $data['content'],
@@ -38,7 +41,11 @@ class MessageService
             'channel_id' => $data['channel_id'] ?? null,
         ];
 
+        Log::info('Message data to create:', $messageData);
+
         $message = $this->messages->create($messageData);
+        
+        Log::info('Message created:', ['message' => $message]);
         
         // Get conversation type for channel selection
         $conversationType = 'direct'; // Default for direct messages
@@ -55,8 +62,12 @@ class MessageService
             'created_at' => is_string($message->created_at) ? $message->created_at : $message->created_at->toISOString(),
         ];
 
+        Log::info('Broadcasting MessageSent event with payload:', $payload);
+
         // Broadcast the event
         broadcast(new \App\Events\MessageSent($payload))->toOthers();
+
+        Log::info('MessageSent event broadcasted successfully');
 
         return ['success' => true, 'data' => (array) $message];
     }

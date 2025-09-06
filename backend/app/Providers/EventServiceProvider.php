@@ -18,14 +18,8 @@ class EventServiceProvider extends ServiceProvider
         Registered::class => [
             SendEmailVerificationNotification::class,
         ],
-        'App\Events\WebSocketMessageReceived' => [
+        \BeyondCode\LaravelWebSockets\Events\WebSocketMessageReceived::class => [
             'App\Listeners\WebSocketMessageListener',
-        ],
-        'App\Events\WebSocketWhisperReceived' => [
-            'App\Listeners\WebSocketWhisperListener',
-        ],
-        'App\Events\WebSocketWhisperEvent' => [
-            'App\Listeners\WebSocketWhisperHandler',
         ],
     ];
 

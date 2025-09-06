@@ -207,11 +207,22 @@ export function useChat() {
   // Setup WebSocket subscription for real-time messages
   const setupWebSocketSubscription = useCallback((conversationId: number) => {
     try {
+      console.log('=== Setting up WebSocket subscription ===')
+      console.log('Conversation ID:', conversationId)
+      
       const echo = getEcho()
+      console.log('Echo instance:', echo)
+      
       const channel = echo.private(`chat.dm.${conversationId}`)
+      console.log('Channel created:', channel)
       
       // Listen for new messages
       channel.listen('.ChatMessageSent', (event: any) => {
+        console.log('=== Received ChatMessageSent event ===')
+        console.log('Event data:', event)
+        console.log('Current user ID:', currentUser?.id)
+        console.log('Event sender ID:', event.sender_id)
+        
         const newMessage = {
           id: event.message_id,
           conversation_id: parseInt(event.conversation_id),
@@ -231,14 +242,18 @@ export function useChat() {
           replies_count: event.replies_count || 0
         }
         
+        console.log('New message object:', newMessage)
+        
         // If it's from current user, replace optimistic update
         if (parseInt(event.sender_id) === currentUser?.id) {
+          console.log('Replacing optimistic message with real message')
           setMessages(prev => prev.map(msg => 
             msg.is_optimistic && msg.user_id === parseInt(event.sender_id) && msg.content === event.content
               ? newMessage
               : msg
           ))
         } else {
+          console.log('Adding new message from other user')
           // Add new message from other users
           setMessages(prev => [...prev, newMessage])
         }
@@ -292,7 +307,14 @@ export function useChat() {
   // Send message via WebSocket
   const sendMessage = useCallback(async (conversationId: number, content: string, type: string = 'text') => {
     try {
+      console.log('=== sendMessage called ===')
+      console.log('Conversation ID:', conversationId)
+      console.log('Content:', content)
+      console.log('Type:', type)
+      console.log('Current user:', currentUser)
+      
       const echo = getEcho()
+      console.log('Echo instance for sending:', echo)
       
       // Create message object for immediate UI update
       const tempMessage = {
@@ -314,42 +336,51 @@ export function useChat() {
         is_optimistic: true // Flag for optimistic update
       }
       
+      console.log('Temp message created:', tempMessage)
+      
       // Add to UI immediately (optimistic update)
       setMessages(prev => [...prev, tempMessage])
+      console.log('Message added to UI (optimistic update)')
       
-      // Send via WebSocket whisper
+      // Send via WebSocket Echo client-send-message
       try {
-        echo.private(`chat.dm.${conversationId}`)
-          .whisper('send-message', {
-            conversation_id: conversationId,
-            content: content,
-            type: type,
-            sender_id: currentUser?.id
-          })
-        console.log('Message sent via WebSocket whisper')
-      } catch (error) {
-        console.error('Failed to send message via WebSocket whisper:', error)
-        // Fallback to API if WebSocket fails
-        try {
-          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/websocket/whisper`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-            },
-            body: JSON.stringify({
-              conversation_id: conversationId,
-              content: content,
-              type: type,
-              sender_id: currentUser?.id
-            })
-          })
-          console.log('Message sent via API fallback:', await response.json())
-        } catch (apiError) {
-          console.error('API fallback also failed:', apiError)
+        console.log('Attempting to send message via WebSocket Echo client-send-message:', {
+          conversationId,
+          content,
+          type,
+          senderId: currentUser?.id
+        })
+        
+        const messageData = {
+          conversation_id: conversationId,
+          content: content,
+          type: type,
+          sender_id: currentUser?.id
         }
+        
+        console.log('Message data for WebSocket:', messageData)
+        
+        // Send via API instead of WebSocket whisper
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/websocket/client-message`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+          },
+          body: JSON.stringify(messageData)
+        })
+
+        if (response.ok) {
+          const result = await response.json()
+          console.log('Message sent via API successfully:', result)
+        } else {
+          console.error('Failed to send message via API:', response.status, response.statusText)
+        }
+      } catch (error) {
+        console.error('Failed to send message via API:', error)
       }
       
+      console.log('sendMessage completed successfully')
       return tempMessage
     } catch (err) {
       setError('Failed to send message')

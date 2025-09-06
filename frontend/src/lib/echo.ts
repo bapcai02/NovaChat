@@ -25,7 +25,7 @@ export const getEcho = (): any => {
     forceTLS: false,
     disableStats: true,
     enabledTransports: ['ws', 'wss'],
-    authEndpoint: `${process.env.NEXT_PUBLIC_API_URL?.replace(/\/api$/, '')}/broadcasting/auth`,
+    authEndpoint: `${process.env.NEXT_PUBLIC_API_URL}/broadcasting/auth`,
     auth: {
       headers: {
         Authorization: typeof window !== 'undefined' && localStorage.getItem('auth_token')

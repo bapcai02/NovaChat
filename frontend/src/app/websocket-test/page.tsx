@@ -1,96 +1,150 @@
-"use client"
+'use client'
 
-import React, { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
 import { getEcho } from '@/lib/echo'
 
 export default function WebSocketTestPage() {
-  const [messages, setMessages] = useState<string[]>([])
-  const [isConnected, setIsConnected] = useState(false)
+  const [messages, setMessages] = useState<any[]>([])
+  const [inputMessage, setInputMessage] = useState('')
+  const [connectionStatus, setConnectionStatus] = useState('Disconnected')
+  const [echo, setEcho] = useState<any>(null)
 
   useEffect(() => {
-    
-    try {
-      const echo = getEcho()
-      
-      // Subscribe to private channel
-      const channel = echo.private('chat.1')
-      
-      // Listen for ChatMessageSent events
-      channel.listen('.ChatMessageSent', (event: any) => {
-        setMessages(prev => [...prev, `New message: ${event.content}`])
+    const echoInstance = getEcho()
+    setEcho(echoInstance)
+
+    // Listen for connection events
+    const pusher = echoInstance.connector?.pusher
+    if (pusher) {
+      pusher.connection.bind('state_change', (state: any) => {
+        console.log('Connection state changed:', state.previous, '→', state.current)
+        setConnectionStatus(state.current)
       })
 
-      // Connection status
-      echo.connector.pusher.connection.bind('connected', () => {
-        setIsConnected(true)
-        setMessages(prev => [...prev, 'Connected to WebSocket'])
+      pusher.connection.bind('connected', () => {
+        console.log('Connected to WebSocket')
+        setConnectionStatus('Connected')
       })
 
-      echo.connector.pusher.connection.bind('disconnected', () => {
-        setIsConnected(false)
-        setMessages(prev => [...prev, 'Disconnected from WebSocket'])
-      })
-
-      echo.connector.pusher.connection.bind('error', (error: any) => {
+      pusher.connection.bind('error', (error: any) => {
         console.error('WebSocket error:', error)
-        setMessages(prev => [...prev, `Error: ${error.message}`])
+        setConnectionStatus('Error')
       })
+    }
 
-      return () => {
-        channel.unsubscribe()
-      }
-    } catch (error) {
-      console.error('Failed to setup WebSocket:', error)
-      setMessages(prev => [...prev, `Setup error: ${error}`])
+    // Subscribe to test channel
+    const channel = echoInstance.private('chat.dm.1')
+    
+    channel.listen('.ChatMessageSent', (event: any) => {
+      console.log('Received message:', event)
+      setMessages(prev => [...prev, event])
+    })
+
+    return () => {
+      echoInstance.leave('chat.dm.1')
     }
   }, [])
 
-  const sendTestMessage = async () => {
+  const sendMessage = () => {
+    if (!echo || !inputMessage.trim()) return
+
+    const messageData = {
+      conversation_id: 1,
+      content: inputMessage,
+      type: 'text',
+      sender_id: 1
+    }
+
+    console.log('Sending message via WebSocket:', messageData)
+
     try {
-      const response = await fetch('http://localhost:8000/api/test/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          roomId: '1',
-          senderId: '1',
-          content: `Test message at ${new Date().toLocaleTimeString()}`
-        })
-      })
+      echo.private('chat.dm.1')
+        .whisper('client-send-message', messageData)
       
-      const data = await response.json()
-      setMessages(prev => [...prev, `Message sent: ${data.data.content}`])
+      console.log('Message sent successfully')
+      setInputMessage('')
     } catch (error) {
-      setMessages(prev => [...prev, `Send error: ${error}`])
+      console.error('Failed to send message:', error)
+    }
+  }
+
+  const sendClientMessage = () => {
+    if (!echo || !inputMessage.trim()) return
+
+    const messageData = {
+      conversation_id: 1,
+      content: inputMessage,
+      type: 'text',
+      sender_id: 1
+    }
+
+    console.log('Sending client-client-send-message via WebSocket:', messageData)
+
+    try {
+      echo.private('chat.dm.1')
+        .whisper('client-client-send-message', messageData)
+      
+      console.log('Client message sent successfully')
+      setInputMessage('')
+    } catch (error) {
+      console.error('Failed to send client message:', error)
     }
   }
 
   return (
     <div className="p-8 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">WebSocket Test</h1>
+      <h1 className="text-2xl font-bold mb-6">WebSocket Test Page</h1>
       
       <div className="mb-4">
-        <div className="flex items-center space-x-2">
-          <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
-          <span>Status: {isConnected ? 'Connected' : 'Disconnected'}</span>
+        <p className="text-sm text-gray-600">
+          Connection Status: <span className={`font-semibold ${
+            connectionStatus === 'Connected' ? 'text-green-600' : 
+            connectionStatus === 'Error' ? 'text-red-600' : 
+            'text-yellow-600'
+          }`}>
+            {connectionStatus}
+          </span>
+        </p>
+      </div>
+
+      <div className="mb-6">
+        <div className="flex gap-2 mb-4">
+          <input
+            type="text"
+            value={inputMessage}
+            onChange={(e) => setInputMessage(e.target.value)}
+            placeholder="Enter message..."
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+          />
+          <button
+            onClick={sendMessage}
+            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            Send (client-send-message)
+          </button>
+          <button
+            onClick={sendClientMessage}
+            className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500"
+          >
+            Send (client-client-send-message)
+          </button>
         </div>
       </div>
 
-      <button 
-        onClick={sendTestMessage}
-        className="bg-blue-500 text-gray-800 px-4 py-2 rounded hover:bg-blue-600 mb-4"
-      >
-        Send Test Message
-      </button>
-
-      <div className="bg-gray-100 p-4 rounded h-96 overflow-y-auto">
-        <h2 className="font-bold mb-2">Messages:</h2>
-        {messages.map((message, index) => (
-          <div key={index} className="mb-1 text-sm">
-            {message}
-          </div>
-        ))}
+      <div className="bg-gray-100 p-4 rounded-md">
+        <h2 className="text-lg font-semibold mb-3">Received Messages:</h2>
+        <div className="space-y-2 max-h-96 overflow-y-auto">
+          {messages.length === 0 ? (
+            <p className="text-gray-500">No messages received yet...</p>
+          ) : (
+            messages.map((message, index) => (
+              <div key={index} className="bg-white p-3 rounded border">
+                <pre className="text-sm">{JSON.stringify(message, null, 2)}</pre>
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </div>
   )
