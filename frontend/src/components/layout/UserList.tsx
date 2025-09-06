@@ -39,11 +39,11 @@ export function UserList() {
         {users.map((user) => (
           <div
             key={user.id}
-            className="flex items-center px-2 py-1 rounded cursor-pointer text-gray-300 hover:bg-gray-700 hover:text-white group"
+            className="flex items-center px-2 py-1 rounded cursor-pointer text-gray-300 hover:bg-gray-700 hover:text-gray-800 group"
           >
             <div className="relative">
               <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center mr-2">
-                <span className="text-white text-xs font-semibold">
+                <span className="text-gray-800 text-xs font-semibold">
                   {user.name.split(' ').map(n => n[0]).join('')}
                 </span>
               </div>

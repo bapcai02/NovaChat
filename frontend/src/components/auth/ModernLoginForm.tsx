@@ -295,7 +295,7 @@ export default function ModernLoginForm({
             </div>
 
             {/* Demo Credentials */}
-            <div className="mt-6 p-4 bg-slate-800/50 border border-slate-700/50 rounded-lg">
+            <div className="mt-6 p-4 bg-gray-100/50 border border-gray-300/50 rounded-lg">
               <div className="flex items-center mb-3">
                 <div className="w-5 h-5 text-yellow-400 mr-2">
                   <svg fill="currentColor" viewBox="0 0 20 20">

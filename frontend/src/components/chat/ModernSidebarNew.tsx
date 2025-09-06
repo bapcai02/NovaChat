@@ -117,6 +117,7 @@ export default function ModernSidebar({
               </div>
             </div>
             <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+            <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-yellow-400 rounded-full border border-white"></div>
           </div>
           <span className="text-xs font-semibold text-gray-600">Nova</span>
         </div>

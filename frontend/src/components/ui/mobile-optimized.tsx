@@ -77,7 +77,7 @@ export const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
     <div className="fixed inset-0 z-50">
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="absolute inset-0 bg-white/50 backdrop-blur-sm"
         onClick={onClose}
       />
       

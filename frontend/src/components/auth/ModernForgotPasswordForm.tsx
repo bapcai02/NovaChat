@@ -77,9 +77,9 @@ export default function ModernForgotPasswordForm({
               transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
               className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl mb-4"
             >
-              <CheckCircle className="h-8 w-8 text-white" />
+              <CheckCircle className="h-8 w-8 text-gray-800" />
             </motion.div>
-            <h1 className="text-3xl font-bold text-white mb-2">Check your email</h1>
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">Check your email</h1>
             <p className="text-slate-400">We've sent a password reset link to your email</p>
           </div>
 
@@ -92,7 +92,7 @@ export default function ModernForgotPasswordForm({
                 </div>
                 
                 <div className="space-y-2">
-                  <h3 className="text-xl font-semibold text-white">Email sent successfully!</h3>
+                  <h3 className="text-xl font-semibold text-gray-800">Email sent successfully!</h3>
                   <p className="text-slate-300">
                     We've sent a password reset link to <span className="font-medium text-blue-400">{email}</span>
                   </p>
@@ -107,7 +107,7 @@ export default function ModernForgotPasswordForm({
                 <div className="space-y-3 pt-4">
                   <Button
                     onClick={onBackToLogin}
-                    className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium py-2.5 rounded-lg transition-all duration-200 transform hover:scale-[1.02]"
+                    className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-gray-800 font-medium py-2.5 rounded-lg transition-all duration-200 transform hover:scale-[1.02]"
                   >
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Back to login
@@ -116,7 +116,7 @@ export default function ModernForgotPasswordForm({
                   <Button
                     variant="outline"
                     onClick={() => onSubmit(email)}
-                    className="w-full bg-white/5 border-white/20 text-slate-300 hover:bg-white/10 hover:text-white"
+                    className="w-full bg-white/5 border-white/20 text-slate-300 hover:bg-white/10 hover:text-gray-800"
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -153,16 +153,16 @@ export default function ModernForgotPasswordForm({
             transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
             className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl mb-4"
           >
-            <span className="text-2xl font-bold text-white">N</span>
+            <span className="text-2xl font-bold text-gray-800">N</span>
           </motion.div>
-          <h1 className="text-3xl font-bold text-white mb-2">Forgot password?</h1>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">Forgot password?</h1>
           <p className="text-slate-400">No worries, we'll send you reset instructions</p>
         </div>
 
         {/* Forgot Password Form */}
         <Card className="backdrop-blur-sm bg-white/10 border-white/20 shadow-2xl">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl text-center text-white">Reset password</CardTitle>
+            <CardTitle className="text-2xl text-center text-gray-800">Reset password</CardTitle>
             <CardDescription className="text-center text-slate-300">
               Enter your email address and we'll send you a link to reset your password
             </CardDescription>
@@ -184,7 +184,7 @@ export default function ModernForgotPasswordForm({
                     value={email}
                     onChange={handleInputChange}
                     className={cn(
-                      "pl-10 bg-white/5 border-white/20 text-white placeholder:text-slate-400 focus:border-blue-400 focus:ring-blue-400/20",
+                      "pl-10 bg-white/5 border-white/20 text-gray-800 placeholder:text-slate-400 focus:border-blue-400 focus:ring-blue-400/20",
                       emailError && "border-red-400 focus:border-red-400 focus:ring-red-400/20"
                     )}
                     disabled={isLoading}
@@ -215,7 +215,7 @@ export default function ModernForgotPasswordForm({
               {/* Submit Button */}
               <Button
                 type="submit"
-                className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium py-2.5 rounded-lg transition-all duration-200 transform hover:scale-[1.02]"
+                className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-gray-800 font-medium py-2.5 rounded-lg transition-all duration-200 transform hover:scale-[1.02]"
                 disabled={isLoading}
               >
                 {isLoading ? (

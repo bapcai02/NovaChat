@@ -69,7 +69,7 @@ export const CreateTeamModal: React.FC<CreateTeamModalProps> = ({ isOpen, onClos
   }
 
   return (!isOpen ? null : (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/90 backdrop-blur-sm">
       <div className="w-full max-w-md rounded-xl bg-[hsl(222.2_84%_4.9%)] border border-[hsl(var(--chat-border))] shadow-2xl">
         <div className="px-5 pt-5 pb-3 border-b border-[hsl(var(--chat-border))] flex items-center justify-between">
           <div className="flex items-center space-x-2">

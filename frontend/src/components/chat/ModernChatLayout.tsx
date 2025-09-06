@@ -140,6 +140,7 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
   }
 
   const handleOpenThread = (message: { id: string; content: string; sender: string; timestamp: string }) => {
+    console.log('Opening thread for message:', message)
     setThreadMessage(message)
     setShowThread(true)
   }
@@ -287,7 +288,7 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
             initial={{ x: 400, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: 400, opacity: 0 }}
-            transition={{ duration: 0.3, ease: 'easeOut' }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
             className="w-96 flex-shrink-0"
           >
             <ModernThreadChat

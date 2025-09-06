@@ -17,7 +17,8 @@ import {
   Send,
   Paperclip,
   Image,
-  X
+  X,
+  MessageCircle
 } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -209,8 +210,9 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
 
   const ThreadMessageBubble = ({ message }: { message: ThreadMessage }) => (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.15, ease: "easeOut" }}
       className="flex gap-2 group"
     >
       {/* Avatar */}
@@ -240,11 +242,11 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
             </div>
 
             {/* Message actions */}
-            <div className="absolute top-0 right-0 flex items-center gap-1 p-2 bg-gray-800 border border-gray-700 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 -translate-y-full z-10">
+            <div className="absolute top-0 right-0 flex items-center gap-1 p-2 bg-white border border-gray-300 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 -translate-y-full z-10">
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 w-7 p-0 hover:bg-gray-700 text-white hover:text-white"
+                className="h-7 w-7 p-0 hover:bg-gray-200 text-gray-600 hover:text-gray-800"
                 onClick={(e) => {
                   e.preventDefault()
                   e.stopPropagation()
@@ -256,7 +258,7 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 w-7 p-0 hover:bg-gray-700 text-white hover:text-white"
+                className="h-7 w-7 p-0 hover:bg-gray-200 text-gray-600 hover:text-gray-800"
                 onClick={(e) => {
                   e.preventDefault()
                   e.stopPropagation()
@@ -271,17 +273,17 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
                     <MoreHorizontal className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-gray-800 border-gray-700 z-20">
-                  <DropdownMenuItem className="text-gray-200 hover:bg-gray-700 hover:text-white">
+                <DropdownMenuContent align="end" className="bg-white border-gray-300 z-20">
+                  <DropdownMenuItem className="text-gray-600 hover:bg-gray-100 hover:text-gray-800">
                     <Copy className="mr-2 h-4 w-4" />
                     Copy
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="text-gray-200 hover:bg-gray-700 hover:text-white">
+                  <DropdownMenuItem className="text-gray-600 hover:bg-gray-100 hover:text-gray-800">
                     <Reply className="mr-2 h-4 w-4" />
                     Reply
                   </DropdownMenuItem>
                   {message.isOwn && (
-                    <DropdownMenuItem className="text-gray-200 hover:bg-gray-700 hover:text-white">
+                    <DropdownMenuItem className="text-gray-600 hover:bg-gray-100 hover:text-gray-800">
                       <Edit3 className="mr-2 h-4 w-4" />
                       Edit
                     </DropdownMenuItem>
@@ -327,6 +329,7 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
       initial={{ x: 400, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: 400, opacity: 0 }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
       className="flex flex-col h-full bg-white border-l border-gray-200"
     >
       {/* Thread Header */}
@@ -358,6 +361,12 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
             <span>{parentMessage.timestamp}</span>
           </div>
           <div className="text-sm text-gray-800">{parentMessage.content}</div>
+          
+          {/* Thread indicator */}
+          <div className="flex items-center gap-1 mt-2 text-xs text-gray-500">
+            <MessageCircle className="h-3 w-3" />
+            <span>{messages.length} {messages.length === 1 ? 'reply' : 'replies'}</span>
+          </div>
         </div>
       </div>
 

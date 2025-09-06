@@ -222,7 +222,7 @@ export const KeyboardShortcuts: React.FC<KeyboardShortcutsProps> = ({
 
       {/* Help Modal */}
               {showHelp && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-white/60 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-[hsl(217.2_32.6%_17.5%)] rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden border border-[hsl(217.2_32.6%_17.5%)]">
             {/* Header */}
             <div className="p-4 border-b border-[hsl(var(--chat-border))] flex items-center justify-between">

@@ -56,7 +56,7 @@ export default function TestChatPage() {
           <button
             type="submit"
             disabled={loading || !message.trim()}
-            className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-300"
+            className="px-4 py-2 bg-blue-500 text-gray-800 rounded disabled:bg-gray-300"
           >
             {loading ? 'Sending...' : 'Send'}
           </button>

@@ -685,7 +685,7 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, select
                         />
                       ))}
                       {message.thread.participants.length > 3 && (
-                        <div className="w-6 h-6 bg-[hsl(var(--chat-text-muted))] rounded-full border-2 border-[hsl(var(--chat-bg))] flex items-center justify-center text-xs text-white">
+                        <div className="w-6 h-6 bg-[hsl(var(--chat-text-muted))] rounded-full border-2 border-[hsl(var(--chat-bg))] flex items-center justify-center text-xs text-gray-800">
                           +{message.thread.participants.length - 3}
                         </div>
                       )}
@@ -727,7 +727,7 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, select
                   
                   {/* Reaction Picker Modal */}
                   {showReactionPicker === message.id && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
+                    <div className="fixed inset-0 bg-white bg-opacity-90 flex items-center justify-center z-[9999]">
                       <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
                         <div className="flex items-center justify-between mb-4">
                           <h3 className="text-lg font-semibold">Choose Reaction</h3>

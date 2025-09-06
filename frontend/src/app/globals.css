@@ -67,9 +67,9 @@
     @apply bg-background text-foreground;
   }
   
-  /* Add dark class by default */
+  /* Use light mode by default */
   html {
-    @apply dark;
+    @apply light;
   }
   
   /* Smooth transitions for theme switching */
@@ -210,28 +210,28 @@ html, body {
 .typing-dot:nth-child(1) { animation-delay: -0.32s; }
 .typing-dot:nth-child(2) { animation-delay: -0.16s; }
 
-/* Force dark background */
-html.dark {
-  background-color: hsl(var(--chat-bg)) !important;
+/* Force light background */
+html.light {
+  background-color: #ffffff !important;
 }
 
-html.dark body {
-  background-color: hsl(var(--chat-bg)) !important;
-  color: hsl(var(--chat-text)) !important;
+html.light body {
+  background-color: #ffffff !important;
+  color: #000000 !important;
 }
 
-/* Chat-specific variables (minimal, modern) */
+/* Chat-specific variables (light theme) */
 :root {
-  --chat-bg: 240 10% 3.9%;
-  --chat-text: 0 0% 98%;
-  --chat-text-muted: 240 5% 64.9%;
-  --chat-border: 240 3.7% 15.9%;
-  --chat-sidebar: 240 3.7% 15.9%;
-  --chat-message-bg: 240 3.7% 15.9%;
-  --chat-message-hover: 240 3.7% 20%;
-  --chat-input-bg: 240 3.7% 15.9%;
-  --chat-accent: 0 0% 98%;
-  --chat-accent-light: 240 5% 64.9%;
+  --chat-bg: 0 0% 100%;
+  --chat-text: 0 0% 0%;
+  --chat-text-muted: 0 0% 45%;
+  --chat-border: 0 0% 90%;
+  --chat-sidebar: 0 0% 98%;
+  --chat-message-bg: 0 0% 100%;
+  --chat-message-hover: 0 0% 95%;
+  --chat-input-bg: 0 0% 100%;
+  --chat-accent: 0 0% 0%;
+  --chat-accent-light: 0 0% 45%;
 }
 
 /* Typing animation */

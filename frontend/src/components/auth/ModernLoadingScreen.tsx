@@ -35,6 +35,21 @@ export default function ModernLoadingScreen({ message = "Loading..." }: ModernLo
             <div className="absolute top-4 left-4 w-4 h-4 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full"></div>
           </motion.div>
           
+          {/* Additional status indicator */}
+          <motion.div
+            className="absolute -bottom-1 -left-1 w-3 h-3 bg-yellow-400 rounded-full border-2 border-white"
+            animate={{ 
+              scale: [1, 1.1, 1],
+              opacity: [0.7, 1, 0.7]
+            }}
+            transition={{ 
+              duration: 2.5,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: 0.5
+            }}
+          />
+          
           {/* Floating status indicators */}
           <motion.div
             className="absolute -top-2 -right-2 w-5 h-5 bg-green-500 rounded-full border-3 border-white shadow-lg"

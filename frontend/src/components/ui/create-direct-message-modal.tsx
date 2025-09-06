@@ -158,7 +158,7 @@ export const CreateDirectMessageModal: React.FC<CreateDirectMessageModalProps> =
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-white/90 backdrop-blur-sm flex items-center justify-center z-50">
       <div className="bg-[hsl(217.2_32.6%_17.5%)] rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden border border-[hsl(217.2_32.6%_17.5%)]">
         {/* Header */}
         <div className="p-6 border-b border-[hsl(217.2_32.6%_17.5%)] flex items-center justify-between">

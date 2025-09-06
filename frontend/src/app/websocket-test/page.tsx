@@ -79,7 +79,7 @@ export default function WebSocketTestPage() {
 
       <button 
         onClick={sendTestMessage}
-        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mb-4"
+        className="bg-blue-500 text-gray-800 px-4 py-2 rounded hover:bg-blue-600 mb-4"
       >
         Send Test Message
       </button>

@@ -81,7 +81,7 @@ export const ResponsiveLayout: React.FC<ResponsiveLayoutProps> = ({
       {/* Mobile Overlay */}
       {(isSidebarOpen || isRightSidebarOpen) && isMobile && (
         <div 
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          className="fixed inset-0 bg-white/90 z-40 lg:hidden"
           onClick={() => {
             setIsSidebarOpen(false)
             setIsRightSidebarOpen(false)

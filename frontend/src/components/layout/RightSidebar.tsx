@@ -229,7 +229,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({ onClose, mode, onMod
             <div className="space-y-3">
               <div className="flex items-center space-x-2">
                 <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-md flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">#</span>
+                  <span className="text-gray-800 font-bold text-sm">#</span>
                 </div>
                 <div>
                   <h3 className="text-sm font-semibold">#general</h3>

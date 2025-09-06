@@ -116,13 +116,14 @@ const MessageBubble = ({
           <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">
             {message.content}
           </p>
+          
 
           {/* Message actions - shown on hover */}
-          <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 shadow-lg z-10">
+                <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1 bg-white border border-gray-300 rounded-lg px-3 py-2 shadow-lg z-10">
             <Button
               variant="ghost"
               size="sm"
-              className="h-7 w-7 p-0 hover:bg-gray-700 text-white hover:text-white"
+              className="h-7 w-7 p-0 hover:bg-gray-200 text-gray-600 hover:text-gray-800"
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
@@ -134,7 +135,7 @@ const MessageBubble = ({
             <Button
               variant="ghost"
               size="sm"
-              className="h-7 w-7 p-0 hover:bg-gray-700 text-white hover:text-white"
+              className="h-7 w-7 p-0 hover:bg-gray-200 text-gray-600 hover:text-gray-800"
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
@@ -146,7 +147,7 @@ const MessageBubble = ({
             <Button
               variant="ghost"
               size="sm"
-              className="h-7 w-7 p-0 hover:bg-gray-700 text-white hover:text-white"
+              className="h-7 w-7 p-0 hover:bg-gray-200 text-gray-600 hover:text-gray-800"
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
@@ -158,7 +159,7 @@ const MessageBubble = ({
             <Button
               variant="ghost"
               size="sm"
-              className="h-7 w-7 p-0 hover:bg-gray-700 text-white hover:text-white"
+              className="h-7 w-7 p-0 hover:bg-gray-200 text-gray-600 hover:text-gray-800"
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
@@ -168,37 +169,58 @@ const MessageBubble = ({
               {message.is_bookmarked ? (
                 <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
               ) : (
-                <Star className="h-4 w-4 text-white" />
+                <Star className="h-4 w-4 text-gray-600" />
               )}
             </Button>
           </div>
         </div>
 
-        {/* Reactions below message bubble */}
-        {message.reactions && message.reactions.length > 0 && (
-          <div className={cn(
-            "flex flex-wrap gap-1",
-            isOwn ? "justify-end" : "justify-start"
-          )}>
-            {message.reactions.map((reaction, index) => (
-              <button
-                key={index}
-                className="flex items-center gap-1 px-2 py-1 text-xs text-gray-600 hover:text-gray-800 transition-colors"
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  handleReaction(reaction.emoji)
-                }}
-              >
-                <span>{reaction.emoji}</span>
-                <span>{reaction.count && reaction.count > 0 ? reaction.count : ''}</span>
-                {reaction.users?.includes(currentUser?.id || 0) || reaction.user_id === currentUser?.id ? (
-                  <span className="text-blue-500">✓</span>
-                ) : null}
-              </button>
-            ))}
-          </div>
-        )}
+        {/* Reactions and Thread indicator below message bubble */}
+        <div className={cn(
+          "flex flex-wrap gap-1 items-center",
+          isOwn ? "justify-end" : "justify-start"
+        )}>
+          {/* Thread indicator - TEST: Mock data for testing */}
+          <button
+            className="flex items-center gap-1 px-2 py-1 text-xs text-gray-600 hover:text-gray-800 transition-colors bg-green-100 rounded"
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              onOpenThread?.({
+                id: message.id.toString(),
+                content: message.content,
+                sender: message.sender?.name || message.user?.name || 'Unknown',
+                timestamp: message.created_at
+              })
+            }}
+          >
+            <MessageCircle className="h-3 w-3" />
+            <span>{message.thread_messages_count || Math.floor(Math.random() * 5) + 1} replies</span>
+          </button>
+          
+          {/* Reactions */}
+          {message.reactions && message.reactions.length > 0 && (
+            <>
+              {message.reactions.map((reaction, index) => (
+                <button
+                  key={index}
+                  className="flex items-center gap-1 px-2 py-1 text-xs text-gray-600 hover:text-gray-800 transition-colors"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    handleReaction(reaction.emoji)
+                  }}
+                >
+                  <span>{reaction.emoji}</span>
+                  <span>{reaction.count && reaction.count > 0 ? reaction.count : ''}</span>
+                  {reaction.users?.includes(currentUser?.id || 0) || reaction.user_id === currentUser?.id ? (
+                    <span className="text-blue-500">✓</span>
+                  ) : null}
+                </button>
+              ))}
+            </>
+          )}
+        </div>
 
         {/* Timestamp for own messages */}
         {isOwn && (
