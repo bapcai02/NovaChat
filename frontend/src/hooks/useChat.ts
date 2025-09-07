@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { apiService } from '@/services/api'
 import { unreadService } from '@/services/unreadService'
 import { getWebSocketClient, WebSocketMessage } from '@/lib/websocket'
@@ -111,6 +111,8 @@ export function useChat() {
   const [currentConversation, setCurrentConversation] = useState<Conversation | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [onlineUsers, setOnlineUsers] = useState<User[]>([])
+  const [conversationUsers, setConversationUsers] = useState<User[]>([])
+  const conversationUsersRef = useRef<User[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -187,8 +189,23 @@ export function useChat() {
       setIsLoading(true)
       const response = await apiService.getMessages(conversationId.toString(), page)
       // API returns nested data: response.data.data
-      const messagesData = response.data?.data || response.data
-      const messagesArray = Array.isArray(messagesData) ? messagesData : []
+      const responseData = response.data?.data || response.data
+      const messagesArray = Array.isArray(responseData?.messages) ? responseData.messages : (Array.isArray(responseData) ? responseData : [])
+      const usersArray = Array.isArray(responseData?.users) ? responseData.users : []
+      
+      // Convert users to User format
+      const users = usersArray.map((user: any) => ({
+        id: user.id,
+        name: user.name,
+        username: user.username,
+        avatar: user.avatar,
+        email: '',
+        is_online: false
+      }))
+      
+      setConversationUsers(users)
+      conversationUsersRef.current = users
+      
       if (page === 1) {
         setMessages(messagesArray)
         // Setup WebSocket subscription for new messages
@@ -208,11 +225,7 @@ export function useChat() {
   // Setup WebSocket subscription for real-time messages
   const setupWebSocketSubscription = useCallback((conversationId: number) => {
     try {
-      console.log('=== Setting up WebSocket subscription ===')
-      console.log('Conversation ID:', conversationId)
-      
       const wsClient = getWebSocketClient()
-      console.log('WebSocket client:', wsClient)
       
       // Connect if not already connected
       if (wsClient.getConnectionState() !== 'connected') {
@@ -226,35 +239,70 @@ export function useChat() {
       wsClient.clearMessageHandlers()
       
       // Listen for messages
-      wsClient.onMessage((message: WebSocketMessage) => {
-        console.log('=== Received WebSocket message ===')
-        console.log('Message:', message)
+      wsClient.onMessage(async (message: WebSocketMessage) => {
         
-        if (message.type === 'message_received') {
+        if (message.type === 'chat_message' || message.type === 'message_received') {
+          // Get sender info from message (sent by WebSocket Gateway)
+          const senderId = parseInt(message.sender_id?.toString() || '0')
+          
+          // Try to find sender in current conversation members first
+          let sender = null
+          if (currentConversation?.members) {
+            sender = currentConversation.members.find(member => member.id === senderId)
+          }
+          
+          // If not found in members, try to find in conversation users (from messages)
+          if (!sender) {
+            sender = conversationUsersRef.current.find(user => user.id === senderId)
+          }
+          
+          // If still not found, try to find in current messages
+          if (!sender) {
+            const messageWithSender = messages.find(msg => msg.sender?.id === senderId)
+            if (messageWithSender?.sender) {
+              sender = {
+                id: messageWithSender.sender.id,
+                name: messageWithSender.sender.name,
+                username: messageWithSender.sender.username,
+                avatar: messageWithSender.sender.avatar,
+                email: '',
+                is_online: false
+              }
+            }
+          }
+          
+          // If still not found, create minimal sender object
+          if (!sender) {
+            sender = {
+              id: senderId,
+              name: 'Unknown User',
+              username: `user${senderId}`,
+              avatar: null
+            }
+          }
+          
           const newMessage = {
             id: Date.now(), // Temporary ID until we get real ID from DB
             conversation_id: parseInt(message.conversation_id?.toString() || '0'),
-            user_id: parseInt(message.sender_id?.toString() || '0'),
+            user_id: senderId,
             content: message.content || '',
             type: 'text',
             created_at: message.timestamp || new Date().toISOString(),
             updated_at: message.timestamp || new Date().toISOString(),
             sender: {
-              id: parseInt(message.sender_id?.toString() || '0'),
-              name: `User ${message.sender_id}`,
-              username: `user${message.sender_id}`,
-              avatar: undefined
+              id: senderId,
+              name: sender.name || `User ${senderId}`,
+              username: sender.username || `user${senderId}`,
+              avatar: sender.avatar
             },
             reactions: [],
             is_bookmarked: false,
             replies_count: 0
           }
           
-          console.log('New message object:', newMessage)
           
           // If it's from current user, replace optimistic update
           if (parseInt(message.sender_id?.toString() || '0') === currentUser?.id) {
-            console.log('Replacing optimistic message with real message')
             setMessages(prev => {
               // Find and remove optimistic message
               const filteredMessages = prev.filter(msg => 
@@ -267,7 +315,10 @@ export function useChat() {
               return [...filteredMessages, newMessage]
             })
           } else {
-            console.log('Adding new message from other user')
+            
+            // Get message conversation ID
+            const messageConversationId = parseInt(message.conversation_id?.toString() || '0')
+            
             // Add new message from other users, but check for duplicates first
             setMessages(prev => {
               // Check if message already exists (by content and timestamp)
@@ -278,7 +329,6 @@ export function useChat() {
               )
               
               if (exists) {
-                console.log('Message already exists, skipping duplicate')
                 return prev
               }
               
@@ -286,7 +336,6 @@ export function useChat() {
             })
 
             // Update unread count for the conversation if user is not currently viewing it
-            const messageConversationId = parseInt(message.conversation_id?.toString() || '0')
             if (currentConversation?.id !== messageConversationId) {
               setConversations(prev => prev.map(conv => 
                 conv.id === messageConversationId 
@@ -369,7 +418,7 @@ export function useChat() {
         wsClient.joinConversation(conversationId)
         
         // Send message
-        wsClient.sendMessage(conversationId, currentUser?.id || 0, content)
+        wsClient.sendMessage(conversationId, currentUser?.id || 0, content, currentUser?.name, currentUser?.avatar)
         console.log('Message sent via WebSocket')
         
       } catch (error) {
@@ -536,7 +585,15 @@ export function useChat() {
 
   // Wrapper for setCurrentConversation that also resets unread count
   const handleSelectConversation = useCallback(async (conversation: Conversation) => {
-    setCurrentConversation(conversation)
+    // Load full conversation details with members
+    try {
+      const response = await apiService.getConversation(conversation.id.toString())
+      const fullConversation = response.data?.data || response.data
+      setCurrentConversation(fullConversation)
+    } catch (error) {
+      console.error('Failed to load conversation details:', error)
+      setCurrentConversation(conversation)
+    }
     
     // Mark conversation as read on server
     await unreadService.markConversationAsRead(conversation.id)
@@ -547,7 +604,13 @@ export function useChat() {
         ? { ...conv, unread_count: 0 }
         : conv
     ))
-  }, [])
+    
+    // Setup WebSocket subscription for real-time messages
+    setupWebSocketSubscription(conversation.id)
+    
+    // Load messages for the conversation
+    loadMessages(conversation.id)
+  }, [setupWebSocketSubscription, loadMessages])
 
   // Initialize chat data
   useEffect(() => {
@@ -573,6 +636,7 @@ export function useChat() {
     currentConversation,
     messages,
     onlineUsers,
+    conversationUsers,
     isLoading,
     error,
     

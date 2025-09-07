@@ -35,13 +35,11 @@ class NovaChatWebSocket implements WebSocketClient {
     }
 
     this.isConnecting = true;
-    console.log('[WebSocket] Connecting to:', this.url);
 
     try {
       this.ws = new WebSocket(this.url);
 
       this.ws.onopen = () => {
-        console.log('[WebSocket] Connected');
         this.isConnecting = false;
         this.reconnectAttempts = 0;
         this.notifyConnectionChange('connected');
@@ -50,7 +48,6 @@ class NovaChatWebSocket implements WebSocketClient {
       this.ws.onmessage = (event) => {
         try {
           const message: WebSocketMessage = JSON.parse(event.data);
-          console.log('[WebSocket] Message received:', message);
           this.notifyMessage(message);
         } catch (error) {
           console.error('[WebSocket] Error parsing message:', error);
@@ -58,7 +55,6 @@ class NovaChatWebSocket implements WebSocketClient {
       };
 
       this.ws.onclose = (event) => {
-        console.log('[WebSocket] Disconnected:', event.code, event.reason);
         this.isConnecting = false;
         this.notifyConnectionChange('disconnected');
         
@@ -85,7 +81,6 @@ class NovaChatWebSocket implements WebSocketClient {
     this.reconnectAttempts++;
     const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
     
-    console.log(`[WebSocket] Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
     
     setTimeout(() => {
       this.connect();
@@ -101,30 +96,38 @@ class NovaChatWebSocket implements WebSocketClient {
   }
 
   joinConversation(conversationId: number): void {
+    
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
       console.warn('[WebSocket] Not connected, cannot join conversation');
       return;
     }
 
     this.currentConversationId = conversationId;
-    this.send({
+    const message = {
       type: 'join_conversation',
       conversation_id: conversationId
-    });
+    };
+    
+    this.send(message);
   }
 
-  sendMessage(conversationId: number, senderId: number, content: string): void {
+  sendMessage(conversationId: number, senderId: number, content: string, senderName?: string, senderAvatar?: string): void {
+    
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
       console.warn('[WebSocket] Not connected, cannot send message');
       return;
     }
 
-    this.send({
+    const message = {
       type: 'chat_message',
       conversation_id: conversationId,
       sender_id: senderId,
+      sender_name: senderName,
+      sender_avatar: senderAvatar,
       content: content
-    });
+    };
+    
+    this.send(message);
   }
 
   private send(message: WebSocketMessage): void {

@@ -8,6 +8,7 @@ import ModernChatMessages from './ModernChatMessagesNew'
 import ModernChatInput from './ModernChatInput'
 import ModernThreadChat from './ModernThreadChat'
 import { useChat } from '@/hooks/useChat'
+import { getWebSocketClient } from '@/lib/websocket'
 
 interface ChatLayoutProps {
   className?: string
@@ -103,43 +104,48 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
   }
 
   const handleTyping = (isTyping: boolean) => {
-    // TODO: Implement typing indicator
-    console.log('Typing:', isTyping)
+    if (!currentConversation || !currentUser) return
+    
+    try {
+      const wsClient = getWebSocketClient()
+      if (wsClient.getConnectionState() === 'connected') {
+        wsClient.send({
+          type: isTyping ? 'typing_start' : 'typing_stop',
+          conversation_id: currentConversation.id,
+          user_id: currentUser.id
+        })
+      }
+    } catch (error) {
+      console.error('Failed to send typing indicator:', error)
+    }
   }
 
   const handleSearch = () => {
     // TODO: Implement search
-    console.log('Search clicked')
   }
 
   const handleCall = () => {
     // TODO: Implement call
-    console.log('Call clicked')
   }
 
   const handleVideoCall = () => {
     // TODO: Implement video call
-    console.log('Video call clicked')
   }
 
   const handleViewMembers = () => {
     // TODO: Implement view members
-    console.log('View members clicked')
   }
 
   const handleToggleMute = () => {
     // TODO: Implement mute toggle
-    console.log('Toggle mute')
   }
 
   const handleTogglePin = () => {
     // TODO: Implement pin toggle
-    console.log('Toggle pin')
   }
 
   const handleSettings = () => {
     // TODO: Implement settings
-    console.log('Settings clicked')
   }
 
   const handleToggleRightSidebar = () => {
@@ -147,7 +153,6 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
   }
 
   const handleOpenThread = (message: { id: string; content: string; sender: string; timestamp: string }) => {
-    console.log('Opening thread for message:', message)
     setThreadMessage(message)
     setShowThread(true)
   }
@@ -171,7 +176,7 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
             teams={teams}
             conversations={conversations}
             currentConversation={currentConversation}
-            onSelectConversation={setCurrentConversation}
+            onSelectConversation={handleSelectConversation}
             currentUser={currentUser}
           />
         </motion.div>
@@ -224,12 +229,13 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
       </motion.div>
 
       {/* Main chat area */}
-      <div className="flex-1 flex flex-col min-w-0 bg-white">
+      <div className="flex-1 flex flex-col min-w-0 bg-white h-screen">
         {/* Chat header */}
         <motion.div
           initial={{ y: -50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.3, delay: 0.1 }}
+          className="flex-shrink-0"
         >
           <ModernChatHeader
             channelName={getConversationDisplayName(currentConversation)}
@@ -257,7 +263,7 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3, delay: 0.2 }}
-          className="flex-1 min-h-0 bg-white"
+          className="flex-1 min-h-0 overflow-hidden"
         >
           <ModernChatMessages 
             messages={messages}
@@ -276,6 +282,7 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
           initial={{ y: 50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.3, delay: 0.3 }}
+          className="flex-shrink-0"
         >
           <ModernChatInput
             onSendMessage={handleSendMessage}

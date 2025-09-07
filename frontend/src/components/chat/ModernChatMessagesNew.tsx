@@ -86,7 +86,7 @@ const MessageBubble = ({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       className={cn(
-        "flex gap-2 group mb-3",
+        "flex gap-2 mb-3",
         testIsOwn ? "flex-row-reverse" : "flex-row"
       )}
     >
@@ -116,7 +116,7 @@ const MessageBubble = ({
 
         {/* Message bubble */}
         <div className={cn(
-          "relative px-3 py-2 rounded-xl shadow-sm transition-all duration-200 break-words",
+          "relative group px-3 py-2 rounded-xl shadow-sm transition-all duration-200 break-words",
           testIsOwn 
             ? "bg-blue-500 text-white rounded-br-md" 
             : "bg-gray-100 text-gray-800 rounded-bl-md"
@@ -127,7 +127,7 @@ const MessageBubble = ({
           
 
           {/* Message actions - shown on hover */}
-                <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1 bg-white border border-gray-300 rounded-lg px-3 py-2 shadow-lg z-10">
+                <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1 bg-white border border-gray-300 rounded-lg px-3 py-2 shadow-lg z-10 pointer-events-none group-hover:pointer-events-auto">
             <Button
               variant="ghost"
               size="sm"
@@ -260,8 +260,8 @@ export default function ModernChatMessages({
   }
 
   return (
-    <div className="flex-1 overflow-hidden bg-white">
-      <div className="h-full overflow-y-auto overflow-x-hidden p-4 space-y-2">
+    <div className="h-full flex flex-col bg-white">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-2">
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
