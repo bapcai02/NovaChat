@@ -54,6 +54,28 @@ class Message extends Model
     {
         return $this->hasMany(Bookmark::class);
     }
+
+    public function reads()
+    {
+        return $this->hasMany(MessageRead::class);
+    }
+
+    /**
+     * Boot method to handle model events
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        // When a new message is created, create read status entries for all conversation members
+        static::created(function ($message) {
+            MessageRead::createForNewMessage(
+                $message->id,
+                $message->conversation_id,
+                $message->user_id
+            );
+        });
+    }
 }
 
 

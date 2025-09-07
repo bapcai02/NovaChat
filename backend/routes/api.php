@@ -10,6 +10,7 @@ use App\Http\Controllers\MessageController;
 use App\Http\Controllers\UserStatusController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\UnreadController;
 
 /*
 |--------------------------------------------------------------------------
@@ -42,74 +43,98 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
     });
     
-    // Channels
-    Route::get('channels', [ChannelController::class, 'index']);
-    Route::post('channels', [ChannelController::class, 'store']);
-    Route::get('channels/{channelId}', [ChannelController::class, 'show']);
-    Route::put('channels/{channelId}', [ChannelController::class, 'update']);
-    Route::delete('channels/{channelId}', [ChannelController::class, 'destroy']);
-
     // Teams
-    Route::get('teams', [TeamController::class, 'index']);
-    Route::post('teams', [TeamController::class, 'store']);
-    Route::get('teams/{teamId}', [TeamController::class, 'show']);
-    Route::put('teams/{teamId}', [TeamController::class, 'update']);
-    Route::delete('teams/{teamId}', [TeamController::class, 'destroy']);
-    Route::get('teams/{teamId}/channels', [ChannelController::class, 'getTeamChannels']);
-    Route::post('teams/{teamId}/channels', [ChannelController::class, 'store']);
+    Route::prefix('teams')->group(function () {
+        Route::get('/', [TeamController::class, 'index']);
+        Route::post('/', [TeamController::class, 'store']);
+        Route::get('/{teamId}', [TeamController::class, 'show']);
+        Route::put('/{teamId}', [TeamController::class, 'update']);
+        Route::delete('/{teamId}', [TeamController::class, 'destroy']);
+        Route::get('/{teamId}/channels', [ChannelController::class, 'getTeamChannels']);
+        Route::post('/{teamId}/channels', [ChannelController::class, 'store']);
+    });
+
+    // Channels
+    Route::prefix('channels')->group(function () {
+        Route::get('/', [ChannelController::class, 'index']);
+        Route::post('/', [ChannelController::class, 'store']);
+        Route::get('/{channelId}', [ChannelController::class, 'show']);
+        Route::put('/{channelId}', [ChannelController::class, 'update']);
+        Route::delete('/{channelId}', [ChannelController::class, 'destroy']);
+    });
 
     // Conversations
-    Route::get('conversations', [ConversationController::class, 'index']);
-    Route::post('conversations', [ConversationController::class, 'store']);
-    Route::get('conversations/{conversationId}', [ConversationController::class, 'show']);
-    Route::get('conversations/{conversationId}/messages', [ConversationController::class, 'getMessages']);
-    Route::post('conversations/{conversationId}/messages', [MessageController::class, 'store']);
-    Route::post('conversations/{conversationId}/members', [ConversationController::class, 'addMember']);
-    Route::delete('conversations/{conversationId}/members/{userId}', [ConversationController::class, 'removeMember']);
+    Route::prefix('conversations')->group(function () {
+        // Basic CRUD
+        Route::get('/', [ConversationController::class, 'index']);
+        Route::post('/', [ConversationController::class, 'store']);
+        
+        // Unread messages (must be before {conversationId} routes)
+        Route::get('/unread', [UnreadController::class, 'getUnreadCounts']);
+        
+        // Conversation specific routes
+        Route::get('/{conversationId}', [ConversationController::class, 'show']);
+        Route::get('/{conversationId}/messages', [ConversationController::class, 'getMessages']);
+        Route::post('/{conversationId}/messages', [MessageController::class, 'store']);
+        
+        // Members management
+        Route::post('/{conversationId}/members', [ConversationController::class, 'addMember']);
+        Route::delete('/{conversationId}/members/{userId}', [ConversationController::class, 'removeMember']);
+        
+        // Read status
+        Route::post('/{conversationId}/read', [UnreadController::class, 'markConversationAsRead']);
+        Route::get('/{conversationId}/unread', [UnreadController::class, 'getConversationUnreadCount']);
+    });
 
-    // Users & legacy list endpoints will be re-added with new controllers
-    Route::get('users', [UserController::class, 'index']);
-    Route::get('users/search', [UserController::class, 'search']);
-
-    // Thread replies
-    Route::get('messages/{messageId}/replies', [\App\Http\Controllers\ThreadController::class, 'index']);
-    Route::post('messages/{messageId}/replies', [\App\Http\Controllers\ThreadController::class, 'store']);
-    Route::get('messages/{messageId}/thread', [\App\Http\Controllers\ThreadController::class, 'index']);
-    Route::post('messages/{messageId}/thread', [\App\Http\Controllers\ThreadController::class, 'store']);
-
-    // Search
-    Route::get('search', [SearchController::class, 'search']);
-    Route::get('search/messages', [SearchController::class, 'searchMessages']);
-    Route::get('search/channels', [SearchController::class, 'searchChannels']);
-    Route::get('search/users', [SearchController::class, 'searchUsers']);
-    Route::get('search/conversations', [SearchController::class, 'searchConversations']);
-    Route::get('search/files', [SearchController::class, 'searchFiles']);
-
-    // Realtime chat message - with rate limiting
-    Route::middleware('throttle:messages')->group(function () {
-        Route::post('messages', [MessageController::class, 'store']);
-        Route::get('messages/{roomId}', [MessageController::class, 'index']);
+    // Messages
+    Route::middleware('throttle:messages')->prefix('messages')->group(function () {
+        Route::post('/', [MessageController::class, 'store']);
+        Route::get('/{roomId}', [MessageController::class, 'index']);
+        Route::put('/{messageId}', [MessageController::class, 'edit']);
         
         // Message reactions
-        Route::post('messages/{messageId}/reactions', [MessageController::class, 'addReaction']);
-        Route::delete('messages/{messageId}/reactions', [MessageController::class, 'removeReaction']);
-        Route::delete('messages/{messageId}/reactions/{emoji}', [MessageController::class, 'removeReaction']);
-        
-        // Message editing
-        Route::put('messages/{messageId}', [MessageController::class, 'edit']);
+        Route::post('/{messageId}/reactions', [MessageController::class, 'addReaction']);
+        Route::delete('/{messageId}/reactions', [MessageController::class, 'removeReaction']);
+        Route::delete('/{messageId}/reactions/{emoji}', [MessageController::class, 'removeReaction']);
         
         // Message bookmarks
-        Route::post('messages/{messageId}/bookmark', [MessageController::class, 'bookmark']);
-        Route::delete('messages/{messageId}/bookmark', [MessageController::class, 'removeBookmark']);
-        Route::get('messages/{messageId}/bookmark', [MessageController::class, 'isBookmarked']);
-        Route::get('bookmarks', [MessageController::class, 'getBookmarks']);
+        Route::post('/{messageId}/bookmark', [MessageController::class, 'bookmark']);
+        Route::delete('/{messageId}/bookmark', [MessageController::class, 'removeBookmark']);
+        Route::get('/{messageId}/bookmark', [MessageController::class, 'isBookmarked']);
+        
+        // Thread replies
+        Route::get('/{messageId}/replies', [\App\Http\Controllers\ThreadController::class, 'index']);
+        Route::post('/{messageId}/replies', [\App\Http\Controllers\ThreadController::class, 'store']);
+        Route::get('/{messageId}/thread', [\App\Http\Controllers\ThreadController::class, 'index']);
+        Route::post('/{messageId}/thread', [\App\Http\Controllers\ThreadController::class, 'store']);
+    });
+
+    // Bookmarks
+    Route::get('bookmarks', [MessageController::class, 'getBookmarks']);
+
+    // Users
+    Route::prefix('users')->group(function () {
+        Route::get('/', [UserController::class, 'index']);
+        Route::get('/search', [UserController::class, 'search']);
     });
 
     // User status and typing
-    Route::post('user/status', [UserStatusController::class, 'updateStatus']);
-    Route::post('user/typing/start', [UserStatusController::class, 'startTyping']);
-    Route::post('user/typing/stop', [UserStatusController::class, 'stopTyping']);
-    Route::get('user/online', [UserStatusController::class, 'getOnlineUsers']);
+    Route::prefix('user')->group(function () {
+        Route::post('/status', [UserStatusController::class, 'updateStatus']);
+        Route::post('/typing/start', [UserStatusController::class, 'startTyping']);
+        Route::post('/typing/stop', [UserStatusController::class, 'stopTyping']);
+        Route::get('/online', [UserStatusController::class, 'getOnlineUsers']);
+    });
+
+    // Search
+    Route::prefix('search')->group(function () {
+        Route::get('/', [SearchController::class, 'search']);
+        Route::get('/messages', [SearchController::class, 'searchMessages']);
+        Route::get('/channels', [SearchController::class, 'searchChannels']);
+        Route::get('/users', [SearchController::class, 'searchUsers']);
+        Route::get('/conversations', [SearchController::class, 'searchConversations']);
+        Route::get('/files', [SearchController::class, 'searchFiles']);
+    });
 
 });
 

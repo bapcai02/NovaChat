@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -12,6 +13,7 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+  const { login } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -19,29 +21,7 @@ export default function LoginPage() {
     setError('')
     
     try {
-      const response = await fetch('http://localhost:8000/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          password,
-        }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Login failed')
-      }
-
-      // Lưu token vào localStorage
-      if (data.data && data.data.token) {
-        localStorage.setItem('auth_token', data.data.token)
-      }
-
+      await login(email, password)
       // Redirect to chat page
       router.push('/chat')
     } catch (err: any) {

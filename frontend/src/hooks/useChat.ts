@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { apiService } from '@/services/api'
+import { unreadService } from '@/services/unreadService'
 import { getWebSocketClient, WebSocketMessage } from '@/lib/websocket'
 
 export interface User {
@@ -283,6 +284,16 @@ export function useChat() {
               
               return [...prev, newMessage]
             })
+
+            // Update unread count for the conversation if user is not currently viewing it
+            const messageConversationId = parseInt(message.conversation_id?.toString() || '0')
+            if (currentConversation?.id !== messageConversationId) {
+              setConversations(prev => prev.map(conv => 
+                conv.id === messageConversationId 
+                  ? { ...conv, unread_count: (conv.unread_count || 0) + 1 }
+                  : conv
+              ))
+            }
           }
         }
       })
@@ -332,6 +343,13 @@ export function useChat() {
       // Add to UI immediately (optimistic update)
       setMessages(prev => [...prev, tempMessage])
       console.log('Message added to UI (optimistic update)')
+      
+      // Reset unread count for current conversation since user is actively chatting
+      setConversations(prev => prev.map(conv => 
+        conv.id === conversationId 
+          ? { ...conv, unread_count: 0 }
+          : conv
+      ))
       
       // Send via WebSocket
       try {
@@ -499,6 +517,38 @@ export function useChat() {
     }
   }, [currentUser])
 
+  // Load unread counts
+  const loadUnreadCounts = useCallback(async () => {
+    try {
+      const unreadCounts = await unreadService.getUnreadCounts()
+      // Update conversations with unread counts
+      setConversations(prev => prev.map(conv => {
+        const unreadData = unreadCounts.find(uc => uc.conversation_id === conv.id)
+        return {
+          ...conv,
+          unread_count: unreadData?.unread_count || 0
+        }
+      }))
+    } catch (error) {
+      console.error('Failed to load unread counts:', error)
+    }
+  }, [])
+
+  // Wrapper for setCurrentConversation that also resets unread count
+  const handleSelectConversation = useCallback(async (conversation: Conversation) => {
+    setCurrentConversation(conversation)
+    
+    // Mark conversation as read on server
+    await unreadService.markConversationAsRead(conversation.id)
+    
+    // Reset unread count in local state
+    setConversations(prev => prev.map(conv => 
+      conv.id === conversation.id 
+        ? { ...conv, unread_count: 0 }
+        : conv
+    ))
+  }, [])
+
   // Initialize chat data
   useEffect(() => {
     loadCurrentUser()
@@ -506,6 +556,13 @@ export function useChat() {
     loadConversations()
     loadOnlineUsers()
   }, [loadCurrentUser, loadTeams, loadConversations, loadOnlineUsers])
+
+  // Load unread counts after conversations are loaded
+  useEffect(() => {
+    if (conversations.length > 0) {
+      loadUnreadCounts()
+    }
+  }, [conversations.length, loadUnreadCounts])
 
   return {
     // State
@@ -521,6 +578,7 @@ export function useChat() {
     
     // Actions
     setCurrentConversation,
+    handleSelectConversation,
     loadTeams,
     loadChannels,
     loadConversations,
@@ -533,6 +591,7 @@ export function useChat() {
     bookmarkMessage,
     removeBookmark,
     updateUserStatus,
+    loadUnreadCounts,
     
     // Utils
     setError,

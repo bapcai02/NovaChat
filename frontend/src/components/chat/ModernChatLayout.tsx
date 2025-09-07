@@ -25,6 +25,7 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
     isLoading,
     error,
     setCurrentConversation,
+    handleSelectConversation,
     loadMessages,
     sendMessage,
     addReaction,
@@ -32,6 +33,7 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
     bookmarkMessage,
     removeBookmark,
     updateUserStatus,
+    loadUnreadCounts,
   } = useChat()
 
   const [showThread, setShowThread] = useState(false)
@@ -216,7 +218,7 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
           teams={teams}
           conversations={conversations}
           currentConversation={currentConversation}
-          onSelectConversation={setCurrentConversation}
+          onSelectConversation={handleSelectConversation}
           currentUser={currentUser}
         />
       </motion.div>

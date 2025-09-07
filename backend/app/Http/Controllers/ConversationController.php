@@ -56,7 +56,7 @@ class ConversationController extends Controller
         }, 'Conversation created', 'Failed to create conversation');
     }
 
-    public function show(Request $request, int $conversationId): JsonResponse
+    public function show(Request $request, string $conversationId): JsonResponse
     {
         $user = Auth::user();
         if (!$user) {
@@ -104,7 +104,7 @@ class ConversationController extends Controller
         }, 'Messages retrieved', 'Failed to retrieve messages');
     }
 
-    public function addMember(AddMemberRequest $request, int $conversationId): JsonResponse
+    public function addMember(AddMemberRequest $request, string $conversationId): JsonResponse
     {
         $user = Auth::user();
         if (!$user) {
@@ -127,7 +127,7 @@ class ConversationController extends Controller
         }, 'Member added', 'Failed to add member');
     }
 
-    public function removeMember(Request $request, int $conversationId, int $userId): JsonResponse
+    public function removeMember(Request $request, string $conversationId, string $userId): JsonResponse
     {
         $user = Auth::user();
         if (!$user) {

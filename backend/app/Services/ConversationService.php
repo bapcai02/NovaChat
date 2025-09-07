@@ -36,10 +36,10 @@ class ConversationService
         }
     }
 
-    public function getConversation(int $conversationId, int $userId): array
+    public function getConversation(string $conversationId, int $userId): array
     {
         try {
-            $conversation = $this->conversations->findById($conversationId);
+            $conversation = $this->conversations->findById((int)$conversationId);
             if (!$conversation) {
                 return ['success' => false, 'message' => 'Conversation not found'];
             }
@@ -57,16 +57,16 @@ class ConversationService
         }
     }
 
-    public function getConversationMessages(int $conversationId, int $userId, int $limit = 50, ?int $beforeId = null): array
+    public function getConversationMessages(string $conversationId, int $userId, int $limit = 50, ?int $beforeId = null): array
     {
         try {
             // Check if user is member
-            $isMember = $this->conversations->isMember($conversationId, $userId);
+            $isMember = $this->conversations->isMember((int)$conversationId, $userId);
             if (!$isMember) {
                 return ['success' => false, 'message' => 'Access denied'];
             }
 
-            $messages = $this->conversations->getMessages($conversationId, $limit, $beforeId, $userId);
+            $messages = $this->conversations->getMessages((int)$conversationId, $limit, $beforeId, $userId);
             return ['success' => true, 'data' => $messages];
         } catch (\Throwable $e) {
             Log::error('ConversationService@getConversationMessages failed: ' . $e->getMessage());
@@ -74,16 +74,16 @@ class ConversationService
         }
     }
 
-    public function addMember(int $conversationId, int $userId, int $requesterId): array
+    public function addMember(string $conversationId, int $userId, int $requesterId): array
     {
         try {
             // Check if requester has permission
-            $canManage = $this->conversations->canManageMembers($conversationId, $requesterId);
+            $canManage = $this->conversations->canManageMembers((int)$conversationId, $requesterId);
             if (!$canManage) {
                 return ['success' => false, 'message' => 'Permission denied'];
             }
 
-            $result = $this->conversations->addMember($conversationId, $userId);
+            $result = $this->conversations->addMember((int)$conversationId, $userId);
             return ['success' => $result, 'message' => $result ? 'Member added successfully' : 'Failed to add member'];
         } catch (\Throwable $e) {
             Log::error('ConversationService@addMember failed: ' . $e->getMessage());
@@ -91,16 +91,16 @@ class ConversationService
         }
     }
 
-    public function removeMember(int $conversationId, int $userId, int $requesterId): array
+    public function removeMember(string $conversationId, int $userId, int $requesterId): array
     {
         try {
             // Check if requester has permission
-            $canManage = $this->conversations->canManageMembers($conversationId, $requesterId);
+            $canManage = $this->conversations->canManageMembers((int)$conversationId, $requesterId);
             if (!$canManage) {
                 return ['success' => false, 'message' => 'Permission denied'];
             }
 
-            $result = $this->conversations->removeMember($conversationId, $userId);
+            $result = $this->conversations->removeMember((int)$conversationId, $userId);
             return ['success' => $result, 'message' => $result ? 'Member removed successfully' : 'Failed to remove member'];
         } catch (\Throwable $e) {
             Log::error('ConversationService@removeMember failed: ' . $e->getMessage());

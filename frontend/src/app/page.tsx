@@ -2,12 +2,12 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAppSelector } from '@/hooks/useAppSelector'
+import { useAuth } from '@/contexts/AuthContext'
 import { AuthGuard } from '@/components/auth/AuthGuard'
 
 export default function Home() {
   const router = useRouter()
-  const { isAuthenticated, isLoading } = useAppSelector((state) => state.auth)
+  const { isAuthenticated, isLoading } = useAuth()
 
   useEffect(() => {
     if (!isLoading) {
