@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { apiService } from '@/services/api'
 import { unreadService } from '@/services/unreadService'
 import { getWebSocketClient, WebSocketMessage } from '@/lib/websocket'
-import type { User, Team, Channel, Conversation, Message, MessageReaction, Bookmark } from '@/types/chat'
+import type { User, Team, Channel, Conversation, Message} from '@/types/chat'
 
 export function useChat() {
   const [currentUser, setCurrentUser] = useState<User | null>(null)
@@ -14,6 +14,8 @@ export function useChat() {
   const [onlineUsers, setOnlineUsers] = useState<User[]>([])
   const [conversationUsers, setConversationUsers] = useState<User[]>([])
   const conversationUsersRef = useRef<User[]>([])
+  // Track optimistic message IDs (avoid extending Message type)
+  const optimisticIdsRef = useRef<Set<number>>(new Set())
   const [onlineUserIds, setOnlineUserIds] = useState<Set<number>>(new Set())
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -23,9 +25,8 @@ export function useChat() {
   const loadCurrentUser = useCallback(async () => {
     try {
       setIsLoading(true)
-      const response = await apiService.getCurrentUser()
-      // API returns nested data: response.data.data
-      const userData = response.data?.data || response.data
+      const res: any = await apiService.getCurrentUser()
+      const userData = res?.data?.data ?? res?.data ?? res
       setCurrentUser(userData)
     } catch (err) {
       setError('Failed to load user data')
@@ -39,9 +40,8 @@ export function useChat() {
   const loadTeams = useCallback(async () => {
     try {
       setIsLoading(true)
-      const response = await apiService.getTeams()
-      // API returns nested data: response.data.data
-      const teamsData = response.data?.data || response.data
+      const res: any = await apiService.getTeams()
+      const teamsData = res?.data?.data ?? res?.data ?? res
       setTeams(Array.isArray(teamsData) ? teamsData : [])
     } catch (err) {
       setError('Failed to load teams')
@@ -56,9 +56,8 @@ export function useChat() {
   const loadChannels = useCallback(async (teamId: number) => {
     try {
       setIsLoading(true)
-      const response = await apiService.getChannels(teamId.toString())
-      // API returns nested data: response.data.data
-      const channelsData = response.data?.data || response.data
+      const res: any = await apiService.getChannels(teamId.toString())
+      const channelsData = res?.data?.data ?? res?.data ?? res
       setChannels(Array.isArray(channelsData) ? channelsData : [])
     } catch (err) {
       setError('Failed to load channels')
@@ -73,9 +72,8 @@ export function useChat() {
   const loadConversations = useCallback(async () => {
     try {
       setIsLoading(true)
-      const response = await apiService.getConversations()
-      // API returns nested data: response.data.data
-      const conversationsData = response.data?.data || response.data
+      const res: any = await apiService.getConversations()
+      const conversationsData = res?.data?.data ?? res?.data ?? res
       const conversations = Array.isArray(conversationsData) ? conversationsData : []
       setConversations(conversations)
       
@@ -93,9 +91,8 @@ export function useChat() {
   const loadMessages = useCallback(async (conversationId: number, page: number = 1) => {
     try {
       setIsLoading(true)
-      const response = await apiService.getMessages(conversationId.toString(), page)
-      // API returns nested data: response.data.data
-      const responseData = response.data?.data || response.data
+      const res: any = await apiService.getMessages(conversationId.toString(), page)
+      const responseData = res?.data?.data ?? res?.data ?? res
       const messagesArray = Array.isArray(responseData?.messages) ? responseData.messages : (Array.isArray(responseData) ? responseData : [])
       const usersArray = Array.isArray(responseData?.users) ? responseData.users : []
       
@@ -148,16 +145,11 @@ export function useChat() {
       wsClient.onMessage(async (message: WebSocketMessage) => {
         
         if (message.type === 'chat_message' || message.type === 'message_received') {
-          // Get sender info from message (sent by WebSocket Gateway)
           const senderId = parseInt(message.sender_id?.toString() || '0')
-          
-          // Try to find sender in current conversation members first
           let sender = null
           if (currentConversation?.members) {
             sender = currentConversation.members.find(member => member.id === senderId)
           }
-          
-          // If not found in members, try to find in conversation users (from messages)
           if (!sender) {
             sender = conversationUsersRef.current.find(user => user.id === senderId)
           }
@@ -209,26 +201,25 @@ export function useChat() {
           
           // If it's from current user, replace optimistic update
           if (parseInt(message.sender_id?.toString() || '0') === currentUser?.id) {
-            setMessages(prev => {
-              // Find and remove optimistic message
-              const filteredMessages = prev.filter(msg => 
-                !(msg.is_optimistic && 
-                  msg.user_id === parseInt(message.sender_id?.toString() || '0') && 
-                  msg.content === message.content)
-              )
-              
+            setMessages((prev: any) => {
+              // Find and remove optimistic message by id/content/sender via Set
+              const filteredMessages = prev.filter((msg: any) => {
+                const isOptimistic = optimisticIdsRef.current.has(msg.id)
+                const sameSender = msg.user_id === parseInt(message.sender_id?.toString() || '0')
+                const sameContent = msg.content === (message.content || '')
+                const shouldRemove = isOptimistic && sameSender && sameContent
+                if (shouldRemove) optimisticIdsRef.current.delete(msg.id)
+                return !shouldRemove
+              })
               // Add real message
               return [...filteredMessages, newMessage]
             })
           } else {
-            
-            // Get message conversation ID
             const messageConversationId = parseInt(message.conversation_id?.toString() || '0')
-            
             // Add new message from other users, but check for duplicates first
-            setMessages(prev => {
+            setMessages((prev: any) => {
               // Check if message already exists (by content and timestamp)
-              const exists = prev.some(msg => 
+              const exists = prev.some((msg: any) => 
                 msg.content === newMessage.content && 
                 msg.user_id === newMessage.user_id &&
                 Math.abs(new Date(msg.created_at).getTime() - new Date(newMessage.created_at).getTime()) < 1000 // Within 1 second
@@ -269,8 +260,9 @@ export function useChat() {
       const wsClient = getWebSocketClient()
       
       // Create message object for immediate UI update
+      const tempId = Date.now()
       const tempMessage = {
-        id: Date.now(), // Temporary ID
+        id: tempId, // Temporary ID
         conversation_id: conversationId,
         user_id: currentUser?.id || 0,
         content: content,
@@ -289,7 +281,8 @@ export function useChat() {
       }
       
       // Add to UI immediately (optimistic update)
-      setMessages(prev => [...prev, tempMessage])
+      setMessages((prev: any) => [...prev, tempMessage])
+      optimisticIdsRef.current.add(tempId)
       
       // Reset unread count for current conversation since user is actively chatting
       setConversations(prev => prev.map(conv => 
@@ -330,9 +323,8 @@ export function useChat() {
   // Load online users
   const loadOnlineUsers = useCallback(async () => {
     try {
-      const response = await apiService.getOnlineUsers()
-      // API returns nested data: response.data.data
-      const usersData = response.data?.data || response.data
+      const res: any = await apiService.getOnlineUsers()
+      const usersData = res?.data?.data ?? res?.data ?? res
       setOnlineUsers(Array.isArray(usersData) ? usersData : [])
     } catch (err) {
       console.error('Error loading online users:', err)
@@ -357,9 +349,8 @@ export function useChat() {
       
       if (allUserIds.size === 0) return
       
-      const response = await apiService.getUsersStatus(Array.from(allUserIds))
-      
-      const userStatuses = response.data?.data || []
+      const res: any = await apiService.getUsersStatus(Array.from(allUserIds))
+      const userStatuses = res?.data?.data ?? []
       
       // Create a map of user_id -> is_online
       const onlineUserIds = new Set<number>()
@@ -378,8 +369,8 @@ export function useChat() {
   // Search messages
   const searchMessages = useCallback(async (query: string, conversationId?: number) => {
     try {
-      const response = await apiService.searchMessages(query, conversationId?.toString())
-      return response.data
+      const res: any = await apiService.searchMessages(query, conversationId?.toString())
+      return res?.data
     } catch (err) {
       setError('Failed to search messages')
       console.error('Error searching messages:', err)
@@ -390,7 +381,7 @@ export function useChat() {
   // Add reaction
   const addReaction = useCallback(async (messageId: number, emoji: string) => {
     try {
-      await apiService.addReaction(messageId.toString(), emoji)
+      await apiService.addReaction(messageId.toString(), emoji as any)
       // Update local state
       setMessages(prev => prev.map(msg => 
         msg.id === messageId 
@@ -429,7 +420,7 @@ export function useChat() {
   // Remove reaction
   const removeReaction = useCallback(async (messageId: number, emoji: string) => {
     try {
-      await apiService.removeReaction(messageId.toString(), emoji)
+      await apiService.removeReaction(messageId.toString(), emoji as any)
       // Update local state
       setMessages(prev => prev.map(msg => 
         msg.id === messageId 
@@ -497,10 +488,10 @@ export function useChat() {
   // Load unread counts
   const loadUnreadCounts = useCallback(async () => {
     try {
-      const unreadCounts = await unreadService.getUnreadCounts()
+      const unreadCounts: any = await unreadService.getUnreadCounts()
       // Update conversations with unread counts
       setConversations(prev => prev.map(conv => {
-        const unreadData = unreadCounts.find(uc => uc.conversation_id === conv.id)
+        const unreadData = unreadCounts.find((uc: any) => uc.conversation_id === conv.id)
         return {
           ...conv,
           unread_count: unreadData?.unread_count || 0
@@ -515,8 +506,8 @@ export function useChat() {
   const handleSelectConversation = useCallback(async (conversation: Conversation) => {
     // Load full conversation details with members
     try {
-      const response = await apiService.getConversation(conversation.id.toString())
-      const fullConversation = response.data?.data || response.data
+      const res: any = await apiService.getConversation(conversation.id.toString())
+      const fullConversation = res?.data?.data ?? res?.data ?? res
       setCurrentConversation(fullConversation)
     } catch (error) {
       console.error('Failed to load conversation details:', error)

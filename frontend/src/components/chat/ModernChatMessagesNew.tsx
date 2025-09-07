@@ -2,7 +2,7 @@
 
 import React, { useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { MessageCircle, Star, StarOff, Smile, MoreHorizontal } from 'lucide-react'
+import { MessageCircle, Star } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { cn } from '@/lib/utils'
@@ -38,14 +38,9 @@ const MessageBubble = ({
   onBookmark, 
   onRemoveBookmark 
 }: MessageBubbleProps) => {
-  // Check multiple possible user ID fields and handle type conversion
   const messageUserId = message.user_id || message.sender?.id || message.user?.id
   const currentUserId = currentUser?.id
-  
-  // Convert to same type for comparison
   const isOwn = String(currentUserId) === String(messageUserId)
-  
-  // TEST: Force first message to be own message for testing
   const testIsOwn = isOwn
   const sender = message.sender || message.user || { name: 'Unknown', avatar: undefined }
   
@@ -127,7 +122,7 @@ const MessageBubble = ({
           
 
           {/* Message actions - shown on hover */}
-                <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1 bg-white border border-gray-300 rounded-lg px-3 py-2 shadow-lg z-10 pointer-events-none group-hover:pointer-events-auto">
+          <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1 bg-white border border-gray-300 rounded-lg px-3 py-2 shadow-lg z-10 pointer-events-none group-hover:pointer-events-auto">
             <Button
               variant="ghost"
               size="sm"

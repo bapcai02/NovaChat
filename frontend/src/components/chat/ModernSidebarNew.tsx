@@ -2,25 +2,7 @@
 
 import React, { useState, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { 
-  Search, 
-  Settings, 
-  Hash, 
-  Users, 
-  MessageCircle,
-  Bell,
-  Grid3X3,
-  Maximize2,
-  HelpCircle,
-  Building2,
-  Briefcase,
-  Users2,
-  Shield,
-  Zap,
-  Heart,
-  Target,
-  Rocket
-} from 'lucide-react'
+import { Search, Hash, Users, MessageCircle, Bell, HelpCircle, Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -28,7 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { UserSearchDropdown } from '@/components/ui/user-search-dropdown'
 import { cn } from '@/lib/utils'
-import type { User, Team, Channel, Conversation } from '@/types/chat'
+import type { User, Team, Conversation } from '@/types/chat'
 import { UserSearchResult } from '@/services/userSearchService'
 import UserOnlineStatus from './UserOnlineStatus'
 import { LogoutButton } from '@/components/auth/LogoutButton'
@@ -55,11 +37,10 @@ export default function ModernSidebar({
   const searchInputRef = useRef<HTMLInputElement>(null)
 
   // Get team icon based on team name or index
-  const getTeamIcon = (teamName: string, index: number) => {
-    const icons = [Building2, Briefcase, Users2, Shield, Zap, Heart, Target, Rocket]
-    const iconIndex = index % icons.length
-    const IconComponent = icons[iconIndex]
-    return <IconComponent className="h-4 w-4 text-white" />
+  const getTeamIcon = (teamName: string) => {
+    const name = teamName.toLowerCase()
+    if (name.includes('dev') || name.includes('development')) return <Users className="h-4 w-4 text-white" />
+    return <Hash className="h-4 w-4 text-white" />
   }
 
   // Get team gradient based on index
@@ -81,12 +62,10 @@ export default function ModernSidebar({
   const getChannelIcon = (channelName: string) => {
     const name = channelName.toLowerCase()
     if (name.includes('general') || name.includes('main')) return <Hash className="h-4 w-4 text-gray-600" />
-    if (name.includes('random') || name.includes('fun')) return <Zap className="h-4 w-4 text-gray-600" />
+    if (name.includes('random') || name.includes('fun')) return <MessageCircle className="h-4 w-4 text-gray-600" />
     if (name.includes('announce') || name.includes('news')) return <Bell className="h-4 w-4 text-gray-600" />
     if (name.includes('help') || name.includes('support')) return <HelpCircle className="h-4 w-4 text-gray-600" />
-    if (name.includes('dev') || name.includes('development')) return <Rocket className="h-4 w-4 text-gray-600" />
-    if (name.includes('design') || name.includes('creative')) return <Heart className="h-4 w-4 text-gray-600" />
-    if (name.includes('marketing') || name.includes('sales')) return <Target className="h-4 w-4 text-gray-600" />
+    if (name.includes('dev') || name.includes('development')) return <Users className="h-4 w-4 text-gray-600" />
     return <Hash className="h-4 w-4 text-gray-600" />
   }
 
@@ -102,16 +81,27 @@ export default function ModernSidebar({
   const handleUserSelect = (user: UserSearchResult) => {
     // Create a direct conversation with the selected user
     const directConversation: Conversation = {
-      id: `user-${user.id}`,
+      id: user.id,
       type: 'direct',
       title: user.name,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
       other_member: {
         id: user.id,
         name: user.name,
-        avatar: user.avatar,
+        email: (user as any).email || '',
+        username: (user as any).username ? String((user as any).username) : `user${user.id}`,
+        avatar: user.avatar || undefined,
         is_online: user.status === 'online'
-      },
-      members: [user as User],
+      } as unknown as User,
+      members: [{
+        id: user.id,
+        name: user.name,
+        email: (user as any).email || '',
+        username: (user as any).username ? String((user as any).username) : `user${user.id}`,
+        avatar: user.avatar || undefined,
+        is_online: user.status === 'online'
+      } as unknown as User],
       unread_count: 0
     }
     
@@ -233,7 +223,7 @@ export default function ModernSidebar({
                 >
                   <div className="flex items-center space-x-2">
                     <div className={cn("h-8 w-8 flex items-center justify-center bg-gradient-to-br rounded-lg", getTeamGradient(index))}>
-                      {getTeamIcon(team.name, index)}
+                      {getTeamIcon(team.name)}
                     </div>
                     <div>
                       <span className="text-sm font-medium text-gray-800 group-hover:text-blue-600">{team.name}</span>
@@ -268,7 +258,7 @@ export default function ModernSidebar({
                 >
                   <div className="flex items-center space-x-2">
                     <div className="h-8 w-8 flex items-center justify-center bg-gray-100 rounded-lg">
-                      {getChannelIcon(conversation.title)}
+                      {getChannelIcon(conversation.title || '')}
                     </div>
                     <div>
                       <span className="text-sm font-medium text-gray-800 group-hover:text-blue-600">{conversation.title}</span>

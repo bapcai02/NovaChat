@@ -185,7 +185,8 @@ class NovaChatWebSocket implements WebSocketClient {
     this.send(message);
   }
 
-  private send(message: WebSocketMessage): void {
+  // Expose send via public method for controlled usage
+  public send(message: WebSocketMessage): void {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify(message));
     } else {

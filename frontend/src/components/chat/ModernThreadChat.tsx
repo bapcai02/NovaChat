@@ -8,13 +8,10 @@ import {
   Reply, 
   Heart, 
   Smile, 
-  Download, 
   Trash2, 
   Edit3,
   Copy,
   Flag,
-  Pin,
-  Send,
   Paperclip,
   Image,
   X,
@@ -22,7 +19,6 @@ import {
 } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
 import { 
   DropdownMenu,
@@ -31,7 +27,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { cn } from '@/lib/utils'
 import EmojiPicker from 'emoji-picker-react'
 import { apiService } from '@/services/api'
 
@@ -83,12 +78,10 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
     const loadThreadMessages = async () => {
       try {
         setIsLoading(true)
-        console.log('Loading thread messages for message ID:', parentMessage.id)
         const response = await apiService.getThreadMessages(parentMessage.id)
-        console.log('Thread API response:', response)
-        
+        const raw = (response as any)?.data ?? []
         // Transform API response to ThreadMessage format
-        const threadMessages: ThreadMessage[] = response.data?.map((msg: any) => ({
+        const threadMessages: ThreadMessage[] = raw.map((msg: any) => ({
           id: msg.id.toString(),
           content: msg.content,
           sender: {
@@ -102,9 +95,8 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
           isEdited: msg.is_edited || false,
           reactions: msg.reactions || [],
           attachments: msg.attachments || []
-        })) || []
+        }))
         
-        console.log('Transformed thread messages:', threadMessages)
         setMessages(threadMessages)
       } catch (error) {
         console.error('Error loading thread messages:', error)
@@ -144,18 +136,18 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
     if (newMessage.trim() || attachments.length > 0) {
       try {
         const response = await apiService.sendThreadMessage(parentMessage.id, newMessage.trim())
-        
+        const data = (response as any)?.data ?? {}
         // Add the new message to the list
         const newMessageData: ThreadMessage = {
-          id: response.data.id.toString(),
-          content: response.data.content,
+          id: (data.id ?? Date.now()).toString(),
+          content: data.content ?? newMessage.trim(),
           sender: {
-            id: response.data.user_id?.toString() || 'current-user',
+            id: data.user_id?.toString() || 'current-user',
             name: 'You',
             avatar: 'https://ui-avatars.com/api/?name=You&background=random',
             isOnline: true
           },
-          timestamp: new Date(response.data.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          timestamp: new Date(data.created_at ?? Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           isOwn: true
         }
         
@@ -528,7 +520,7 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
                   showPreview: false
                 }}
                 searchPlaceHolder="Search emojis..."
-                theme="light"
+                theme={undefined}
               />
             </motion.div>
           )}
