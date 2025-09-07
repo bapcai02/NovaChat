@@ -139,6 +139,71 @@ export default function ModernChatHeader({
 
       {/* Right side - Actions */}
       <div className="flex items-center gap-1">
+        {/* Search */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => { setIsSearchOpen(true); onSearch && onSearch(); }}
+          className="h-8 w-8 p-0 hover:bg-gray-100 rounded-full"
+          aria-label="Search in conversation"
+        >
+          <Search className="h-4 w-4" />
+        </Button>
+
+        {/* Voice Call */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onCall}
+          className="h-8 w-8 p-0 hover:bg-gray-100 rounded-full"
+          aria-label="Start voice call"
+        >
+          <Phone className="h-4 w-4" />
+        </Button>
+
+        {/* Video Call */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onVideoCall}
+          className="h-8 w-8 p-0 hover:bg-gray-100 rounded-full"
+          aria-label="Start video call"
+        >
+          <Video className="h-4 w-4" />
+        </Button>
+
+        {/* View Members (for group/channel) */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onViewMembers}
+          className="h-8 w-8 p-0 hover:bg-gray-100 rounded-full"
+          aria-label="View members"
+        >
+          <Users className="h-4 w-4" />
+        </Button>
+
+        {/* Toggle Mute */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onToggleMute}
+          className="h-8 w-8 p-0 hover:bg-gray-100 rounded-full"
+          aria-label={isMuted ? 'Unmute conversation' : 'Mute conversation'}
+        >
+          {isMuted ? <BellOff className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
+        </Button>
+
+        {/* Toggle Pin */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onTogglePin}
+          className="h-8 w-8 p-0 hover:bg-gray-100 rounded-full"
+          aria-label={isPinned ? 'Unpin conversation' : 'Pin conversation'}
+        >
+          <Pin className="h-4 w-4" />
+        </Button>
         {/* Information button */}
         <Button
           variant="ghost"
@@ -180,26 +245,34 @@ export default function ModernChatHeader({
         </DropdownMenu>
       </div>
 
-      {/* Search overlay */}
+      {/* Search overlay (floating, centered at top) */}
       {isSearchOpen && (
         <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          className="absolute top-full left-0 right-0 p-4 bg-card border-b border-border shadow-lg z-50"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50"
+          aria-modal="true"
+          role="dialog"
+          onClick={() => setIsSearchOpen(false)}
         >
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search messages..."
-              className="pl-10 focus:ring-1 focus:ring-blue-400 focus:border-blue-400 focus:outline-none transition-all duration-200"
-              style={{
-                border: '1px solid #e5e7eb',
-                boxShadow: 'none'
-              }}
-              autoFocus
-              onBlur={() => setIsSearchOpen(false)}
-            />
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/30" />
+
+          {/* Panel */}
+          <div className="absolute left-1/2 -translate-x-1/2 mt-6 w-[92%] max-w-2xl">
+            <div className="rounded-xl bg-white shadow-2xl ring-1 ring-black/5 p-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Search messages..."
+                  className="pl-10 h-11 text-sm border border-gray-200 focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                  autoFocus
+                  onClick={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => { if (e.key === 'Escape') setIsSearchOpen(false) }}
+                />
+              </div>
+            </div>
           </div>
         </motion.div>
       )}

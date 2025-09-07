@@ -264,14 +264,9 @@ export function useChat() {
   // Send message via WebSocket
   const sendMessage = useCallback(async (conversationId: number, content: string, type: string = 'text') => {
     try {
-      console.log('=== sendMessage called ===')
-      console.log('Conversation ID:', conversationId)
-      console.log('Content:', content)
-      console.log('Type:', type)
-      console.log('Current user:', currentUser)
+      
       
       const wsClient = getWebSocketClient()
-      console.log('WebSocket client for sending:', wsClient)
       
       // Create message object for immediate UI update
       const tempMessage = {
@@ -293,11 +288,8 @@ export function useChat() {
         is_optimistic: true // Flag for optimistic update
       }
       
-      console.log('Temp message created:', tempMessage)
-      
       // Add to UI immediately (optimistic update)
       setMessages(prev => [...prev, tempMessage])
-      console.log('Message added to UI (optimistic update)')
       
       // Reset unread count for current conversation since user is actively chatting
       setConversations(prev => prev.map(conv => 
@@ -308,12 +300,7 @@ export function useChat() {
       
       // Send via WebSocket
       try {
-        console.log('Attempting to send message via WebSocket:', {
-          conversationId,
-          content,
-          type,
-          senderId: currentUser?.id
-        })
+        
         
         // Connect if not already connected
         if (wsClient.getConnectionState() !== 'connected') {
@@ -325,13 +312,13 @@ export function useChat() {
         
         // Send message
         wsClient.sendMessage(conversationId, currentUser?.id || 0, content, currentUser?.name, currentUser?.avatar)
-        console.log('Message sent via WebSocket')
+        
         
       } catch (error) {
         console.error('Failed to send message via WebSocket:', error)
       }
       
-      console.log('sendMessage completed successfully')
+      
       return tempMessage
     } catch (err) {
       setError('Failed to send message')
@@ -373,7 +360,6 @@ export function useChat() {
       const response = await apiService.getUsersStatus(Array.from(allUserIds))
       
       const userStatuses = response.data?.data || []
-      console.log('=== Loaded user statuses ===', userStatuses)
       
       // Create a map of user_id -> is_online
       const onlineUserIds = new Set<number>()
@@ -566,12 +552,10 @@ export function useChat() {
       const checkConnection = () => {
         if (wsClient.isConnected()) {
           wsClient.subscribeAllConversations(currentUser.id, conversationIds)
-          console.log(`Subscribed to ${conversationIds.length} conversations:`, conversationIds)
           
           // Set user online only once, with a small delay
           if (!userOnlineSet) {
             setTimeout(() => {
-              console.log('=== Setting user online in subscribeToAllConversations ===', currentUser.id)
               wsClient.setUserOnline(currentUser.id)
               setUserOnlineSet(true)
             }, 1000) // 1 second delay
@@ -620,7 +604,6 @@ export function useChat() {
   // Auto-select first conversation if none is selected
   useEffect(() => {
     if (conversations.length > 0 && !currentConversation) {
-      console.log('Auto-selecting first conversation:', conversations[0].id)
       handleSelectConversation(conversations[0])
     }
   }, [conversations, currentConversation, handleSelectConversation])

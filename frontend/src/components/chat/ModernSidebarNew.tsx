@@ -133,10 +133,12 @@ export default function ModernSidebar({
     }, 150)
   }
 
+  const [showNotifications, setShowNotifications] = useState(false)
+
   return (
     <div className="w-full h-full bg-white border-r border-gray-200 flex flex-col">
       {/* Top Navigation Bar */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-100">
+      <div className="flex items-center justify-between p-4 border-b border-gray-100 relative">
         <div className="flex flex-col items-center gap-1">
           <div className="relative">
             <div className="h-10 w-10 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
@@ -152,22 +154,36 @@ export default function ModernSidebar({
           <span className="text-xs font-semibold text-gray-600">Nova</span>
         </div>
         <div className="flex items-center space-x-2">
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-gray-100 text-gray-600 hover:text-gray-800">
-            <Grid3X3 className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-gray-100 text-gray-600 hover:text-gray-800">
-            <Maximize2 className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-gray-100 text-gray-600 hover:text-gray-800">
-            <Grid3X3 className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-gray-100 text-gray-600 hover:text-gray-800">
-            <HelpCircle className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-gray-100 text-gray-600 hover:text-gray-800">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0 hover:bg-gray-100 text-gray-600 hover:text-gray-800"
+            aria-label="Notifications"
+            onClick={() => setShowNotifications(v => !v)}
+          >
             <Bell className="h-4 w-4" />
           </Button>
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0 hover:bg-gray-100 text-gray-600 hover:text-gray-800"
+            aria-label="Help"
+          >
+            <a href="https://example.com/help" target="_blank" rel="noreferrer">
+              <HelpCircle className="h-4 w-4" />
+            </a>
+          </Button>
         </div>
+
+        {showNotifications && (
+          <div className="absolute right-4 top-14 w-72 bg-white border border-gray-100 shadow-xl rounded-md overflow-hidden z-20">
+            <div className="px-3 py-2 border-b text-sm font-semibold">Notifications</div>
+            <div className="max-h-64 overflow-auto divide-y">
+              <div className="px-3 py-2 text-sm text-gray-600">No notifications</div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Search */}

@@ -7,10 +7,7 @@ const { v4: uuidv4 } = require('uuid');
 const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
 
 // Logging function (console only)
-const log = (message, data = null) => {
-  const timestamp = new Date().toISOString();
-  console.log(`[${timestamp}] ${message}`, data || '');
-};
+const log = (message, data = null) => {};
 
 // WebSocket server
 const wss = new WebSocket.Server({ port: 7000 });

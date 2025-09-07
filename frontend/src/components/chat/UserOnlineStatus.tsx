@@ -12,8 +12,7 @@ export const UserOnlineStatus: React.FC<UserOnlineStatusProps> = ({
   isOnline, 
   className 
 }) => {
-  // Debug log
-  console.log(`=== UserOnlineStatus userId: ${userId}, isOnline: ${isOnline} ===`)
+  
   
   return (
     <div className={cn("relative", className)}>

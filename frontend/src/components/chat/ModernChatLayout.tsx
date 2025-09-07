@@ -41,6 +41,9 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
 
   const [showThread, setShowThread] = useState(false)
   const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false)
+  const [rightSidebarMode, setRightSidebarMode] = useState<'members' | 'settings' | 'call' | 'video' | null>(null)
+  const [isMuted, setIsMuted] = useState(false)
+  const [isPinned, setIsPinned] = useState(false)
   const [threadMessage, setThreadMessage] = useState<{
     id: string
     content: string
@@ -123,35 +126,39 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
   }
 
   const handleSearch = () => {
-    // TODO: Implement search
+    // Search overlay handled in header; no-op hook for now
   }
 
   const handleCall = () => {
-    // TODO: Implement call
+    setRightSidebarMode('call')
+    setIsRightSidebarOpen(true)
   }
 
   const handleVideoCall = () => {
-    // TODO: Implement video call
+    setRightSidebarMode('video')
+    setIsRightSidebarOpen(true)
   }
 
   const handleViewMembers = () => {
-    // TODO: Implement view members
+    setRightSidebarMode('members')
+    setIsRightSidebarOpen(true)
   }
 
   const handleToggleMute = () => {
-    // TODO: Implement mute toggle
+    setIsMuted(prev => !prev)
   }
 
   const handleTogglePin = () => {
-    // TODO: Implement pin toggle
+    setIsPinned(prev => !prev)
   }
 
   const handleSettings = () => {
-    // TODO: Implement settings
+    setRightSidebarMode('settings')
+    setIsRightSidebarOpen(true)
   }
 
   const handleToggleRightSidebar = () => {
-    setIsRightSidebarOpen(!isRightSidebarOpen)
+    setIsRightSidebarOpen(prev => !prev)
   }
 
   const handleOpenThread = (message: { id: string; content: string; sender: string; timestamp: string }) => {
@@ -248,8 +255,8 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
             isOnline={true}
             lastSeen="now"
             avatar={getConversationAvatar(currentConversation)}
-            isMuted={false}
-            isPinned={false}
+            isMuted={isMuted}
+            isPinned={isPinned}
             onSearch={handleSearch}
             onCall={handleCall}
             onVideoCall={handleVideoCall}
@@ -296,6 +303,93 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
           />
         </motion.div>
       </div>
+
+      {/* Right Sidebar (dynamic content) */}
+      <AnimatePresence>
+        {isRightSidebarOpen && (
+          <motion.aside
+            initial={{ x: 320, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 320, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="w-80 border-l border-gray-100 bg-white flex-shrink-0 flex flex-col"
+          >
+            <div className="flex items-center justify-between px-4 py-3 border-b">
+              <h3 className="text-sm font-semibold">
+                {rightSidebarMode === 'members' && 'Members'}
+                {rightSidebarMode === 'settings' && 'Conversation Settings'}
+                {rightSidebarMode === 'call' && 'Voice Call'}
+                {rightSidebarMode === 'video' && 'Video Call'}
+              </h3>
+              <button
+                onClick={() => setIsRightSidebarOpen(false)}
+                className="text-gray-500 hover:text-gray-700 text-sm"
+                aria-label="Close sidebar"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="p-4 overflow-auto flex-1">
+              {rightSidebarMode === 'members' && (
+                <div className="space-y-3">
+                  {(currentConversation?.members || []).map((m: any) => (
+                    <div key={m.id} className="flex items-center gap-3">
+                      <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center text-xs font-semibold">
+                        {(m.name || m.username || 'U').toString().charAt(0)}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-medium truncate">{m.name || m.username}</div>
+                        <div className="text-xs text-gray-500 truncate">@{m.username}</div>
+                      </div>
+                    </div>
+                  ))}
+                  {(!currentConversation?.members || currentConversation.members.length === 0) && (
+                    <div className="text-sm text-gray-500">No members</div>
+                  )}
+                </div>
+              )}
+
+              {rightSidebarMode === 'settings' && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Mute conversation</span>
+                    <button
+                      onClick={handleToggleMute}
+                      className={`px-2 py-1 text-xs rounded ${isMuted ? 'bg-gray-800 text-white' : 'bg-gray-100'}`}
+                    >
+                      {isMuted ? 'Muted' : 'Mute'}
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Pin conversation</span>
+                    <button
+                      onClick={handleTogglePin}
+                      className={`px-2 py-1 text-xs rounded ${isPinned ? 'bg-gray-800 text-white' : 'bg-gray-100'}`}
+                    >
+                      {isPinned ? 'Pinned' : 'Pin'}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {rightSidebarMode === 'call' && (
+                <div className="text-sm text-gray-600 space-y-3">
+                  <p>Preparing voice call UI...</p>
+                  <p className="text-xs text-gray-400">(Placeholder) Integrate WebRTC or a calling SDK here.</p>
+                </div>
+              )}
+
+              {rightSidebarMode === 'video' && (
+                <div className="text-sm text-gray-600 space-y-3">
+                  <p>Preparing video call UI...</p>
+                  <p className="text-xs text-gray-400">(Placeholder) Integrate WebRTC or a video SDK here.</p>
+                </div>
+              )}
+            </div>
+          </motion.aside>
+        )}
+      </AnimatePresence>
 
       {/* Thread Chat */}
       <AnimatePresence>
