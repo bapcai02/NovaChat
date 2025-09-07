@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { appWithTranslation } from "next-i18next";
 import { ReduxProvider } from "@/store/provider";
 import { ThemeProvider } from "@/components/ui/theme-provider";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { I18nProvider } from "@/components/providers/I18nProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -12,7 +14,7 @@ export const metadata: Metadata = {
   description: "Modern chat platform built with Next.js and Laravel",
 };
 
-export default function RootLayout({
+function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
@@ -28,7 +30,9 @@ export default function RootLayout({
         >
           <AuthProvider>
             <ReduxProvider>
-              {children}
+              <I18nProvider>
+                {children}
+              </I18nProvider>
             </ReduxProvider>
           </AuthProvider>
         </ThemeProvider>
@@ -36,3 +40,5 @@ export default function RootLayout({
     </html>
   );
 }
+
+export default RootLayout

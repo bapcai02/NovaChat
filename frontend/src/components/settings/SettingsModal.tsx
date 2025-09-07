@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { userSettingsService } from '@/services/userSettingsService'
+import { useTranslation } from 'react-i18next'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
@@ -30,6 +31,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
 
   const [language, setLanguage] = useState<'EN' | 'VI'>('EN')
   const [sessions, setSessions] = useState<any[]>([])
+  const { t, i18n } = useTranslation('common')
 
   useEffect(() => {
     if (!open) return
@@ -59,7 +61,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
       setLoading(true)
       const avatarPayload = avatarFile ? await readFileAsDataUrl(avatarFile) : avatar
       await userSettingsService.updateProfile({ name, email, phone, avatar: avatarPayload })
-      notify('Profile updated')
+      notify(t('profile_updated'))
     } finally { setLoading(false) }
   }
 
@@ -74,15 +76,15 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
     }
   }
   const submitPassword = async () => {
-    try { setLoading(true); await userSettingsService.changePassword({ current_password: currentPassword, new_password: newPassword, new_password_confirmation: newPasswordConfirmation }); notify('Password changed'); setCurrentPassword(''); setNewPassword(''); setNewPasswordConfirmation('') } finally { setLoading(false) }
+    try { setLoading(true); await userSettingsService.changePassword({ current_password: currentPassword, new_password: newPassword, new_password_confirmation: newPasswordConfirmation }); notify(t('password_changed')); setCurrentPassword(''); setNewPassword(''); setNewPasswordConfirmation('') } finally { setLoading(false) }
   }
   const submitLanguage = async () => {
-    try { setLoading(true); await userSettingsService.updatePreferences({ language }); notify('Language saved') } finally { setLoading(false) }
+    try { setLoading(true); await userSettingsService.updatePreferences({ language }); notify(t('language_saved')) } finally { setLoading(false) }
   }
   const revokeSession = async (id: number) => {
     await userSettingsService.deleteSession(id)
     setSessions(prev => prev.filter(s => s.id !== id))
-    notify('Session revoked')
+    notify(t('session_revoked'))
   }
 
   if (!open) return null
@@ -93,7 +95,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
       <div className="relative w-full h-full flex items-center justify-center p-4">
         <div className="w-[92%] max-w-3xl bg-white rounded-xl shadow-2xl ring-1 ring-black/5">
         <div className="flex items-center justify-between px-5 py-3 border-b">
-          <h2 className="text-lg font-semibold">Settings</h2>
+          <h2 className="text-lg font-semibold">{t('settings')}</h2>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-700">×</button>
         </div>
         {toast && <div className="px-5 py-2 text-sm bg-green-50 text-green-700">{toast}</div>}
@@ -109,7 +111,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
                     active===tab ? 'bg-indigo-100 text-indigo-700 border border-indigo-200' : 'bg-gray-100 text-gray-700'
                   }`}
                 >
-                  {tab[0].toUpperCase()+tab.slice(1)}
+                  {t(tab)}
                 </button>
               ))}
             </div>
@@ -118,77 +120,77 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
             {active==='profile' && (
               <div className="space-y-4">
                 <div className="space-y-2 flex flex-col items-center">
-                  <label className="block text-sm mb-1 text-center">Avatar</label>
+                  <label className="block text-sm mb-1 text-center">{t('avatar')}</label>
                   <input id="avatar-input" type="file" accept="image/*" className="sr-only" onChange={handleAvatarChange} />
                   <label htmlFor="avatar-input" className="inline-block">
                     <div className="relative w-24 h-24 rounded-full overflow-hidden border cursor-pointer group">
                       {avatarPreview || avatar ? (
                         <img src={avatarPreview || avatar} alt="avatar" className="w-full h-full object-cover" />
                       ) : (
-                        <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400 text-sm">Add</div>
+                        <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400 text-sm">{t('add')}</div>
                       )}
                       <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity" />
-                      <div className="absolute bottom-1 right-1 px-2 py-0.5 text-[11px] rounded-full bg-white/90 text-gray-700 border shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">Edit</div>
+                      <div className="absolute bottom-1 right-1 px-2 py-0.5 text-[11px] rounded-full bg-white/90 text-gray-700 border shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">{t('edit')}</div>
                     </div>
                   </label>
                 </div>
                 <div>
-                  <label className="block text-sm mb-1">Name</label>
-                  <Input value={name} onChange={e=>setName(e.target.value)} placeholder="Enter your name" />
+                  <label className="block text-sm mb-1">{t('name')}</label>
+                  <Input value={name} onChange={e=>setName(e.target.value)} placeholder={t('ph_name')} />
                 </div>
                 <div>
-                  <label className="block text-sm mb-1">Email</label>
-                  <Input value={email} onChange={e=>setEmail(e.target.value)} placeholder="Enter your email" />
+                  <label className="block text-sm mb-1">{t('email')}</label>
+                  <Input value={email} onChange={e=>setEmail(e.target.value)} placeholder={t('ph_email')} />
                 </div>
                 <div>
-                  <label className="block text-sm mb-1">Phone</label>
-                  <Input value={phone} onChange={e=>setPhone(e.target.value)} placeholder="Enter your phone number" />
+                  <label className="block text-sm mb-1">{t('phone')}</label>
+                  <Input value={phone} onChange={e=>setPhone(e.target.value)} placeholder={t('ph_phone')} />
                 </div>
-                <Button disabled={loading} onClick={submitProfile} className="bg-indigo-600 hover:bg-indigo-700 text-white">Save</Button>
+                <Button disabled={loading} onClick={submitProfile} className="bg-indigo-600 hover:bg-indigo-700 text-white">{t('save')}</Button>
               </div>
             )}
 
             {active==='security' && (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm mb-1">Current password</label>
-                  <Input type="password" value={currentPassword} onChange={e=>setCurrentPassword(e.target.value)} placeholder="Current password" />
+                  <label className="block text-sm mb-1">{t('current_password')}</label>
+                  <Input type="password" value={currentPassword} onChange={e=>setCurrentPassword(e.target.value)} placeholder={t('ph_current_password')} />
                 </div>
                 <div>
-                  <label className="block text-sm mb-1">New password</label>
-                  <Input type="password" value={newPassword} onChange={e=>setNewPassword(e.target.value)} placeholder="New password" />
+                  <label className="block text-sm mb-1">{t('new_password')}</label>
+                  <Input type="password" value={newPassword} onChange={e=>setNewPassword(e.target.value)} placeholder={t('ph_new_password')} />
                 </div>
                 <div>
-                  <label className="block text-sm mb-1">Confirm new password</label>
-                  <Input type="password" value={newPasswordConfirmation} onChange={e=>setNewPasswordConfirmation(e.target.value)} placeholder="Confirm new password" />
+                  <label className="block text-sm mb-1">{t('confirm_new_password')}</label>
+                  <Input type="password" value={newPasswordConfirmation} onChange={e=>setNewPasswordConfirmation(e.target.value)} placeholder={t('ph_confirm_new_password')} />
                 </div>
-                <Button disabled={loading} onClick={submitPassword} className="bg-indigo-600 hover:bg-indigo-700 text-white">Change password</Button>
+                <Button disabled={loading} onClick={submitPassword} className="bg-indigo-600 hover:bg-indigo-700 text-white">{t('change_password')}</Button>
               </div>
             )}
 
             {active==='language' && (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm mb-1">Language</label>
-                  <select className="border rounded px-3 py-2 text-sm bg-white" value={language} onChange={e=>setLanguage(e.target.value as 'EN'|'VI')}>
-                    <option value="EN">English</option>
-                    <option value="VI">Vietnamese</option>
+                  <label className="block text-sm mb-1">{t('language')}</label>
+                  <select className="border rounded px-3 py-2 text-sm bg-white" value={language} onChange={e=>{ const val = e.target.value as 'EN'|'VI'; setLanguage(val); i18n.changeLanguage(val.toLowerCase()) }}>
+                    <option value="EN">{t('language_en')}</option>
+                    <option value="VI">{t('language_vi')}</option>
                   </select>
                 </div>
-                <Button disabled={loading} onClick={submitLanguage} className="bg-indigo-600 hover:bg-indigo-700 text-white">Save</Button>
+                <Button disabled={loading} onClick={submitLanguage} className="bg-indigo-600 hover:bg-indigo-700 text-white">{t('save')}</Button>
               </div>
             )}
 
             {active==='sessions' && (
               <div className="space-y-3">
-                {sessions.length === 0 && <div className="text-sm text-gray-500">No active sessions</div>}
+                {sessions.length === 0 && <div className="text-sm text-gray-500">{t('no_active_sessions')}</div>}
                 {sessions.map(s => (
                   <div key={s.id} className="flex items-center justify-between border rounded px-3 py-2 text-sm">
                     <div>
-                      <div className="font-medium">{s.device_info || 'Unknown device'}</div>
-                      <div className="text-gray-500">{s.ip_address || 'N/A'} · {s.last_active ? new Date(s.last_active).toLocaleString() : 'N/A'}</div>
+                      <div className="font-medium">{s.device_info || t('device_unknown')}</div>
+                      <div className="text-gray-500">{s.ip_address || t('ip_na')} · {s.last_active ? new Date(s.last_active).toLocaleString() : t('ip_na')}</div>
                     </div>
-                    <Button variant="ghost" onClick={()=>revokeSession(s.id)}>Logout</Button>
+                    <Button variant="ghost" onClick={()=>revokeSession(s.id)}>{t('logout')}</Button>
                   </div>
                 ))}
               </div>
