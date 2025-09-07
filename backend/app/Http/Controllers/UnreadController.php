@@ -27,7 +27,7 @@ class UnreadController extends Controller
 
         // Get conversation details
         $conversations = Conversation::whereIn('id', array_keys($unreadCounts))
-            ->with(['other_member', 'members'])
+            ->with(['members', 'channel', 'team'])
             ->get()
             ->keyBy('id');
 
@@ -38,7 +38,7 @@ class UnreadController extends Controller
                 $result[] = [
                     'conversation_id' => $conversationId,
                     'unread_count' => $count,
-                    'conversation' => $conversation
+                    'conversation_name' => $conversation->title,
                 ];
             }
         }

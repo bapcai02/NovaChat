@@ -67,7 +67,24 @@ class ConversationService
             }
 
             $messages = $this->conversations->getMessages((int)$conversationId, $limit, $beforeId, $userId);
-            return ['success' => true, 'data' => $messages];
+            
+            // Get unique users from messages
+            $users = [];
+            $userIds = [];
+            foreach ($messages as $message) {
+                if (isset($message['sender']['id']) && !in_array($message['sender']['id'], $userIds)) {
+                    $userIds[] = $message['sender']['id'];
+                    $users[] = $message['sender'];
+                }
+            }
+            
+            return [
+                'success' => true, 
+                'data' => [
+                    'messages' => $messages,
+                    'users' => $users
+                ]
+            ];
         } catch (\Throwable $e) {
             Log::error('ConversationService@getConversationMessages failed: ' . $e->getMessage());
             return ['success' => false, 'message' => 'Failed to load messages'];

@@ -1,3 +1,4 @@
+// ws-gateway.js
 const WebSocket = require('ws');
 const Redis = require('ioredis');
 const { v4: uuidv4 } = require('uuid');
@@ -5,17 +6,23 @@ const { v4: uuidv4 } = require('uuid');
 // Redis connection
 const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
 
+// Logging function (console only)
+const log = (message, data = null) => {
+  const timestamp = new Date().toISOString();
+  console.log(`[${timestamp}] ${message}`, data || '');
+};
+
 // WebSocket server
 const wss = new WebSocket.Server({ port: 7000 });
 
 // Store connected clients by conversation
 const clientsByConversation = new Map();
 
-console.log('WebSocket Gateway started on port 7000');
+log('WebSocket Gateway started on port 7000');
 
-wss.on('connection', (ws, req) => {
+wss.on('connection', (ws) => {
   const clientId = uuidv4();
-  console.log(`New client connected: ${clientId}`);
+  log(`New client connected: ${clientId}`);
 
   ws.clientId = clientId;
   ws.conversationId = null;
@@ -23,33 +30,36 @@ wss.on('connection', (ws, req) => {
   ws.on('message', async (data) => {
     try {
       const message = JSON.parse(data.toString());
-      console.log('Received message:', message);
+      log('Received message:', message);
 
       if (message.type === 'join_conversation') {
-        // Client joins a conversation room
         ws.conversationId = message.conversation_id;
-        
+
         if (!clientsByConversation.has(ws.conversationId)) {
           clientsByConversation.set(ws.conversationId, new Set());
+          log(`Created new conversation room: ${ws.conversationId}`);
         }
         clientsByConversation.get(ws.conversationId).add(ws);
-        
-        console.log(`Client ${clientId} joined conversation ${ws.conversationId}`);
-        
-        // Send confirmation
-        ws.send(JSON.stringify({
-          type: 'joined_conversation',
-          conversation_id: ws.conversationId,
-          client_id: clientId
-        }));
-        
+
+        log(
+          `Client ${clientId} joined conversation ${ws.conversationId}. Room size: ${clientsByConversation.get(ws.conversationId).size}`
+        );
+
+        ws.send(
+          JSON.stringify({
+            type: 'joined_conversation',
+            conversation_id: ws.conversationId,
+            client_id: clientId,
+          })
+        );
       } else if (message.type === 'chat_message') {
-        // Handle chat message
         if (!ws.conversationId) {
-          ws.send(JSON.stringify({
-            type: 'error',
-            message: 'Must join a conversation first'
-          }));
+          ws.send(
+            JSON.stringify({
+              type: 'error',
+              message: 'Must join a conversation first',
+            })
+          );
           return;
         }
 
@@ -58,61 +68,99 @@ wss.on('connection', (ws, req) => {
           sender_id: message.sender_id,
           content: message.content,
           timestamp: new Date().toISOString(),
-          client_id: clientId
+          client_id: clientId,
         };
 
-        // Push to Redis queue for Laravel to process
-        await redis.lpush('chatbackend_database_chat_messages', JSON.stringify(chatMessage));
-        console.log('Message pushed to Redis queue:', chatMessage);
+        // Push vào Redis để Laravel xử lý
+        redis
+          .lpush('chat_messages', JSON.stringify(chatMessage))
+          .then(() => log('Message pushed to Redis queue:', chatMessage))
+          .catch((err) => log('Error pushing to Redis:', err));
 
-        // Broadcast to all clients in the same conversation
-        const conversationClients = clientsByConversation.get(ws.conversationId);
+        // Broadcast cho tất cả client trong cùng conversation
+        log('=== Starting broadcast process ===');
+        const conversationClients =
+          clientsByConversation.get(ws.conversationId);
+        log(`Broadcasting to ${conversationClients ? conversationClients.size : 0} clients in conversation ${ws.conversationId}`);
+        
         if (conversationClients) {
-          const broadcastMessage = {
-            type: 'message_received',
-            conversation_id: ws.conversationId,
-            sender_id: message.sender_id,
-            content: message.content,
-            timestamp: chatMessage.timestamp
-          };
+          let sentCount = 0;
+          conversationClients.forEach((client) => {
+            if (client !== ws && client.readyState === WebSocket.OPEN) {
+              client.send(
+                JSON.stringify({
+                  type: 'chat_message',
+                  conversation_id: ws.conversationId,
+                  sender_id: message.sender_id,
+                  sender_name: message.sender_name || `User ${message.sender_id}`,
+                  sender_avatar: message.sender_avatar,
+                  content: message.content,
+                  timestamp: chatMessage.timestamp,
+                })
+              );
+              sentCount++;
+              log(`Message sent to client (${sentCount})`);
+            } else if (client === ws) {
+              log('Skipping sender');
+            } else {
+              log('Client not ready, skipping');
+            }
+          });
+          log(
+            `Broadcasted message to ${sentCount} clients in conversation ${ws.conversationId}`
+          );
+        } else {
+          log('No clients found for conversation', ws.conversationId);
+        }
 
-          conversationClients.forEach(client => {
-            if (client.readyState === WebSocket.OPEN) {
-              client.send(JSON.stringify(broadcastMessage));
+        ws.send(
+          JSON.stringify({
+            type: 'message_sent',
+            conversation_id: ws.conversationId,
+            message_id: clientId,
+          })
+        );
+      } else if (
+        message.type === 'typing_start' ||
+        message.type === 'typing_stop'
+      ) {
+        if (!ws.conversationId) return;
+
+        const typingMessage = {
+          type: message.type,
+          conversation_id: ws.conversationId,
+          user_id: message.user_id,
+          timestamp: new Date().toISOString(),
+        };
+
+        const conversationClients =
+          clientsByConversation.get(ws.conversationId);
+        if (conversationClients) {
+          conversationClients.forEach((client) => {
+            if (client !== ws && client.readyState === WebSocket.OPEN) {
+              client.send(JSON.stringify(typingMessage));
             }
           });
         }
-
-        // Send confirmation to sender
-        ws.send(JSON.stringify({
-          type: 'message_sent',
-          conversation_id: ws.conversationId,
-          message_id: clientId // Temporary ID for frontend
-        }));
-
       } else if (message.type === 'ping') {
-        // Handle ping for connection health
         ws.send(JSON.stringify({ type: 'pong' }));
       }
-
     } catch (error) {
-      console.error('Error processing message:', error);
-      ws.send(JSON.stringify({
-        type: 'error',
-        message: 'Invalid message format'
-      }));
+      log('Error processing message:', error);
+      ws.send(
+        JSON.stringify({
+          type: 'error',
+          message: 'Invalid message format',
+        })
+      );
     }
   });
 
   ws.on('close', () => {
-    console.log(`Client ${clientId} disconnected`);
-    
-    // Remove client from conversation
+    log(`Client ${clientId} disconnected`);
     if (ws.conversationId && clientsByConversation.has(ws.conversationId)) {
       const conversationClients = clientsByConversation.get(ws.conversationId);
       conversationClients.delete(ws);
-      
-      // Clean up empty conversation
       if (conversationClients.size === 0) {
         clientsByConversation.delete(ws.conversationId);
       }
@@ -120,29 +168,30 @@ wss.on('connection', (ws, req) => {
   });
 
   ws.on('error', (error) => {
-    console.error(`WebSocket error for client ${clientId}:`, error);
+    log(`WebSocket error for client ${clientId}:`, error);
   });
 
-  // Send welcome message
-  ws.send(JSON.stringify({
-    type: 'connected',
-    client_id: clientId,
-    message: 'Connected to WebSocket Gateway'
-  }));
+  ws.send(
+    JSON.stringify({
+      type: 'connected',
+      client_id: clientId,
+      message: 'Connected to WebSocket Gateway',
+    })
+  );
 });
 
-// Handle Redis connection errors
+// Redis events
 redis.on('error', (error) => {
-  console.error('Redis connection error:', error);
+  log('Redis connection error:', error);
 });
 
 redis.on('connect', () => {
-  console.log('Connected to Redis');
+  log('Connected to Redis');
 });
 
 // Graceful shutdown
 process.on('SIGINT', () => {
-  console.log('Shutting down WebSocket Gateway...');
+  log('Shutting down WebSocket Gateway...');
   wss.close(() => {
     redis.disconnect();
     process.exit(0);
