@@ -1,9 +1,11 @@
 "use client"
 
 import React, { useState, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Search, Hash, Users, MessageCircle, Bell, HelpCircle, Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import SettingsModal from '@/components/settings/SettingsModal'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -32,6 +34,8 @@ export default function ModernSidebar({
   currentUser,
   onlineUserIds = new Set()
 }: ModernSidebarProps) {
+  const [openSettings, setOpenSettings] = useState(false)
+  const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
   const [isUserSearchOpen, setIsUserSearchOpen] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
@@ -346,41 +350,45 @@ export default function ModernSidebar({
 
       {/* User Profile Section */}
       {currentUser && (
-        <div className="p-3 border-t border-gray-100 bg-gray-50">
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <Avatar className="h-10 w-10">
-                <AvatarImage src={currentUser.avatar} />
-                <AvatarFallback className="text-sm font-semibold bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                  {currentUser.name?.charAt(0) || 'U'}
-                </AvatarFallback>
-              </Avatar>
-              <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 bg-green-500 rounded-full border-2 border-white" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-gray-800 truncate">
-                {currentUser.name || 'Unknown User'}
-              </p>
-              <p className="text-xs text-gray-500">Online</p>
-            </div>
-            <div className="flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0 hover:bg-gray-200 text-gray-600 hover:text-gray-800"
-              >
-                <Settings className="h-4 w-4" />
-              </Button>
-              <LogoutButton
-                className="h-8 w-8 p-0 hover:bg-red-100 text-gray-600 hover:text-red-600"
-              >
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-              </LogoutButton>
+        <>
+          <div className="p-3 border-t border-gray-100 bg-gray-50">
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <Avatar className="h-10 w-10">
+                  <AvatarImage src={currentUser.avatar} />
+                  <AvatarFallback className="text-sm font-semibold bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                    {currentUser.name?.charAt(0) || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 bg-green-500 rounded-full border-2 border-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-gray-800 truncate">
+                  {currentUser.name || 'Unknown User'}
+                </p>
+                <p className="text-xs text-gray-500">Online</p>
+              </div>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 hover:bg-gray-200 text-gray-600 hover:text-gray-800"
+                  onClick={() => setOpenSettings(true)}
+                >
+                  <Settings className="h-4 w-4" />
+                </Button>
+                <LogoutButton
+                  className="h-8 w-8 p-0 hover:bg-red-100 text-gray-600 hover:text-red-600"
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                </LogoutButton>
+              </div>
             </div>
           </div>
-        </div>
+          <SettingsModal open={openSettings} onClose={() => setOpenSettings(false)} />
+        </>
       )}
     </div>
   )

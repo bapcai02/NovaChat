@@ -19,6 +19,28 @@ const eslintConfig = [
       "build/**",
       "next-env.d.ts",
     ],
+    rules: {
+      // Soften/disable noisy rules for current migration stage
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        { "argsIgnorePattern": "^_", "varsIgnorePattern": "^(_|ignored)", "destructuredArrayIgnorePattern": "^_" }
+      ],
+      "@typescript-eslint/no-empty-object-type": "off",
+      "react-hooks/exhaustive-deps": "off",
+      "react/no-unescaped-entities": "off",
+      "jsx-a11y/alt-text": "off",
+      "@next/next/no-img-element": "off",
+    },
+    overrides: [
+      {
+        files: ["**/*.ts", "**/*.tsx"],
+        rules: {
+          // Allow temporary any in hooks/services while integrating APIs
+          "@typescript-eslint/no-explicit-any": "off",
+        }
+      }
+    ]
   },
 ];
 

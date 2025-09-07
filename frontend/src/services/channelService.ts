@@ -1,5 +1,3 @@
-import { apiService } from './api'
-
 // Channel types
 export interface Channel {
   id: number

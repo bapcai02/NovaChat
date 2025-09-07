@@ -6,14 +6,12 @@ export interface UserStatus {
   status: 'online' | 'away' | 'busy' | 'offline'
   statusMessage?: string
   userName: string
-  userName: string
   timestamp: string
 }
 
 export interface TypingEvent {
   roomId: string
   userId: string
-  userName: string
   userName: string
   timestamp: string
 }
@@ -67,9 +65,9 @@ export const userStatusService = {
   },
 
   // Get online users
-  getOnlineUsers: async (roomId: string = '1'): Promise<OnlineUser[]> => {
-    const response = await apiService.getOnlineUsers()
-    return response.data.map(user => ({
+  getOnlineUsers: async (): Promise<OnlineUser[]> => {
+    const response: any = await apiService.getOnlineUsers()
+    return response?.data?.map((user: any) => ({
       id: user.id.toString(),
       name: user.name,
       username: user.username,

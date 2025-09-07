@@ -121,6 +121,16 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/{userId}/status', [UserStatusController::class, 'getUserStatus']);
     });
 
+    // User settings (protected)
+    Route::middleware('auth:api')->group(function () {
+        Route::get('/user/profile', [\App\Http\Controllers\UserSettingsController::class, 'getProfile']);
+        Route::put('/user/profile', [\App\Http\Controllers\UserSettingsController::class, 'updateProfile']);
+        Route::post('/user/change-password', [\App\Http\Controllers\UserSettingsController::class, 'changePassword']);
+        Route::put('/user/preferences', [\App\Http\Controllers\UserSettingsController::class, 'updatePreferences']);
+        Route::get('/user/sessions', [\App\Http\Controllers\UserSettingsController::class, 'sessions']);
+        Route::delete('/user/sessions/{id}', [\App\Http\Controllers\UserSettingsController::class, 'destroySession']);
+    });
+
     // User status and typing
     Route::prefix('user')->group(function () {
         Route::post('/status', [UserStatusController::class, 'updateStatus']);

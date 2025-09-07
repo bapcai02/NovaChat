@@ -26,6 +26,7 @@ export default function RegisterPage() {
   }, [dispatch])
 
   const handleLogin = async (data: { email: string; password: string }) => {
+    console.log('Login data:', data)
     router.push('/login')
   }
 
