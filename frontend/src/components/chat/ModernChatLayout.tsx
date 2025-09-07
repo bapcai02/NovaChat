@@ -130,6 +130,28 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
     // Search overlay handled in header; no-op hook for now
   }
 
+  const jumpToMessage = (conversationId: number, messageId: number) => {
+    // If jumping within current conversation, scroll to message; else switch then fetch and scroll.
+    const doScroll = () => {
+      const el = document.querySelector(`[data-message-id="${messageId}"]`)
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        el.classList.add('ring-2', 'ring-yellow-300')
+        setTimeout(() => el.classList.remove('ring-2', 'ring-yellow-300'), 1500)
+      }
+    }
+    if (currentConversation?.id !== conversationId) {
+      const conv = conversations.find(c => c.id === conversationId)
+      if (conv) {
+        handleSelectConversation(conv)
+        // delay to ensure messages loaded
+        setTimeout(() => doScroll(), 500)
+      }
+    } else {
+      doScroll()
+    }
+  }
+
   const handleCall = () => {
     setRightSidebarMode('call')
     setIsRightSidebarOpen(true)
@@ -265,6 +287,8 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
             onToggleMute={handleToggleMute}
             onTogglePin={handleTogglePin}
             onSettings={handleSettings}
+            onJumpToMessage={jumpToMessage}
+            
           />
         </motion.div>
 
@@ -313,6 +337,9 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
         onToggleMute={handleToggleMute}
         onTogglePin={handleTogglePin}
       />
+
+      {/* Global search overlay for jump-to-message */}
+      {/* The overlay is managed in header, but we pass the jumper here */}
 
       {/* Thread Chat */}
       <AnimatePresence>

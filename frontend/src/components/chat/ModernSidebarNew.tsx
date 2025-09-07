@@ -16,6 +16,7 @@ import type { User, Team, Conversation } from '@/types/chat'
 import { UserSearchResult } from '@/services/userSearchService'
 import UserOnlineStatus from './UserOnlineStatus'
 import { LogoutButton } from '@/components/auth/LogoutButton'
+import { useTranslation } from 'react-i18next'
 
 interface ModernSidebarProps {
   teams: Team[]
@@ -35,6 +36,7 @@ export default function ModernSidebar({
   onlineUserIds = new Set()
 }: ModernSidebarProps) {
   const [openSettings, setOpenSettings] = useState(false)
+  const { t } = useTranslation('common')
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
   const [isUserSearchOpen, setIsUserSearchOpen] = useState(false)
@@ -172,9 +174,9 @@ export default function ModernSidebar({
 
         {showNotifications && (
           <div className="absolute right-4 top-14 w-72 bg-white border border-gray-100 shadow-xl rounded-md overflow-hidden z-20">
-            <div className="px-3 py-2 border-b text-sm font-semibold">Notifications</div>
+            <div className="px-3 py-2 border-b text-sm font-semibold">{t('notifications')}</div>
             <div className="max-h-64 overflow-auto divide-y">
-              <div className="px-3 py-2 text-sm text-gray-600">No notifications</div>
+              <div className="px-3 py-2 text-sm text-gray-600">{t('no_notifications')}</div>
             </div>
           </div>
         )}
@@ -186,7 +188,7 @@ export default function ModernSidebar({
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
             ref={searchInputRef}
-            placeholder="Search users..."
+            placeholder={t('search_messages')}
             value={searchQuery}
             onChange={handleSearchInputChange}
             onFocus={handleSearchInputFocus}
@@ -213,7 +215,7 @@ export default function ModernSidebar({
           <div className="space-y-3">
             <div className="flex items-center space-x-2 mb-2">
               <Users className="h-4 w-4 text-gray-500" />
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Teams</span>
+              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('teams')}</span>
             </div>
             <div className="space-y-1">
               {(teams || []).map((team, index) => (
@@ -248,7 +250,7 @@ export default function ModernSidebar({
           <div className="space-y-3">
             <div className="flex items-center space-x-2 mb-2">
               <Hash className="h-4 w-4 text-gray-500" />
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Channels</span>
+              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('channels')}</span>
             </div>
             <div className="space-y-1">
               {channelConversations.map((conversation) => (
@@ -283,7 +285,7 @@ export default function ModernSidebar({
           <div className="space-y-3">
             <div className="flex items-center space-x-2 mb-2">
               <MessageCircle className="h-4 w-4 text-gray-500" />
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Direct Messages</span>
+              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('direct_messages')}</span>
             </div>
             <div className="space-y-1">
               {directConversations.map((conversation) => {
@@ -366,7 +368,7 @@ export default function ModernSidebar({
                 <p className="text-sm font-semibold text-gray-800 truncate">
                   {currentUser.name || 'Unknown User'}
                 </p>
-                <p className="text-xs text-gray-500">Online</p>
+                <p className="text-xs text-gray-500">{t('online')}</p>
               </div>
               <div className="flex items-center gap-1">
                 <Button

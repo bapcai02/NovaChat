@@ -30,7 +30,29 @@
   "language_saved": "Language saved",
   "session_revoked": "Session revoked",
   "add": "Add",
-  "edit": "Edit"
+  "edit": "Edit",
+  "search_messages": "Search messages...",
+  "teams": "Teams",
+  "channels": "Channels",
+  "direct_messages": "Direct Messages",
+  "notifications": "Notifications",
+  "no_notifications": "No notifications",
+  "online": "Online",
+  "offline": "Offline",
+  "last_seen": "Last seen {{time}}",
+  "members": "Members",
+  "conversation_settings": "Conversation Settings",
+  "voice_call": "Voice Call",
+  "video_call": "Video Call",
+  "no_members": "No members",
+  "mute_conversation": "Mute conversation",
+  "muted": "Muted",
+  "mute": "Mute",
+  "pin_conversation": "Pin conversation",
+  "pinned": "Pinned",
+  "pin": "Pin"
+  ,"type_message": "Type a message...",
+  "you_are_typing": "You are typing..."
 }
 
 

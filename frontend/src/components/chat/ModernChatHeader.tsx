@@ -28,6 +28,8 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 import { LogoutButton } from '@/components/auth/LogoutButton'
+import { useTranslation } from 'react-i18next'
+import HeaderSearchOverlay from './HeaderSearchOverlay'
 
 interface ChatHeaderProps {
   channelName: string
@@ -45,6 +47,7 @@ interface ChatHeaderProps {
   onToggleMute?: () => void
   onTogglePin?: () => void
   onSettings?: () => void
+  onJumpToMessage?: (conversationId: number, messageId: number) => void
 }
 
 export default function ModernChatHeader({
@@ -62,9 +65,12 @@ export default function ModernChatHeader({
   onViewMembers,
   onToggleMute,
   onTogglePin,
-  onSettings
+  onSettings,
+  onJumpToMessage
 }: ChatHeaderProps) {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const { t } = useTranslation('common')
+  const { handleSelectConversation, loadMessages } = ({} as any)
 
   const getChannelIcon = () => {
     switch (channelType) {
@@ -81,9 +87,9 @@ export default function ModernChatHeader({
 
   const getStatusText = () => {
     if (channelType === 'direct') {
-      return isOnline ? 'Online' : lastSeen ? `Last seen ${lastSeen}` : 'Offline'
+      return isOnline ? t('online') : lastSeen ? t('last_seen', { time: lastSeen }) : t('offline')
     }
-    return memberCount ? `${memberCount} members` : ''
+    return memberCount ? `${memberCount} ${t('members')}` : ''
   }
 
   const getStatusColor = () => {
@@ -145,7 +151,7 @@ export default function ModernChatHeader({
           size="sm"
           onClick={() => { setIsSearchOpen(true); onSearch && onSearch(); }}
           className="h-8 w-8 p-0 hover:bg-gray-100 rounded-full"
-          aria-label="Search in conversation"
+          aria-label={t('search_messages')}
         >
           <Search className="h-4 w-4" />
         </Button>
@@ -156,7 +162,7 @@ export default function ModernChatHeader({
           size="sm"
           onClick={onCall}
           className="h-8 w-8 p-0 hover:bg-gray-100 rounded-full"
-          aria-label="Start voice call"
+          aria-label={t('voice_call')}
         >
           <Phone className="h-4 w-4" />
         </Button>
@@ -167,7 +173,7 @@ export default function ModernChatHeader({
           size="sm"
           onClick={onVideoCall}
           className="h-8 w-8 p-0 hover:bg-gray-100 rounded-full"
-          aria-label="Start video call"
+          aria-label={t('video_call')}
         >
           <Video className="h-4 w-4" />
         </Button>
@@ -178,7 +184,7 @@ export default function ModernChatHeader({
           size="sm"
           onClick={onViewMembers}
           className="h-8 w-8 p-0 hover:bg-gray-100 rounded-full"
-          aria-label="View members"
+          aria-label={t('members')}
         >
           <Users className="h-4 w-4" />
         </Button>
@@ -189,7 +195,7 @@ export default function ModernChatHeader({
           size="sm"
           onClick={onToggleMute}
           className="h-8 w-8 p-0 hover:bg-gray-100 rounded-full"
-          aria-label={isMuted ? 'Unmute conversation' : 'Mute conversation'}
+          aria-label={isMuted ? t('mute') : t('mute_conversation')}
         >
           {isMuted ? <BellOff className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
         </Button>
@@ -200,7 +206,7 @@ export default function ModernChatHeader({
           size="sm"
           onClick={onTogglePin}
           className="h-8 w-8 p-0 hover:bg-gray-100 rounded-full"
-          aria-label={isPinned ? 'Unpin conversation' : 'Pin conversation'}
+          aria-label={isPinned ? t('pinned') : t('pin_conversation')}
         >
           <Pin className="h-4 w-4" />
         </Button>
@@ -230,7 +236,7 @@ export default function ModernChatHeader({
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuItem onClick={onSettings}>
               <Settings className="h-4 w-4 mr-2" />
-              Settings
+              {t('settings')}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
@@ -238,44 +244,14 @@ export default function ModernChatHeader({
                 <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
-                Logout
+                {t('logout')}
               </LogoutButton>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
 
-      {/* Search overlay (floating, centered at top) */}
-      {isSearchOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50"
-          aria-modal="true"
-          role="dialog"
-          onClick={() => setIsSearchOpen(false)}
-        >
-          {/* Backdrop */}
-          <div className="absolute inset-0 bg-black/30" />
-
-          {/* Panel */}
-          <div className="absolute left-1/2 -translate-x-1/2 mt-6 w-[92%] max-w-2xl">
-            <div className="rounded-xl bg-white shadow-2xl ring-1 ring-black/5 p-3">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Search messages..."
-                  className="pl-10 h-11 text-sm border border-gray-200 focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
-                  autoFocus
-                  onClick={(e) => e.stopPropagation()}
-                  onKeyDown={(e) => { if (e.key === 'Escape') setIsSearchOpen(false) }}
-                />
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      )}
+      <HeaderSearchOverlay open={isSearchOpen} onClose={() => setIsSearchOpen(false)} onJumpToMessage={onJumpToMessage} />
     </motion.div>
   )
 }

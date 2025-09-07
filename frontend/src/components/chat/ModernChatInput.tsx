@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState, useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Send, 
@@ -54,6 +55,7 @@ export default function ModernChatInput({
   const fileInputRef = useRef<HTMLInputElement>(null)
   const imageInputRef = useRef<HTMLInputElement>(null)
   const emojiPickerRef = useRef<HTMLDivElement>(null)
+  const { t } = useTranslation('common')
 
   const handleSend = () => {
     if (message.trim() || attachments.length > 0) {
@@ -255,7 +257,7 @@ export default function ModernChatInput({
               value={message}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
-              placeholder={placeholder}
+              placeholder={placeholder || t('type_message')}
               disabled={disabled}
               className="min-h-[40px] max-h-28 resize-none pr-12 bg-gray-50 border border-gray-200 hover:border-gray-300 focus:ring-1 focus:ring-blue-400 focus:border-blue-400 focus:outline-none text-sm text-gray-800 placeholder-gray-500 transition-all duration-200 rounded-lg"
               style={{
@@ -306,7 +308,7 @@ export default function ModernChatInput({
                 previewConfig={{
                   showPreview: false
                 }}
-                searchPlaceHolder="Search emojis..."
+                searchPlaceHolder={t('search_messages')}
                 theme={"light" as any}
               />
             </motion.div>
@@ -321,7 +323,7 @@ export default function ModernChatInput({
             exit={{ opacity: 0, y: 10 }}
             className="mt-2 text-xs text-gray-500"
           >
-            You are typing...
+            {t('you_are_typing')}
           </motion.div>
         )}
       </div>

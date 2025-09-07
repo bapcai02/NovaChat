@@ -20,6 +20,7 @@ export function useChat() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [userOnlineSet, setUserOnlineSet] = useState(false)
+  const [typingByConversation, setTypingByConversation] = useState<Record<number, Set<number>>>({})
 
   // Load current user
   const loadCurrentUser = useCallback(async () => {
@@ -143,6 +144,21 @@ export function useChat() {
       
       // Listen for messages
       wsClient.onMessage(async (message: WebSocketMessage) => {
+        // Typing indicators
+        if (message.type === 'typing_start' || message.type === 'typing_stop') {
+          const convId = parseInt(message.conversation_id?.toString() || '0')
+          const userId = parseInt(message.user_id?.toString() || '0')
+          if (!convId || !userId) return
+          setTypingByConversation(prev => {
+            const copy: Record<number, Set<number>> = { ...prev }
+            const set = new Set(copy[convId] || [])
+            if (message.type === 'typing_start') set.add(userId)
+            else set.delete(userId)
+            copy[convId] = set
+            return copy
+          })
+          return
+        }
         
         if (message.type === 'chat_message' || message.type === 'message_received') {
           const senderId = parseInt(message.sender_id?.toString() || '0')
@@ -277,7 +293,8 @@ export function useChat() {
         },
         reactions: [],
         is_bookmarked: false,
-        is_optimistic: true // Flag for optimistic update
+        is_optimistic: true, // Flag for optimistic update
+        status: 'sent' as any
       }
       
       // Add to UI immediately (optimistic update)
@@ -630,6 +647,7 @@ export function useChat() {
     onlineUserIds,
     isLoading,
     error,
+    typingByConversation,
     
     // Actions
     setCurrentConversation,

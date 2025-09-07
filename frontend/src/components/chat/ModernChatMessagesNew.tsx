@@ -84,6 +84,7 @@ const MessageBubble = ({
         "flex gap-2 mb-3",
         testIsOwn ? "flex-row-reverse" : "flex-row"
       )}
+      data-message-id={message.id}
     >
       {/* Avatar */}
       {!testIsOwn && (

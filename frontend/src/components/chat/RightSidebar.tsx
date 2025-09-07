@@ -1,6 +1,7 @@
 "use client"
 
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { AnimatePresence, motion } from 'framer-motion'
 
 interface RightSidebarProps {
@@ -24,6 +25,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
   onToggleMute,
   onTogglePin,
 }) => {
+  const { t } = useTranslation('common')
   return (
     <AnimatePresence>
       {open && (
@@ -36,10 +38,10 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
         >
           <div className="flex items-center justify-between px-4 py-3 border-b">
             <h3 className="text-sm font-semibold">
-              {mode === 'members' && 'Members'}
-              {mode === 'settings' && 'Conversation Settings'}
-              {mode === 'call' && 'Voice Call'}
-              {mode === 'video' && 'Video Call'}
+              {mode === 'members' && t('members')}
+              {mode === 'settings' && t('conversation_settings')}
+              {mode === 'call' && t('voice_call')}
+              {mode === 'video' && t('video_call')}
             </h3>
             <button
               onClick={onClose}
@@ -67,7 +69,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                   </div>
                 ))}
                 {(!members || members.length === 0) && (
-                  <div className="text-sm text-gray-500">No members</div>
+                  <div className="text-sm text-gray-500">{t('no_members')}</div>
                 )}
               </div>
             )}
@@ -75,21 +77,21 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
             {mode === 'settings' && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm">Mute conversation</span>
+                  <span className="text-sm">{t('mute_conversation')}</span>
                   <button
                     onClick={onToggleMute}
                     className={`px-2 py-1 text-xs rounded ${isMuted ? 'bg-gray-800 text-white' : 'bg-gray-100'}`}
                   >
-                    {isMuted ? 'Muted' : 'Mute'}
+                    {isMuted ? t('muted') : t('mute')}
                   </button>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm">Pin conversation</span>
+                  <span className="text-sm">{t('pin_conversation')}</span>
                   <button
                     onClick={onTogglePin}
                     className={`px-2 py-1 text-xs rounded ${isPinned ? 'bg-gray-800 text-white' : 'bg-gray-100'}`}
                   >
-                    {isPinned ? 'Pinned' : 'Pin'}
+                    {isPinned ? t('pinned') : t('pin')}
                   </button>
                 </div>
               </div>

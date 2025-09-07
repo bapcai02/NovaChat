@@ -11,11 +11,13 @@ export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [instance, setInstance] = useState<I18nType | null>(null)
 
   useEffect(() => {
+    const saved = typeof window !== 'undefined' ? (localStorage.getItem('locale') || '') : ''
+    const initialLng = (saved === 'vi' || saved === 'en') ? saved : 'en'
     const i18n = i18next.createInstance()
     i18n
       .use(initReactI18next)
       .init({
-        lng: 'en',
+        lng: initialLng,
         fallbackLng: 'en',
         resources: {
           en: { common: enCommon },
@@ -24,8 +26,24 @@ export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children
         defaultNS: 'common',
         interpolation: { escapeValue: false },
       })
-      .then(() => setInstance(i18n))
+      .then(() => {
+        // persist and sync <html lang>
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('locale', initialLng)
+        }
+        if (typeof document !== 'undefined') {
+          document.documentElement.lang = initialLng
+        }
+        // listen for changes to persist
+        i18n.on('languageChanged', (lng) => {
+          if (typeof window !== 'undefined') localStorage.setItem('locale', lng)
+          if (typeof document !== 'undefined') document.documentElement.lang = lng
+        })
+        setInstance(i18n)
+      })
   }, [])
+
+  // If no saved locale, optionally fall back to URL prefix once (kept simple)
 
   if (!instance) return null
 

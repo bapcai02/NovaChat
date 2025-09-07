@@ -30,7 +30,29 @@
   "language_saved": "Đã lưu ngôn ngữ",
   "session_revoked": "Đã đăng xuất phiên",
   "add": "Thêm",
-  "edit": "Sửa"
+  "edit": "Sửa",
+  "search_messages": "Tìm kiếm tin nhắn...",
+  "teams": "Nhóm",
+  "channels": "Kênh",
+  "direct_messages": "Tin nhắn trực tiếp",
+  "notifications": "Thông báo",
+  "no_notifications": "Không có thông báo",
+  "online": "Trực tuyến",
+  "offline": "Ngoại tuyến",
+  "last_seen": "Lần cuối {{time}}",
+  "members": "Thành viên",
+  "conversation_settings": "Cài đặt cuộc trò chuyện",
+  "voice_call": "Gọi thoại",
+  "video_call": "Gọi video",
+  "no_members": "Không có thành viên",
+  "mute_conversation": "Tắt thông báo",
+  "muted": "Đã tắt",
+  "mute": "Tắt",
+  "pin_conversation": "Ghim cuộc trò chuyện",
+  "pinned": "Đã ghim",
+  "pin": "Ghim",
+  "type_message": "Nhập tin nhắn...",
+  "you_are_typing": "Bạn đang nhập..."
 }
 
 

@@ -18,6 +18,7 @@ interface WebSocketClient {
   joinConversation(conversationId: number): void;
   subscribeAllConversations(userId: number, conversationIds: number[]): void;
   sendMessage(conversationId: number, senderId: number, content: string, senderName?: string, senderAvatar?: string): void;
+  sendReadReceipt(conversationId: number, messageId: number, userId: number): void;
   setUserOnline(userId: number): void;
   setUserOffline(userId: number): void;
   onMessage(callback: (message: WebSocketMessage) => void): void;
@@ -135,9 +136,24 @@ class NovaChatWebSocket implements WebSocketClient {
       sender_id: senderId,
       sender_name: senderName,
       sender_avatar: senderAvatar,
-      content: content
+      content: content,
+      client_id: `${senderId}-${Date.now()}`
     };
     
+    this.send(message);
+  }
+
+  sendReadReceipt(conversationId: number, messageId: number, userId: number): void {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+      console.warn('[WebSocket] Not connected, cannot send read receipt');
+      return;
+    }
+    const message = {
+      type: 'message_read',
+      conversation_id: conversationId,
+      message_id: String(messageId),
+      user_id: userId,
+    } as unknown as WebSocketMessage;
     this.send(message);
   }
 
