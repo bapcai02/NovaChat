@@ -6,13 +6,20 @@ interface WebSocketMessage {
   timestamp?: string;
   client_id?: string;
   message_id?: string;
+  user_id?: number;
+  status?: 'online' | 'offline';
+  conversation_ids?: number[];
 }
 
 interface WebSocketClient {
   connect(): void;
   disconnect(): void;
+  isConnected(): boolean;
   joinConversation(conversationId: number): void;
-  sendMessage(conversationId: number, senderId: number, content: string): void;
+  subscribeAllConversations(userId: number, conversationIds: number[]): void;
+  sendMessage(conversationId: number, senderId: number, content: string, senderName?: string, senderAvatar?: string): void;
+  setUserOnline(userId: number): void;
+  setUserOffline(userId: number): void;
   onMessage(callback: (message: WebSocketMessage) => void): void;
   onConnectionChange(callback: (status: string) => void): void;
 }
@@ -95,6 +102,10 @@ class NovaChatWebSocket implements WebSocketClient {
     this.currentConversationId = null;
   }
 
+  isConnected(): boolean {
+    return this.ws !== null && this.ws.readyState === WebSocket.OPEN;
+  }
+
   joinConversation(conversationId: number): void {
     
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
@@ -125,6 +136,50 @@ class NovaChatWebSocket implements WebSocketClient {
       sender_name: senderName,
       sender_avatar: senderAvatar,
       content: content
+    };
+    
+    this.send(message);
+  }
+
+  subscribeAllConversations(userId: number, conversationIds: number[]): void {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+      console.warn('[WebSocket] Not connected, cannot subscribe to conversations');
+      return;
+    }
+
+    const message = {
+      type: 'subscribe_all_conversations',
+      user_id: userId,
+      conversation_ids: conversationIds
+    };
+    
+    this.send(message);
+  }
+
+  setUserOnline(userId: number): void {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+      console.warn('[WebSocket] Not connected, cannot set user online');
+      return;
+    }
+
+    const message = {
+      type: 'user_online',
+      user_id: userId
+    };
+    
+    console.log('=== Sending user_online message ===', message);
+    this.send(message);
+  }
+
+  setUserOffline(userId: number): void {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+      console.warn('[WebSocket] Not connected, cannot set user offline');
+      return;
+    }
+
+    const message = {
+      type: 'user_offline',
+      user_id: userId
     };
     
     this.send(message);

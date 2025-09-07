@@ -116,6 +116,9 @@ Route::middleware('auth:api')->group(function () {
     Route::prefix('users')->group(function () {
         Route::get('/', [UserController::class, 'index']);
         Route::get('/search', [UserController::class, 'search']);
+        Route::post('/status', [UserStatusController::class, 'getUsersStatus']);
+        Route::get('/me/status', [UserStatusController::class, 'getCurrentUserStatus']);
+        Route::get('/{userId}/status', [UserStatusController::class, 'getUserStatus']);
     });
 
     // User status and typing
@@ -123,7 +126,6 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/status', [UserStatusController::class, 'updateStatus']);
         Route::post('/typing/start', [UserStatusController::class, 'startTyping']);
         Route::post('/typing/stop', [UserStatusController::class, 'stopTyping']);
-        Route::get('/online', [UserStatusController::class, 'getOnlineUsers']);
     });
 
     // Search
@@ -134,6 +136,13 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/users', [SearchController::class, 'searchUsers']);
         Route::get('/conversations', [SearchController::class, 'searchConversations']);
         Route::get('/files', [SearchController::class, 'searchFiles']);
+    });
+
+    // User status routes
+    Route::prefix('users')->group(function () {
+        Route::get('/status', [App\Http\Controllers\UserStatusController::class, 'getUsersStatus']);
+        Route::get('/me/status', [App\Http\Controllers\UserStatusController::class, 'getCurrentUserStatus']);
+        Route::get('/{userId}/status', [App\Http\Controllers\UserStatusController::class, 'getUserStatus']);
     });
 
 });

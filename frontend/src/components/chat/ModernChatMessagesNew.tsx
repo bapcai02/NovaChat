@@ -6,7 +6,7 @@ import { MessageCircle, Star, StarOff, Smile, MoreHorizontal } from 'lucide-reac
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { cn } from '@/lib/utils'
-import { Message, User } from '@/hooks/useChat'
+import type { Message, User } from '@/types/chat'
 
 interface ModernChatMessagesProps {
   messages: Message[]

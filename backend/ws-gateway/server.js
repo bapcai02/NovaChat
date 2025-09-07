@@ -18,6 +18,36 @@ const wss = new WebSocket.Server({ port: 7000 });
 // Store connected clients by conversation
 const clientsByConversation = new Map();
 
+// Store connected clients by user (for cleanup only)
+const clientsByUser = new Map();
+
+// Function to publish user presence events to Redis Stream
+const publishUserPresenceEvent = async (event, userId) => {
+  try {
+    const eventData = {
+      event: event,
+      user_id: userId,
+      timestamp: new Date().toISOString()
+    };
+    
+    // Publish to Redis Stream with MAXLEN ~ 100000
+    const streamId = await redis.xadd(
+      'user_presence',
+      'MAXLEN', '~', 100000,
+      '*',
+      'event', eventData.event,
+      'user_id', eventData.user_id,
+      'timestamp', eventData.timestamp
+    );
+    
+    log(`Published ${event} event for user ${userId} to Redis Stream:`, streamId);
+    return streamId;
+  } catch (error) {
+    log(`Error publishing ${event} event for user ${userId}:`, error.message);
+    throw error;
+  }
+};
+
 log('WebSocket Gateway started on port 7000');
 
 wss.on('connection', (ws) => {
@@ -26,6 +56,8 @@ wss.on('connection', (ws) => {
 
   ws.clientId = clientId;
   ws.conversationId = null;
+  ws.userId = null;
+  ws.subscribedConversations = new Set();
 
   ws.on('message', async (data) => {
     try {
@@ -52,6 +84,77 @@ wss.on('connection', (ws) => {
             client_id: clientId,
           })
         );
+      } else if (message.type === 'user_online') {
+        try {
+          const userId = message.user_id;
+          log(`Processing user_online for user ${userId}`);
+          
+          ws.userId = userId;
+          
+          // Store client by user (for cleanup only)
+          if (!clientsByUser.has(userId)) {
+            clientsByUser.set(userId, new Set());
+          }
+          clientsByUser.get(userId).add(ws);
+          
+          // Publish user_connected event to Redis Stream
+          await publishUserPresenceEvent('user_connected', userId);
+          
+          log(`User ${userId} connected - event published to Redis Stream`);
+        } catch (error) {
+          log(`Error handling user_online: ${error.message}`);
+          log(`Error stack: ${error.stack}`);
+        }
+        
+      } else if (message.type === 'user_offline') {
+        try {
+          const userId = message.user_id;
+          
+          // Remove client from user mapping
+          if (clientsByUser.has(userId)) {
+            clientsByUser.get(userId).delete(ws);
+            if (clientsByUser.get(userId).size === 0) {
+              clientsByUser.delete(userId);
+            }
+          }
+          
+          // Check if user has any other connections
+          const hasOtherConnections = clientsByUser.has(userId) && clientsByUser.get(userId).size > 0;
+          
+          if (!hasOtherConnections) {
+            // Publish user_disconnected event to Redis Stream
+            await publishUserPresenceEvent('user_disconnected', userId);
+            
+            log(`User ${userId} disconnected - event published to Redis Stream`);
+          }
+        } catch (error) {
+          log(`Error handling user_offline: ${error.message}`);
+          log(`Error stack: ${error.stack}`);
+        }
+      } else if (message.type === 'subscribe_all_conversations') {
+        const userId = message.user_id;
+        const conversationIds = message.conversation_ids || [];
+        
+        ws.userId = userId;
+        
+        // Subscribe to all conversations
+        conversationIds.forEach(conversationId => {
+          if (!clientsByConversation.has(conversationId)) {
+            clientsByConversation.set(conversationId, new Set());
+            log(`Created new conversation room: ${conversationId}`);
+          }
+          clientsByConversation.get(conversationId).add(ws);
+          ws.subscribedConversations.add(conversationId);
+        });
+        
+        log(`User ${userId} subscribed to ${conversationIds.length} conversations: [${conversationIds.join(', ')}]`);
+        
+        ws.send(JSON.stringify({
+          type: 'subscribed_all_conversations',
+          conversation_ids: conversationIds,
+          client_id: clientId,
+        }));
+        
       } else if (message.type === 'chat_message') {
         if (!ws.conversationId) {
           ws.send(
@@ -71,11 +174,22 @@ wss.on('connection', (ws) => {
           client_id: clientId,
         };
 
-        // Push vào Redis để Laravel xử lý
-        redis
-          .lpush('chat_messages', JSON.stringify(chatMessage))
-          .then(() => log('Message pushed to Redis queue:', chatMessage))
-          .catch((err) => log('Error pushing to Redis:', err));
+        // Push vào Redis Stream để Laravel xử lý (Redis Streams)
+        try {
+          const streamId = await redis.xadd(
+            'chat_messages',
+            'MAXLEN', '~', 100000,
+            '*',
+            'conversation_id', String(chatMessage.conversation_id),
+            'sender_id', String(chatMessage.sender_id),
+            'content', chatMessage.content,
+            'timestamp', chatMessage.timestamp,
+            'client_id', chatMessage.client_id
+          );
+          log('Message pushed to Redis Stream chat_messages:', streamId);
+        } catch (err) {
+          log('Error pushing to Redis Stream chat_messages:', err.message || err);
+        }
 
         // Broadcast cho tất cả client trong cùng conversation
         log('=== Starting broadcast process ===');
@@ -156,15 +270,39 @@ wss.on('connection', (ws) => {
     }
   });
 
-  ws.on('close', () => {
+  ws.on('close', async () => {
     log(`Client ${clientId} disconnected`);
-    if (ws.conversationId && clientsByConversation.has(ws.conversationId)) {
-      const conversationClients = clientsByConversation.get(ws.conversationId);
-      conversationClients.delete(ws);
-      if (conversationClients.size === 0) {
-        clientsByConversation.delete(ws.conversationId);
+    
+    // Handle user offline if user was connected
+    if (ws.userId) {
+      // Remove client from user mapping
+      if (clientsByUser.has(ws.userId)) {
+        clientsByUser.get(ws.userId).delete(ws);
+        if (clientsByUser.get(ws.userId).size === 0) {
+          clientsByUser.delete(ws.userId);
+          
+          // Publish user_disconnected event to Redis Stream
+          try {
+            await publishUserPresenceEvent('user_disconnected', ws.userId);
+            log(`User ${ws.userId} disconnected (client closed) - event published to Redis Stream`);
+          } catch (error) {
+            log(`Error publishing user_disconnected event for user ${ws.userId}:`, error.message);
+          }
+        }
       }
     }
+    
+    // Handle conversation cleanup - remove from all subscribed conversations
+    ws.subscribedConversations.forEach(conversationId => {
+      if (clientsByConversation.has(conversationId)) {
+        const conversationClients = clientsByConversation.get(conversationId);
+        conversationClients.delete(ws);
+        if (conversationClients.size === 0) {
+          clientsByConversation.delete(conversationId);
+          log(`Conversation room ${conversationId} is now empty`);
+        }
+      }
+    });
   });
 
   ws.on('error', (error) => {

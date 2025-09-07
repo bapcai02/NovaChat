@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { apiService } from '@/services/api'
-import { User } from '@/hooks/useChat'
+import type { User } from '@/types/chat'
 
 interface AuthContextType {
   user: User | null

@@ -9,6 +9,7 @@ import ModernChatInput from './ModernChatInput'
 import ModernThreadChat from './ModernThreadChat'
 import { useChat } from '@/hooks/useChat'
 import { getWebSocketClient } from '@/lib/websocket'
+import UserOnlineStatus from './UserOnlineStatus'
 
 interface ChatLayoutProps {
   className?: string
@@ -23,6 +24,7 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
     currentConversation,
     messages,
     onlineUsers,
+    onlineUserIds,
     isLoading,
     error,
     setCurrentConversation,
@@ -178,6 +180,7 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
             currentConversation={currentConversation}
             onSelectConversation={handleSelectConversation}
             currentUser={currentUser}
+            onlineUserIds={onlineUserIds}
           />
         </motion.div>
         <div className="flex-1 flex items-center justify-center bg-white">
@@ -225,6 +228,7 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
           currentConversation={currentConversation}
           onSelectConversation={handleSelectConversation}
           currentUser={currentUser}
+          onlineUserIds={onlineUserIds}
         />
       </motion.div>
 

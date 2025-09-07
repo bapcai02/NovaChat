@@ -2,106 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { apiService } from '@/services/api'
 import { unreadService } from '@/services/unreadService'
 import { getWebSocketClient, WebSocketMessage } from '@/lib/websocket'
-
-export interface User {
-  id: number
-  name: string
-  email: string
-  username: string
-  avatar?: string
-  is_online: boolean
-  last_seen_at?: string
-  status?: string
-  status_message?: string
-}
-
-export interface Team {
-  id: number
-  name: string
-  description?: string
-  slug: string
-  owner_id: number
-  is_private: boolean
-  created_at: string
-  updated_at: string
-  owner?: User
-  members_count?: number
-}
-
-export interface Channel {
-  id: number
-  name: string
-  description?: string
-  slug: string
-  team_id: number
-  is_private: boolean
-  created_at: string
-  updated_at: string
-  team?: Team
-  members_count?: number
-}
-
-export interface Conversation {
-  id: number
-  type: 'direct' | 'channel' | 'group'
-  name?: string
-  title?: string
-  team_id?: number
-  channel_id?: number
-  metadata?: any
-  created_at: string
-  updated_at: string
-  team?: Team
-  channel?: Channel
-  members?: User[]
-  other_member?: User
-  last_message?: Message
-  unread_count?: number
-  messages_count?: number
-}
-
-export interface Message {
-  id: number
-  user_id: number
-  conversation_id: number
-  channel_id?: number
-  parent_id?: number
-  content: string
-  type: 'text' | 'image' | 'file' | 'system'
-  metadata?: any
-  created_at: string
-  updated_at: string
-  edited_at?: string
-  is_edited?: boolean
-  is_pinned?: boolean
-  is_deleted?: boolean
-  user?: User
-  sender?: User
-  reactions?: MessageReaction[]
-  is_bookmarked?: boolean
-  thread_messages_count?: number
-  replies_count?: number
-}
-
-export interface MessageReaction {
-  id?: number
-  message_id?: number
-  user_id?: number
-  emoji: string
-  count?: number
-  users?: number[]
-  created_at?: string
-  user?: User
-}
-
-export interface Bookmark {
-  id: number
-  user_id: number
-  message_id: number
-  note?: string
-  created_at: string
-  message?: Message
-}
+import type { User, Team, Channel, Conversation, Message, MessageReaction, Bookmark } from '@/types/chat'
 
 export function useChat() {
   const [currentUser, setCurrentUser] = useState<User | null>(null)
@@ -113,8 +14,10 @@ export function useChat() {
   const [onlineUsers, setOnlineUsers] = useState<User[]>([])
   const [conversationUsers, setConversationUsers] = useState<User[]>([])
   const conversationUsersRef = useRef<User[]>([])
+  const [onlineUserIds, setOnlineUserIds] = useState<Set<number>>(new Set())
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [userOnlineSet, setUserOnlineSet] = useState(false)
 
   // Load current user
   const loadCurrentUser = useCallback(async () => {
@@ -173,7 +76,10 @@ export function useChat() {
       const response = await apiService.getConversations()
       // API returns nested data: response.data.data
       const conversationsData = response.data?.data || response.data
-      setConversations(Array.isArray(conversationsData) ? conversationsData : [])
+      const conversations = Array.isArray(conversationsData) ? conversationsData : []
+      setConversations(conversations)
+      
+      // Store conversations (auto-select will be handled in useEffect)
     } catch (err) {
       setError('Failed to load conversations')
       console.error('Error loading conversations:', err)
@@ -181,7 +87,7 @@ export function useChat() {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [currentConversation])
 
   // Load messages for a conversation
   const loadMessages = useCallback(async (conversationId: number, page: number = 1) => {
@@ -447,6 +353,42 @@ export function useChat() {
     }
   }, [])
 
+  // Load user statuses from API
+  const loadUserStatuses = useCallback(async () => {
+    try {
+      // Get all user IDs from conversations
+      const allUserIds = new Set<number>()
+      conversations.forEach(conv => {
+        if (conv.members) {
+          conv.members.forEach(member => {
+            if (member.id !== currentUser?.id) {
+              allUserIds.add(member.id)
+            }
+          })
+        }
+      })
+      
+      if (allUserIds.size === 0) return
+      
+      const response = await apiService.getUsersStatus(Array.from(allUserIds))
+      
+      const userStatuses = response.data?.data || []
+      console.log('=== Loaded user statuses ===', userStatuses)
+      
+      // Create a map of user_id -> is_online
+      const onlineUserIds = new Set<number>()
+      userStatuses.forEach((status: any) => {
+        if (status.is_online) {
+          onlineUserIds.add(status.user_id)
+        }
+      })
+      
+      setOnlineUserIds(onlineUserIds)
+    } catch (err) {
+      console.error('Error loading user statuses:', err)
+    }
+  }, [conversations, currentUser?.id])
+
   // Search messages
   const searchMessages = useCallback(async (query: string, conversationId?: number) => {
     try {
@@ -608,9 +550,41 @@ export function useChat() {
     // Setup WebSocket subscription for real-time messages
     setupWebSocketSubscription(conversation.id)
     
+    // Note: User online status is handled in subscribeToAllConversations
+    
     // Load messages for the conversation
     loadMessages(conversation.id)
   }, [setupWebSocketSubscription, loadMessages])
+
+  // Subscribe to all conversations when user is loaded
+  const subscribeToAllConversations = useCallback(() => {
+    if (currentUser?.id && conversations.length > 0) {
+      const wsClient = getWebSocketClient()
+      const conversationIds = conversations.map(conv => conv.id)
+      
+      // Wait for WebSocket to be connected
+      const checkConnection = () => {
+        if (wsClient.isConnected()) {
+          wsClient.subscribeAllConversations(currentUser.id, conversationIds)
+          console.log(`Subscribed to ${conversationIds.length} conversations:`, conversationIds)
+          
+          // Set user online only once, with a small delay
+          if (!userOnlineSet) {
+            setTimeout(() => {
+              console.log('=== Setting user online in subscribeToAllConversations ===', currentUser.id)
+              wsClient.setUserOnline(currentUser.id)
+              setUserOnlineSet(true)
+            }, 1000) // 1 second delay
+          }
+        } else {
+          // Retry after 1 second
+          setTimeout(checkConnection, 1000)
+        }
+      }
+      
+      checkConnection()
+    }
+  }, [currentUser?.id, conversations, userOnlineSet])
 
   // Initialize chat data
   useEffect(() => {
@@ -619,6 +593,48 @@ export function useChat() {
     loadConversations()
     loadOnlineUsers()
   }, [loadCurrentUser, loadTeams, loadConversations, loadOnlineUsers])
+
+  // Load user statuses when conversations change
+  useEffect(() => {
+    if (conversations.length > 0) {
+      loadUserStatuses()
+    }
+  }, [loadUserStatuses])
+
+  // Periodic refresh of user statuses every 30 seconds
+  useEffect(() => {
+    if (conversations.length > 0) {
+      const interval = setInterval(() => {
+        loadUserStatuses()
+      }, 30000) // 30 seconds
+
+      return () => clearInterval(interval)
+    }
+  }, [loadUserStatuses, conversations.length])
+
+  // Subscribe to all conversations when conversations are loaded
+  useEffect(() => {
+    subscribeToAllConversations()
+  }, [subscribeToAllConversations])
+
+  // Auto-select first conversation if none is selected
+  useEffect(() => {
+    if (conversations.length > 0 && !currentConversation) {
+      console.log('Auto-selecting first conversation:', conversations[0].id)
+      handleSelectConversation(conversations[0])
+    }
+  }, [conversations, currentConversation, handleSelectConversation])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      // Set user offline when component unmounts
+      if (currentUser?.id) {
+        const wsClient = getWebSocketClient()
+        wsClient.setUserOffline(currentUser.id)
+      }
+    }
+  }, [currentUser?.id])
 
   // Load unread counts after conversations are loaded
   useEffect(() => {
@@ -637,6 +653,7 @@ export function useChat() {
     messages,
     onlineUsers,
     conversationUsers,
+    onlineUserIds,
     isLoading,
     error,
     

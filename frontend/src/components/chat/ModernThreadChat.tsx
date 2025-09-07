@@ -61,49 +61,6 @@ interface ThreadChatProps {
   onClose: () => void
 }
 
-const mockThreadMessages: ThreadMessage[] = [
-  {
-    id: '1',
-    content: 'This is a reply to the original message',
-    sender: {
-      id: '1',
-      name: 'John Doe',
-      avatar: 'https://ui-avatars.com/api/?name=John+Doe&background=random',
-      isOnline: true
-    },
-    timestamp: '2:30 PM',
-    isOwn: false,
-    reactions: [
-      { emoji: '👍', count: 2, users: ['user1', 'user2'] }
-    ]
-  },
-  {
-    id: '2',
-    content: 'Another reply in the thread',
-    sender: {
-      id: '2',
-      name: 'Jane Smith',
-      avatar: 'https://ui-avatars.com/api/?name=Jane+Smith&background=random',
-      isOnline: true
-    },
-    timestamp: '2:32 PM',
-    isOwn: true,
-    isEdited: true
-  },
-  {
-    id: '3',
-    content: 'Thread discussion continues here...',
-    sender: {
-      id: '3',
-      name: 'Mike Johnson',
-      avatar: 'https://ui-avatars.com/api/?name=Mike+Johnson&background=random',
-      isOnline: false
-    },
-    timestamp: '2:35 PM',
-    isOwn: false
-  }
-]
-
 export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatProps) {
   const [messages, setMessages] = useState<ThreadMessage[]>([])
   const [newMessage, setNewMessage] = useState('')
@@ -186,9 +143,7 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
   const handleSendMessage = async () => {
     if (newMessage.trim() || attachments.length > 0) {
       try {
-        console.log('Sending thread message:', newMessage.trim())
         const response = await apiService.sendThreadMessage(parentMessage.id, newMessage.trim())
-        console.log('Thread message sent:', response)
         
         // Add the new message to the list
         const newMessageData: ThreadMessage = {

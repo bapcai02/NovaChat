@@ -28,8 +28,10 @@ import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { UserSearchDropdown } from '@/components/ui/user-search-dropdown'
 import { cn } from '@/lib/utils'
-import { User, Team, Channel, Conversation } from '@/hooks/useChat'
+import type { User, Team, Channel, Conversation } from '@/types/chat'
 import { UserSearchResult } from '@/services/userSearchService'
+import UserOnlineStatus from './UserOnlineStatus'
+import { LogoutButton } from '@/components/auth/LogoutButton'
 
 interface ModernSidebarProps {
   teams: Team[]
@@ -37,6 +39,7 @@ interface ModernSidebarProps {
   currentConversation: Conversation | null
   onSelectConversation: (conversation: Conversation) => void
   currentUser: User | null
+  onlineUserIds?: Set<number>
 }
 
 export default function ModernSidebar({
@@ -44,7 +47,8 @@ export default function ModernSidebar({
   conversations,
   currentConversation,
   onSelectConversation,
-  currentUser
+  currentUser,
+  onlineUserIds = new Set()
 }: ModernSidebarProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [isUserSearchOpen, setIsUserSearchOpen] = useState(false)
@@ -296,9 +300,11 @@ export default function ModernSidebar({
                           </AvatarFallback>
                         </Avatar>
                         {/* Online/Offline indicator */}
-                        <div className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white ${
-                          otherUser?.is_online ? 'bg-green-500' : 'bg-gray-400'
-                        }`} />
+                        <UserOnlineStatus 
+                          userId={otherUser?.id || 0}
+                          isOnline={otherUser?.id ? onlineUserIds.has(otherUser.id) : false}
+                          className="absolute -bottom-0.5 -right-0.5"
+                        />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center space-x-1">
@@ -351,13 +357,22 @@ export default function ModernSidebar({
               </p>
               <p className="text-xs text-gray-500">Online</p>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0 hover:bg-gray-200 text-gray-600 hover:text-gray-800"
-            >
-              <Settings className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 hover:bg-gray-200 text-gray-600 hover:text-gray-800"
+              >
+                <Settings className="h-4 w-4" />
+              </Button>
+              <LogoutButton
+                className="h-8 w-8 p-0 hover:bg-red-100 text-gray-600 hover:text-red-600"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              </LogoutButton>
+            </div>
           </div>
         </div>
       )}
