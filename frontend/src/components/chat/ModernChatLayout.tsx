@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import ModernSidebar from './ModernSidebarNew'
 import ModernChatHeader from './ModernChatHeader'
@@ -28,6 +28,8 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
     onlineUsers,
     onlineUserIds,
     isLoading,
+    isAppReady,
+    wsStatus,
     error,
     setCurrentConversation,
     handleSelectConversation,
@@ -44,6 +46,9 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
     readPointers,
     typingByConversation,
   } = useChat()
+  const reloadedRef = useRef(false)
+
+  // No auto-select/reload; user must pick a conversation explicitly
 
   const [showThread, setShowThread] = useState(false)
   const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false)
@@ -235,6 +240,20 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
     setThreadMessage(null)
   }
 
+  // App-level loading gate: wait until data & ws are ready
+  if (!isAppReady) {
+    return (
+      <div className={`flex h-screen bg-white text-gray-900 items-center justify-center ${className || ''}`}>
+        <div className="flex flex-col items-center gap-3">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <div className="text-sm text-gray-500">
+            {wsStatus === 'connecting' ? 'Connecting…' : 'Loading…'}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   // Show loading if no conversation selected
   if (!currentConversation) {
     return (
@@ -348,6 +367,7 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
           <ModernChatMessages 
             messages={messages}
             currentUser={currentUser}
+            conversationId={currentConversation.id}
             onOpenThread={handleOpenThread}
             onAddReaction={addReaction}
             onRemoveReaction={removeReaction}

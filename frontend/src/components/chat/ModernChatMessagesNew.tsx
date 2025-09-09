@@ -8,11 +8,12 @@ import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { cn } from '@/lib/utils'
 import type { Message, User } from '@/types/chat'
-import { Virtuoso } from 'react-virtuoso'
+import { Virtuoso, VirtuosoHandle } from 'react-virtuoso'
 
 interface ModernChatMessagesProps {
   messages: Message[]
   currentUser: User | null
+  conversationId?: number
   onOpenThread?: (message: { id: string; content: string; sender: string; timestamp: string }) => void
   onAddReaction?: (messageId: number, emoji: string) => void
   onRemoveReaction?: (messageId: number, emoji: string) => void
@@ -312,6 +313,7 @@ const MessageBubble = ({
 export default function ModernChatMessages({ 
   messages, 
   currentUser, 
+  conversationId,
   onOpenThread, 
   onAddReaction, 
   onRemoveReaction, 
@@ -326,14 +328,26 @@ export default function ModernChatMessages({
 }: ModernChatMessagesProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const virtuosoRef = useRef<VirtuosoHandle>(null)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
   useEffect(() => {
+    // For non-virtuoso sections (empty state), keep behavior
     scrollToBottom()
   }, [messages])
+
+  // Ensure we jump to bottom when switching conversations and after initial load
+  useEffect(() => {
+    if (!messages || messages.length === 0) return
+    // small delay to allow Virtuoso to layout items
+    const t = setTimeout(() => {
+      virtuosoRef.current?.scrollToIndex({ index: messages.length - 1, align: 'end', behavior: 'auto' })
+    }, 50)
+    return () => clearTimeout(t)
+  }, [conversationId, messages.length])
 
   // Detect reach bottom to potentially send read receipts (handled in parent via WS)
   useEffect(() => {
@@ -375,8 +389,11 @@ export default function ModernChatMessages({
           </div>
         ) : (
           <Virtuoso
+            key={conversationId}
+            ref={virtuosoRef}
             style={{ height: '100%' }}
             data={messages}
+            initialTopMostItemIndex={Math.max(0, messages.length - 1)}
             itemContent={(index, message) => (
               <div className="px-4 py-1">
                 <MessageBubble
@@ -395,7 +412,7 @@ export default function ModernChatMessages({
             )}
             atBottomThreshold={24}
             atBottomStateChange={(atBottom) => { if (atBottom) onReachBottom?.() }}
-            followOutput={true}
+            followOutput={"smooth" as any}
           />
         )}
         {members && readPointers && (

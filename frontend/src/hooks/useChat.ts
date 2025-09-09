@@ -18,6 +18,9 @@ export function useChat() {
   const optimisticIdsRef = useRef<Set<number>>(new Set())
   const [onlineUserIds, setOnlineUserIds] = useState<Set<number>>(new Set())
   const [isLoading, setIsLoading] = useState(false)
+  const [isConversationsLoaded, setIsConversationsLoaded] = useState(false)
+  const [isMessagesLoaded, setIsMessagesLoaded] = useState(false)
+  const [wsStatus, setWsStatus] = useState<'disconnected' | 'connecting' | 'connected' | 'closing' | 'error'>('disconnected')
   const [error, setError] = useState<string | null>(null)
   const [userOnlineSet, setUserOnlineSet] = useState(false)
   const [typingByConversation, setTypingByConversation] = useState<Record<number, Set<number>>>({})
@@ -76,16 +79,33 @@ export function useChat() {
       setIsLoading(true)
       const res: any = await apiService.getConversations()
       const conversationsData = res?.data?.data ?? res?.data ?? res
-      const conversations = Array.isArray(conversationsData) ? conversationsData : []
-      setConversations(conversations)
-      
-      // Store conversations (auto-select will be handled in useEffect)
+      const baseConversations: any[] = Array.isArray(conversationsData) ? conversationsData : []
+
+      // Fetch unread counts and merge BEFORE first render to avoid flicker
+      let mergedConversations = baseConversations
+      try {
+        const unreadCounts: any[] = await unreadService.getUnreadCounts()
+        if (Array.isArray(unreadCounts)) {
+          const idToUnread = new Map<number, number>()
+          unreadCounts.forEach((u: any) => { if (u && typeof u.conversation_id === 'number') idToUnread.set(u.conversation_id, u.unread_count || 0) })
+          mergedConversations = baseConversations.map((c: any) => ({
+            ...c,
+            unread_count: idToUnread.get(c.id) ?? (c.unread_count ?? 0)
+          }))
+        }
+      } catch (e) {
+        console.warn('Load unread counts failed', e)
+      }
+
+      setConversations(mergedConversations as any)
+
     } catch (err) {
       setError('Failed to load conversations')
       console.error('Error loading conversations:', err)
       setConversations([])
     } finally {
       setIsLoading(false)
+      setIsConversationsLoaded(true)
     }
   }, [currentConversation])
 
@@ -115,6 +135,7 @@ export function useChat() {
         setMessages(messagesArray)
         // Setup WebSocket subscription for new messages
         setupWebSocketSubscription(conversationId)
+        setIsMessagesLoaded(true)
       } else {
         setMessages(prev => [...messagesArray, ...prev])
       }
@@ -637,6 +658,21 @@ export function useChat() {
 
   // Initialize chat data
   useEffect(() => {
+    // Prime websocket connection early
+    try {
+      const ws = getWebSocketClient()
+      setWsStatus(ws.getConnectionState() as any)
+      ws.onConnectionChange((status) => {
+        setWsStatus((status as any) === 'error' ? 'error' : (status as any))
+      })
+      if (!ws.isConnected()) {
+        ws.connect()
+      }
+    } catch (e) {
+      console.error('WS init failed', e)
+      setWsStatus('error')
+    }
+
     loadCurrentUser()
     loadTeams()
     loadConversations()
@@ -666,12 +702,7 @@ export function useChat() {
     subscribeToAllConversations()
   }, [subscribeToAllConversations])
 
-  // Auto-select first conversation if none is selected
-  useEffect(() => {
-    if (conversations.length > 0 && !currentConversation) {
-      handleSelectConversation(conversations[0])
-    }
-  }, [conversations, currentConversation, handleSelectConversation])
+  // Do not auto-select conversation; wait for explicit user action
 
   // Cleanup on unmount
   useEffect(() => {
@@ -684,12 +715,9 @@ export function useChat() {
     }
   }, [currentUser?.id])
 
-  // Load unread counts after conversations are loaded
-  useEffect(() => {
-    if (conversations.length > 0) {
-      loadUnreadCounts()
-    }
-  }, [conversations.length, loadUnreadCounts])
+  // Removed extra unread refresh here to prevent flicker; use explicit triggers instead
+
+  const isAppReady = !!currentUser && isConversationsLoaded && (!!currentConversation ? isMessagesLoaded : true) && (wsStatus === 'connected' || wsStatus === 'connecting')
 
   return {
     // State
@@ -703,6 +731,10 @@ export function useChat() {
     conversationUsers,
     onlineUserIds,
     isLoading,
+    isConversationsLoaded,
+    isMessagesLoaded,
+    wsStatus,
+    isAppReady,
     error,
     typingByConversation,
     readPointers,
