@@ -389,7 +389,6 @@ export default function ModernChatMessages({
           </div>
         ) : (
           <Virtuoso
-            key={conversationId}
             ref={virtuosoRef}
             style={{ height: '100%' }}
             data={messages}

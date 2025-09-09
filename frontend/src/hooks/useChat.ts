@@ -80,24 +80,8 @@ export function useChat() {
       const res: any = await apiService.getConversations()
       const conversationsData = res?.data?.data ?? res?.data ?? res
       const baseConversations: any[] = Array.isArray(conversationsData) ? conversationsData : []
-
-      // Fetch unread counts and merge BEFORE first render to avoid flicker
-      let mergedConversations = baseConversations
-      try {
-        const unreadCounts: any[] = await unreadService.getUnreadCounts()
-        if (Array.isArray(unreadCounts)) {
-          const idToUnread = new Map<number, number>()
-          unreadCounts.forEach((u: any) => { if (u && typeof u.conversation_id === 'number') idToUnread.set(u.conversation_id, u.unread_count || 0) })
-          mergedConversations = baseConversations.map((c: any) => ({
-            ...c,
-            unread_count: idToUnread.get(c.id) ?? (c.unread_count ?? 0)
-          }))
-        }
-      } catch (e) {
-        console.warn('Load unread counts failed', e)
-      }
-
-      setConversations(mergedConversations as any)
+      // Tin cậy unread_count do API /conversations trả về, không merge thêm để tránh sai lệch
+      setConversations(baseConversations as any)
 
     } catch (err) {
       setError('Failed to load conversations')
@@ -609,8 +593,12 @@ export function useChat() {
       setCurrentConversation(conversation)
     }
     
-    // Mark conversation as read on server
-    await unreadService.markConversationAsRead(conversation.id)
+    // Mark conversation as read on server (new route with fallback handled in service)
+    try {
+      await unreadService.markConversationAsRead(conversation.id)
+      // After marking as read, refresh conversations to persist correct unread on next reload
+      try { await loadConversations() } catch {}
+    } catch {}
     
     // Reset unread count in local state
     setConversations(prev => prev.map(conv => 

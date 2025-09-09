@@ -38,12 +38,18 @@ export const unreadService = {
    */
   async markConversationAsRead(conversationId: number): Promise<boolean> {
     try {
+      // Prefer legacy/likely-available route first
       const response = await apiService.post(`/conversations/${conversationId}/read`)
-      // Return true if request was successful (status 200-299)
       return response.status >= 200 && response.status < 300
     } catch (error) {
-      console.error('Failed to mark conversation as read:', error)
-      return false
+      // Fallback to alternative route if primary is unavailable
+      try {
+        const fallback = await apiService.post(`/conversations/${conversationId}/mark-as-read`)
+        return fallback.status >= 200 && fallback.status < 300
+      } catch (err) {
+        console.error('Failed to mark conversation as read:', err)
+        return false
+      }
     }
   },
 

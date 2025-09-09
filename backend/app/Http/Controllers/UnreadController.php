@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\MessageRead;
 use App\Models\Conversation;
+use App\Models\ConversationMember;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -72,6 +73,11 @@ class UnreadController extends Controller
 
         // Mark all messages as read
         MessageRead::markConversationAsRead((int)$conversationId, $userId);
+
+        // Also update last_read_at so unread_count in GET /conversations reflects correctly
+        ConversationMember::where('conversation_id', (int)$conversationId)
+            ->where('user_id', $userId)
+            ->update(['last_read_at' => now()]);
 
         return response()->json([
             'success' => true,

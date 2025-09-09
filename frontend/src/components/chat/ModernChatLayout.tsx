@@ -254,55 +254,6 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
     )
   }
 
-  // Show loading if no conversation selected
-  if (!currentConversation) {
-    return (
-      <div className={`flex h-screen bg-gray-50 text-gray-900 ${className || ''}`}>
-        <motion.div
-          initial={{ x: -300, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ duration: 0.3, ease: 'easeOut' }}
-          className="w-80 flex-shrink-0"
-        >
-          <ModernSidebar 
-            teams={teams}
-            conversations={conversations}
-            currentConversation={currentConversation}
-            onSelectConversation={handleSelectConversation}
-            currentUser={currentUser}
-            onlineUserIds={onlineUserIds}
-          />
-        </motion.div>
-        <div className="flex-1 flex items-center justify-center bg-white">
-          <div className="text-center">
-            <div className="flex flex-col items-center justify-center gap-3 mb-6">
-              <div className="relative">
-                <div className="h-16 w-16 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-2xl">
-                  <div className="relative">
-                    <div className="w-10 h-10 border-3 border-white rounded-full"></div>
-                    <div className="absolute top-1.5 left-1.5 w-7 h-7 bg-white rounded-full opacity-90"></div>
-                    <div className="absolute top-3 left-3 w-4 h-4 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full"></div>
-                  </div>
-                </div>
-                <div className="absolute -top-2 -right-2 w-4 h-4 bg-green-500 rounded-full border-3 border-white shadow-lg"></div>
-                <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-yellow-400 rounded-full border-2 border-white"></div>
-              </div>
-              <div className="text-center">
-                <h2 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-1">
-                  Nova Chat
-                </h2>
-                <p className="text-sm font-medium text-gray-500">Modern Communication</p>
-              </div>
-            </div>
-            <p className="text-lg text-gray-500">
-              Select a conversation to start chatting
-            </p>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className={`flex h-screen bg-gray-50 text-gray-900 ${className || ''}`}>
       {/* Sidebar */}
@@ -324,37 +275,42 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
 
       {/* Main chat area */}
       <div className="flex-1 flex flex-col min-w-0 bg-white h-screen">
-        {/* Chat header */}
+        {/* Chat header (or placeholder when no conversation) */}
         <motion.div
           initial={{ y: -50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.3, delay: 0.1 }}
           className="flex-shrink-0"
         >
-          <ModernChatHeader
-            channelName={getConversationDisplayName(currentConversation)}
-            channelType={currentConversation.type}
-            memberCount={currentConversation.members?.length || 0}
-            isOnline={true}
-            lastSeen="now"
-            avatar={getConversationAvatar(currentConversation)}
-            isMuted={isMuted}
-            isPinned={isPinned}
-            onSearch={handleSearch}
-            onCall={handleCall}
-            onVideoCall={handleVideoCall}
-            onViewMembers={handleViewMembers}
-            onToggleMute={handleToggleMute}
-            onTogglePin={handleTogglePin}
-            onSettings={handleSettings}
-            onJumpToMessage={jumpToMessage}
-            onMarkAllRead={async () => {
-              if (!currentConversation) return
-              await unreadService.markConversationAsRead(currentConversation.id)
-              loadUnreadCounts()
-            }}
-            
-          />
+          {currentConversation ? (
+            <ModernChatHeader
+              channelName={getConversationDisplayName(currentConversation)}
+              channelType={currentConversation.type}
+              memberCount={currentConversation.members?.length || 0}
+              isOnline={true}
+              lastSeen="now"
+              avatar={getConversationAvatar(currentConversation)}
+              isMuted={isMuted}
+              isPinned={isPinned}
+              onSearch={handleSearch}
+              onCall={handleCall}
+              onVideoCall={handleVideoCall}
+              onViewMembers={handleViewMembers}
+              onToggleMute={handleToggleMute}
+              onTogglePin={handleTogglePin}
+              onSettings={handleSettings}
+              onJumpToMessage={jumpToMessage}
+              onMarkAllRead={async () => {
+                if (!currentConversation) return
+                await unreadService.markConversationAsRead(currentConversation.id)
+                loadUnreadCounts()
+              }}
+            />
+          ) : (
+            <div className="h-16 flex items-center px-6 border-b border-gray-100">
+              <h2 className="text-sm font-medium text-gray-500">Select a conversation to start</h2>
+            </div>
+          )}
         </motion.div>
 
         {/* Chat messages */}
@@ -364,22 +320,30 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
           transition={{ duration: 0.3, delay: 0.2 }}
           className="flex-1 min-h-0 overflow-hidden"
         >
-          <ModernChatMessages 
-            messages={messages}
-            currentUser={currentUser}
-            conversationId={currentConversation.id}
-            onOpenThread={handleOpenThread}
-            onAddReaction={addReaction}
-            onRemoveReaction={removeReaction}
-            onBookmark={bookmarkMessage}
-            onRemoveBookmark={removeBookmark}
-            isLoading={isLoading}
-            onEditMessage={async (id, content) => { await editMessage(id, content) }}
-            onDeleteMessage={async (id) => { await deleteMessage(id) }}
-            onReachBottom={handleReachBottom}
-            members={(currentConversation?.members || []).map((m: any) => ({ id: m.id, name: m.name, avatar: m.avatar }))}
-            readPointers={currentConversation ? (readPointers[currentConversation.id] || {}) : {}}
-          />
+          {currentConversation ? (
+            <ModernChatMessages 
+              messages={messages}
+              currentUser={currentUser}
+              conversationId={currentConversation.id}
+              onOpenThread={handleOpenThread}
+              onAddReaction={addReaction}
+              onRemoveReaction={removeReaction}
+              onBookmark={bookmarkMessage}
+              onRemoveBookmark={removeBookmark}
+              isLoading={isLoading}
+              onEditMessage={async (id, content) => { await editMessage(id, content) }}
+              onDeleteMessage={async (id) => { await deleteMessage(id) }}
+              onReachBottom={handleReachBottom}
+              members={(currentConversation?.members || []).map((m: any) => ({ id: m.id, name: m.name, avatar: m.avatar }))}
+              readPointers={currentConversation ? (readPointers[currentConversation.id] || {}) : {}}
+            />
+          ) : (
+            <div className="h-full flex items-center justify-center">
+              <div className="text-center">
+                <p className="text-lg text-gray-500">Select a conversation to start chatting</p>
+              </div>
+            </div>
+          )}
         </motion.div>
 
         {/* Chat input */}
@@ -389,14 +353,18 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
           transition={{ duration: 0.3, delay: 0.3 }}
           className="flex-shrink-0"
         >
-          <ModernChatInput
-            onSendMessage={handleSendMessage}
-            onTyping={handleTyping}
-            placeholder={`Type message...`}
-            disabled={isLoading}
-            typingUsers={typingNames}
-            mentionUsers={(currentConversation?.members || []).map((m: any) => ({ id: m.id, name: m.name, username: m.username, avatar: m.avatar }))}
-          />
+          {currentConversation ? (
+            <ModernChatInput
+              onSendMessage={handleSendMessage}
+              onTyping={handleTyping}
+              placeholder={`Type message...`}
+              disabled={isLoading}
+              typingUsers={typingNames}
+              mentionUsers={(currentConversation?.members || []).map((m: any) => ({ id: m.id, name: m.name, username: m.username, avatar: m.avatar }))}
+            />
+          ) : (
+            <div className="h-16 border-t border-gray-100 bg-white" />
+          )}
         </motion.div>
       </div>
 
