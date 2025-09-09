@@ -91,6 +91,7 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/', [MessageController::class, 'store']);
         Route::get('/{roomId}', [MessageController::class, 'index']);
         Route::put('/{messageId}', [MessageController::class, 'edit']);
+        Route::delete('/{messageId}', [MessageController::class, 'destroy']);
         
         // Message reactions
         Route::post('/{messageId}/reactions', [MessageController::class, 'addReaction']);

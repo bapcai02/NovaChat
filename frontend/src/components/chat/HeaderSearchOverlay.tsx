@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useRef, useEffect, useState } from 'react'
+import React, { useRef, useEffect, useState, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { Search } from 'lucide-react'
 import { Input } from '@/components/ui/input'
@@ -10,7 +10,7 @@ import { apiService } from '@/services/api'
 interface HeaderSearchOverlayProps {
   open: boolean
   onClose: () => void
-  onJumpToMessage?: (conversationId: number, messageId: number) => void
+  onJumpToMessage?: (conversationId: number, messageId: number, query?: string) => void
 }
 
 type SearchResult = {
@@ -22,12 +22,17 @@ type SearchResult = {
   message_id?: number
 }
 
+type FilterType = 'all' | 'message' | 'user' | 'channel'
+
 const HeaderSearchOverlay: React.FC<HeaderSearchOverlayProps> = ({ open, onClose, onJumpToMessage }) => {
   const { t } = useTranslation('common')
   const inputRef = useRef<HTMLInputElement>(null)
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
   const [loading, setLoading] = useState(false)
+  const [activeIdx, setActiveIdx] = useState<number>(-1)
+  const [filter, setFilter] = useState<FilterType>('all')
+  const abortRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
     if (open) {
@@ -36,25 +41,31 @@ const HeaderSearchOverlay: React.FC<HeaderSearchOverlayProps> = ({ open, onClose
     }
   }, [open])
 
-  useEffect(() => {
-    const run = async () => {
+  const runSearch = useCallback(async () => {
       const q = query.trim()
       if (!q) { setResults([]); return }
       setLoading(true)
       try {
-        const res: any = await apiService.searchMessages(q)
+        abortRef.current?.abort()
+        abortRef.current = new AbortController()
+        const res: any = await apiService.searchMessages(q, undefined, { signal: (abortRef.current as AbortController).signal } as any)
         const data = res?.data ?? []
-        const mapped: SearchResult[] = (Array.isArray(data) ? data : (data.messages || [])).map((m: any) => ({
+        const mappedMessages: SearchResult[] = (Array.isArray(data) ? data : (data.messages || [])).map((m: any) => ({
           type: 'message', id: m.id, title: m.sender?.name || 'User', snippet: m.content, conversation_id: m.conversation_id, message_id: m.id
         }))
-        setResults(mapped)
+        // Placeholder: can fetch users/channels when backend ready
+        const combined = mappedMessages.filter(r => filter === 'all' ? true : r.type === filter)
+        setResults(combined)
       } finally {
         setLoading(false)
       }
-    }
-    const tmr = setTimeout(run, 250)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, filter])
+
+  useEffect(() => {
+    const tmr = setTimeout(runSearch, 300)
     return () => clearTimeout(tmr)
-  }, [query])
+  }, [query, filter, runSearch])
 
   if (!open) return null
 
@@ -79,29 +90,52 @@ const HeaderSearchOverlay: React.FC<HeaderSearchOverlayProps> = ({ open, onClose
               className="pl-10 h-11 text-sm border border-gray-200 focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
               onClick={(e) => e.stopPropagation()}
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Escape') onClose() }}
+              onChange={(e) => { setQuery(e.target.value); setActiveIdx(-1) }}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') onClose()
+                if (e.key === 'ArrowDown') { e.preventDefault(); setActiveIdx(prev => Math.min(prev + 1, results.length - 1)) }
+                if (e.key === 'ArrowUp') { e.preventDefault(); setActiveIdx(prev => Math.max(prev - 1, 0)) }
+                if (e.key === 'Enter' && activeIdx >= 0) {
+                  const r = results[activeIdx]
+                  if (r && r.type === 'message' && r.conversation_id && r.message_id && onJumpToMessage) {
+                    onJumpToMessage(r.conversation_id, r.message_id, query)
+                    onClose()
+                  }
+                }
+              }}
             />
+          </div>
+          {/* Filters */}
+          <div className="flex items-center gap-2 px-1 pt-2">
+            {(['all','message','user','channel'] as FilterType[]).map(f => (
+              <button
+                key={f}
+                onClick={(e) => { e.stopPropagation(); setFilter(f); setActiveIdx(-1) }}
+                className={`px-2 py-1 text-xs rounded ${filter===f ? 'bg-indigo-100 text-indigo-700 border border-indigo-200' : 'bg-gray-100 text-gray-700'}`}
+              >
+                {f === 'all' ? t('all') : f === 'message' ? t('messages') : f === 'user' ? t('users') : t('channels')}
+              </button>
+            ))}
           </div>
           <div className="mt-3 max-h-80 overflow-auto divide-y">
             {loading && <div className="px-3 py-2 text-sm text-gray-500">Loading...</div>}
             {!loading && results.length === 0 && query.trim() && (
               <div className="px-3 py-2 text-sm text-gray-500">No results</div>
             )}
-            {results.map((r) => (
+            {results.map((r, idx) => (
               <button
                 key={`${r.type}-${r.id}-${r.message_id || ''}`}
-                className="w-full text-left px-3 py-2 hover:bg-gray-50"
+                className={`w-full text-left px-3 py-2 hover:bg-gray-50 ${idx===activeIdx ? 'bg-gray-50' : ''}`}
                 onClick={(e) => {
                   e.stopPropagation()
                   if (r.type === 'message' && r.conversation_id && r.message_id && onJumpToMessage) {
-                    onJumpToMessage(r.conversation_id, r.message_id)
+                    onJumpToMessage(r.conversation_id, r.message_id, query)
                   }
                   onClose()
                 }}
               >
                 <div className="text-sm font-medium text-gray-800">
-                  {r.type === 'message' ? 'Message' : r.type === 'user' ? 'User' : 'Channel'} · {r.title}
+                  {r.type === 'message' ? t('message') : r.type === 'user' ? t('user') : t('channel')} · {r.title}
                 </div>
                 {r.snippet && (
                   <div className="text-xs text-gray-500 truncate" dangerouslySetInnerHTML={{ __html: highlight(r.snippet, query) }} />

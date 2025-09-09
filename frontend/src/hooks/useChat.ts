@@ -21,6 +21,7 @@ export function useChat() {
   const [error, setError] = useState<string | null>(null)
   const [userOnlineSet, setUserOnlineSet] = useState(false)
   const [typingByConversation, setTypingByConversation] = useState<Record<number, Set<number>>>({})
+  const [readPointers, setReadPointers] = useState<Record<number, Record<number, number>>>({})
 
   // Load current user
   const loadCurrentUser = useCallback(async () => {
@@ -144,6 +145,40 @@ export function useChat() {
       
       // Listen for messages
       wsClient.onMessage(async (message: WebSocketMessage) => {
+        // Delivery/Read receipts
+        if (message.type === 'message_ack') {
+          const ackMsgId = parseInt((message as any).message_id?.toString() || '0')
+          const clientId = (message as any).client_id as string | undefined
+          const convId = parseInt(message.conversation_id?.toString() || '0')
+          setMessages((prev: any[]) => prev.map(m => {
+            const sameConv = (m.conversation_id || 0) === convId
+            const sameClient = clientId && m.client_id === clientId
+            const sameContent = !clientId && (m.content === (message as any).content) && (m.user_id === parseInt(message.sender_id?.toString() || '0'))
+            if (sameConv && (sameClient || sameContent)) {
+              return { ...m, id: ackMsgId || m.id, status: 'delivered' }
+            }
+            return m
+          }))
+          return
+        }
+        if (message.type === 'message_read') {
+          const readMsgId = parseInt((message as any).message_id?.toString() || '0')
+          const convId = parseInt(message.conversation_id?.toString() || '0')
+          const readerId = parseInt((message as any).user_id?.toString() || '0')
+          if (convId && readerId && readMsgId) {
+            setReadPointers(prev => ({
+              ...prev,
+              [convId]: { ...(prev[convId] || {}), [readerId]: Math.max(readMsgId, (prev[convId]?.[readerId] || 0)) }
+            }))
+          }
+          setMessages((prev: any[]) => prev.map(m => {
+            if ((m.conversation_id || 0) === convId && m.id && readMsgId && m.id <= readMsgId) {
+              return { ...m, status: 'read' }
+            }
+            return m
+          }))
+          return
+        }
         // Typing indicators
         if (message.type === 'typing_start' || message.type === 'typing_stop') {
           const convId = parseInt(message.conversation_id?.toString() || '0')
@@ -211,7 +246,8 @@ export function useChat() {
             },
             reactions: [],
             is_bookmarked: false,
-            replies_count: 0
+            replies_count: 0,
+            status: 'delivered'
           }
           
           
@@ -277,6 +313,7 @@ export function useChat() {
       
       // Create message object for immediate UI update
       const tempId = Date.now()
+      const clientId = `${currentUser?.id || 0}-${Date.now()}`
       const tempMessage = {
         id: tempId, // Temporary ID
         conversation_id: conversationId,
@@ -294,7 +331,8 @@ export function useChat() {
         reactions: [],
         is_bookmarked: false,
         is_optimistic: true, // Flag for optimistic update
-        status: 'sent' as any
+        status: 'sent' as any,
+        client_id: clientId
       }
       
       // Add to UI immediately (optimistic update)
@@ -336,6 +374,25 @@ export function useChat() {
       throw err
     }
   }, [currentUser])
+
+  const editMessage = useCallback(async (messageId: number, content: string) => {
+    try {
+      // Optimistic update
+      setMessages(prev => prev.map(m => m.id === messageId ? { ...m, content, is_edited: true, updated_at: new Date().toISOString() } : m))
+      await apiService.updateMessage?.(messageId.toString(), { content } as any)
+    } catch (err) {
+      console.error('Failed to edit message:', err)
+    }
+  }, [])
+
+  const deleteMessage = useCallback(async (messageId: number) => {
+    try {
+      setMessages(prev => prev.map(m => m.id === messageId ? { ...m, is_deleted: true, content: '[deleted]' } : m))
+      await apiService.deleteMessage?.(messageId.toString())
+    } catch (err) {
+      console.error('Failed to delete message:', err)
+    }
+  }, [])
 
   // Load online users
   const loadOnlineUsers = useCallback(async () => {
@@ -648,6 +705,7 @@ export function useChat() {
     isLoading,
     error,
     typingByConversation,
+    readPointers,
     
     // Actions
     setCurrentConversation,
@@ -663,6 +721,8 @@ export function useChat() {
     removeReaction,
     bookmarkMessage,
     removeBookmark,
+    editMessage,
+    deleteMessage,
     updateUserStatus,
     loadUnreadCounts,
     

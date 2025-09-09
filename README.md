@@ -1,46 +1,79 @@
 # NovaChat - Modern Chat Application
 
+![Architecture](/frontend/public/screenshots/architecture.png)
+
 A modern, real-time chat application built with Laravel (Backend) and Next.js (Frontend), featuring a clean UI inspired by Rocket.Chat and Slack.
 
 ## 🚀 Features
 
 ### Core Features
 - ✅ **User Authentication** - Register, login, logout with JWT tokens
-- ✅ **Real-time Messaging** - Send and receive messages instantly
+- ✅ **Real-time Messaging** - Send and receive messages instantly (WebSocket)
 - ✅ **Channel Management** - Create, join, and manage public/private channels
 - ✅ **Direct Messages** - Private conversations between users
-- ✅ **Message Threading** - Reply to specific messages
-- ✅ **Message Reactions** - React to messages with emojis
-- ✅ **File Attachments** - Share files and images
+- ✅ **Message Threading** - Reply to specific messages (right panel)
+- ✅ **Message Reactions** - Emoji popover, toggle/remove, reaction counters
+- ✅ **Mentions** - Autocomplete @members, highlight in input and message bubble
+- ✅ **Read Receipts** - Sent/Delivered/Read ticks, per-user read pointers (avatars)
+- ✅ **File Attachments** - Drag & drop, paste-to-upload, progress, image/video preview
 - ✅ **Voice Messages** - Record and send voice messages
 - ✅ **User Status** - Online, away, busy, offline status
 - ✅ **Dark/Light Theme** - Toggle between themes
-- ✅ **Search** - Search messages and users
-- ✅ **Notifications** - Real-time notifications
+- ✅ **Search** - Global overlay (messages), in-chat jump-to-message, highlight, keyboard nav
+- ✅ **Notifications** - Basis for mentions; per-conversation mute/pin
 - ✅ **Mobile Responsive** - Works on all devices
 
 ### Advanced Features
 - 🎨 **Custom Themes** - Create and customize themes
 - ⌨️ **Keyboard Shortcuts** - Power user shortcuts
-- 📊 **Message Analytics** - Read receipts and typing indicators
+- 📊 **Message Analytics** - Read receipts and typing indicators (multi-typers)
 - 🔍 **Advanced Search** - Search with filters
 - 📱 **Mobile Optimization** - Touch gestures and responsive design
 
 ## 🏗️ Architecture
 
 ### Backend (Laravel)
-- **Domain-Driven Design (DDD)** architecture
+- Controller + Service + Repository (Eloquent)
 - **Laravel Passport** for OAuth2 authentication
 - **MySQL** database
-- **Redis** for caching and real-time features
-- **WebSocket** support for real-time messaging
+- **Redis** for caching and real-time features (Streams for presence/messages)
+- **WebSocket** support for real-time messaging (Node ws gateway)
 
 ### Frontend (Next.js)
-- **Next.js 14** with App Router
+- **Next.js 15** with App Router & Turbopack
 - **TypeScript** for type safety
 - **Tailwind CSS** for styling
-- **React Hooks** for state management
+- **React Hooks** for state management + lightweight store
+- **Virtualized Lists** with `react-virtuoso` for smooth chat scrolling
+- **i18n** with `react-i18next` + localStorage language persistence
 - **Modern UI/UX** design
+
+### Architecture components & responsibilities
+
+- Frontend (Next.js)
+  - UI: `ModernChatLayout`, `ModernChatMessagesNew`, `ModernChatInput`, `ModernChatHeader`, `RightSidebar`.
+  - Logic: `useChat` kết hợp REST API và WebSocket client (`src/lib/websocket.ts`).
+  - Tính năng: virtualized messages, mentions autocomplete, reactions popover, read receipts, search overlay (jump-to-message), uploads kéo-thả/paste (progress).
+
+- WebSocket Gateway (Node ws) — `backend/ws-gateway/server.js`
+  - Nhận kết nối WS, quản lý phòng theo conversation.
+  - Xử lý: `join_conversation`, `subscribe_all_conversations`, `chat_message`, `typing_start/stop`, `message_read`.
+  - Broadcast realtime tới client trong phòng; ghi sự kiện vào Redis Streams (`chat_messages`, `user_presence`).
+
+- Backend API (Laravel)
+  - Controllers/Services/Repositories (Eloquent) cho: messages (edit/delete/react/bookmark), conversations, unread/read, settings, search.
+  - Lưu trữ MySQL; có thể tiêu thụ Streams để persist message khi mở rộng hàng đợi.
+
+- Redis
+  - Streams: `chat_messages` (hàng đợi tin nhắn), `user_presence` (online/offline) — giao tiếp nhẹ giữa gateway và backend.
+
+### End-to-end flow (tóm tắt)
+
+1) FE gửi tin: `useChat` → WebSocket `chat_message` (đã join room).
+2) WS gateway broadcast ngay tới các client cùng conversation; đồng thời `XADD` vào stream `chat_messages` cho backend.
+3) FE hiển thị tin mới; nếu không ở cuộc trò chuyện đó, tăng `unread`.
+4) Khi cuộn chạm cuối, FE gửi `message_read` → gateway broadcast → FE cập nhật read receipts (ticks/avatars).
+5) Edit/Delete/Reaction: FE gọi REST; Laravel cập nhật DB và (tuỳ chọn) phát sự kiện cho client khác.
 
 ## 📋 Prerequisites
 
@@ -100,35 +133,23 @@ npm run dev
 
 ```
 NovaChat/
-├── backend/                 # Laravel Backend
+├── backend/                      # Laravel Backend (API + WS gateway under ws-gateway/)
 │   ├── app/
-│   │   ├── Domain/         # DDD Domain Layer
-│   │   │   ├── Channel/    # Channel Domain
-│   │   │   ├── Message/    # Message Domain
-│   │   │   ├── User/       # User Domain
-│   │   │   └── ...
-│   │   ├── Http/
-│   │   │   └── Controllers/
-│   │   │       └── Api/    # API Controllers
+│   │   ├── Http/Controllers/
+│   │   ├── Models/
+│   │   ├── Services/
+│   │   ├── Repositories/
 │   │   └── ...
-│   ├── database/
-│   │   ├── migrations/     # Database migrations
-│   │   └── seeders/        # Database seeders
-│   ├── routes/
-│   │   └── api.php         # API routes
+│   ├── config/ routes/ database/
+│   ├── ws-gateway/               # Node ws server
 │   └── ...
-├── frontend/               # Next.js Frontend
-│   ├── src/
-│   │   ├── app/           # App Router pages
-│   │   │   ├── login/     # Login page
-│   │   │   ├── register/  # Register page
-│   │   │   ├── chat/      # Chat page
-│   │   │   └── ...
-│   │   ├── components/    # React components
-│   │   │   ├── layout/    # Layout components
-│   │   │   └── ui/        # UI components
-│   │   └── ...
-│   └── ...
+├── frontend/                     # Next.js Frontend
+│   ├── public/                   # Static assets (+ screenshots)
+│   └── src/
+│       ├── app/                  # App Router pages
+│       ├── components/
+│       ├── hooks/ services/ types/
+│       └── ...
 └── README.md
 ```
 
@@ -166,27 +187,23 @@ npm run build
 
 # Run tests
 npm test
+
+### WebSocket Gateway
+
+The WS gateway runs under `backend/ws-gateway` (Node `ws`). It handles:
+- Connection lifecycle (heartbeat ping)
+- Join/subscribe to conversations
+- Broadcast chat_message, typing_start/stop, message_read
+
+Start (dev): from `backend/ws-gateway`, run `npm i && npm run start` (config matches Laravel URL and Redis).
 ```
-
-## 📚 API Documentation
-
-Complete API documentation is available in `backend/API_DOCUMENTATION.md`
-
-### Key Endpoints
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - Login user
-- `POST /api/auth/logout` - Logout user
-- `GET /api/channels` - Get user's channels
-- `POST /api/channels` - Create new channel
-- `GET /api/channels/{id}/messages` - Get channel messages
-- `POST /api/channels/{id}/messages` - Send message
 
 ## 🎨 UI Components
 
 The application includes a comprehensive set of UI components:
 
 - **Authentication Forms** - Login and registration
-- **Chat Interface** - Message list, input, reactions
+- **Chat Interface** - Virtualized message list, reactions popover, mentions, receipts
 - **Channel Management** - Channel list, creation, settings
 - **User Management** - User profiles, status, search
 - **Theme System** - Dark/light mode, custom themes
@@ -239,21 +256,26 @@ If you encounter any issues:
 4. Check the API documentation
 5. Create an issue with detailed information
 
-## 🎯 Roadmap
+## 🎯 Roadmap (high-level)
 
-- [ ] WebSocket real-time messaging
-- [ ] File upload and storage
+- [x] WebSocket real-time messaging (typing, read)
+- [x] Message editing and deletion
+- [x] Reactions popover + counters
+- [x] Mentions autocomplete + highlight
+- [x] Search overlay + jump-to-message
+- [x] Virtualized messages
+- [x] File upload (drag-drop, paste, progress, preview)
+- [ ] Read receipts avatar row refine (per-user pointer position)
+- [ ] Offline queue + resend with backoff
+- [ ] Push notifications & mentions inbox
 - [ ] Video/audio calls
 - [ ] Message encryption
 - [ ] User roles and permissions
-- [ ] Channel categories
-- [ ] Message editing and deletion
-- [ ] User blocking and muting
-- [ ] Message search and filters
 - [ ] Export chat history
-- [ ] Integration with external services
 - [ ] Mobile app (React Native)
 
----
+## 📸 Screenshots
+
+![Screen](/frontend/public/screenshots/screen.png)
 
 **Built with ❤️ using Laravel and Next.js**

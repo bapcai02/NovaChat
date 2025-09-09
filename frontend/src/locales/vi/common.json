@@ -52,7 +52,15 @@
   "pinned": "Đã ghim",
   "pin": "Ghim",
   "type_message": "Nhập tin nhắn...",
-  "you_are_typing": "Bạn đang nhập..."
+  "you_are_typing": "Bạn đang nhập...",
+  "all": "Tất cả",
+  "messages": "Tin nhắn",
+  "users": "Người dùng",
+  "message": "Tin nhắn",
+  "user": "Người dùng",
+  "channel": "Kênh",
+  "loading": "Đang tải...",
+  "no_results": "Không có kết quả"
 }
 
 

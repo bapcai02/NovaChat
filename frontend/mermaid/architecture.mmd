@@ -1,0 +1,36 @@
+flowchart LR
+  subgraph FE["Frontend - Next.js 15"]
+    UI["React UI: ModernChatLayout/Messages/Input"]
+    Hook["useChat (hooks): API + WebSocket client"]
+  end
+
+  subgraph GW["WS Gateway - Node ws (backend/ws-gateway/server.js)"]
+    WSS["ws Server :7000\njoin_conversation / subscribe_all_conversations\ntyping_start/stop, chat_message, message_read"]
+  end
+
+  subgraph BE["Backend API - Laravel"]
+    Ctrl["Http Controllers"]
+    Svc["Services"]
+    Repo["Repositories (Eloquent)"]
+    DB[("MySQL")]
+  end
+
+  subgraph REDIS["Redis"]
+    RS1[("Stream: chat_messages")]
+    RS2[("Stream: user_presence")]
+  end
+
+  UI <--> Hook
+  Hook -- "REST" --> Ctrl
+  Ctrl --> Svc --> Repo --> DB
+  Ctrl <--> REDIS
+
+  Hook <-- "WebSocket" --> WSS
+  WSS <--> REDIS
+
+  %% Notes
+  Note1["Hook:\n- WS: message, typing, read\n- REST: messages, reactions, read, settings"]
+  Note2["Redis Streams:\n- chat_messages: hàng đợi tin nhắn\n- user_presence: hiện diện"]
+
+  Hook --- Note1
+  REDIS --- Note2

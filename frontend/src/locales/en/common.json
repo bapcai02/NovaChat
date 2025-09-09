@@ -50,9 +50,17 @@
   "mute": "Mute",
   "pin_conversation": "Pin conversation",
   "pinned": "Pinned",
-  "pin": "Pin"
-  ,"type_message": "Type a message...",
-  "you_are_typing": "You are typing..."
+  "pin": "Pin",
+  "type_message": "Type a message...",
+  "you_are_typing": "You are typing...",
+  "all": "All",
+  "messages": "Messages",
+  "users": "Users",
+  "message": "Message",
+  "user": "User",
+  "channel": "Channel",
+  "loading": "Loading...",
+  "no_results": "No results"
 }
 
 

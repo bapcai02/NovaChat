@@ -14,6 +14,7 @@ interface MessageRepositoryInterface
     public function removeBookmark(int $messageId, int $userId): bool;
     public function getUserBookmarks(int $userId): array;
     public function edit(int $messageId, string $content): array;
+    public function softDelete(int $messageId): bool;
 }
 
 

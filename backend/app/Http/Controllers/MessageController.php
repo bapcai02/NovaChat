@@ -196,6 +196,23 @@ class MessageController extends Controller
         }, 'Bookmark removed', 'Failed to remove bookmark');
     }
 
+    public function destroy(string $messageId): JsonResponse
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return $this->unauthorizedResponse('Unauthenticated');
+        }
+
+        return $this->executeInTransactionWithResponse(function () use ($messageId, $user) {
+            $result = $this->messages->deleteMessage($messageId, (int)$user->id);
+            if (!$result['success']) {
+                $code = $result['message'] === 'Message not found' ? 404 : 400;
+                return $this->errorResponse($result['message'] ?? 'Failed to delete message', null, $code);
+            }
+            return $this->successResponse(null, $result['message'] ?? 'Message deleted successfully');
+        }, 'Message deleted', 'Failed to delete message');
+    }
+
     public function getBookmarks(Request $request): JsonResponse
     {
         $user = Auth::user();

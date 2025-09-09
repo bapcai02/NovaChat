@@ -47,7 +47,8 @@ interface ChatHeaderProps {
   onToggleMute?: () => void
   onTogglePin?: () => void
   onSettings?: () => void
-  onJumpToMessage?: (conversationId: number, messageId: number) => void
+  onJumpToMessage?: (conversationId: number, messageId: number, query?: string) => void
+  onMarkAllRead?: () => void
 }
 
 export default function ModernChatHeader({
@@ -66,7 +67,8 @@ export default function ModernChatHeader({
   onToggleMute,
   onTogglePin,
   onSettings,
-  onJumpToMessage
+  onJumpToMessage,
+  onMarkAllRead
 }: ChatHeaderProps) {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const { t } = useTranslation('common')
@@ -234,6 +236,9 @@ export default function ModernChatHeader({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem onClick={onMarkAllRead}>
+              Mark all as read
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={onSettings}>
               <Settings className="h-4 w-4 mr-2" />
               {t('settings')}

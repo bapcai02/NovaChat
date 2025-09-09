@@ -170,6 +170,31 @@ class MessageService
         return ['success' => true, 'message' => 'Message updated successfully', 'data' => $payload];
     }
 
+    public function deleteMessage(string $messageId, int $userId): array
+    {
+        $message = $this->messages->findById((int) $messageId);
+        if (!$message) {
+            return ['success' => false, 'message' => 'Message not found'];
+        }
+        if ((int)($message['user_id'] ?? 0) !== $userId) {
+            return ['success' => false, 'message' => 'You can only delete your own messages'];
+        }
+
+        $ok = $this->messages->softDelete((int)$messageId);
+        if (!$ok) return ['success' => false, 'message' => 'Failed to delete message'];
+
+        $conversationType = !empty($message['channel_id']) ? 'channel' : 'direct';
+        $payload = [
+            'conversation_id' => (string) $message['conversation_id'],
+            'type' => $conversationType,
+            'message_id' => (string) $messageId,
+            'user_id' => (string) $userId,
+            'deleted_at' => now()->toISOString(),
+        ];
+        broadcast(new \App\Events\MessageEdited($payload))->toOthers();
+        return ['success' => true, 'message' => 'Message deleted successfully'];
+    }
+
     public function bookmarkMessage(string $messageId, int $userId, ?string $note = null, ?array $tags = null): array
     {
         $exists = $this->messages->isBookmarked((int)$messageId, $userId);

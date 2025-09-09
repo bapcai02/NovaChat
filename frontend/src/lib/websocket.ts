@@ -34,6 +34,10 @@ class NovaChatWebSocket implements WebSocketClient {
   private reconnectDelay = 1000;
   private isConnecting = false;
   private currentConversationId: number | null = null;
+  private joinedConversationIds: Set<number> = new Set();
+  private lastSubscribeAll: { userId: number; ids: number[] } | null = null;
+  private pingTimer: any = null;
+  private sendQueue: WebSocketMessage[] = [];
 
   constructor(private url: string = 'ws://localhost:7000') {}
 
@@ -51,6 +55,24 @@ class NovaChatWebSocket implements WebSocketClient {
         this.isConnecting = false;
         this.reconnectAttempts = 0;
         this.notifyConnectionChange('connected');
+        // Heartbeat
+        if (this.pingTimer) clearInterval(this.pingTimer);
+        this.pingTimer = setInterval(() => {
+          this.send({ type: 'ping' } as any);
+        }, 15000);
+        // Flush queued messages
+        if (this.sendQueue.length) {
+          const queue = [...this.sendQueue];
+          this.sendQueue = [];
+          queue.forEach((m) => this.send(m));
+        }
+        // Re-subscribe
+        this.joinedConversationIds.forEach((id) => {
+          this.send({ type: 'join_conversation', conversation_id: id } as any);
+        });
+        if (this.lastSubscribeAll) {
+          this.send({ type: 'subscribe_all_conversations', user_id: this.lastSubscribeAll.userId, conversation_ids: this.lastSubscribeAll.ids } as any);
+        }
       };
 
       this.ws.onmessage = (event) => {
@@ -65,6 +87,7 @@ class NovaChatWebSocket implements WebSocketClient {
       this.ws.onclose = (event) => {
         this.isConnecting = false;
         this.notifyConnectionChange('disconnected');
+        if (this.pingTimer) { clearInterval(this.pingTimer); this.pingTimer = null; }
         
         // Auto-reconnect if not manually closed
         if (event.code !== 1000 && this.reconnectAttempts < this.maxReconnectAttempts) {
@@ -101,6 +124,7 @@ class NovaChatWebSocket implements WebSocketClient {
       this.ws = null;
     }
     this.currentConversationId = null;
+    if (this.pingTimer) { clearInterval(this.pingTimer); this.pingTimer = null; }
   }
 
   isConnected(): boolean {
@@ -110,7 +134,9 @@ class NovaChatWebSocket implements WebSocketClient {
   joinConversation(conversationId: number): void {
     
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
-      console.warn('[WebSocket] Not connected, cannot join conversation');
+      this.joinedConversationIds.add(conversationId);
+      console.warn('[WebSocket] Not connected, queue join conversation');
+      this.sendQueue.push({ type: 'join_conversation', conversation_id: conversationId } as any);
       return;
     }
 
@@ -121,6 +147,7 @@ class NovaChatWebSocket implements WebSocketClient {
     };
     
     this.send(message);
+    this.joinedConversationIds.add(conversationId);
   }
 
   sendMessage(conversationId: number, senderId: number, content: string, senderName?: string, senderAvatar?: string): void {
@@ -159,7 +186,9 @@ class NovaChatWebSocket implements WebSocketClient {
 
   subscribeAllConversations(userId: number, conversationIds: number[]): void {
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
-      console.warn('[WebSocket] Not connected, cannot subscribe to conversations');
+      console.warn('[WebSocket] Not connected, queue subscribe all');
+      this.lastSubscribeAll = { userId, ids: conversationIds };
+      this.sendQueue.push({ type: 'subscribe_all_conversations', user_id: userId, conversation_ids: conversationIds } as any);
       return;
     }
 
@@ -170,6 +199,7 @@ class NovaChatWebSocket implements WebSocketClient {
     };
     
     this.send(message);
+    this.lastSubscribeAll = { userId, ids: conversationIds };
   }
 
   setUserOnline(userId: number): void {
@@ -206,7 +236,9 @@ class NovaChatWebSocket implements WebSocketClient {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify(message));
     } else {
-      console.warn('[WebSocket] Cannot send message, not connected');
+      // Queue offline to send later
+      this.sendQueue.push(message);
+      console.warn('[WebSocket] Queued message, not connected');
     }
   }
 

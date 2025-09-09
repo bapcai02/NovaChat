@@ -155,6 +155,18 @@ class EloquentMessageRepository implements MessageRepositoryInterface
         return $message->fresh()->toArray();
     }
 
+    public function softDelete(int $messageId): bool
+    {
+        $message = Message::find($messageId);
+        if (!$message) return false;
+        $message->update([
+            'is_deleted' => true,
+            'deleted_at' => now(),
+            'content' => '[deleted]'
+        ]);
+        return true;
+    }
+
     private function getMessageReactions(int $messageId): array
     {
         return MessageReaction::select('emoji', DB::raw('COUNT(*) as count'))

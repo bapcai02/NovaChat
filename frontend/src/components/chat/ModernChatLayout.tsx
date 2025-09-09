@@ -10,6 +10,7 @@ import ModernThreadChat from './ModernThreadChat'
 import RightSidebar from './RightSidebar'
 import { useChat } from '@/hooks/useChat'
 import { getWebSocketClient } from '@/lib/websocket'
+import { unreadService } from '@/services/unreadService'
 import UserOnlineStatus from './UserOnlineStatus'
 
 interface ChatLayoutProps {
@@ -36,8 +37,12 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
     removeReaction,
     bookmarkMessage,
     removeBookmark,
+    editMessage,
+    deleteMessage,
     updateUserStatus,
     loadUnreadCounts,
+    readPointers,
+    typingByConversation,
   } = useChat()
 
   const [showThread, setShowThread] = useState(false)
@@ -109,6 +114,17 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
     }
   }
 
+  const handleReachBottom = () => {
+    if (!currentConversation || !currentUser) return
+    try {
+      const wsClient = getWebSocketClient()
+      if (wsClient.getConnectionState() === 'connected' && messages.length > 0) {
+        const lastMsg = messages[messages.length - 1]
+        wsClient.send({ type: 'message_read', conversation_id: currentConversation.id, message_id: lastMsg.id as any, user_id: currentUser.id } as any)
+      }
+    } catch {}
+  }
+
   const handleTyping = (isTyping: boolean) => {
     if (!currentConversation || !currentUser) return
     
@@ -126,11 +142,22 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
     }
   }
 
+  const typingNames = (() => {
+    if (!currentConversation) return [] as string[]
+    const set = typingByConversation[currentConversation.id]
+    if (!set) return []
+    const ids = Array.from(set).filter(id => id !== (currentUser?.id || 0))
+    const names = (currentConversation.members || [])
+      .filter((m: any) => ids.includes(m.id))
+      .map((m: any) => m.name || m.username || `user${m.id}`)
+    return names
+  })()
+
   const handleSearch = () => {
     // Search overlay handled in header; no-op hook for now
   }
 
-  const jumpToMessage = (conversationId: number, messageId: number) => {
+  const jumpToMessage = (conversationId: number, messageId: number, q?: string) => {
     // If jumping within current conversation, scroll to message; else switch then fetch and scroll.
     const doScroll = () => {
       const el = document.querySelector(`[data-message-id="${messageId}"]`)
@@ -145,10 +172,24 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
       if (conv) {
         handleSelectConversation(conv)
         // delay to ensure messages loaded
-        setTimeout(() => doScroll(), 500)
+        let attempts = 0
+        const tryScroll = () => {
+          attempts++
+          const found = document.querySelector(`[data-message-id="${messageId}"]`)
+          if (found) { doScroll(); return }
+          if (attempts < 8) { setTimeout(tryScroll, 250); return }
+        }
+        setTimeout(tryScroll, 500)
       }
     } else {
-      doScroll()
+      let attempts = 0
+      const tryScroll = () => {
+        attempts++
+        const found = document.querySelector(`[data-message-id="${messageId}"]`)
+        if (found) { doScroll(); return }
+        if (attempts < 8) { setTimeout(tryScroll, 200); return }
+      }
+      tryScroll()
     }
   }
 
@@ -288,6 +329,11 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
             onTogglePin={handleTogglePin}
             onSettings={handleSettings}
             onJumpToMessage={jumpToMessage}
+            onMarkAllRead={async () => {
+              if (!currentConversation) return
+              await unreadService.markConversationAsRead(currentConversation.id)
+              loadUnreadCounts()
+            }}
             
           />
         </motion.div>
@@ -308,6 +354,11 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
             onBookmark={bookmarkMessage}
             onRemoveBookmark={removeBookmark}
             isLoading={isLoading}
+            onEditMessage={async (id, content) => { await editMessage(id, content) }}
+            onDeleteMessage={async (id) => { await deleteMessage(id) }}
+            onReachBottom={handleReachBottom}
+            members={(currentConversation?.members || []).map((m: any) => ({ id: m.id, name: m.name, avatar: m.avatar }))}
+            readPointers={currentConversation ? (readPointers[currentConversation.id] || {}) : {}}
           />
         </motion.div>
 
@@ -323,6 +374,8 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
             onTyping={handleTyping}
             placeholder={`Type message...`}
             disabled={isLoading}
+            typingUsers={typingNames}
+            mentionUsers={(currentConversation?.members || []).map((m: any) => ({ id: m.id, name: m.name, username: m.username, avatar: m.avatar }))}
           />
         </motion.div>
       </div>
