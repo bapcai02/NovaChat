@@ -40,14 +40,16 @@ class ProcessChatMessages extends Command
             return;
         }
 
-        // Check queue length
-        $queueLength = Redis::llen('chat_messages');
+        // Respect Redis prefix (Laravel adds APP_NAME prefix)
+        $listKey = (string) config('database.redis.options.prefix', '') . 'chat_messages_list';
+        // Check queue length (list variant)
+        $queueLength = Redis::llen($listKey);
         $this->info("Queue length: {$queueLength}");
 
         while (true) {
             try {
                 // Blocking pop from Redis list with 5 second timeout
-                $messageData = Redis::brpop('chat_messages', 5);
+                $messageData = Redis::brpop($listKey, 5);
                 
                 if ($messageData) {
                     $message = json_decode($messageData[1], true);

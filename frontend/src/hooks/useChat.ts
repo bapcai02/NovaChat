@@ -144,9 +144,27 @@ export function useChat() {
       // Join conversation
       wsClient.joinConversation(conversationId)
       
-      // Clear existing message handlers to avoid duplicates
+      // Reset handlers to avoid duplicates, then re-install global ones
       wsClient.clearMessageHandlers()
-      
+      ;(window as any).__ncGlobalWsHandlerInstalled = false
+      // Re-install global unread bump handler if needed
+      if (!(window as any).__ncGlobalWsHandlerInstalled) {
+        (window as any).__ncGlobalWsHandlerInstalled = true
+        wsClient.onMessage((message: any) => {
+          if (message?.type === 'chat_message') {
+            const convId = parseInt(message.conversation_id?.toString() || '0')
+            if (!convId) return
+            if (!currentConversation || currentConversation.id !== convId) {
+              setConversations(prev => prev.map(conv => 
+                conv.id === convId 
+                  ? { ...conv, unread_count: (conv.unread_count || 0) + 1 }
+                  : conv
+              ))
+            }
+          }
+        })
+      }
+
       // Listen for messages
       wsClient.onMessage(async (message: WebSocketMessage) => {
         // Handle initial connection with online users
@@ -154,7 +172,20 @@ export function useChat() {
           const onlineUsers = (message as any).online_users
           console.log('[WS] Received online users on connect:', onlineUsers)
           if (Array.isArray(onlineUsers)) {
-            setOnlineUserIds(new Set(onlineUsers))
+            const normalized = onlineUsers.map((id: any) => parseInt(id?.toString?.() || '0')).filter((n: number) => !!n)
+            setOnlineUserIds(new Set(normalized))
+          }
+          return
+        }
+
+        // Handle subscribed_all_conversations with online users list to sync sidebar presence ASAP
+        if (message.type === 'subscribed_all_conversations' && (message as any).online_users) {
+          const onlineUsers = (message as any).online_users
+          console.log('[WS] Received online users on subscribe_all:', onlineUsers)
+          if (Array.isArray(onlineUsers)) {
+            // Normalize to numbers if needed
+            const normalized = onlineUsers.map((id: any) => parseInt(id?.toString?.() || '0')).filter((n: number) => !!n)
+            setOnlineUserIds(new Set(normalized))
           }
           return
         }
@@ -225,6 +256,12 @@ export function useChat() {
         }
         
         if (message.type === 'chat_message' || message.type === 'message_received') {
+          const messageConversationId = parseInt(message.conversation_id?.toString() || '0')
+          // Only add to current messages if it belongs to the active conversation
+          if (!messageConversationId || currentConversation?.id !== messageConversationId) {
+            // Non-active conversations are handled by the global unread handler
+            return
+          }
           const senderId = parseInt(message.sender_id?.toString() || '0')
           let sender = null
           if (currentConversation?.members) {
@@ -296,7 +333,6 @@ export function useChat() {
               return [...filteredMessages, newMessage]
             })
           } else {
-            const messageConversationId = parseInt(message.conversation_id?.toString() || '0')
             // Add new message from other users, but check for duplicates first
             setMessages((prev: any) => {
               // Check if message already exists (by content and timestamp)
@@ -312,15 +348,6 @@ export function useChat() {
               
               return [...prev, newMessage]
             })
-
-            // Update unread count for the conversation if user is not currently viewing it
-            if (currentConversation?.id !== messageConversationId) {
-              setConversations(prev => prev.map(conv => 
-                conv.id === messageConversationId 
-                  ? { ...conv, unread_count: (conv.unread_count || 0) + 1 }
-                  : conv
-              ))
-            }
           }
         }
       })
@@ -668,6 +695,29 @@ export function useChat() {
       const checkConnection = () => {
         if (wsClient.isConnected()) {
           wsClient.subscribeAllConversations(currentUser.id, conversationIds)
+          // Ensure a global handler exists to bump unread for non-active conversations
+          if (!(window as any).__ncGlobalWsHandlerInstalled) {
+            (window as any).__ncGlobalWsHandlerInstalled = true
+            wsClient.onMessage((message: any) => {
+              if (message?.type === 'chat_message') {
+                const convId = parseInt(message.conversation_id?.toString() || '0')
+                if (!convId) return
+                if (!currentConversation || currentConversation.id !== convId) {
+                  setConversations(prev => prev.map(conv => 
+                    conv.id === convId 
+                      ? { ...conv, unread_count: (conv.unread_count || 0) + 1 }
+                      : conv
+                  ))
+                }
+              }
+              // Sync online users when receive subscribed_all_conversations
+              if (message?.type === 'subscribed_all_conversations' && Array.isArray((message as any).online_users)) {
+                const onlineUsers = (message as any).online_users
+                const normalized = onlineUsers.map((id: any) => parseInt(id?.toString?.() || '0')).filter((n: number) => !!n)
+                setOnlineUserIds(new Set(normalized))
+              }
+            })
+          }
           
           // Set user online only once, with a small delay
           if (!userOnlineSet) {

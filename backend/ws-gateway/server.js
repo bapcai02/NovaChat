@@ -227,20 +227,21 @@ wss.on('connection', (ws) => {
 
       // === CHAT MESSAGE ===
       if (message.type === 'chat_message') {
-        if (!ws.conversationId) {
-          ws.send(JSON.stringify({ type: 'error', message: 'Join a conversation first' }))
+        const targetCid = message.conversation_id
+        if (!targetCid) {
+          ws.send(JSON.stringify({ type: 'error', message: 'Missing conversation_id' }))
           return
         }
 
         const chat = {
-          conversation_id: message.conversation_id,
+          conversation_id: targetCid,
           sender_id: message.sender_id,
           content: message.content,
           timestamp: new Date().toISOString(),
           client_id: clientId,
         }
 
-        // Push vào Redis Stream
+        // Push to Redis Stream
         await redis.xadd(
           'chat_messages',
           'MAXLEN', '~', 100000,
@@ -252,13 +253,27 @@ wss.on('connection', (ws) => {
           'client_id', chat.client_id
         )
 
-        // Broadcast tới cùng conversation
-        const clients = clientsByConversation.get(ws.conversationId) || []
+        // Also push JSON into Redis List for the Laravel consumer (BRPOP)
+        try {
+          await redis.lpush('chat_messages_list', JSON.stringify({
+            conversation_id: chat.conversation_id,
+            sender_id: chat.sender_id,
+            content: chat.content,
+            timestamp: chat.timestamp
+          }))
+          // Keep list length within limit
+          await redis.ltrim('chat_messages_list', 0, 99999)
+        } catch (e) {
+          console.error('[WS-Gateway] Failed to LPUSH chat_messages list:', e?.message || e)
+        }
+
+        // Broadcast to the conversation specified by conversation_id in the message
+        const clients = clientsByConversation.get(targetCid) || []
         clients.forEach(c => {
           if (c.readyState === WebSocket.OPEN) {
             c.send(JSON.stringify({
               type: 'chat_message',
-              conversation_id: ws.conversationId,
+              conversation_id: targetCid,
               sender_id: message.sender_id,
               content: message.content,
               timestamp: chat.timestamp,
@@ -266,7 +281,7 @@ wss.on('connection', (ws) => {
           }
         })
 
-        ws.send(JSON.stringify({ type: 'message_sent', conversation_id: ws.conversationId }))
+        ws.send(JSON.stringify({ type: 'message_sent', conversation_id: targetCid }))
         return
       }
 
@@ -293,7 +308,7 @@ wss.on('connection', (ws) => {
   })
 
   ws.on('close', () => {
-    // ❌ Không setOffline ở đây — rely TTL
+    // Do not set offline here — rely on TTL
     if (ws.userId && clientsByUser.has(ws.userId)) {
       clientsByUser.get(ws.userId).delete(ws)
       if (clientsByUser.get(ws.userId).size === 0) {

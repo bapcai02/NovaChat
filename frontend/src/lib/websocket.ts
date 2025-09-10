@@ -213,7 +213,6 @@ class NovaChatWebSocket implements WebSocketClient {
       user_id: userId
     };
     
-    console.log('=== Sending user_online message ===', message);
     this.send(message);
   }
 
