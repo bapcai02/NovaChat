@@ -39,9 +39,25 @@ class MessageService
             'metadata' => $data['metadata'] ?? [],
             'conversation_id' => $data['conversation_id'] ?? null,
             'channel_id' => $data['channel_id'] ?? null,
+            'parent_id' => $data['parent_id'] ?? null,
         ];
 
         Log::info('Message data to create:', $messageData);
+
+        // If this is a thread reply and conversation_id is missing, inherit from parent
+        if (empty($messageData['conversation_id']) && !empty($messageData['parent_id'])) {
+            try {
+                $parent = $this->messages->findById((int) $messageData['parent_id']);
+                if ($parent) {
+                    $messageData['conversation_id'] = $parent['conversation_id'] ?? null;
+                    if (empty($messageData['channel_id']) && !empty($parent['channel_id'])) {
+                        $messageData['channel_id'] = $parent['channel_id'];
+                    }
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Failed to inherit conversation/channel from parent', ['error' => $e->getMessage()]);
+            }
+        }
 
         $message = $this->messages->create($messageData);
         
@@ -60,6 +76,7 @@ class MessageService
             'sender_id' => (string) $data['user_id'],
             'content' => (string) $data['content'],
             'created_at' => is_string($message->created_at) ? $message->created_at : $message->created_at->toISOString(),
+            'parent_id' => isset($messageData['parent_id']) ? (string) $messageData['parent_id'] : null,
         ];
 
         Log::info('Broadcasting MessageSent event with payload:', $payload);

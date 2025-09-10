@@ -21,7 +21,8 @@ class EloquentMessageRepository implements MessageRepositoryInterface
         // For direct messages, use Message model with conversation
         if ($type === 'direct') {
             $query = Message::query()->with('user');
-            $query->where('conversation_id', $roomId);
+            $query->where('conversation_id', $roomId)
+                  ->whereNull('parent_id'); // exclude thread replies from main feed
             
             if ($beforeId) {
                 $query->where('id', '<', (int) $beforeId);
@@ -55,7 +56,8 @@ class EloquentMessageRepository implements MessageRepositoryInterface
         
         // For channel/team messages, use Message model
         $query = Message::query()->with('user');
-        $query->where('channel_id', $roomId);
+        $query->where('channel_id', $roomId)
+              ->whereNull('parent_id'); // exclude thread replies from main feed
         
         if ($beforeId) {
             $query->where('id', '<', (int) $beforeId);

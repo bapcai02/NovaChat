@@ -50,6 +50,7 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
     public function getMessages(int $conversationId, int $limit = 50, ?int $beforeId = null, ?int $userId = null): array
     {
         $query = Message::where('conversation_id', $conversationId)
+            ->whereNull('parent_id')  // Exclude thread replies from main conversation
             ->with(['user', 'reactions', 'replies'])
             ->orderByDesc('id');
 
@@ -63,6 +64,7 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
             return [
                 'id' => $message->id,
                 'conversation_id' => $message->conversation_id,
+                'parent_id' => $message->parent_id,
                 'sender' => [
                     'id' => $message->user->id,
                     'name' => $message->user->name,

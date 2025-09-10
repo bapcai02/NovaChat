@@ -60,6 +60,7 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
     content: string
     sender: string
     timestamp: string
+    conversation_id: string
   } | null>(null)
 
   // Helper function to get conversation display name
@@ -230,7 +231,7 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
     setIsRightSidebarOpen(prev => !prev)
   }
 
-  const handleOpenThread = (message: { id: string; content: string; sender: string; timestamp: string }) => {
+  const handleOpenThread = (message: { id: string; content: string; sender: string; timestamp: string; conversation_id: string }) => {
     setThreadMessage(message)
     setShowThread(true)
   }

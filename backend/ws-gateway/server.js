@@ -247,8 +247,10 @@ wss.on('connection', (ws) => {
 
       // === CHAT MESSAGE ===
       if (message.type === 'chat_message') {
+        console.log('[WS-Gateway] Received chat_message:', JSON.stringify(message))
         const targetCid = message.conversation_id
         if (!targetCid) {
+          console.log('[WS-Gateway] Missing conversation_id, rejecting message')
           ws.send(JSON.stringify({ type: 'error', message: 'Missing conversation_id' }))
           return
         }
@@ -276,14 +278,18 @@ wss.on('connection', (ws) => {
         // Also push JSON into Redis List for the Laravel consumer (BRPOP)
         try {
           const listKey = process.env.REDIS_CHAT_LIST_KEY || 'chat_messages_list'
-          await redis.lpush(listKey, JSON.stringify({
+          const listPayload = {
             conversation_id: chat.conversation_id,
             sender_id: chat.sender_id,
             content: chat.content,
-            timestamp: chat.timestamp
-          }))
+            timestamp: chat.timestamp,
+            parent_id: message.parent_id || null
+          }
+          console.log('[WS-Gateway] LPUSH to Redis List:', listKey, JSON.stringify(listPayload))
+          await redis.lpush(listKey, JSON.stringify(listPayload))
           // Keep list length within limit
           await redis.ltrim(listKey, 0, 99999)
+          console.log('[WS-Gateway] Successfully pushed to Redis List')
         } catch (e) {
           console.error('[WS-Gateway] Failed to LPUSH chat_messages list:', e?.message || e)
         }
@@ -298,9 +304,26 @@ wss.on('connection', (ws) => {
               sender_id: message.sender_id,
               content: message.content,
               timestamp: chat.timestamp,
+              parent_id: message.parent_id || null,
             }))
           }
         })
+
+        // If this is a thread reply, emit a lightweight thread_reply for UI badges/notifications
+        if (message.parent_id) {
+          clients.forEach(c => {
+            if (c.readyState === WebSocket.OPEN) {
+              c.send(JSON.stringify({
+                type: 'thread_reply',
+                conversation_id: targetCid,
+                parent_id: message.parent_id,
+                sender_id: message.sender_id,
+                content: message.content,
+                timestamp: chat.timestamp,
+              }))
+            }
+          })
+        }
 
         ws.send(JSON.stringify({ type: 'message_sent', conversation_id: targetCid }))
         return

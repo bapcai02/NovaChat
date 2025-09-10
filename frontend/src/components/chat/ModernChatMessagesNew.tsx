@@ -14,7 +14,7 @@ interface ModernChatMessagesProps {
   messages: Message[]
   currentUser: User | null
   conversationId?: number
-  onOpenThread?: (message: { id: string; content: string; sender: string; timestamp: string }) => void
+  onOpenThread?: (message: { id: string; content: string; sender: string; timestamp: string; conversation_id: string }) => void
   onAddReaction?: (messageId: number, emoji: string) => void
   onRemoveReaction?: (messageId: number, emoji: string) => void
   onBookmark?: (messageId: number, note?: string) => void
@@ -30,7 +30,7 @@ interface ModernChatMessagesProps {
 interface MessageBubbleProps {
   message: Message
   currentUser: User | null
-  onOpenThread?: (message: { id: string; content: string; sender: string; timestamp: string }) => void
+  onOpenThread?: (message: { id: string; content: string; sender: string; timestamp: string; conversation_id: string }) => void
   onAddReaction?: (messageId: number, emoji: string) => void
   onRemoveReaction?: (messageId: number, emoji: string) => void
   onBookmark?: (messageId: number, note?: string) => void
@@ -84,11 +84,14 @@ const MessageBubble = ({
   }
 
   const handleReply = () => {
+    console.log('[MessageBubble] message object:', message)
+    console.log('[MessageBubble] message.conversation_id:', message.conversation_id)
     onOpenThread?.({
       id: message.id.toString(),
       content: message.content,
       sender: sender.name || 'Unknown',
-      timestamp: new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      timestamp: new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      conversation_id: message.conversation_id?.toString() || ''
     })
   }
 
@@ -164,6 +167,7 @@ const MessageBubble = ({
             ? "bg-blue-500 text-white rounded-br-md" 
             : "bg-gray-100 text-gray-800 rounded-bl-md"
         )}>
+          {/* Content or editor */}
           {isEditing ? (
             <div className="space-y-2">
               <textarea
@@ -182,6 +186,16 @@ const MessageBubble = ({
               className="text-sm whitespace-pre-wrap break-words leading-relaxed"
               dangerouslySetInnerHTML={{ __html: renderWithMentions(message.content) }}
             />
+          )}
+
+          {/* Thread hint below the message */}
+          {((message as any).parent_id || ((message as any).replies_count || 0) > 0) && (
+            <div className="mt-1 flex items-center gap-1 text-[11px] leading-none">
+              <MessageCircle className={cn("h-3.5 w-3.5", testIsOwn ? 'text-white/80' : 'text-gray-500')} />
+              <span className={cn(testIsOwn ? 'text-white/80' : 'text-gray-500')}>
+                {(message as any).parent_id ? 'Reply in thread' : `${(message as any).replies_count || 0} replies`}
+              </span>
+            </div>
           )}
 
           {/* Message actions - shown on hover */}

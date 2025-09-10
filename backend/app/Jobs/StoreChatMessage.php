@@ -20,16 +20,18 @@ class StoreChatMessage implements ShouldQueue
     protected $senderId;
     protected $content;
     protected $timestamp;
+    protected $parentId;
 
     /**
      * Create a new job instance.
      */
-    public function __construct($conversationId, $senderId, $content, $timestamp = null)
+    public function __construct($conversationId, $senderId, $content, $timestamp = null, $parentId = null)
     {
         $this->conversationId = $conversationId;
         $this->senderId = $senderId;
         $this->content = $content;
         $this->timestamp = $timestamp ?: now();
+        $this->parentId = $parentId;
     }
 
     /**
@@ -43,17 +45,27 @@ class StoreChatMessage implements ShouldQueue
                 '[' . now() . '] local.INFO: === StoreChatMessage Job Started ===' . PHP_EOL .
                 'Conversation ID: ' . $this->conversationId . PHP_EOL .
                 'Sender ID: ' . $this->senderId . PHP_EOL .
-                'Content: ' . $this->content . PHP_EOL,
+                'Content: ' . $this->content . PHP_EOL .
+                'Parent ID: ' . ($this->parentId ?: 'null') . PHP_EOL,
                 FILE_APPEND | LOCK_EX
             );
 
             Log::info('Processing chat message from Redis queue', [
                 'conversation_id' => $this->conversationId,
                 'sender_id' => $this->senderId,
-                'content' => $this->content
+                'content' => $this->content,
+                'parent_id' => $this->parentId
             ]);
 
-            // Verify conversation exists
+            // If this is a thread reply and conversationId is missing, inherit from parent
+            if (empty($this->conversationId) && !empty($this->parentId)) {
+                $parent = Message::find($this->parentId);
+                if ($parent) {
+                    $this->conversationId = $parent->conversation_id;
+                }
+            }
+
+            // Verify conversation exists (after inheritance if applied)
             $conversation = Conversation::find($this->conversationId);
             if (!$conversation) {
                 Log::error('Conversation not found', ['conversation_id' => $this->conversationId]);
@@ -66,6 +78,7 @@ class StoreChatMessage implements ShouldQueue
                 'user_id' => $this->senderId,  // Changed from sender_id to user_id
                 'content' => $this->content,
                 'type' => 'text',
+                'parent_id' => $this->parentId,
                 'created_at' => $this->timestamp,
                 'updated_at' => $this->timestamp
             ]);

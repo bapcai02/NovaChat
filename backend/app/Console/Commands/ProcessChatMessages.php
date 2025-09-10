@@ -40,19 +40,21 @@ class ProcessChatMessages extends Command
             return;
         }
 
-        // Use base key; Redis client will apply configured prefix automatically
-        $listKey = 'chat_messages_list';
-        // Check queue length (list variant)
-        $queueLength = Redis::llen($listKey);
+        // Use base key; Redis client may apply configured prefix automatically
+        $baseKey = 'chat_messages_list';
+        $prefixedKey = (string) config('database.redis.options.prefix', '') . $baseKey;
+        // Check queue length across both keys (best effort)
+        $queueLength = (int) Redis::llen($baseKey) + (int) Redis::llen($prefixedKey);
         $this->info("Queue length: {$queueLength}");
 
         while (true) {
             try {
-                // Blocking pop from Redis list with 5 second timeout
-                $messageData = Redis::brpop($listKey, 5);
+                // Blocking pop from Redis list(s) with 5 second timeout
+                $messageData = Redis::brpop([$baseKey, $prefixedKey], 5);
                 
                 if ($messageData) {
-                    $message = json_decode($messageData[1], true);
+                    $payload = is_array($messageData) ? ($messageData[1] ?? null) : null;
+                    $message = $payload ? json_decode($payload, true) : null;
                     
                     if ($message) {
                         $this->info('Processing message: ' . json_encode($message));
@@ -66,15 +68,16 @@ class ProcessChatMessages extends Command
                         
                         // Dispatch job to store message
                         StoreChatMessage::dispatch(
-                            $message['conversation_id'],
-                            $message['sender_id'],
-                            $message['content'],
-                            $message['timestamp'] ?? null
+                            $message['conversation_id'] ?? null,
+                            $message['sender_id'] ?? null,
+                            $message['content'] ?? '',
+                            $message['timestamp'] ?? null,
+                            $message['parent_id'] ?? null
                         );
                         
                         $this->info('Message dispatched to queue');
                     } else {
-                        $this->error('Invalid message format: ' . $messageData[1]);
+                        $this->error('Invalid message format: ' . ($payload ?? 'null'));
                     }
                 } else {
                     // No message received, continue loop

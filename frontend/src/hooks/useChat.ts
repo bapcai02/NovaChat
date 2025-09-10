@@ -27,6 +27,7 @@ export function useChat() {
   const [userOnlineSet, setUserOnlineSet] = useState(false)
   const [typingByConversation, setTypingByConversation] = useState<Record<number, Set<number>>>({})
   const [readPointers, setReadPointers] = useState<Record<number, Record<number, number>>>({})
+  const [threadUnreadCounts, setThreadUnreadCounts] = useState<Record<number, number>>({})
   const currentConversationIdRef = useRef<number | null>(null)
   const notificationPermissionRequestedRef = useRef<boolean>(false)
 
@@ -254,9 +255,43 @@ export function useChat() {
           return
         }
         
+        // Thread reply lightweight event (for badges/notifications)
+        if (message.type === 'thread_reply') {
+          const parentId = parseInt((message as any).parent_id?.toString() || '0')
+          if (parentId) {
+            setThreadUnreadCounts(prev => ({ ...prev, [parentId]: (prev[parentId] || 0) + 1 }))
+            const text = (message as any).content || ''
+            showDesktopNotification('New thread reply', text)
+          }
+          return
+        }
+
         if (message.type === 'chat_message' || message.type === 'message_received') {
           const messageConversationId = parseInt(message.conversation_id?.toString() || '0')
           const activeConvId = currentConversationIdRef.current
+          const parentId = parseInt(((message as any).parent_id ?? '0').toString() || '0')
+          const isThreadReply = !!parentId
+          // If this is a thread reply, do not append into main messages list
+          if (isThreadReply) {
+            if (parentId) {
+              setThreadUnreadCounts(prev => ({ ...prev, [parentId]: (prev[parentId] || 0) + 1 }))
+            }
+            // Still update sidebar preview for that conversation
+            setConversations(prev => prev.map(conv => {
+              if (conv.id === messageConversationId) {
+                return {
+                  ...conv,
+                  last_message: {
+                    ...(conv as any).last_message,
+                    content: (message as any).content || '',
+                    updated_at: (message as any).timestamp || new Date().toISOString(),
+                  }
+                } as any
+              }
+              return conv
+            }))
+            return
+          }
           // Only add to current messages if it belongs to the active conversation
           if (!messageConversationId || activeConvId !== messageConversationId) {
             // Non-active conversations are handled by the global unread handler

@@ -29,6 +29,8 @@ import {
 } from '@/components/ui/dropdown-menu'
 import EmojiPicker from 'emoji-picker-react'
 import { apiService } from '@/services/api'
+import { getWebSocketClient } from '@/lib/websocket'
+import { useChat } from '@/hooks/useChat'
 
 interface ThreadMessage {
   id: string
@@ -52,17 +54,20 @@ interface ThreadChatProps {
     content: string
     sender: string
     timestamp: string
+    conversation_id: string
   }
   onClose: () => void
 }
 
 export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatProps) {
+  const { currentUser } = useChat()
   const [messages, setMessages] = useState<ThreadMessage[]>([])
   const [newMessage, setNewMessage] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [showEmojis, setShowEmojis] = useState(false)
   const [attachments, setAttachments] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const hasLoadedRef = useRef<boolean>(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const emojiPickerRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -73,14 +78,13 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
-  // Load thread messages from API
+  // Load thread messages from API (only on first open for this parent id)
   useEffect(() => {
     const loadThreadMessages = async () => {
       try {
         setIsLoading(true)
         const response = await apiService.getThreadMessages(parentMessage.id)
         const raw = (response as any)?.data ?? []
-        // Transform API response to ThreadMessage format
         const threadMessages: ThreadMessage[] = raw.map((msg: any) => ({
           id: msg.id.toString(),
           content: msg.content,
@@ -91,24 +95,72 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
             isOnline: msg.sender?.is_online || msg.user?.is_online || false
           },
           timestamp: new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          isOwn: false, // You might want to determine this based on current user
+          isOwn: false,
           isEdited: msg.is_edited || false,
           reactions: msg.reactions || [],
           attachments: msg.attachments || []
         }))
-        
         setMessages(threadMessages)
       } catch (error) {
         console.error('Error loading thread messages:', error)
         setMessages([])
       } finally {
         setIsLoading(false)
+        hasLoadedRef.current = true
       }
     }
 
-    if (parentMessage.id) {
-      loadThreadMessages()
-    }
+    if (!parentMessage.id) return
+    // Reset state if parent changed
+    setMessages([])
+    setIsLoading(true)
+    hasLoadedRef.current = false
+    // Defer load to next tick to batch state updates
+    Promise.resolve().then(() => {
+      if (!hasLoadedRef.current) loadThreadMessages()
+    })
+  }, [parentMessage.id])
+
+  // Realtime: append replies without reloading entire thread
+  useEffect(() => {
+    try {
+      const ws = getWebSocketClient()
+      // Avoid duplicate handler registration across rerenders
+      const key = `__nc_thread_${parentMessage.id}`
+      if ((window as any)[key]) return
+      ;(window as any)[key] = true
+      const handler = (raw: any) => {
+        const message = raw as any
+        // Accept either dedicated thread event or chat_message carrying parent_id
+        const isThreadEvt = message?.type === 'thread_reply'
+        const isReplyChat = message?.type === 'chat_message' && !!message?.parent_id
+        if (!isThreadEvt && !isReplyChat) return
+        const parentId = parseInt((message.parent_id || '0').toString() || '0')
+        if (!parentId || parentId.toString() !== parentMessage.id.toString()) return
+
+        const ts = message.timestamp || new Date().toISOString()
+        const newMsg = {
+          id: (Date.now()).toString(),
+          content: message.content || '',
+          sender: {
+            id: (message.sender_id || '').toString(),
+            name: '',
+            avatar: undefined,
+            isOnline: false,
+          },
+          timestamp: new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          isOwn: false,
+        } as any
+
+        setMessages(prev => {
+          // prevent duplicate by content+time close
+          const exists = prev.some(m => m.content === newMsg.content)
+          return exists ? prev : [...prev, newMsg]
+        })
+      }
+      ws.onMessage(handler)
+      return () => { /* no-op */ }
+    } catch {}
   }, [parentMessage.id])
 
   // Click outside to close emoji picker
@@ -135,45 +187,42 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
   const handleSendMessage = async () => {
     if (newMessage.trim() || attachments.length > 0) {
       try {
-        const response = await apiService.sendThreadMessage(parentMessage.id, newMessage.trim())
-        const data = (response as any)?.data ?? {}
-        // Add the new message to the list
-        const newMessageData: ThreadMessage = {
-          id: (data.id ?? Date.now()).toString(),
-          content: data.content ?? newMessage.trim(),
-          sender: {
-            id: data.user_id?.toString() || 'current-user',
-            name: 'You',
-            avatar: 'https://ui-avatars.com/api/?name=You&background=random',
-            isOnline: true
-          },
-          timestamp: new Date(data.created_at ?? Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        // Send via WebSocket with parent_id
+        const ws = getWebSocketClient()
+        const optimistic: ThreadMessage = {
+          id: Date.now().toString(),
+          content: newMessage.trim(),
+          sender: { id: 'current-user', name: 'You', avatar: 'https://ui-avatars.com/api/?name=You&background=random', isOnline: true },
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           isOwn: true
         }
-        
-        setMessages(prev => [...prev, newMessageData])
+        setMessages(prev => [...prev, optimistic])
+        const currentUserId = currentUser?.id || null
+        console.log('[ThreadChat] parentMessage:', parentMessage)
+        console.log('[ThreadChat] currentUser:', currentUser)
+        console.log('[ThreadChat] currentUserId:', currentUserId)
+        const messagePayload = {
+          type: 'chat_message',
+          conversation_id: parentMessage.conversation_id,
+          parent_id: parentMessage.id,
+          sender_id: currentUserId || 0,
+          content: newMessage.trim(),
+          client_id: `${currentUserId || 0}-${Date.now()}`
+        }
+        console.log('[ThreadChat] Sending WS message:', messagePayload)
+        ws.send(messagePayload as any)
         setNewMessage('')
         setAttachments([])
         setIsTyping(false)
       } catch (error) {
         console.error('Error sending thread message:', error)
-        // Still add to UI for better UX, but show error
-        const message: ThreadMessage = {
-          id: Date.now().toString(),
-          content: newMessage.trim(),
-          sender: {
-            id: 'current-user',
-            name: 'You',
-            avatar: 'https://ui-avatars.com/api/?name=You&background=random',
-            isOnline: true
-          },
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          isOwn: true
-        }
-        setMessages(prev => [...prev, message])
-        setNewMessage('')
-        setAttachments([])
-        setIsTyping(false)
+        // Fallback to API if WS fails
+        try {
+          const response = await apiService.sendThreadMessage(parentMessage.id, newMessage.trim())
+          const data = (response as any)?.data ?? {}
+          const patchedId = (data.id ?? Date.now()).toString()
+          setMessages(prev => prev.map(m => m.id === optimistic.id ? { ...m, id: patchedId } : m))
+        } catch {}
       }
     }
   }
