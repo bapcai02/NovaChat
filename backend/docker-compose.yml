@@ -56,6 +56,7 @@ services:
       - redis
     environment:
       - REDIS_URL=redis://redis:6379
+      - REDIS_CHAT_LIST_KEY=chatbackend_database_chat_messages_list
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin

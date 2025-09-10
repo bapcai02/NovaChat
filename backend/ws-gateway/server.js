@@ -255,14 +255,15 @@ wss.on('connection', (ws) => {
 
         // Also push JSON into Redis List for the Laravel consumer (BRPOP)
         try {
-          await redis.lpush('chat_messages_list', JSON.stringify({
+          const listKey = process.env.REDIS_CHAT_LIST_KEY || 'chat_messages_list'
+          await redis.lpush(listKey, JSON.stringify({
             conversation_id: chat.conversation_id,
             sender_id: chat.sender_id,
             content: chat.content,
             timestamp: chat.timestamp
           }))
           // Keep list length within limit
-          await redis.ltrim('chat_messages_list', 0, 99999)
+          await redis.ltrim(listKey, 0, 99999)
         } catch (e) {
           console.error('[WS-Gateway] Failed to LPUSH chat_messages list:', e?.message || e)
         }

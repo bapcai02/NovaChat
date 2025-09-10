@@ -24,6 +24,7 @@ export function useChat() {
   const [userOnlineSet, setUserOnlineSet] = useState(false)
   const [typingByConversation, setTypingByConversation] = useState<Record<number, Set<number>>>({})
   const [readPointers, setReadPointers] = useState<Record<number, Record<number, number>>>({})
+  const currentConversationIdRef = useRef<number | null>(null)
 
   // Load current user
   const loadCurrentUser = useCallback(async () => {
@@ -257,8 +258,9 @@ export function useChat() {
         
         if (message.type === 'chat_message' || message.type === 'message_received') {
           const messageConversationId = parseInt(message.conversation_id?.toString() || '0')
+          const activeConvId = currentConversationIdRef.current
           // Only add to current messages if it belongs to the active conversation
-          if (!messageConversationId || currentConversation?.id !== messageConversationId) {
+          if (!messageConversationId || activeConvId !== messageConversationId) {
             // Non-active conversations are handled by the global unread handler
             return
           }
@@ -336,11 +338,13 @@ export function useChat() {
             // Add new message from other users, but check for duplicates first
             setMessages((prev: any) => {
               // Check if message already exists (by content and timestamp)
-              const exists = prev.some((msg: any) => 
-                msg.content === newMessage.content && 
-                msg.user_id === newMessage.user_id &&
-                Math.abs(new Date(msg.created_at).getTime() - new Date(newMessage.created_at).getTime()) < 1000 // Within 1 second
-              )
+              const exists = prev.some((msg: any) => {
+                const sameConv = (msg.conversation_id || 0) === messageConversationId
+                const sameUser = msg.user_id === newMessage.user_id
+                const sameContent = msg.content === newMessage.content
+                const closeTime = Math.abs(new Date(msg.created_at).getTime() - new Date(newMessage.created_at).getTime()) < 1000
+                return sameConv && sameUser && sameContent && closeTime
+              })
               
               if (exists) {
                 return prev
@@ -758,6 +762,11 @@ export function useChat() {
     loadConversations()
     loadOnlineUsers()
   }, [loadCurrentUser, loadTeams, loadConversations, loadOnlineUsers])
+
+  // Keep a ref of current conversation id to avoid stale closures in WS handlers
+  useEffect(() => {
+    currentConversationIdRef.current = currentConversation?.id ?? null
+  }, [currentConversation?.id])
 
   // Load user statuses when conversations change
   useEffect(() => {

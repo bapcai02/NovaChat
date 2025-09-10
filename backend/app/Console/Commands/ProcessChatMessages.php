@@ -40,8 +40,8 @@ class ProcessChatMessages extends Command
             return;
         }
 
-        // Respect Redis prefix (Laravel adds APP_NAME prefix)
-        $listKey = (string) config('database.redis.options.prefix', '') . 'chat_messages_list';
+        // Use base key; Redis client will apply configured prefix automatically
+        $listKey = 'chat_messages_list';
         // Check queue length (list variant)
         $queueLength = Redis::llen($listKey);
         $this->info("Queue length: {$queueLength}");
