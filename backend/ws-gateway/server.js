@@ -1,334 +1,343 @@
-// ws-gateway.js
-const WebSocket = require('ws');
-const Redis = require('ioredis');
-const { v4: uuidv4 } = require('uuid');
+const http = require('http')
+const express = require('express')
+const WebSocket = require('ws')
+const Redis = require('ioredis')
+const { v4: uuidv4 } = require('uuid')
+
+const PORT = process.env.WS_PORT ? parseInt(process.env.WS_PORT, 10) : 7000
 
 // Redis connection
-const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
+const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379')
 
-// Logging function (console only)
-const log = (message, data = null) => {};
+// Presence storage keys
+const ONLINE_SET_KEY = 'online_users'
+const STATUS_KEY_PREFIX = 'user_status:' // user_status:{userId} => 'online' with TTL
 
-// WebSocket server
-const wss = new WebSocket.Server({ port: 7000 });
+// Logging helper
+const log = (message, data = null) => {
+  console.log(`[WS-Gateway] ${message}`, data || '')
+}
 
-// Store connected clients by conversation
-const clientsByConversation = new Map();
+// HTTP + Express + WS
+const app = express()
+app.use(express.json())
 
-// Store connected clients by user (for cleanup only)
-const clientsByUser = new Map();
-
-// Function to publish user presence events to Redis Stream
-const publishUserPresenceEvent = async (event, userId) => {
+// API: /online-users → return list of online users
+app.get('/online-users', async (_req, res) => {
   try {
-    const eventData = {
-      event: event,
-      user_id: userId,
-      timestamp: new Date().toISOString()
-    };
-    
-    // Publish to Redis Stream with MAXLEN ~ 100000
-    const streamId = await redis.xadd(
-      'user_presence',
-      'MAXLEN', '~', 100000,
-      '*',
-      'event', eventData.event,
-      'user_id', eventData.user_id,
-      'timestamp', eventData.timestamp
-    );
-    
-    log(`Published ${event} event for user ${userId} to Redis Stream:`, streamId);
-    return streamId;
-  } catch (error) {
-    log(`Error publishing ${event} event for user ${userId}:`, error.message);
-    throw error;
+    const ids = await redis.smembers(ONLINE_SET_KEY)
+    res.json({ success: true, data: ids.map((id) => Number(id)) })
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Internal error' })
   }
-};
+})
 
-log('WebSocket Gateway started on port 7000');
+const server = http.createServer(app)
+const wss = new WebSocket.Server({ server })
 
+// Map user → connected clients
+const clientsByUser = new Map()
+// Map conversation → clients
+const clientsByConversation = new Map()
+
+// Presence helpers
+async function setOnline(userId) {
+  try {
+    console.log(`[Presence] Setting user ${userId} online...`)
+    const key = `${STATUS_KEY_PREFIX}${userId}`
+    await redis.setex(key, 10, 'online')
+    await redis.sadd(ONLINE_SET_KEY, String(userId))
+    console.log(`[Presence] User ${userId} set online successfully`)
+  } catch (error) {
+    console.log(`[Presence] Error setting user ${userId} online:`, error.message)
+    log(`[Presence] Error setting user ${userId} online:`, error.message)
+  }
+}
+
+async function touchOnline(userId) {
+  try {
+    const key = `${STATUS_KEY_PREFIX}${userId}`
+    await redis.expire(key, 10)
+    await redis.sadd(ONLINE_SET_KEY, String(userId))
+  } catch (error) {
+    log(`[Presence] Error touching user ${userId} online:`, error.message)
+  }
+}
+
+async function setOffline(userId) {
+  try {
+    const key = `${STATUS_KEY_PREFIX}${userId}`
+    await redis.del(key)
+    await redis.srem(ONLINE_SET_KEY, String(userId))
+  } catch (error) {
+    log(`[Presence] Error setting user ${userId} offline:`, error.message)
+  }
+}
+
+// Publish to Redis Stream
+async function publishUserPresenceEvent(event, userId) {
+  const streamId = await redis.xadd(
+    'user_presence',
+    'MAXLEN', '~', 100000,
+    '*',
+    'event', event,
+    'user_id', userId,
+    'timestamp', new Date().toISOString()
+  )
+}
+
+// WS connection handler
 wss.on('connection', (ws) => {
-  const clientId = uuidv4();
-  log(`New client connected: ${clientId}`);
+  const clientId = uuidv4()
+  ws.clientId = clientId
+  ws.userId = null
+  ws.conversationId = null
+  ws.subscribedConversations = new Set()
 
-  ws.clientId = clientId;
-  ws.conversationId = null;
-  ws.userId = null;
-  ws.subscribedConversations = new Set();
-
-  ws.on('message', async (data) => {
+  ws.on('message', async (raw) => {
     try {
-      const message = JSON.parse(data.toString());
-      log('Received message:', message);
+      const message = JSON.parse(raw.toString())
+      console.log(`[WS-Gateway] Received message:`, message)
+      // === PING/PONG ===
+      if (message.type === 'ping') {
+        if (typeof message.user_id === 'number') {
+          ws.userId = ws.userId ?? message.user_id
+        }
+        if (ws.userId) {
+          await touchOnline(ws.userId)
+        }
+        ws.send(JSON.stringify({ type: 'pong' }))
+        return
+      }
 
+       // === LOGIN (user_online) ===
+       if (message.type === 'user_online') {
+         const userId = message.user_id
+         ws.userId = userId
+
+         if (!clientsByUser.has(userId)) clientsByUser.set(userId, new Set())
+         clientsByUser.get(userId).add(ws)
+
+         await setOnline(userId)
+         await publishUserPresenceEvent('user_connected', userId)
+
+         const onlineUsers = await redis.smembers(ONLINE_SET_KEY)
+
+         // Broadcast to ALL connected clients (not just current conversation)
+         wss.clients.forEach((c) => {
+           if (c.readyState === WebSocket.OPEN) {
+             c.send(JSON.stringify({ type: 'user_online', user_id: userId }))
+           }
+         })
+         return
+       }
+
+      // === LOGOUT ===
+      if (message.type === 'logout' && typeof message.user_id === 'number') {
+        await setOffline(message.user_id)
+        await publishUserPresenceEvent('user_disconnected', message.user_id)
+        ws.close(1000, 'logout')
+        return
+      }
+
+      // === EXPLICIT USER_OFFLINE ===
+      if (message.type === 'user_offline') {
+        const userId = message.user_id
+        if (clientsByUser.has(userId)) {
+          clientsByUser.get(userId).delete(ws)
+          if (clientsByUser.get(userId).size === 0) {
+            clientsByUser.delete(userId)
+            await setOffline(userId)
+            await publishUserPresenceEvent('user_disconnected', userId)
+          }
+        }
+        return
+      }
+
+      // === JOIN CONVERSATION ===
       if (message.type === 'join_conversation') {
-        ws.conversationId = message.conversation_id;
+        const cid = message.conversation_id
+        ws.conversationId = cid
+        if (!clientsByConversation.has(cid)) clientsByConversation.set(cid, new Set())
+        clientsByConversation.get(cid).add(ws)
 
-        if (!clientsByConversation.has(ws.conversationId)) {
-          clientsByConversation.set(ws.conversationId, new Set());
-          log(`Created new conversation room: ${ws.conversationId}`);
-        }
-        clientsByConversation.get(ws.conversationId).add(ws);
-
-        log(
-          `Client ${clientId} joined conversation ${ws.conversationId}. Room size: ${clientsByConversation.get(ws.conversationId).size}`
-        );
-
-        ws.send(
-          JSON.stringify({
-            type: 'joined_conversation',
-            conversation_id: ws.conversationId,
-            client_id: clientId,
-          })
-        );
-      } else if (message.type === 'user_online') {
-        try {
-          const userId = message.user_id;
-          log(`Processing user_online for user ${userId}`);
-          
-          ws.userId = userId;
-          
-          // Store client by user (for cleanup only)
-          if (!clientsByUser.has(userId)) {
-            clientsByUser.set(userId, new Set());
-          }
-          clientsByUser.get(userId).add(ws);
-          
-          // Publish user_connected event to Redis Stream
-          await publishUserPresenceEvent('user_connected', userId);
-          
-          log(`User ${userId} connected - event published to Redis Stream`);
-        } catch (error) {
-          log(`Error handling user_online: ${error.message}`);
-          log(`Error stack: ${error.stack}`);
-        }
-        
-      } else if (message.type === 'user_offline') {
-        try {
-          const userId = message.user_id;
-          
-          // Remove client from user mapping
-          if (clientsByUser.has(userId)) {
-            clientsByUser.get(userId).delete(ws);
-            if (clientsByUser.get(userId).size === 0) {
-              clientsByUser.delete(userId);
-            }
-          }
-          
-          // Check if user has any other connections
-          const hasOtherConnections = clientsByUser.has(userId) && clientsByUser.get(userId).size > 0;
-          
-          if (!hasOtherConnections) {
-            // Publish user_disconnected event to Redis Stream
-            await publishUserPresenceEvent('user_disconnected', userId);
-            
-            log(`User ${userId} disconnected - event published to Redis Stream`);
-          }
-        } catch (error) {
-          log(`Error handling user_offline: ${error.message}`);
-          log(`Error stack: ${error.stack}`);
-        }
-      } else if (message.type === 'subscribe_all_conversations') {
-        const userId = message.user_id;
-        const conversationIds = message.conversation_ids || [];
-        
-        ws.userId = userId;
-        
-        // Subscribe to all conversations
-        conversationIds.forEach(conversationId => {
-          if (!clientsByConversation.has(conversationId)) {
-            clientsByConversation.set(conversationId, new Set());
-            log(`Created new conversation room: ${conversationId}`);
-          }
-          clientsByConversation.get(conversationId).add(ws);
-          ws.subscribedConversations.add(conversationId);
-        });
-        
-        log(`User ${userId} subscribed to ${conversationIds.length} conversations: [${conversationIds.join(', ')}]`);
-        
         ws.send(JSON.stringify({
-          type: 'subscribed_all_conversations',
-          conversation_ids: conversationIds,
+          type: 'joined_conversation',
+          conversation_id: cid,
           client_id: clientId,
-        }));
-        
-      } else if (message.type === 'chat_message') {
+        }))
+        return
+      }
+
+       // === SUBSCRIBE ALL CONVERSATIONS ===
+       if (message.type === 'subscribe_all_conversations') {
+         console.log(`[WS-Gateway] Processing subscribe_all_conversations for user ${message.user_id}`)
+         const userId = message.user_id
+         const cids = message.conversation_ids || []
+         
+         try {
+           ws.userId = userId
+           if (!clientsByUser.has(userId)) clientsByUser.set(userId, new Set())
+           clientsByUser.get(userId).add(ws)
+
+           cids.forEach(cid => {
+             if (!clientsByConversation.has(cid)) clientsByConversation.set(cid, new Set())
+             clientsByConversation.get(cid).add(ws)
+             ws.subscribedConversations.add(cid)
+           })
+
+           // Set user online and broadcast to all clients
+           console.log(`[WS-Gateway] Calling setOnline for user ${userId}`)
+           await setOnline(userId)
+           console.log(`[WS-Gateway] setOnline completed for user ${userId}`)
+
+           await publishUserPresenceEvent('user_connected', userId)
+         } catch (error) {
+           console.log(`[WS-Gateway] Error in subscribe_all_conversations:`, error.message)
+           ws.send(JSON.stringify({ type: 'error', message: 'Failed to subscribe' }))
+         }
+         
+         // Broadcast user_online to all clients
+         wss.clients.forEach((c) => {
+           if (c.readyState === WebSocket.OPEN) {
+             c.send(JSON.stringify({ type: 'user_online', user_id: userId }))
+           }
+         })
+
+         // Get online users from Redis and send to client
+         try {
+           const onlineUsers = await redis.smembers(ONLINE_SET_KEY)
+           
+           ws.send(JSON.stringify({
+             type: 'subscribed_all_conversations',
+             conversation_ids: cids,
+             client_id: clientId,
+             online_users: onlineUsers
+           }))
+         } catch (error) {
+           ws.send(JSON.stringify({
+             type: 'subscribed_all_conversations',
+             conversation_ids: cids,
+             client_id: clientId,
+             online_users: []
+           }))
+         }
+         return
+       }
+
+      // === CHAT MESSAGE ===
+      if (message.type === 'chat_message') {
         if (!ws.conversationId) {
-          ws.send(
-            JSON.stringify({
-              type: 'error',
-              message: 'Must join a conversation first',
-            })
-          );
-          return;
+          ws.send(JSON.stringify({ type: 'error', message: 'Join a conversation first' }))
+          return
         }
 
-        const chatMessage = {
+        const chat = {
           conversation_id: message.conversation_id,
           sender_id: message.sender_id,
           content: message.content,
           timestamp: new Date().toISOString(),
           client_id: clientId,
-        };
-
-        // Push vào Redis Stream để Laravel xử lý (Redis Streams)
-        try {
-          const streamId = await redis.xadd(
-            'chat_messages',
-            'MAXLEN', '~', 100000,
-            '*',
-            'conversation_id', String(chatMessage.conversation_id),
-            'sender_id', String(chatMessage.sender_id),
-            'content', chatMessage.content,
-            'timestamp', chatMessage.timestamp,
-            'client_id', chatMessage.client_id
-          );
-          log('Message pushed to Redis Stream chat_messages:', streamId);
-        } catch (err) {
-          log('Error pushing to Redis Stream chat_messages:', err.message || err);
         }
 
-        // Broadcast cho tất cả client trong cùng conversation
-        log('=== Starting broadcast process ===');
-        const conversationClients =
-          clientsByConversation.get(ws.conversationId);
-        log(`Broadcasting to ${conversationClients ? conversationClients.size : 0} clients in conversation ${ws.conversationId}`);
-        
-        if (conversationClients) {
-          let sentCount = 0;
-          conversationClients.forEach((client) => {
-            if (client !== ws && client.readyState === WebSocket.OPEN) {
-              client.send(
-                JSON.stringify({
-                  type: 'chat_message',
-                  conversation_id: ws.conversationId,
-                  sender_id: message.sender_id,
-                  sender_name: message.sender_name || `User ${message.sender_id}`,
-                  sender_avatar: message.sender_avatar,
-                  content: message.content,
-                  timestamp: chatMessage.timestamp,
-                })
-              );
-              sentCount++;
-              log(`Message sent to client (${sentCount})`);
-            } else if (client === ws) {
-              log('Skipping sender');
-            } else {
-              log('Client not ready, skipping');
-            }
-          });
-          log(
-            `Broadcasted message to ${sentCount} clients in conversation ${ws.conversationId}`
-          );
-        } else {
-          log('No clients found for conversation', ws.conversationId);
-        }
+        // Push vào Redis Stream
+        await redis.xadd(
+          'chat_messages',
+          'MAXLEN', '~', 100000,
+          '*',
+          'conversation_id', String(chat.conversation_id),
+          'sender_id', String(chat.sender_id),
+          'content', chat.content,
+          'timestamp', chat.timestamp,
+          'client_id', chat.client_id
+        )
 
-        ws.send(
-          JSON.stringify({
-            type: 'message_sent',
-            conversation_id: ws.conversationId,
-            message_id: clientId,
-          })
-        );
-      } else if (
-        message.type === 'typing_start' ||
-        message.type === 'typing_stop'
-      ) {
-        if (!ws.conversationId) return;
+        // Broadcast tới cùng conversation
+        const clients = clientsByConversation.get(ws.conversationId) || []
+        clients.forEach(c => {
+          if (c.readyState === WebSocket.OPEN) {
+            c.send(JSON.stringify({
+              type: 'chat_message',
+              conversation_id: ws.conversationId,
+              sender_id: message.sender_id,
+              content: message.content,
+              timestamp: chat.timestamp,
+            }))
+          }
+        })
 
-        const typingMessage = {
+        ws.send(JSON.stringify({ type: 'message_sent', conversation_id: ws.conversationId }))
+        return
+      }
+
+      // === TYPING ===
+      if (message.type === 'typing_start' || message.type === 'typing_stop') {
+        if (!ws.conversationId) return
+        const typing = {
           type: message.type,
           conversation_id: ws.conversationId,
           user_id: message.user_id,
           timestamp: new Date().toISOString(),
-        };
-
-        const conversationClients =
-          clientsByConversation.get(ws.conversationId);
-        if (conversationClients) {
-          conversationClients.forEach((client) => {
-            if (client !== ws && client.readyState === WebSocket.OPEN) {
-              client.send(JSON.stringify(typingMessage));
-            }
-          });
         }
-      } else if (message.type === 'ping') {
-        ws.send(JSON.stringify({ type: 'pong' }));
-      }
-    } catch (error) {
-      log('Error processing message:', error);
-      ws.send(
-        JSON.stringify({
-          type: 'error',
-          message: 'Invalid message format',
-        })
-      );
-    }
-  });
-
-  ws.on('close', async () => {
-    log(`Client ${clientId} disconnected`);
-    
-    // Handle user offline if user was connected
-    if (ws.userId) {
-      // Remove client from user mapping
-      if (clientsByUser.has(ws.userId)) {
-        clientsByUser.get(ws.userId).delete(ws);
-        if (clientsByUser.get(ws.userId).size === 0) {
-          clientsByUser.delete(ws.userId);
-          
-          // Publish user_disconnected event to Redis Stream
-          try {
-            await publishUserPresenceEvent('user_disconnected', ws.userId);
-            log(`User ${ws.userId} disconnected (client closed) - event published to Redis Stream`);
-          } catch (error) {
-            log(`Error publishing user_disconnected event for user ${ws.userId}:`, error.message);
+        const clients = clientsByConversation.get(ws.conversationId) || []
+        clients.forEach(c => {
+          if (c !== ws && c.readyState === WebSocket.OPEN) {
+            c.send(JSON.stringify(typing))
           }
-        }
+        })
+      }
+    } catch (err) {
+      log('Error parsing message:', err)
+      ws.send(JSON.stringify({ type: 'error', message: 'Invalid message' }))
+    }
+  })
+
+  ws.on('close', () => {
+    // ❌ Không setOffline ở đây — rely TTL
+    if (ws.userId && clientsByUser.has(ws.userId)) {
+      clientsByUser.get(ws.userId).delete(ws)
+      if (clientsByUser.get(ws.userId).size === 0) {
+        clientsByUser.delete(ws.userId)
       }
     }
-    
-    // Handle conversation cleanup - remove from all subscribed conversations
-    ws.subscribedConversations.forEach(conversationId => {
-      if (clientsByConversation.has(conversationId)) {
-        const conversationClients = clientsByConversation.get(conversationId);
-        conversationClients.delete(ws);
-        if (conversationClients.size === 0) {
-          clientsByConversation.delete(conversationId);
-          log(`Conversation room ${conversationId} is now empty`);
+    ws.subscribedConversations.forEach(cid => {
+      if (clientsByConversation.has(cid)) {
+        clientsByConversation.get(cid).delete(ws)
+        if (clientsByConversation.get(cid).size === 0) {
+          clientsByConversation.delete(cid)
         }
       }
-    });
-  });
-
-  ws.on('error', (error) => {
-    log(`WebSocket error for client ${clientId}:`, error);
-  });
-
-  ws.send(
-    JSON.stringify({
-      type: 'connected',
-      client_id: clientId,
-      message: 'Connected to WebSocket Gateway',
     })
-  );
-});
+  })
+
+  // Send online users list when user connects
+  const sendOnlineUsers = async () => {
+    try {
+      const onlineUsers = await redis.smembers(ONLINE_SET_KEY)
+      
+      ws.send(JSON.stringify({
+        type: 'connected',
+        client_id: clientId,
+        online_users: onlineUsers.map(id => parseInt(id))
+      }))
+    } catch (error) {
+      ws.send(JSON.stringify({
+        type: 'connected',
+        client_id: clientId,
+        online_users: []
+      }))
+    }
+  }
+  
+  // Send online users immediately when client connects
+  sendOnlineUsers()
+})
 
 // Redis events
-redis.on('error', (error) => {
-  log('Redis connection error:', error);
-});
+redis.on('connect', () => log('Connected to Redis'))
+redis.on('error', (e) => log('Redis error:', e.message))
 
-redis.on('connect', () => {
-  log('Connected to Redis');
-});
-
-// Graceful shutdown
-process.on('SIGINT', () => {
-  log('Shutting down WebSocket Gateway...');
-  wss.close(() => {
-    redis.disconnect();
-    process.exit(0);
-  });
-});
+// Start
+server.listen(PORT, () => {
+  log(`WS Gateway listening on :${PORT}`)
+})

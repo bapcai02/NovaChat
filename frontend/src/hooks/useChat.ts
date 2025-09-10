@@ -14,7 +14,6 @@ export function useChat() {
   const [onlineUsers, setOnlineUsers] = useState<User[]>([])
   const [conversationUsers, setConversationUsers] = useState<User[]>([])
   const conversationUsersRef = useRef<User[]>([])
-  // Track optimistic message IDs (avoid extending Message type)
   const optimisticIdsRef = useRef<Set<number>>(new Set())
   const [onlineUserIds, setOnlineUserIds] = useState<Set<number>>(new Set())
   const [isLoading, setIsLoading] = useState(false)
@@ -150,6 +149,31 @@ export function useChat() {
       
       // Listen for messages
       wsClient.onMessage(async (message: WebSocketMessage) => {
+        // Handle initial connection with online users
+        if (message.type === 'connected' && (message as any).online_users) {
+          const onlineUsers = (message as any).online_users
+          console.log('[WS] Received online users on connect:', onlineUsers)
+          if (Array.isArray(onlineUsers)) {
+            setOnlineUserIds(new Set(onlineUsers))
+          }
+          return
+        }
+
+        // Presence events: log and update sidebar state instantly
+        if (message.type === 'user_online' || message.type === 'user_offline') {
+          const presenceUserId = parseInt((message as any).user_id?.toString() || '0')
+          if (presenceUserId) {
+            console.log('[Presence]', presenceUserId, message.type)
+            setOnlineUserIds(prev => {
+              const next = new Set(prev)
+              if (message.type === 'user_online') next.add(presenceUserId)
+              else next.delete(presenceUserId)
+              return next
+            })
+          }
+          return
+        }
+
         // Delivery/Read receipts
         if (message.type === 'message_ack') {
           const ackMsgId = parseInt((message as any).message_id?.toString() || '0')
@@ -402,12 +426,24 @@ export function useChat() {
   // Load online users
   const loadOnlineUsers = useCallback(async () => {
     try {
+      console.log('Loading online users...')
       const res: any = await apiService.getOnlineUsers()
+      console.log('Online users response:', res)
       const usersData = res?.data?.data ?? res?.data ?? res
-      setOnlineUsers(Array.isArray(usersData) ? usersData : [])
+      console.log('Online users data:', usersData)
+      
+      if (Array.isArray(usersData)) {
+        setOnlineUsers(usersData)
+        // Also update onlineUserIds for sidebar
+        setOnlineUserIds(new Set(usersData))
+      } else {
+        setOnlineUsers([])
+        setOnlineUserIds(new Set())
+      }
     } catch (err) {
       console.error('Error loading online users:', err)
       setOnlineUsers([])
+      setOnlineUserIds(new Set())
     }
   }, [])
 
@@ -417,9 +453,15 @@ export function useChat() {
       // Get all user IDs from conversations
       const allUserIds = new Set<number>()
       conversations.forEach(conv => {
-        if (conv.members) {
-          conv.members.forEach(member => {
-            if (member.id !== currentUser?.id) {
+        // Direct messages often expose other_member instead of full members
+        const other = (conv as any).other_member
+        if (other && typeof other.id === 'number' && other.id !== currentUser?.id) {
+          allUserIds.add(other.id)
+        }
+        // If members array exists, include them too
+        if ((conv as any).members) {
+          ;((conv as any).members as any[]).forEach(member => {
+            if (member && typeof member.id === 'number' && member.id !== currentUser?.id) {
               allUserIds.add(member.id)
             }
           })

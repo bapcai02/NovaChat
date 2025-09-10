@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Redis;
 use App\Services\UserPresenceService;
 
 class UserStatusController extends Controller
@@ -95,6 +96,31 @@ class UserStatusController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to get current user status',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get all online users from Redis (from WS Gateway)
+     */
+    public function getOnlineUsers(): JsonResponse
+    {
+        try {
+            // Get online user IDs from Redis Set
+            $onlineUserIds = Redis::smembers('online_users');
+            
+            // Convert to integers and filter out invalid values
+            $onlineUserIds = array_map('intval', array_filter($onlineUserIds, 'is_numeric'));
+            
+            return response()->json([
+                'success' => true,
+                'data' => $onlineUserIds
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to get online users',
                 'error' => $e->getMessage()
             ], 500);
         }

@@ -154,6 +154,7 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/status', [App\Http\Controllers\UserStatusController::class, 'getUsersStatus']);
         Route::get('/me/status', [App\Http\Controllers\UserStatusController::class, 'getCurrentUserStatus']);
         Route::get('/{userId}/status', [App\Http\Controllers\UserStatusController::class, 'getUserStatus']);
+        Route::get('/online', [App\Http\Controllers\UserStatusController::class, 'getOnlineUsers']);
     });
 
 });

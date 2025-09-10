@@ -258,9 +258,7 @@ class ApiService {
   }
 
   async getOnlineUsers() {
-    // This method is deprecated, use getUsersStatus instead
-    // For backward compatibility, return empty array
-    return { data: { data: [] } }
+    return this.request('/users/online')
   }
 
   async getUsersStatus(userIds: number[]) {
