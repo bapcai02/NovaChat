@@ -2,7 +2,10 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { apiService } from '@/services/api'
 import { unreadService } from '@/services/unreadService'
 import { getWebSocketClient, WebSocketMessage } from '@/lib/websocket'
+import { loadUnreadCountsAndMerge, markConversationAsReadAndRefresh } from './useUnread'
+import { normalizeOnlineUsers } from './usePresence'
 import type { User, Team, Channel, Conversation, Message} from '@/types/chat'
+import { requestNotificationPermission as requestNotifPermHelper, showDesktopNotification as showNotifHelper } from './useDesktopNotifications'
 
 export function useChat() {
   const [currentUser, setCurrentUser] = useState<User | null>(null)
@@ -25,6 +28,21 @@ export function useChat() {
   const [typingByConversation, setTypingByConversation] = useState<Record<number, Set<number>>>({})
   const [readPointers, setReadPointers] = useState<Record<number, Record<number, number>>>({})
   const currentConversationIdRef = useRef<number | null>(null)
+  const notificationPermissionRequestedRef = useRef<boolean>(false)
+
+  const requestNotificationPermission = useCallback(() => {
+    try {
+      if (notificationPermissionRequestedRef.current) return
+      notificationPermissionRequestedRef.current = true
+      requestNotifPermHelper()
+    } catch {}
+  }, [])
+
+  const showDesktopNotification = useCallback((title: string, body: string) => {
+    try {
+      showNotifHelper(title, body)
+    } catch {}
+  }, [])
 
   // Load current user
   const loadCurrentUser = useCallback(async () => {
@@ -145,26 +163,7 @@ export function useChat() {
       // Join conversation
       wsClient.joinConversation(conversationId)
       
-      // Reset handlers to avoid duplicates, then re-install global ones
-      wsClient.clearMessageHandlers()
-      ;(window as any).__ncGlobalWsHandlerInstalled = false
-      // Re-install global unread bump handler if needed
-      if (!(window as any).__ncGlobalWsHandlerInstalled) {
-        (window as any).__ncGlobalWsHandlerInstalled = true
-        wsClient.onMessage((message: any) => {
-          if (message?.type === 'chat_message') {
-            const convId = parseInt(message.conversation_id?.toString() || '0')
-            if (!convId) return
-            if (!currentConversation || currentConversation.id !== convId) {
-              setConversations(prev => prev.map(conv => 
-                conv.id === convId 
-                  ? { ...conv, unread_count: (conv.unread_count || 0) + 1 }
-                  : conv
-              ))
-            }
-          }
-        })
-      }
+      // Do not clear global handlers here; preserve global notifications/unread listener
 
       // Listen for messages
       wsClient.onMessage(async (message: WebSocketMessage) => {
@@ -173,7 +172,7 @@ export function useChat() {
           const onlineUsers = (message as any).online_users
           console.log('[WS] Received online users on connect:', onlineUsers)
           if (Array.isArray(onlineUsers)) {
-            const normalized = onlineUsers.map((id: any) => parseInt(id?.toString?.() || '0')).filter((n: number) => !!n)
+            const normalized = normalizeOnlineUsers(onlineUsers)
             setOnlineUserIds(new Set(normalized))
           }
           return
@@ -184,8 +183,7 @@ export function useChat() {
           const onlineUsers = (message as any).online_users
           console.log('[WS] Received online users on subscribe_all:', onlineUsers)
           if (Array.isArray(onlineUsers)) {
-            // Normalize to numbers if needed
-            const normalized = onlineUsers.map((id: any) => parseInt(id?.toString?.() || '0')).filter((n: number) => !!n)
+            const normalized = normalizeOnlineUsers(onlineUsers)
             setOnlineUserIds(new Set(normalized))
           }
           return
@@ -262,6 +260,24 @@ export function useChat() {
           // Only add to current messages if it belongs to the active conversation
           if (!messageConversationId || activeConvId !== messageConversationId) {
             // Non-active conversations are handled by the global unread handler
+            // Fire desktop notification for non-active conversations
+            const senderId = parseInt(message.sender_id?.toString() || '0')
+            const text = (message as any).content || ''
+            showDesktopNotification('New message', text)
+            // Update sidebar preview & last_message for the conversation
+            setConversations(prev => prev.map(conv => {
+              if (conv.id === messageConversationId) {
+                return {
+                  ...conv,
+                  last_message: {
+                    ...(conv as any).last_message,
+                    content: (message as any).content || '',
+                    updated_at: (message as any).timestamp || new Date().toISOString(),
+                  }
+                } as any
+              }
+              return conv
+            }))
             return
           }
           const senderId = parseInt(message.sender_id?.toString() || '0')
@@ -352,6 +368,20 @@ export function useChat() {
               
               return [...prev, newMessage]
             })
+            // Update sidebar preview & last_message for the conversation (active conv receives too)
+            setConversations(prev => prev.map(conv => {
+              if (conv.id === messageConversationId) {
+                return {
+                  ...conv,
+                  last_message: {
+                    ...(conv as any).last_message,
+                    content: (message as any).content || '',
+                    updated_at: (message as any).timestamp || new Date().toISOString(),
+                  }
+                } as any
+              }
+              return conv
+            }))
           }
         }
       })
@@ -408,8 +438,6 @@ export function useChat() {
       
       // Send via WebSocket
       try {
-        
-        
         // Connect if not already connected
         if (wsClient.getConnectionState() !== 'connected') {
           wsClient.connect()
@@ -425,7 +453,6 @@ export function useChat() {
       } catch (error) {
         console.error('Failed to send message via WebSocket:', error)
       }
-      
       
       return tempMessage
     } catch (err) {
@@ -639,20 +666,8 @@ export function useChat() {
 
   // Load unread counts
   const loadUnreadCounts = useCallback(async () => {
-    try {
-      const unreadCounts: any = await unreadService.getUnreadCounts()
-      // Update conversations with unread counts
-      setConversations(prev => prev.map(conv => {
-        const unreadData = unreadCounts.find((uc: any) => uc.conversation_id === conv.id)
-        return {
-          ...conv,
-          unread_count: unreadData?.unread_count || 0
-        }
-      }))
-    } catch (error) {
-      console.error('Failed to load unread counts:', error)
-    }
-  }, [])
+    await loadUnreadCountsAndMerge(conversations, setConversations)
+  }, [conversations])
 
   // Wrapper for setCurrentConversation that also resets unread count
   const handleSelectConversation = useCallback(async (conversation: Conversation) => {
@@ -666,19 +681,8 @@ export function useChat() {
       setCurrentConversation(conversation)
     }
     
-    // Mark conversation as read on server (new route with fallback handled in service)
-    try {
-      await unreadService.markConversationAsRead(conversation.id)
-      // After marking as read, refresh conversations to persist correct unread on next reload
-      try { await loadConversations() } catch {}
-    } catch {}
-    
-    // Reset unread count in local state
-    setConversations(prev => prev.map(conv => 
-      conv.id === conversation.id 
-        ? { ...conv, unread_count: 0 }
-        : conv
-    ))
+    // Mark read and refresh via helper
+    await markConversationAsReadAndRefresh(conversation.id, loadConversations, setConversations)
     
     // Setup WebSocket subscription for real-time messages
     setupWebSocketSubscription(conversation.id)
@@ -706,18 +710,39 @@ export function useChat() {
               if (message?.type === 'chat_message') {
                 const convId = parseInt(message.conversation_id?.toString() || '0')
                 if (!convId) return
+                const ts = (message as any).timestamp || new Date().toISOString()
+                // Always update sidebar preview for that conversation
+                setConversations(prev => prev.map(conv => {
+                  if (conv.id === convId) {
+                    return {
+                      ...conv,
+                      last_message: {
+                        ...(conv as any).last_message,
+                        content: (message as any).content || '',
+                        updated_at: ts,
+                      }
+                    } as any
+                  }
+                  return conv
+                }))
+                // If not the active conversation, bump unread and notify
                 if (!currentConversation || currentConversation.id !== convId) {
                   setConversations(prev => prev.map(conv => 
                     conv.id === convId 
                       ? { ...conv, unread_count: (conv.unread_count || 0) + 1 }
                       : conv
                   ))
+                  const senderId = parseInt(message.sender_id?.toString() || '0')
+                  if (!currentUser || senderId !== currentUser.id) {
+                    const preview = (message?.content || '').toString()
+                    showDesktopNotification('New message', preview)
+                  }
                 }
               }
               // Sync online users when receive subscribed_all_conversations
               if (message?.type === 'subscribed_all_conversations' && Array.isArray((message as any).online_users)) {
                 const onlineUsers = (message as any).online_users
-                const normalized = onlineUsers.map((id: any) => parseInt(id?.toString?.() || '0')).filter((n: number) => !!n)
+                const normalized = normalizeOnlineUsers(onlineUsers)
                 setOnlineUserIds(new Set(normalized))
               }
             })
@@ -752,6 +777,8 @@ export function useChat() {
       if (!ws.isConnected()) {
         ws.connect()
       }
+      // Ask for notification permission early
+      requestNotificationPermission()
     } catch (e) {
       console.error('WS init failed', e)
       setWsStatus('error')

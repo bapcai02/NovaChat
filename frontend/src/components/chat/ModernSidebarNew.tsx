@@ -78,6 +78,20 @@ export default function ModernSidebar({
   const directConversations = (conversations || []).filter(conv => conv.type === 'direct')
   const channelConversations = (conversations || []).filter(conv => conv.type === 'channel')
 
+  const timeAgo = (iso?: string) => {
+    if (!iso) return ''
+    const now = Date.now()
+    const then = new Date(iso).getTime()
+    const diff = Math.max(0, Math.floor((now - then) / 1000))
+    if (diff < 60) return 'just now'
+    const m = Math.floor(diff / 60)
+    if (m < 60) return `${m}m`
+    const h = Math.floor(m / 60)
+    if (h < 24) return `${h}h`
+    const d = Math.floor(h / 24)
+    return `${d}d`
+  }
+
   const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
     setSearchQuery(value)
@@ -335,7 +349,7 @@ export default function ModernSidebar({
                       </div>
                     </div>
                     <div className="flex flex-col items-end space-y-0.5">
-                      <span className="text-xs text-gray-400">8min</span>
+                      <span className="text-xs text-gray-400">{timeAgo(conversation.last_message?.updated_at || conversation.updated_at)}</span>
                       {(conversation.unread_count ?? 0) > 0 && (
                         <Badge className="bg-red-500 text-white text-[10px] font-bold px-1 py-0.5 h-4 min-w-[16px] flex items-center justify-center">
                           {conversation.unread_count}
