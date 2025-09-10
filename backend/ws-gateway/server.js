@@ -12,6 +12,7 @@ const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379')
 // Presence storage keys
 const ONLINE_SET_KEY = 'online_users'
 const STATUS_KEY_PREFIX = 'user_status:' // user_status:{userId} => 'online' with TTL
+const LAST_SEEN_KEY_PREFIX = 'user_last_seen:' // user_last_seen:{userId} => ISO timestamp
 
 // Logging helper
 const log = (message, data = null) => {
@@ -29,6 +30,23 @@ app.get('/online-users', async (_req, res) => {
     res.json({ success: true, data: ids.map((id) => Number(id)) })
   } catch (err) {
     res.status(500).json({ success: false, message: 'Internal error' })
+  }
+})
+
+// API: /last-seen?ids=1,2,3 → return last seen ISO timestamps
+app.get('/last-seen', async (req, res) => {
+  try {
+    const idsParam = req.query.ids
+    if (!idsParam) return res.json({ success: true, data: {} })
+    const ids = String(idsParam).split(',').map((s) => s.trim()).filter(Boolean)
+    if (!ids.length) return res.json({ success: true, data: {} })
+    const keys = ids.map((id) => `${LAST_SEEN_KEY_PREFIX}${id}`)
+    const values = await redis.mget(keys)
+    const data = {}
+    ids.forEach((id, idx) => { if (values[idx]) data[id] = values[idx] })
+    return res.json({ success: true, data })
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Internal error' })
   }
 })
 
@@ -69,6 +87,8 @@ async function setOffline(userId) {
     const key = `${STATUS_KEY_PREFIX}${userId}`
     await redis.del(key)
     await redis.srem(ONLINE_SET_KEY, String(userId))
+    const lastSeenKey = `${LAST_SEEN_KEY_PREFIX}${userId}`
+    await redis.set(lastSeenKey, new Date().toISOString())
   } catch (error) {
     log(`[Presence] Error setting user ${userId} offline:`, error.message)
   }

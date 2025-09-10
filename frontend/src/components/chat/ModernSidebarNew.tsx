@@ -349,7 +349,7 @@ export default function ModernSidebar({
                       </div>
                     </div>
                     <div className="flex flex-col items-end space-y-0.5">
-                      <span className="text-xs text-gray-400">{timeAgo(conversation.last_message?.updated_at || conversation.updated_at)}</span>
+                      <span className="text-xs text-gray-400">{timeAgo(conversation.last_message?.updated_at || conversation.last_message?.created_at || conversation.updated_at)}</span>
                       {(conversation.unread_count ?? 0) > 0 && (
                         <Badge className="bg-red-500 text-white text-[10px] font-bold px-1 py-0.5 h-4 min-w-[16px] flex items-center justify-center">
                           {conversation.unread_count}
