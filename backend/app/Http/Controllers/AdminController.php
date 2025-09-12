@@ -1,0 +1,307 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\User;
+use App\Repositories\Contracts\UserRepositoryInterface;
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
+
+class AdminController extends Controller
+{
+    protected $users;
+
+    public function __construct(UserRepositoryInterface $users)
+    {
+        $this->users = $users;
+    }
+
+    /**
+     * Get all users with pagination and filters
+     */
+    public function getUsers(Request $request): JsonResponse
+    {
+        $user = Auth::user();
+        if (!$user || !in_array($user->role, ['super_admin', 'admin'])) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        try {
+            $page = (int) $request->get('page', 1);
+            $limit = (int) $request->get('limit', 20);
+            $search = $request->get('search', '');
+            $role = $request->get('role', 'all');
+            $status = $request->get('status', 'all');
+
+            $query = User::query();
+
+            // Apply search filter
+            if (!empty($search)) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('email', 'like', "%{$search}%")
+                      ->orWhere('username', 'like', "%{$search}%");
+                });
+            }
+
+            // Apply role filter
+            if ($role !== 'all') {
+                $query->where('role', $role);
+            }
+
+            // Apply status filter
+            if ($status !== 'all') {
+                $query->where('status', $status);
+            }
+
+            // Get paginated results
+            $users = $query->orderBy('created_at', 'desc')
+                          ->paginate($limit, ['*'], 'page', $page);
+
+            return response()->json([
+                'success' => true,
+                'data' => $users->items(),
+                'pagination' => [
+                    'current_page' => $users->currentPage(),
+                    'last_page' => $users->lastPage(),
+                    'per_page' => $users->perPage(),
+                    'total' => $users->total(),
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve users',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get user statistics
+     */
+    public function getStats(): JsonResponse
+    {
+        $user = Auth::user();
+        if (!$user || !in_array($user->role, ['super_admin', 'admin'])) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        try {
+            $stats = [
+                'total_users' => User::count(),
+                'online_users' => User::where('is_online', true)->count(),
+                'admins' => User::whereIn('role', ['super_admin', 'admin'])->count(),
+                'suspended' => User::whereIn('status', ['suspended', 'banned'])->count(),
+                'verified_users' => User::where('is_verified', true)->count(),
+                'premium_users' => User::where('is_premium', true)->count(),
+            ];
+
+            return response()->json([
+                'success' => true,
+                'data' => $stats
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve statistics',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get single user details
+     */
+    public function getUser(int $id): JsonResponse
+    {
+        $user = Auth::user();
+        if (!$user || !in_array($user->role, ['super_admin', 'admin'])) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        try {
+            $targetUser = User::find($id);
+            if (!$targetUser) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not found'
+                ], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $targetUser
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve user',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update user
+     */
+    public function updateUser(Request $request, int $id): JsonResponse
+    {
+        $user = Auth::user();
+        if (!$user || !in_array($user->role, ['super_admin', 'admin'])) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        try {
+            $targetUser = User::find($id);
+            if (!$targetUser) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not found'
+                ], 404);
+            }
+
+            $validator = Validator::make($request->all(), [
+                'name' => 'sometimes|string|max:255',
+                'email' => 'sometimes|email|unique:users,email,' . $id,
+                'username' => 'sometimes|string|max:255|unique:users,username,' . $id,
+                'role' => 'sometimes|in:super_admin,admin,moderator,user,guest',
+                'status' => 'sometimes|in:active,inactive,suspended,banned',
+                'is_verified' => 'sometimes|boolean',
+                'is_premium' => 'sometimes|boolean',
+                'phone' => 'sometimes|nullable|string|max:20',
+                'bio' => 'sometimes|nullable|string|max:500',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $data = $request->only([
+                'name', 'email', 'username', 'role', 'status', 
+                'is_verified', 'is_premium', 'phone', 'bio'
+            ]);
+
+            $targetUser->update($data);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'User updated successfully',
+                'data' => $targetUser->fresh()
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update user',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete user
+     */
+    public function deleteUser(int $id): JsonResponse
+    {
+        $user = Auth::user();
+        if (!$user || !in_array($user->role, ['super_admin', 'admin'])) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        try {
+            $targetUser = User::find($id);
+            if (!$targetUser) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not found'
+                ], 404);
+            }
+
+            // Prevent deleting yourself
+            if ($targetUser->id === $user->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You cannot delete yourself'
+                ], 400);
+            }
+
+            $targetUser->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'User deleted successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete user',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Create new user
+     */
+    public function createUser(Request $request): JsonResponse
+    {
+        $user = Auth::user();
+        if (!$user || !in_array($user->role, ['super_admin', 'admin'])) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        try {
+            $validator = Validator::make($request->all(), [
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|unique:users',
+                'password' => 'required|string|min:8',
+                'username' => 'nullable|string|max:255|unique:users',
+                'role' => 'required|in:super_admin,admin,moderator,user,guest',
+                'status' => 'sometimes|in:active,inactive,suspended,banned',
+                'phone' => 'nullable|string|max:20',
+                'bio' => 'nullable|string|max:500',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $data = $request->only([
+                'name', 'email', 'username', 'role', 'status', 'phone', 'bio'
+            ]);
+            $data['password'] = Hash::make($request->password);
+            $data['status'] = $data['status'] ?? 'active';
+
+            $newUser = User::create($data);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'User created successfully',
+                'data' => $newUser
+            ], 201);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create user',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+}

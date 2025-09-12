@@ -97,7 +97,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50" role="dialog" aria-modal>
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="absolute inset-0 bg-gray-600/40" onClick={onClose} />
       <div className="relative w-full h-full flex items-center justify-center p-4">
         <div className="w-[92%] max-w-3xl bg-white rounded-xl shadow-2xl ring-1 ring-black/5">
         <div className="flex items-center justify-between px-5 py-3 border-b">
@@ -135,7 +135,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
                       ) : (
                         <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400 text-sm">{t('add')}</div>
                       )}
-                      <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <div className="absolute inset-0 bg-gray-600/30 opacity-0 group-hover:opacity-100 transition-opacity" />
                       <div className="absolute bottom-1 right-1 px-2 py-0.5 text-[11px] rounded-full bg-white/90 text-gray-700 border shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">{t('edit')}</div>
                     </div>
                   </label>
@@ -178,7 +178,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm mb-1">{t('language')}</label>
-                  <select className="border rounded px-3 py-2 text-sm bg-white" value={language} onChange={e=>{ const val = e.target.value as 'EN'|'VI'; setLanguage(val); i18n.changeLanguage(val.toLowerCase()) }}>
+                  <select className="border border-gray-300 rounded px-3 py-2 text-sm bg-white text-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20" value={language} onChange={e=>{ const val = e.target.value as 'EN'|'VI'; setLanguage(val); i18n.changeLanguage(val.toLowerCase()) }}>
                     <option value="EN">{t('language_en')}</option>
                     <option value="VI">{t('language_vi')}</option>
                   </select>

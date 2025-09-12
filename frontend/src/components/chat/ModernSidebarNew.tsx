@@ -3,7 +3,7 @@
 import React, { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Search, Hash, Users, MessageCircle, Bell, HelpCircle, Settings, BookmarkIcon, X } from 'lucide-react'
+import { Search, Hash, Users, MessageCircle, Bell, HelpCircle, Settings, BookmarkIcon, X, Shield } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import SettingsModal from '@/components/settings/SettingsModal'
 import BookmarkList from '@/components/bookmarks/BookmarkList'
@@ -401,6 +401,18 @@ export default function ModernSidebar({
                 <p className="text-xs text-gray-500">{t('online')}</p>
               </div>
               <div className="flex items-center gap-1">
+                {/* Admin button - only show for admin users */}
+                {(currentUser.role === 'admin' || currentUser.role === 'super_admin') && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 hover:bg-purple-100 text-purple-600 hover:text-purple-800"
+                    onClick={() => router.push('/admin')}
+                    title="Admin Panel"
+                  >
+                    <Shield className="h-4 w-4" />
+                  </Button>
+                )}
                 <Button
                   variant="ghost"
                   size="sm"
@@ -424,7 +436,7 @@ export default function ModernSidebar({
           {/* Bookmark modal - simplified */}
           {openBookmarks && (
             <div 
-              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center" 
+              className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center" 
               style={{ zIndex: 99999 }}
               onClick={() => setOpenBookmarks(false)}
             >

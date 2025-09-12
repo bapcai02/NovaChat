@@ -10,6 +10,7 @@ export interface User {
   last_seen_at?: string
   status?: string
   status_message?: string
+  role?: 'super_admin' | 'admin' | 'moderator' | 'user' | 'guest'
 }
 
 export interface Team {

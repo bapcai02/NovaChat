@@ -80,7 +80,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                   <span className="text-sm">{t('mute_conversation')}</span>
                   <button
                     onClick={onToggleMute}
-                    className={`px-2 py-1 text-xs rounded ${isMuted ? 'bg-gray-800 text-white' : 'bg-gray-100'}`}
+                    className={`px-2 py-1 text-xs rounded ${isMuted ? 'bg-gray-600 text-white' : 'bg-gray-100'}`}
                   >
                     {isMuted ? t('muted') : t('mute')}
                   </button>
@@ -89,7 +89,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                   <span className="text-sm">{t('pin_conversation')}</span>
                   <button
                     onClick={onTogglePin}
-                    className={`px-2 py-1 text-xs rounded ${isPinned ? 'bg-gray-800 text-white' : 'bg-gray-100'}`}
+                    className={`px-2 py-1 text-xs rounded ${isPinned ? 'bg-gray-600 text-white' : 'bg-gray-100'}`}
                   >
                     {isPinned ? t('pinned') : t('pin')}
                   </button>

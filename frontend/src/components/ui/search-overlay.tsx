@@ -40,7 +40,7 @@ export function SearchOverlay({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="absolute inset-0 bg-black/20 backdrop-blur-sm"
+          className="absolute inset-0 bg-gray-600/20 backdrop-blur-sm"
         />
         
         {/* Search Results Card */}

@@ -94,7 +94,7 @@ export default function SettingsPage() {
 
       <div className="flex gap-2 mb-6">
         {(['profile','security','language','sessions','bookmarks'] as TabKey[]).map(tab => (
-          <button key={tab} onClick={() => setActive(tab)} className={`px-3 py-1.5 text-sm rounded ${active===tab?'bg-gray-900 text-white':'bg-gray-100 text-gray-700'}`}>{tab[0].toUpperCase()+tab.slice(1)}</button>
+          <button key={tab} onClick={() => setActive(tab)} className={`px-3 py-1.5 text-sm rounded ${active===tab?'bg-gray-600 text-white':'bg-gray-100 text-gray-700'}`}>{tab[0].toUpperCase()+tab.slice(1)}</button>
         ))}
       </div>
 
@@ -142,7 +142,7 @@ export default function SettingsPage() {
         <div className="space-y-4">
           <div>
             <label className="block text-sm mb-1">Language</label>
-            <select className="border rounded px-3 py-2 text-sm" value={language} onChange={e=>setLanguage(e.target.value as 'EN'|'VI')}>
+            <select className="border border-gray-300 rounded px-3 py-2 text-sm bg-white text-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20" value={language} onChange={e=>setLanguage(e.target.value as 'EN'|'VI')}>
               <option value="EN">English</option>
               <option value="VI">Vietnamese</option>
             </select>

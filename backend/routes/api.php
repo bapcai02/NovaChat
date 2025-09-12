@@ -122,6 +122,17 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/{userId}/status', [UserStatusController::class, 'getUserStatus']);
     });
 
+    // Admin routes (protected)
+    Route::middleware('auth:api')->prefix('admin')->group(function () {
+        Route::get('/users', [\App\Http\Controllers\AdminController::class, 'getUsers']);
+        Route::get('/stats', [\App\Http\Controllers\AdminController::class, 'getStats']);
+        Route::get('/reports', [\App\Http\Controllers\ReportsController::class, 'getReports']);
+        Route::get('/users/{id}', [\App\Http\Controllers\AdminController::class, 'getUser']);
+        Route::put('/users/{id}', [\App\Http\Controllers\AdminController::class, 'updateUser']);
+        Route::delete('/users/{id}', [\App\Http\Controllers\AdminController::class, 'deleteUser']);
+        Route::post('/users', [\App\Http\Controllers\AdminController::class, 'createUser']);
+    });
+
     // User settings (protected)
     Route::middleware('auth:api')->group(function () {
         Route::get('/user/profile', [\App\Http\Controllers\UserSettingsController::class, 'getProfile']);

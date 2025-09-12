@@ -79,7 +79,7 @@ const HeaderSearchOverlay: React.FC<HeaderSearchOverlayProps> = ({ open, onClose
       role="dialog"
       onClick={onClose}
     >
-      <div className="absolute inset-0 bg-black/30" />
+      <div className="absolute inset-0 bg-gray-600/30" />
       <div className="absolute left-1/2 -translate-x-1/2 mt-6 w-[92%] max-w-2xl">
         <div className="rounded-xl bg-white shadow-2xl ring-1 ring-black/5 p-3">
           <div className="relative">
