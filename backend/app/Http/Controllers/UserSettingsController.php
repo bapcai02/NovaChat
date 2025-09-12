@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use App\Http\Requests\UpdateProfileRequest;
+use App\Http\Requests\ChangePasswordRequest;
+use App\Http\Requests\UpdatePreferencesRequest;
 
 class UserSettingsController extends Controller
 {
@@ -16,16 +18,17 @@ class UserSettingsController extends Controller
         return response()->json(['data' => $user]);
     }
 
-    public function updateProfile(Request $request)
+    public function updateProfile(UpdateProfileRequest $request)
     {
         $user = $request->user();
 
-        $data = $request->validate([
-            'name' => 'sometimes|string|max:255',
-            'email' => 'sometimes|email|max:255',
-            'phone' => 'sometimes|string|max:50',
-            'avatar' => 'sometimes|url'
-        ]);
+        $data = $request->validated();
+
+        // Handle avatar upload if a file is provided
+        if ($request->hasFile('avatar')) {
+            $path = $request->file('avatar')->store('avatars', 'public');
+            $data['avatar'] = Storage::url($path);
+        }
 
         $user->fill($data);
         $user->save();
@@ -33,13 +36,8 @@ class UserSettingsController extends Controller
         return response()->json(['data' => $user]);
     }
 
-    public function changePassword(Request $request)
+    public function changePassword(ChangePasswordRequest $request)
     {
-        $request->validate([
-            'current_password' => 'required|string',
-            'new_password' => 'required|string|min:8|confirmed',
-        ]);
-
         $user = $request->user();
         if (!Hash::check($request->input('current_password'), $user->password)) {
             return response()->json(['message' => 'Current password is incorrect'], 422);
@@ -51,12 +49,8 @@ class UserSettingsController extends Controller
         return response()->json(['message' => 'Password changed']);
     }
 
-    public function updatePreferences(Request $request)
+    public function updatePreferences(UpdatePreferencesRequest $request)
     {
-        $request->validate([
-            'language' => 'required|in:EN,VI',
-        ]);
-
         $userId = $request->user()->id;
         DB::table('user_preferences')->updateOrInsert(
             ['user_id' => $userId],

@@ -51,16 +51,19 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
   const notify = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 1800) }
 
   const submitProfile = async () => {
-    const readFileAsDataUrl = (file: File) => new Promise<string>((resolve, reject) => {
-      const reader = new FileReader()
-      reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '')
-      reader.onerror = reject
-      reader.readAsDataURL(file)
-    })
     try {
       setLoading(true)
-      const avatarPayload = avatarFile ? await readFileAsDataUrl(avatarFile) : avatar
-      await userSettingsService.updateProfile({ name, email, phone, avatar: avatarPayload })
+      const form = new FormData()
+      if (name) form.append('name', name)
+      if (email) form.append('email', email)
+      if (phone) form.append('phone', phone)
+      if (avatarFile) {
+        form.append('avatar', avatarFile)
+      } else if (avatar) {
+        // keep existing URL if user didn't choose a new file
+        form.append('avatar', avatar)
+      }
+      await userSettingsService.updateProfile(form as any)
       notify(t('profile_updated'))
     } finally { setLoading(false) }
   }
@@ -161,7 +164,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
                   <Input type="password" value={newPassword} onChange={e=>setNewPassword(e.target.value)} placeholder={t('ph_new_password')} />
                 </div>
                 <div>
-                  <label className="block text-sm mb-1">{t('confirm_new_password')}</label>
+                  <label className="block text sm mb-1">{t('confirm_new_password')}</label>
                   <Input type="password" value={newPasswordConfirmation} onChange={e=>setNewPasswordConfirmation(e.target.value)} placeholder={t('ph_confirm_new_password')} />
                 </div>
                 <Button disabled={loading} onClick={submitPassword} className="bg-indigo-600 hover:bg-indigo-700 text-white">{t('change_password')}</Button>

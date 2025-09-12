@@ -33,12 +33,16 @@ class MessageReadSeeder extends Seeder
                 foreach ($memberIds as $memberId) {
                     // Randomly mark some messages as read (70% chance)
                     $isRead = rand(1, 10) <= 7;
-                    
-                    MessageRead::create([
-                        'message_id' => $message->id,
-                        'user_id' => $memberId,
-                        'read_at' => $isRead ? now()->subDays(rand(0, 7)) : null,
-                    ]);
+
+                    MessageRead::updateOrCreate(
+                        [
+                            'message_id' => $message->id,
+                            'user_id' => $memberId,
+                        ],
+                        [
+                            'read_at' => $isRead ? now()->subDays(rand(0, 7)) : null,
+                        ]
+                    );
                 }
             }
         }

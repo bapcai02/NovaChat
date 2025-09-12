@@ -11,7 +11,6 @@ class ApiService {
 
   private getHeaders(): HeadersInit {
     const headers: HeadersInit = {
-      'Content-Type': 'application/json',
       'Accept': 'application/json',
     }
 
@@ -28,12 +27,19 @@ class ApiService {
   ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`
     
+    const baseHeaders = this.getHeaders()
+
+    // Build headers dynamically. If body is a string (JSON), set Content-Type accordingly.
+    const isJsonBody = typeof options.body === 'string'
+    const headers: HeadersInit = {
+      ...baseHeaders,
+      ...(isJsonBody ? { 'Content-Type': 'application/json' } : {}),
+      ...(options.headers || {}),
+    }
+
     const config: RequestInit = {
       ...options,
-      headers: {
-        ...this.getHeaders(),
-        ...options.headers,
-      },
+      headers,
     }
 
     try {
@@ -99,7 +105,7 @@ class ApiService {
   }
 
   async updateTeam(teamId: string, data: { name?: string; description?: string; is_private?: boolean }) {
-    return this.request(`/teams/${teamId}`, {
+    return this.request(`/teams/${teamId}/channels`, {
       method: 'PUT',
       body: JSON.stringify(data),
     })
