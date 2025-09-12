@@ -237,7 +237,7 @@ class MessageService
     public function getUserBookmarks(int $userId, int $page = 1, int $limit = 20): array
     {
         $bookmarks = $this->messages->getUserBookmarks($userId, $page, $limit);
-        return ['success' => true, 'data' => $bookmarks['data'], 'meta' => $bookmarks['meta']];
+        return ['success' => true, 'data' => $bookmarks['data'], 'pagination' => $bookmarks['meta']];
     }
 
     public function isMessageBookmarked(string $messageId, int $userId): bool

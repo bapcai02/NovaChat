@@ -3,9 +3,10 @@
 import React, { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Search, Hash, Users, MessageCircle, Bell, HelpCircle, Settings } from 'lucide-react'
+import { Search, Hash, Users, MessageCircle, Bell, HelpCircle, Settings, BookmarkIcon, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import SettingsModal from '@/components/settings/SettingsModal'
+import BookmarkList from '@/components/bookmarks/BookmarkList'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -144,7 +145,8 @@ export default function ModernSidebar({
   }
 
   const [showNotifications, setShowNotifications] = useState(false)
-
+  const [openBookmarks, setOpenBookmarks] = useState(false)
+  
   return (
     <div className="w-full h-full bg-white border-r border-gray-200 flex flex-col">
       {/* Top Navigation Bar */}
@@ -164,6 +166,20 @@ export default function ModernSidebar({
           <span className="text-xs font-semibold text-gray-600">Nova</span>
         </div>
         <div className="flex items-center space-x-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0 hover:bg-gray-100 text-gray-600 hover:text-gray-800"
+            aria-label="Bookmarks"
+            onClick={() => {
+              if (!openBookmarks) {
+                setOpenBookmarks(true);
+                console.log('Set openBookmarks to true');
+              }
+            }}
+          >
+            <BookmarkIcon className="h-4 w-4" />
+          </Button>
           <Button
             variant="ghost"
             size="sm"
@@ -404,6 +420,36 @@ export default function ModernSidebar({
             </div>
           </div>
           <SettingsModal open={openSettings} onClose={() => setOpenSettings(false)} />
+          
+          {/* Bookmark modal - simplified */}
+          {openBookmarks && (
+            <div 
+              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center" 
+              style={{ zIndex: 99999 }}
+              onClick={() => setOpenBookmarks(false)}
+            >
+              <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[80vh] flex flex-col">
+                <div className="flex items-center justify-between p-6 border-b">
+                  <div className="flex items-center space-x-2">
+                    <BookmarkIcon className="h-5 w-5 text-yellow-500" />
+                    <h2 className="text-lg font-semibold">Bookmarks</h2>
+                  </div>
+                  <button
+                    onClick={() => setOpenBookmarks(false)}
+                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+
+                <div className="flex-1 overflow-hidden">
+                  <div className="h-full overflow-y-auto p-6">
+                    <BookmarkList />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>

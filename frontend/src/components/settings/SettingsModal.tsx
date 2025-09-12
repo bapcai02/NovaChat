@@ -5,8 +5,9 @@ import { userSettingsService } from '@/services/userSettingsService'
 import { useTranslation } from 'react-i18next'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import BookmarkList from '@/components/bookmarks/BookmarkList'
 
-type TabKey = 'profile' | 'security' | 'language' | 'sessions'
+type TabKey = 'profile' | 'security' | 'language' | 'sessions' | 'bookmarks'
 
 interface SettingsModalProps {
   open: boolean
@@ -108,7 +109,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
         <div className="px-5 pt-4 pb-5 grid grid-cols-12 gap-4">
           <div className="col-span-3">
             <div className="flex flex-col gap-2">
-              {(['profile','security','language','sessions'] as TabKey[]).map(tab => (
+              {(['profile','security','language','sessions','bookmarks'] as TabKey[]).map(tab => (
                 <button
                   key={tab}
                   onClick={() => setActive(tab)}
@@ -198,6 +199,16 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
                     <Button variant="ghost" onClick={()=>revokeSession(s.id)}>{t('logout')}</Button>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {active==='bookmarks' && (
+              <div>
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold mb-2">Bookmarks</h3>
+                  <p className="text-sm text-gray-600">Quản lý các tin nhắn đã bookmark</p>
+                </div>
+                <BookmarkList />
               </div>
             )}
           </div>

@@ -30,7 +30,8 @@ export default function BookmarkList({ onRemoveBookmark }: BookmarkListProps) {
       setError(null);
       
       const response = await bookmarkService.getBookmarks(pageNum, 20);
-      const newBookmarks = response.data;
+      const newBookmarks = response.data || [];
+      const pagination = response.pagination || { last_page: 1 };
       
       if (reset) {
         setBookmarks(newBookmarks);
@@ -38,7 +39,7 @@ export default function BookmarkList({ onRemoveBookmark }: BookmarkListProps) {
         setBookmarks(prev => [...prev, ...newBookmarks]);
       }
       
-      setHasMore(pageNum < response.pagination.last_page);
+      setHasMore(pageNum < pagination.last_page);
       setPage(pageNum);
     } catch (err) {
       setError('Không thể tải danh sách bookmark');

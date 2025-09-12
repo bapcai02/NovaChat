@@ -137,13 +137,27 @@ class EloquentMessageRepository implements MessageRepositoryInterface
             ->delete() > 0;
     }
 
-    public function getUserBookmarks(int $userId): array
+    public function getUserBookmarks(int $userId, int $page = 1, int $limit = 20): array
     {
-        return Bookmark::with('message.user')
+        $query = Bookmark::with('message.user')
             ->where('user_id', $userId)
-            ->orderByDesc('created_at')
+            ->orderByDesc('created_at');
+            
+        $total = $query->count();
+        $bookmarks = $query->skip(($page - 1) * $limit)
+            ->take($limit)
             ->get()
             ->toArray();
+            
+        return [
+            'data' => $bookmarks,
+            'meta' => [
+                'current_page' => $page,
+                'last_page' => ceil($total / $limit),
+                'per_page' => $limit,
+                'total' => $total
+            ]
+        ];
     }
 
     public function edit(int $messageId, string $content): array
