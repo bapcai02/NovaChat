@@ -17,7 +17,10 @@ import {
   Calendar,
   Eye,
   EyeOff,
-  BarChart3
+  BarChart3,
+  Ban,
+  UserCheck,
+  X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,6 +46,29 @@ export default function AdminPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [error, setError] = useState<string | null>(null);
+  
+  // Modal states
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [showBanModal, setShowBanModal] = useState(false);
+  const [banningUser, setBanningUser] = useState<User | null>(null);
+  const [banReason, setBanReason] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletingUser, setDeletingUser] = useState<User | null>(null);
+  
+  // Form states
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    username: '',
+    password: '',
+    role: 'user' as 'admin' | 'moderator' | 'user' | 'guest',
+    status: 'active' as 'active' | 'inactive' | 'suspended' | 'banned',
+    phone: '',
+    bio: '',
+    is_verified: false,
+    is_premium: false
+  });
 
   const loadUsers = async () => {
     try {
@@ -76,6 +102,111 @@ export default function AdminPage() {
     }
   };
 
+  const handleCreateUser = () => {
+    setEditingUser(null);
+    setFormData({
+      name: '',
+      email: '',
+      username: '',
+      password: '',
+      role: 'user',
+      status: 'active',
+      phone: '',
+      bio: '',
+      is_verified: false,
+      is_premium: false
+    });
+    setShowUserModal(true);
+  };
+
+  const handleEditUser = (user: User) => {
+    setEditingUser(user);
+    setFormData({
+      name: user.name,
+      email: user.email,
+      username: user.username || '',
+      password: '',
+      role: user.role,
+      status: user.status,
+      phone: user.phone || '',
+      bio: user.bio || '',
+      is_verified: user.is_verified,
+      is_premium: user.is_premium
+    });
+    setShowUserModal(true);
+  };
+
+  const handleSaveUser = async () => {
+    try {
+      if (editingUser) {
+        // Update user
+        const updateData = { ...formData };
+        if (!updateData.password) {
+          delete updateData.password;
+        }
+        await adminService.updateUser(editingUser.id, updateData);
+      } else {
+        // Create user
+        await adminService.createUser(formData);
+      }
+      setShowUserModal(false);
+      loadUsers();
+    } catch (err) {
+      console.error('Error saving user:', err);
+      setError('Failed to save user');
+    }
+  };
+
+  const handleDeleteUser = (user: User) => {
+    setDeletingUser(user);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingUser) return;
+    
+    try {
+      await adminService.deleteUser(deletingUser.id);
+      setShowDeleteModal(false);
+      setDeletingUser(null);
+      loadUsers();
+    } catch (err) {
+      console.error('Error deleting user:', err);
+      setError('Failed to delete user');
+    }
+  };
+
+  const handleBanUser = (user: User) => {
+    setBanningUser(user);
+    setBanReason('');
+    setShowBanModal(true);
+  };
+
+  const handleUnbanUser = async (user: User) => {
+    try {
+      await adminService.unbanUser(user.id);
+      loadUsers();
+    } catch (err) {
+      console.error('Error unbanning user:', err);
+      setError('Failed to unban user');
+    }
+  };
+
+  const handleConfirmBan = async () => {
+    if (!banningUser) return;
+    
+    try {
+      await adminService.banUser(banningUser.id, banReason);
+      setShowBanModal(false);
+      setBanningUser(null);
+      setBanReason('');
+      loadUsers();
+    } catch (err) {
+      console.error('Error banning user:', err);
+      setError('Failed to ban user');
+    }
+  };
+
   useEffect(() => {
     loadUsers();
     loadStats();
@@ -83,7 +214,6 @@ export default function AdminPage() {
 
   const getRoleColor = (role: string) => {
     switch (role) {
-      case 'super_admin': return 'bg-red-100 text-red-800';
       case 'admin': return 'bg-purple-100 text-purple-800';
       case 'moderator': return 'bg-blue-100 text-blue-800';
       case 'user': return 'bg-green-100 text-green-800';
@@ -105,23 +235,6 @@ export default function AdminPage() {
   // Users are already filtered by API, so we just use them directly
   const filteredUsers = users;
 
-  const handleEditUser = (userId: number) => {
-    console.log('Edit user:', userId);
-    // TODO: Open edit modal
-  };
-
-  const handleDeleteUser = (userId: number) => {
-    if (confirm('Are you sure you want to delete this user?')) {
-      console.log('Delete user:', userId);
-      // TODO: Delete user
-    }
-  };
-
-  const handleToggleStatus = (userId: number, currentStatus: string) => {
-    const newStatus = currentStatus === 'active' ? 'suspended' : 'active';
-    console.log('Toggle user status:', userId, newStatus);
-    // TODO: Update user status
-  };
 
   if (loading) {
     return (
@@ -240,9 +353,9 @@ export default function AdminPage() {
                   <option value="suspended">Suspended</option>
                   <option value="banned">Banned</option>
                 </select>
-                <Button>
+                <Button onClick={handleCreateUser} className="bg-green-600 hover:bg-green-700">
                   <UserPlus className="h-4 w-4 mr-2" />
-                  Add User
+                  Create User
                 </Button>
               </div>
             </div>
@@ -313,15 +426,15 @@ export default function AdminPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <Badge className={getRoleColor(user.role)}>
+                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getRoleColor(user.role)} hover:opacity-80`}>
                         {user.role.replace('_', ' ').toUpperCase()}
-                      </Badge>
+                      </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <Badge className={getStatusColor(user.status)}>
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getStatusColor(user.status)} hover:opacity-80`}>
                           {user.status.toUpperCase()}
-                        </Badge>
+                        </span>
                         {user.is_online && (
                           <div className="ml-2 h-2 w-2 bg-green-500 rounded-full"></div>
                         )}
@@ -348,28 +461,24 @@ export default function AdminPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleEditUser(user.id)}>
+                          <DropdownMenuItem onClick={() => handleEditUser(user)}>
                             <Edit className="h-4 w-4 mr-2" />
                             Edit User
                           </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => handleToggleStatus(user.id, user.status)}
-                          >
-                            {user.status === 'active' ? (
-                              <>
-                                <EyeOff className="h-4 w-4 mr-2" />
-                                Suspend User
-                              </>
-                            ) : (
-                              <>
-                                <Eye className="h-4 w-4 mr-2" />
-                                Activate User
-                              </>
-                            )}
-                          </DropdownMenuItem>
+                          {user.status === 'banned' ? (
+                            <DropdownMenuItem onClick={() => handleUnbanUser(user)}>
+                              <UserCheck className="h-4 w-4 mr-2" />
+                              Unban User
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem onClick={() => handleBanUser(user)}>
+                              <Ban className="h-4 w-4 mr-2" />
+                              Ban User
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuSeparator />
                           <DropdownMenuItem 
-                            onClick={() => handleDeleteUser(user.id)}
+                            onClick={() => handleDeleteUser(user)}
                             className="text-red-600"
                           >
                             <Trash2 className="h-4 w-4 mr-2" />
@@ -413,6 +522,214 @@ export default function AdminPage() {
           </div>
         </div>
       </div>
+
+      {/* User Modal */}
+      {showUserModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4 shadow-xl">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-semibold text-gray-700">
+                {editingUser ? 'Edit User' : 'Create User'}
+              </h2>
+              <Button variant="ghost" onClick={() => setShowUserModal(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                <Input
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  placeholder="Enter name"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <Input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  placeholder="Enter email"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                <Input
+                  value={formData.username}
+                  onChange={(e) => setFormData({...formData, username: e.target.value})}
+                  placeholder="Enter username"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                <Input
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({...formData, password: e.target.value})}
+                  placeholder={editingUser ? "Leave blank to keep current" : "Enter password"}
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                  <select
+                    value={formData.role}
+                    onChange={(e) => setFormData({...formData, role: e.target.value as any})}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                  >
+                    <option value="user">User</option>
+                    <option value="moderator">Moderator</option>
+                    <option value="admin">Admin</option>
+                    <option value="guest">Guest</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                  <select
+                    value={formData.status}
+                    onChange={(e) => setFormData({...formData, status: e.target.value as any})}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                  >
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="suspended">Suspended</option>
+                    <option value="banned">Banned</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                <Input
+                  value={formData.phone}
+                  onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                  placeholder="Enter phone"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Bio</label>
+                <textarea
+                  value={formData.bio}
+                  onChange={(e) => setFormData({...formData, bio: e.target.value})}
+                  placeholder="Enter bio"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                  rows={3}
+                />
+              </div>
+              
+              <div className="flex items-center space-x-4">
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={formData.is_verified}
+                    onChange={(e) => setFormData({...formData, is_verified: e.target.checked})}
+                    className="mr-2"
+                  />
+                  <span className="text-sm text-gray-700">Verified</span>
+                </label>
+                
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={formData.is_premium}
+                    onChange={(e) => setFormData({...formData, is_premium: e.target.checked})}
+                    className="mr-2"
+                  />
+                  <span className="text-sm text-gray-700">Premium</span>
+                </label>
+              </div>
+            </div>
+            
+            <div className="flex justify-end space-x-3 mt-6">
+              <Button variant="outline" onClick={() => setShowUserModal(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSaveUser} className="bg-blue-600 hover:bg-blue-700">
+                {editingUser ? 'Update User' : 'Create User'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Ban Modal */}
+      {showBanModal && banningUser && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center" style={{ zIndex: 9999 }}>
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-semibold text-gray-700">Ban User</h2>
+              <Button variant="ghost" onClick={() => setShowBanModal(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 mb-2">
+                Are you sure you want to ban <strong>{banningUser.name}</strong>?
+              </p>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Reason (optional)</label>
+                <textarea
+                  value={banReason}
+                  onChange={(e) => setBanReason(e.target.value)}
+                  placeholder="Enter ban reason"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                  rows={3}
+                />
+              </div>
+            </div>
+            
+            <div className="flex justify-end space-x-3">
+              <Button variant="outline" onClick={() => setShowBanModal(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleConfirmBan} className="bg-red-600 hover:bg-red-700">
+                Ban User
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Modal */}
+      {showDeleteModal && deletingUser && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center" style={{ zIndex: 9999 }}>
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-semibold text-gray-700">Delete User</h2>
+              <Button variant="ghost" onClick={() => setShowDeleteModal(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 mb-2">
+                Are you sure you want to delete <strong>{deletingUser.name}</strong>?
+              </p>
+              <p className="text-xs text-red-600">
+                This action cannot be undone. All data associated with this user will be permanently deleted.
+              </p>
+            </div>
+            
+            <div className="flex justify-end space-x-3">
+              <Button variant="outline" onClick={() => setShowDeleteModal(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleConfirmDelete} className="bg-red-600 hover:bg-red-700">
+                Delete User
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

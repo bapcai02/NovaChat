@@ -6,7 +6,7 @@ export interface User {
   email: string;
   username?: string;
   avatar?: string;
-  role: 'super_admin' | 'admin' | 'moderator' | 'user' | 'guest';
+  role: 'admin' | 'moderator' | 'user' | 'guest';
   status: 'active' | 'inactive' | 'suspended' | 'banned';
   is_online: boolean;
   last_seen_at?: string;
@@ -42,7 +42,7 @@ export interface CreateUserRequest {
   email: string;
   password: string;
   username?: string;
-  role: 'super_admin' | 'admin' | 'moderator' | 'user' | 'guest';
+  role: 'admin' | 'moderator' | 'user' | 'guest';
   status?: 'active' | 'inactive' | 'suspended' | 'banned';
   phone?: string;
   bio?: string;
@@ -98,6 +98,14 @@ class AdminService {
 
   async deleteUser(id: number): Promise<void> {
     return apiService.delete(`/admin/users/${id}`);
+  }
+
+  async banUser(id: number, reason?: string): Promise<User> {
+    return apiService.post(`/admin/users/${id}/ban`, { action: 'ban', reason });
+  }
+
+  async unbanUser(id: number): Promise<User> {
+    return apiService.post(`/admin/users/${id}/ban`, { action: 'unban' });
   }
 
   async getReports(params: {

@@ -124,6 +124,7 @@ Route::middleware('auth:api')->group(function () {
 
     // Admin routes (protected)
     Route::middleware('auth:api')->prefix('admin')->group(function () {
+        // User management
         Route::get('/users', [\App\Http\Controllers\AdminController::class, 'getUsers']);
         Route::get('/stats', [\App\Http\Controllers\AdminController::class, 'getStats']);
         Route::get('/reports', [\App\Http\Controllers\ReportsController::class, 'getReports']);
@@ -131,6 +132,18 @@ Route::middleware('auth:api')->group(function () {
         Route::put('/users/{id}', [\App\Http\Controllers\AdminController::class, 'updateUser']);
         Route::delete('/users/{id}', [\App\Http\Controllers\AdminController::class, 'deleteUser']);
         Route::post('/users', [\App\Http\Controllers\AdminController::class, 'createUser']);
+        Route::post('/users/{id}/ban', [\App\Http\Controllers\AdminController::class, 'toggleUserBan']);
+        
+        // Message management
+        Route::get('/messages', [\App\Http\Controllers\AdminController::class, 'getMessages']);
+        Route::delete('/messages/{id}', [\App\Http\Controllers\AdminController::class, 'deleteMessage']);
+        
+        // Bookmark management
+        Route::get('/bookmarks', [\App\Http\Controllers\AdminController::class, 'getBookmarks']);
+        Route::delete('/bookmarks/{id}', [\App\Http\Controllers\AdminController::class, 'deleteBookmark']);
+        
+        // System logs
+        Route::get('/logs', [\App\Http\Controllers\AdminController::class, 'getLogs']);
     });
 
     // User settings (protected)
