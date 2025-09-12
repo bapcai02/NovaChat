@@ -18,6 +18,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
   const [loading, setLoading] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
 
+  const [userId, setUserId] = useState<number | null>(null)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
@@ -38,6 +39,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
     ;(async () => {
       try {
         const profile = await userSettingsService.getProfile()
+        setUserId(profile?.id ?? null)
         setName(profile?.name || '')
         setEmail(profile?.email || '')
         setPhone(profile?.phone || '')
@@ -54,13 +56,13 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
     try {
       setLoading(true)
       const form = new FormData()
+      if (userId != null) form.append('id', String(userId))
       if (name) form.append('name', name)
       if (email) form.append('email', email)
       if (phone) form.append('phone', phone)
       if (avatarFile) {
         form.append('avatar', avatarFile)
       } else if (avatar) {
-        // keep existing URL if user didn't choose a new file
         form.append('avatar', avatar)
       }
       await userSettingsService.updateProfile(form as any)

@@ -6,6 +6,7 @@ import { MessageCircle, Star, MoreHorizontal, Smile } from 'lucide-react'
 import EmojiPicker from 'emoji-picker-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import BookmarkButton from '@/components/ui/bookmark-button'
 import { cn } from '@/lib/utils'
 import type { Message, User } from '@/types/chat'
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso'
@@ -75,13 +76,6 @@ const MessageBubble = ({
     }
   }
 
-  const handleBookmark = () => {
-    if (message.is_bookmarked) {
-      onRemoveBookmark?.(message.id)
-    } else {
-      onBookmark?.(message.id)
-    }
-  }
 
   const handleReply = () => {
     console.log('[MessageBubble] message object:', message)
@@ -220,22 +214,18 @@ const MessageBubble = ({
             >
               <MessageCircle className="h-4 w-4" />
             </Button>
-            <Button
-              variant="ghost"
+            <BookmarkButton
+              messageId={message.id}
               size="sm"
-              className="h-7 w-7 p-0 hover:bg-gray-200 text-gray-600 hover:text-gray-800"
-              onClick={(e) => {
-                e.preventDefault()
-                e.stopPropagation()
-                handleBookmark()
+              className="h-7 w-7 p-0 hover:bg-gray-200"
+              onBookmarkChange={(isBookmarked) => {
+                if (isBookmarked) {
+                  onBookmark?.(message.id);
+                } else {
+                  onRemoveBookmark?.(message.id);
+                }
               }}
-            >
-              {message.is_bookmarked ? (
-                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-              ) : (
-                <Star className="h-4 w-4 text-gray-600" />
-              )}
-            </Button>
+            />
             {testIsOwn && !isEditing && (
               <div className="relative">
                 <Button

@@ -20,6 +20,7 @@ class UpdatePreferencesRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'id' => 'required|integer|exists:users,id',
             'language' => 'required|in:EN,VI',
         ];
     }

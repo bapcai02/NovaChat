@@ -31,6 +31,8 @@ use App\Domain\Team\Repositories\TeamRepositoryInterface;
 use App\Infrastructure\Repositories\TeamRepository;
 use App\Domain\Search\Repositories\SearchRepositoryInterface;
 use App\Domain\Search\Repositories\SearchRepository;
+use App\Repositories\Contracts\UserSessionRepositoryInterface;
+use App\Repositories\Eloquent\EloquentUserSessionRepository;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -55,6 +57,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(MessageRepositoryInterface::class, MessageRepository::class);
         $this->app->bind(TeamRepositoryInterface::class, TeamRepository::class);
         $this->app->bind(SearchRepositoryInterface::class, SearchRepository::class);
+        $this->app->bind(UserSessionRepositoryInterface::class, EloquentUserSessionRepository::class);
     }
 
     /**

@@ -4,8 +4,9 @@ import React, { useEffect, useState } from 'react'
 import { userSettingsService } from '@/services/userSettingsService'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import BookmarkList from '@/components/bookmarks/BookmarkList'
 
-type TabKey = 'profile' | 'security' | 'language' | 'sessions'
+type TabKey = 'profile' | 'security' | 'language' | 'sessions' | 'bookmarks'
 
 export default function SettingsPage() {
   const [active, setActive] = useState<TabKey>('profile')
@@ -13,6 +14,7 @@ export default function SettingsPage() {
   const [toast, setToast] = useState<string | null>(null)
 
   // Profile
+  const [userId, setUserId] = useState<number | null>(null)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
@@ -33,6 +35,7 @@ export default function SettingsPage() {
     (async () => {
       try {
         const profile = await userSettingsService.getProfile()
+        setUserId(profile?.id ?? null)
         setName(profile?.name || '')
         setEmail(profile?.email || '')
         setPhone(profile?.phone || '')
@@ -46,7 +49,13 @@ export default function SettingsPage() {
   const submitProfile = async () => {
     try {
       setLoading(true)
-      await userSettingsService.updateProfile({ name, email, phone, avatar })
+      const form = new FormData()
+      if (userId != null) form.append('id', String(userId))
+      if (avatar) form.append('avatar', avatar)
+      if (name) form.append('name', name)
+      if (email) form.append('email', email)
+      if (phone) form.append('phone', phone)
+      await userSettingsService.updateProfile(form as any)
       setToast('Profile updated')
       setTimeout(() => setToast(null), 2000)
     } finally { setLoading(false) }
@@ -84,7 +93,7 @@ export default function SettingsPage() {
       {toast && (<div className="mb-4 text-sm bg-green-50 text-green-700 px-3 py-2 rounded">{toast}</div>)}
 
       <div className="flex gap-2 mb-6">
-        {(['profile','security','language','sessions'] as TabKey[]).map(tab => (
+        {(['profile','security','language','sessions','bookmarks'] as TabKey[]).map(tab => (
           <button key={tab} onClick={() => setActive(tab)} className={`px-3 py-1.5 text-sm rounded ${active===tab?'bg-gray-900 text-white':'bg-gray-100 text-gray-700'}`}>{tab[0].toUpperCase()+tab.slice(1)}</button>
         ))}
       </div>
@@ -154,6 +163,16 @@ export default function SettingsPage() {
               <Button variant="ghost" onClick={()=>revokeSession(s.id)}>Logout</Button>
             </div>
           ))}
+        </div>
+      )}
+
+      {active==='bookmarks' && (
+        <div>
+          <div className="mb-4">
+            <h2 className="text-lg font-semibold mb-2">Bookmarks</h2>
+            <p className="text-sm text-gray-600">Quản lý các tin nhắn đã bookmark</p>
+          </div>
+          <BookmarkList />
         </div>
       )}
     </div>
