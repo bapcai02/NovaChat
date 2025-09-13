@@ -61,7 +61,9 @@
   "user": "Người dùng",
   "channel": "Kênh",
   "loading": "Đang tải...",
-  "no_results": "Không có kết quả"
+  "no_results": "Không có kết quả",
+  "delete_conversation": "Xóa cuộc trò chuyện",
+  "leave_group": "Rời nhóm"
 }
 
 

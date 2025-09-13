@@ -61,7 +61,6 @@ export const MessageInput: React.FC<MessageInputProps> = ({ roomId = '1', type =
         try {
           const userData = JSON.parse(userStr)
           dispatch(setUser(userData))
-          console.log('Auto-loaded user from localStorage:', userData)
         } catch (error) {
           console.error('Failed to parse user from localStorage:', error)
         }
@@ -71,20 +70,16 @@ export const MessageInput: React.FC<MessageInputProps> = ({ roomId = '1', type =
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log('handleSubmit - user:', user, 'message:', message.trim())
     if (message.trim() && !isSending && user) {
       setIsSending(true)
       try {
-        console.log('Sending message to API...')
         const response = await api.post('/messages', {
           type: type === 'conversation' ? 'direct' : type,
           roomId,
           senderId: user.id.toString(),
           content: message.trim()
         })
-        
-        console.log('Message sent successfully:', response.data)
-        
+                
         // Show success feedback
         const submitButton = document.querySelector('button[type="submit"]')
         if (submitButton) {
@@ -441,7 +436,6 @@ export const MessageInput: React.FC<MessageInputProps> = ({ roomId = '1', type =
           <div className="absolute bottom-full left-0 right-0 mb-2">
             <VoiceRecorder
               onRecordingComplete={(audioBlob, duration) => {
-                console.log('Voice message recorded:', { audioBlob, duration })
                 // TODO: Send voice message to backend
                 setShowVoiceRecorder(false)
               }}

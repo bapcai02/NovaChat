@@ -43,7 +43,6 @@ export const userStatusService = {
   // Start typing
   startTyping: async (roomId: string = '1'): Promise<TypingEvent> => {
     // Note: Typing events not implemented in apiService yet
-    console.log('Start typing in room:', roomId)
     return {
       roomId,
       userId: 'current-user',
@@ -55,7 +54,6 @@ export const userStatusService = {
   // Stop typing
   stopTyping: async (roomId: string = '1'): Promise<TypingEvent> => {
     // Note: Typing events not implemented in apiService yet
-    console.log('Stop typing in room:', roomId)
     return {
       roomId,
       userId: 'current-user',

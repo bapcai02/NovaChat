@@ -79,8 +79,18 @@ export default function ModernSidebar({
     return <Hash className="h-4 w-4 text-gray-600" />
   }
 
-  const directConversations = (conversations || []).filter(conv => conv.type === 'direct')
-  const channelConversations = (conversations || []).filter(conv => conv.type === 'channel')
+  // Sort conversations: pinned first, then by updated_at
+  const sortedConversations = (conversations || []).sort((a, b) => {
+    // Pinned conversations first
+    if (a.is_pinned && !b.is_pinned) return -1
+    if (!a.is_pinned && b.is_pinned) return 1
+    
+    // Then by updated_at
+    return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+  })
+  
+  const directConversations = sortedConversations.filter(conv => conv.type === 'direct')
+  const channelConversations = sortedConversations.filter(conv => conv.type === 'channel')
 
   const timeAgo = (iso?: string) => {
     if (!iso) return ''
@@ -122,15 +132,31 @@ export default function ModernSidebar({
           console.log('API Response:', response)
           console.log('New conversation:', newConversation)
           
-          // Ensure the conversation has user info
-          if (newConversation && !newConversation.other_member) {
-            newConversation.other_member = {
-              id: user.id,
-              name: user.name,
-              username: (user as any).username || `user${user.id}`,
-              avatar: user.avatar,
-              is_online: user.status === 'online'
+          // Ensure the conversation has user info and members
+          if (newConversation) {
+            if (!newConversation.other_member) {
+              newConversation.other_member = {
+                id: user.id,
+                name: user.name,
+                username: (user as any).username || `user${user.id}`,
+                avatar: user.avatar,
+                is_online: user.status === 'online'
+              }
             }
+            
+            // Ensure members array exists with both users
+            if (!newConversation.members || newConversation.members.length === 0) {
+              newConversation.members = [
+                {
+                  id: user.id,
+                  name: user.name,
+                  username: (user as any).username || `user${user.id}`,
+                  avatar: user.avatar,
+                  is_online: user.status === 'online'
+                }
+              ]
+            }
+            
             newConversation.user_name = user.name
             newConversation.participant_name = user.name
           }
@@ -406,10 +432,6 @@ export default function ModernSidebar({
                   member => member.id !== currentUser?.id
                 )
                 
-                // Debug log
-                console.log('Conversation:', conversation)
-                console.log('Other user:', otherUser)
-                
                 // Fallback: if no other_member, try to get name from conversation data
                 const displayName = otherUser?.name || 
                   (conversation as any).user_name || 
@@ -444,6 +466,11 @@ export default function ModernSidebar({
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center space-x-1">
+                          {conversation.is_pinned && (
+                            <svg className="h-3 w-3 text-yellow-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M10 2L3 7v11h4v-6h6v6h4V7l-7-5z"/>
+                            </svg>
+                          )}
                           <p className="text-sm font-medium text-gray-800 group-hover:text-blue-600 truncate">
                             {displayName}
                           </p>

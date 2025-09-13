@@ -111,6 +111,28 @@ class ConversationController extends Controller
         }, 'Messages retrieved', 'Failed to retrieve messages');
     }
 
+    public function getMembers(string $conversationId): JsonResponse
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return $this->unauthorizedResponse('Unauthenticated');
+        }
+
+        return $this->executeInTransactionWithResponse(function () use ($conversationId, $user) {
+            $result = $this->conversations->getMembers($conversationId, $user->id);
+            
+            if (!$result['success']) {
+                return $this->errorResponse(
+                    $result['message'] ?? 'Failed to get members',
+                    $result['errors'] ?? null,
+                    $result['code'] ?? 500
+                );
+            }
+            
+            return $this->successResponse($result['data'] ?? null, $result['message'] ?? 'Members retrieved successfully');
+        }, 'Members retrieved', 'Failed to get members');
+    }
+
     public function addMember(AddMemberRequest $request, string $conversationId): JsonResponse
     {
         $user = Auth::user();
@@ -154,5 +176,49 @@ class ConversationController extends Controller
             
             return $this->successResponse($result['data'] ?? null, $result['message'] ?? 'Member removed successfully');
         }, 'Member removed', 'Failed to remove member');
+    }
+
+    public function pinConversation(string $conversationId): JsonResponse
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return $this->unauthorizedResponse('Unauthenticated');
+        }
+
+        return $this->executeInTransactionWithResponse(function () use ($conversationId, $user) {
+            $result = $this->conversations->pinConversation($conversationId, $user->id);
+            
+            if (!$result['success']) {
+                return $this->errorResponse(
+                    $result['message'] ?? 'Failed to pin conversation',
+                    $result['errors'] ?? null,
+                    $result['code'] ?? 500
+                );
+            }
+            
+            return $this->successResponse($result['data'] ?? null, $result['message'] ?? 'Conversation pinned successfully');
+        }, 'Conversation pinned', 'Failed to pin conversation');
+    }
+
+    public function unpinConversation(string $conversationId): JsonResponse
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return $this->unauthorizedResponse('Unauthenticated');
+        }
+
+        return $this->executeInTransactionWithResponse(function () use ($conversationId, $user) {
+            $result = $this->conversations->unpinConversation($conversationId, $user->id);
+            
+            if (!$result['success']) {
+                return $this->errorResponse(
+                    $result['message'] ?? 'Failed to unpin conversation',
+                    $result['errors'] ?? null,
+                    $result['code'] ?? 500
+                );
+            }
+            
+            return $this->successResponse($result['data'] ?? null, $result['message'] ?? 'Conversation unpinned successfully');
+        }, 'Conversation unpinned', 'Failed to unpin conversation');
     }
 }

@@ -78,12 +78,17 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/{conversationId}/messages', [MessageController::class, 'store']);
         
         // Members management
+        Route::get('/{conversationId}/members', [ConversationController::class, 'getMembers']);
         Route::post('/{conversationId}/members', [ConversationController::class, 'addMember']);
         Route::delete('/{conversationId}/members/{userId}', [ConversationController::class, 'removeMember']);
         
         // Read status
         Route::post('/{conversationId}/read', [UnreadController::class, 'markConversationAsRead']);
         Route::get('/{conversationId}/unread', [UnreadController::class, 'getConversationUnreadCount']);
+        
+        // Pin/Unpin conversation
+        Route::post('/{conversationId}/pin', [ConversationController::class, 'pinConversation']);
+        Route::post('/{conversationId}/unpin', [ConversationController::class, 'unpinConversation']);
     });
 
     // Messages

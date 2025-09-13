@@ -11,6 +11,7 @@ import RightSidebar from './RightSidebar'
 import { useChat } from '@/hooks/useChat'
 import { getWebSocketClient } from '@/lib/websocket'
 import { unreadService } from '@/services/unreadService'
+import { apiService } from '@/services/api'
 import UserOnlineStatus from './UserOnlineStatus'
 
 interface ChatLayoutProps {
@@ -44,6 +45,7 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
     deleteMessage,
     updateUserStatus,
     loadUnreadCounts,
+    loadConversations,
     readPointers,
     typingByConversation,
   } = useChat()
@@ -56,6 +58,7 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
   const [rightSidebarMode, setRightSidebarMode] = useState<'members' | 'settings' | 'call' | 'video' | null>(null)
   const [isMuted, setIsMuted] = useState(false)
   const [isPinned, setIsPinned] = useState(false)
+  const [conversationMembers, setConversationMembers] = useState<any[]>([])
   const [threadMessage, setThreadMessage] = useState<{
     id: string
     content: string
@@ -110,6 +113,36 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
       loadMessages(currentConversation.id)
     }
   }, [currentConversation, loadMessages])
+
+  // Load members when conversation changes
+  useEffect(() => {
+    const loadMembers = async () => {
+      if (currentConversation) {
+        try {
+          const response = await apiService.getConversationMembers(currentConversation.id.toString())
+          const members = response?.data?.data || response?.data || []
+          setConversationMembers(members)
+        } catch (error) {
+          console.error('Failed to load members:', error)
+          setConversationMembers([])
+        }
+      } else {
+        setConversationMembers([])
+      }
+    }
+
+    loadMembers()
+  }, [currentConversation])
+
+  // Sync pin state with conversation data
+  useEffect(() => {
+    if (currentConversation) {
+      console.log('Current conversation pin state:', currentConversation.is_pinned)
+      setIsPinned(currentConversation.is_pinned || false)
+    } else {
+      setIsPinned(false)
+    }
+  }, [currentConversation])
 
   const handleSendMessage = async (content: string, attachments?: any[]) => {
     if (!currentConversation) return
@@ -219,8 +252,73 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
     setIsMuted(prev => !prev)
   }
 
-  const handleTogglePin = () => {
-    setIsPinned(prev => !prev)
+  const handleTogglePin = async () => {
+    if (!currentConversation) return
+    
+    try {
+      console.log('Toggling pin, current state:', isPinned)
+      let response
+      if (isPinned) {
+        console.log('Unpinning conversation:', currentConversation.id)
+        response = await apiService.unpinConversation(currentConversation.id.toString())
+        setIsPinned(false)
+      } else {
+        console.log('Pinning conversation:', currentConversation.id)
+        response = await apiService.pinConversation(currentConversation.id.toString())
+        setIsPinned(true)
+      }
+      
+      console.log('Pin response:', response)
+      
+      // Update conversation data if API returns updated conversation
+      if (response?.data?.data) {
+        const updatedConversation = response.data.data
+        console.log('Updated conversation:', updatedConversation)
+        setCurrentConversation(prev => ({
+          ...prev,
+          is_pinned: updatedConversation.is_pinned
+        }))
+      }
+      
+      // Reload conversations list to show pin status in sidebar
+      console.log('Reloading conversations list...')
+      await loadConversations()
+      
+      console.log('Pin state after toggle:', !isPinned)
+    } catch (error) {
+      console.error('Failed to toggle pin:', error)
+      alert('Có lỗi xảy ra khi thay đổi trạng thái pin')
+    }
+  }
+
+  const handleLeaveGroup = async () => {
+    if (!currentConversation) return
+    
+    if (confirm('Bạn có chắc chắn muốn rời khỏi nhóm này?')) {
+      try {
+        // After successful leave, close the conversation
+        setCurrentConversation(null)
+        setIsRightSidebarOpen(false)
+      } catch (error) {
+        console.error('Error leaving group:', error)
+        alert('Có lỗi xảy ra khi rời nhóm')
+      }
+    }
+  }
+
+  const handleDeleteConversation = async () => {
+    if (!currentConversation) return
+    
+    if (confirm('Bạn có chắc chắn muốn xóa cuộc trò chuyện này?')) {
+      try {
+        // After successful delete, close the conversation
+        setCurrentConversation(null)
+        setIsRightSidebarOpen(false)
+      } catch (error) {
+        console.error('Error deleting conversation:', error)
+        alert('Có lỗi xảy ra khi xóa cuộc trò chuyện')
+      }
+    }
   }
 
   const handleSettings = () => {
@@ -377,9 +475,12 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
         open={isRightSidebarOpen}
         mode={rightSidebarMode}
         onClose={() => setIsRightSidebarOpen(false)}
-        members={(currentConversation?.members || []).map((m: any) => ({ id: m.id, name: m.name, username: m.username }))}
+        members={conversationMembers}
         isMuted={isMuted}
         isPinned={isPinned}
+        conversationType={currentConversation?.type}
+        onLeaveGroup={handleLeaveGroup}
+        onDeleteConversation={handleDeleteConversation}
         onToggleMute={handleToggleMute}
         onTogglePin={handleTogglePin}
       />

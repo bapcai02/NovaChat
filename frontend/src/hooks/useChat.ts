@@ -171,7 +171,6 @@ export function useChat() {
         // Handle initial connection with online users
         if (message.type === 'connected' && (message as any).online_users) {
           const onlineUsers = (message as any).online_users
-          console.log('[WS] Received online users on connect:', onlineUsers)
           if (Array.isArray(onlineUsers)) {
             const normalized = normalizeOnlineUsers(onlineUsers)
             setOnlineUserIds(new Set(normalized))
@@ -182,7 +181,6 @@ export function useChat() {
         // Handle subscribed_all_conversations with online users list to sync sidebar presence ASAP
         if (message.type === 'subscribed_all_conversations' && (message as any).online_users) {
           const onlineUsers = (message as any).online_users
-          console.log('[WS] Received online users on subscribe_all:', onlineUsers)
           if (Array.isArray(onlineUsers)) {
             const normalized = normalizeOnlineUsers(onlineUsers)
             setOnlineUserIds(new Set(normalized))
@@ -194,7 +192,6 @@ export function useChat() {
         if (message.type === 'user_online' || message.type === 'user_offline') {
           const presenceUserId = parseInt((message as any).user_id?.toString() || '0')
           if (presenceUserId) {
-            console.log('[Presence]', presenceUserId, message.type)
             setOnlineUserIds(prev => {
               const next = new Set(prev)
               if (message.type === 'user_online') next.add(presenceUserId)
@@ -551,11 +548,8 @@ export function useChat() {
   // Load online users
   const loadOnlineUsers = useCallback(async () => {
     try {
-      console.log('Loading online users...')
       const res: any = await apiService.getOnlineUsers()
-      console.log('Online users response:', res)
       const usersData = res?.data?.data ?? res?.data ?? res
-      console.log('Online users data:', usersData)
       
       if (Array.isArray(usersData)) {
         setOnlineUsers(usersData)
@@ -566,7 +560,6 @@ export function useChat() {
         setOnlineUserIds(new Set())
       }
     } catch (err) {
-      console.error('Error loading online users:', err)
       setOnlineUsers([])
       setOnlineUserIds(new Set())
     }
@@ -754,6 +747,8 @@ export function useChat() {
     try {
       const res: any = await apiService.getConversation(conversation.id.toString())
       const fullConversation = res?.data?.data ?? res?.data ?? res
+      console.log('Loaded conversation details:', fullConversation)
+      console.log('Members from API:', fullConversation?.members)
       setCurrentConversation(fullConversation)
     } catch (error) {
       console.error('Failed to load conversation details:', error)

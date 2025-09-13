@@ -16,7 +16,6 @@ export function AuthGuard({ children, requireAuth = true }: AuthGuardProps) {
   const [isChecking, setIsChecking] = useState(true)
 
   useEffect(() => {
-    console.log(user);
     const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
     const delayMs = (() => {
       const v = Number(process.env.NEXT_PUBLIC_LOADING_DELAY_MS)

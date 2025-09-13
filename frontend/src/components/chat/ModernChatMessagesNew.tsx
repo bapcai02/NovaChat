@@ -78,8 +78,6 @@ const MessageBubble = ({
 
 
   const handleReply = () => {
-    console.log('[MessageBubble] message object:', message)
-    console.log('[MessageBubble] message.conversation_id:', message.conversation_id)
     onOpenThread?.({
       id: message.id.toString(),
       content: message.content,

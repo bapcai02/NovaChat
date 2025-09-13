@@ -61,7 +61,9 @@
   "user": "User",
   "channel": "Channel",
   "loading": "Loading...",
-  "no_results": "No results"
+  "no_results": "No results",
+  "delete_conversation": "Delete Conversation",
+  "leave_group": "Leave Group"
 }
 
 

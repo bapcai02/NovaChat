@@ -331,7 +331,6 @@ export default function ModernChatInput({
               size="sm"
               className="h-8 w-8 p-0 hover:bg-gray-200 text-gray-600 hover:text-gray-800"
               onClick={() => {
-                console.log('Emoji button clicked, showEmojis:', !showEmojis)
                 setShowEmojis(!showEmojis)
               }}
               disabled={disabled}

@@ -169,6 +169,10 @@ class ApiService {
     return this.request(`/conversations/${conversationId}`)
   }
 
+  async getConversationMembers(conversationId: string) {
+    return this.request(`/conversations/${conversationId}/members`)
+  }
+
   async createDirectConversation(userId: string) {
     return this.request('/conversations', {
       method: 'POST',
@@ -189,6 +193,18 @@ class ApiService {
   async removeMemberFromConversation(conversationId: string, userId: string) {
     return this.request(`/conversations/${conversationId}/members/${userId}`, {
       method: 'DELETE',
+    })
+  }
+
+  async pinConversation(conversationId: string) {
+    return this.request(`/conversations/${conversationId}/pin`, {
+      method: 'POST',
+    })
+  }
+
+  async unpinConversation(conversationId: string) {
+    return this.request(`/conversations/${conversationId}/unpin`, {
+      method: 'POST',
     })
   }
 

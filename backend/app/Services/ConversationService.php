@@ -91,6 +91,27 @@ class ConversationService
         }
     }
 
+    public function getMembers(string $conversationId, int $userId): array
+    {
+        try {
+            // Check if user is member
+            $isMember = $this->conversations->isMember((int)$conversationId, $userId);
+            if (!$isMember) {
+                return ['success' => false, 'message' => 'Access denied'];
+            }
+
+            $members = $this->conversations->getMembers((int)$conversationId);
+            
+            return [
+                'success' => true, 
+                'data' => $members
+            ];
+        } catch (\Throwable $e) {
+            Log::error('ConversationService@getMembers failed: ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Failed to get members'];
+        }
+    }
+
     public function addMember(string $conversationId, int $userId, int $requesterId): array
     {
         try {
@@ -122,6 +143,68 @@ class ConversationService
         } catch (\Throwable $e) {
             Log::error('ConversationService@removeMember failed: ' . $e->getMessage());
             return ['success' => false, 'message' => 'Failed to remove member'];
+        }
+    }
+
+    public function pinConversation(string $conversationId, int $userId): array
+    {
+        try {
+            // Check if user is member
+            $isMember = $this->conversations->isMember((int)$conversationId, $userId);
+            if (!$isMember) {
+                return ['success' => false, 'message' => 'Access denied'];
+            }
+
+            $result = $this->conversations->pinConversation((int)$conversationId);
+            
+            if ($result) {
+                // Get updated conversation data
+                $conversation = $this->conversations->findById((int)$conversationId);
+                return [
+                    'success' => true, 
+                    'data' => $conversation,
+                    'message' => 'Conversation pinned successfully'
+                ];
+            }
+            
+            return [
+                'success' => false, 
+                'message' => 'Failed to pin conversation'
+            ];
+        } catch (\Throwable $e) {
+            Log::error('ConversationService@pinConversation failed: ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Failed to pin conversation'];
+        }
+    }
+
+    public function unpinConversation(string $conversationId, int $userId): array
+    {
+        try {
+            // Check if user is member
+            $isMember = $this->conversations->isMember((int)$conversationId, $userId);
+            if (!$isMember) {
+                return ['success' => false, 'message' => 'Access denied'];
+            }
+
+            $result = $this->conversations->unpinConversation((int)$conversationId);
+            
+            if ($result) {
+                // Get updated conversation data
+                $conversation = $this->conversations->findById((int)$conversationId);
+                return [
+                    'success' => true, 
+                    'data' => $conversation,
+                    'message' => 'Conversation unpinned successfully'
+                ];
+            }
+            
+            return [
+                'success' => false, 
+                'message' => 'Failed to unpin conversation'
+            ];
+        } catch (\Throwable $e) {
+            Log::error('ConversationService@unpinConversation failed: ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Failed to unpin conversation'];
         }
     }
 }

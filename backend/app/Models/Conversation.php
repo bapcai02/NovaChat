@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Conversation extends Model
 {
     protected $fillable = [
-        'type', 'name', 'team_id', 'channel_id', 'metadata'
+        'type', 'name', 'team_id', 'channel_id', 'metadata', 'is_pinned'
     ];
 
     protected $casts = [

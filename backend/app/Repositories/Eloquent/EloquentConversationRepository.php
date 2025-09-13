@@ -34,6 +34,7 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
                 'channel_id' => $conversation->channel_id,
                 'messages_count' => $conversation->messages_count,
                 'unread_count' => $unreadCount,
+                'is_pinned' => $conversation->is_pinned ?? false,
                 'other_member' => $otherMember ? [
                     'id' => $otherMember->id,
                     'name' => $otherMember->name,
@@ -303,6 +304,7 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
             'channel_id' => $conversation->channel_id,
             'messages_count' => $conversation->messages()->count(),
             'unread_count' => $unreadCount,
+            'is_pinned' => $conversation->is_pinned ?? false,
             'other_member' => $otherMember ? [
                 'id' => $otherMember->id,
                 'name' => $otherMember->name,
@@ -313,6 +315,57 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
             'created_at' => $conversation->created_at,
             'updated_at' => $conversation->updated_at,
         ];
+    }
+
+    public function getMembers(int $conversationId): array
+    {
+        $conversation = Conversation::with('members')->find($conversationId);
+        
+        if (!$conversation) {
+            return [];
+        }
+
+        return $conversation->members->map(function ($member) {
+            return [
+                'id' => $member->id,
+                'name' => $member->name,
+                'username' => $member->username,
+                'avatar' => $member->avatar,
+                'is_online' => $member->is_online ?? false,
+            ];
+        })->toArray();
+    }
+
+    public function pinConversation(int $conversationId): bool
+    {
+        try {
+            $conversation = Conversation::find($conversationId);
+            if (!$conversation) {
+                return false;
+            }
+
+            $conversation->update(['is_pinned' => true]);
+            return true;
+        } catch (\Throwable $e) {
+            Log::error('EloquentConversationRepository@pinConversation failed: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function unpinConversation(int $conversationId): bool
+    {
+        try {
+            $conversation = Conversation::find($conversationId);
+            if (!$conversation) {
+                return false;
+            }
+
+            $conversation->update(['is_pinned' => false]);
+            return true;
+        } catch (\Throwable $e) {
+            Log::error('EloquentConversationRepository@unpinConversation failed: ' . $e->getMessage());
+            return false;
+        }
     }
 
     private function getLastMessage(int $conversationId): ?array

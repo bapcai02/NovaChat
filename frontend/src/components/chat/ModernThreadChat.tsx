@@ -198,9 +198,6 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
         }
         setMessages(prev => [...prev, optimistic])
         const currentUserId = currentUser?.id || null
-        console.log('[ThreadChat] parentMessage:', parentMessage)
-        console.log('[ThreadChat] currentUser:', currentUser)
-        console.log('[ThreadChat] currentUserId:', currentUserId)
         const messagePayload = {
           type: 'chat_message',
           conversation_id: parentMessage.conversation_id,
@@ -209,7 +206,6 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
           content: newMessage.trim(),
           client_id: `${currentUserId || 0}-${Date.now()}`
         }
-        console.log('[ThreadChat] Sending WS message:', messagePayload)
         ws.send(messagePayload as any)
         setNewMessage('')
         setAttachments([])

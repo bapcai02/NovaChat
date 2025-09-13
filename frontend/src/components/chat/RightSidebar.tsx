@@ -11,6 +11,9 @@ interface RightSidebarProps {
   members?: Array<{ id: number; name?: string; username?: string }>
   isMuted: boolean
   isPinned: boolean
+  conversationType?: 'direct' | 'group' | 'channel' | 'team'
+  onLeaveGroup?: () => void
+  onDeleteConversation?: () => void
   onToggleMute: () => void
   onTogglePin: () => void
 }
@@ -22,6 +25,9 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
   members = [],
   isMuted,
   isPinned,
+  conversationType,
+  onLeaveGroup,
+  onDeleteConversation,
   onToggleMute,
   onTogglePin,
 }) => {
@@ -57,9 +63,17 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
               <div className="space-y-3">
                 {(members || []).map((m) => (
                   <div key={m.id} className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center text-xs font-semibold">
-                      {(m.name || m.username || 'U').toString().charAt(0)}
-                    </div>
+                    {m.avatar ? (
+                      <img 
+                        src={m.avatar} 
+                        alt={m.name || m.username || 'User'} 
+                        className="h-8 w-8 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center text-xs font-semibold">
+                        {(m.name || m.username || 'U').toString().charAt(0)}
+                      </div>
+                    )}
                     <div className="min-w-0 flex-1">
                       <div className="text-sm font-medium truncate">{m.name || m.username}</div>
                       {m.username && (
@@ -93,6 +107,27 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                   >
                     {isPinned ? t('pinned') : t('pin')}
                   </button>
+                </div>
+                
+                {/* Action buttons based on conversation type */}
+                <div className="border-t pt-4 space-y-2">
+                  {conversationType === 'direct' && onDeleteConversation && (
+                    <button
+                      onClick={onDeleteConversation}
+                      className="w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md border border-red-200 hover:border-red-300 transition-colors"
+                    >
+                      {t('delete_conversation')}
+                    </button>
+                  )}
+                  
+                  {(conversationType === 'group' || conversationType === 'channel' || conversationType === 'team') && onLeaveGroup && (
+                    <button
+                      onClick={onLeaveGroup}
+                      className="w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md border border-red-200 hover:border-red-300 transition-colors"
+                    >
+                      {t('leave_group')}
+                    </button>
+                  )}
                 </div>
               </div>
             )}
