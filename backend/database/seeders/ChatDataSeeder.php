@@ -25,10 +25,23 @@ class ChatDataSeeder extends Seeder
         // Create users
         $users = [
             [
+                'name' => 'Admin User',
+                'email' => 'admin@example.com',
+                'username' => 'admin',
+                'password' => Hash::make('password'),
+                'role' => 'admin',
+                'status' => 'active',
+                'is_online' => true,
+                'avatar' => 'https://ui-avatars.com/api/?name=Admin&background=random',
+            ],
+            [
                 'name' => 'John Doe',
                 'email' => 'john@example.com',
                 'username' => 'john_doe',
                 'password' => Hash::make('password'),
+                'role' => 'user',
+                'status' => 'active',
+                'is_online' => true,
                 'avatar' => 'https://ui-avatars.com/api/?name=John+Doe&background=random',
             ],
             [
@@ -36,6 +49,9 @@ class ChatDataSeeder extends Seeder
                 'email' => 'jane@example.com',
                 'username' => 'jane_smith',
                 'password' => Hash::make('password'),
+                'role' => 'user',
+                'status' => 'active',
+                'is_online' => false,
                 'avatar' => 'https://ui-avatars.com/api/?name=Jane+Smith&background=random',
             ],
             [
@@ -43,6 +59,9 @@ class ChatDataSeeder extends Seeder
                 'email' => 'mike@example.com',
                 'username' => 'mike_johnson',
                 'password' => Hash::make('password'),
+                'role' => 'user',
+                'status' => 'active',
+                'is_online' => true,
                 'avatar' => 'https://ui-avatars.com/api/?name=Mike+Johnson&background=random',
             ],
         ];

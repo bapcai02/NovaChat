@@ -235,27 +235,27 @@ export default function LoginPage() {
                 transition={{ delay: 0.8, duration: 0.5 }}
                 className="mt-6 space-y-4"
               >
-                {/* Regular User Demo */}
-                <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors cursor-pointer" onClick={() => fillCredentials('john@example.com', 'password')}>
+                {/* Admin Credentials */}
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors cursor-pointer" onClick={() => fillCredentials('admin@example.com', 'password')}>
                   <div className="flex items-center mb-3">
-                    <div className="w-5 h-5 text-yellow-400 mr-2">
+                    <div className="w-5 h-5 text-blue-500 mr-2">
                       <svg fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        <path fillRule="evenodd" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" clipRule="evenodd" />
                       </svg>
                     </div>
-                    <p className="text-sm font-semibold text-gray-800">Demo User Account</p>
+                    <p className="text-sm font-semibold text-gray-800">Admin Account</p>
                   </div>
                   <div className="space-y-2 text-xs text-gray-700">
                     <div className="flex items-center justify-between">
                       <span className="text-gray-600">Email:</span>
-                      <span className="font-mono bg-gray-100 px-2 py-1 rounded text-gray-800">john@example.com</span>
+                      <span className="font-mono bg-gray-100 px-2 py-1 rounded text-gray-800">admin@example.com</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-gray-600">Password:</span>
                       <span className="font-mono bg-gray-100 px-2 py-1 rounded text-gray-800">password</span>
                     </div>
                   </div>
-                  <div className="mt-2 text-xs text-amber-600 text-center">
+                  <div className="mt-2 text-xs text-blue-600 text-center">
                     <span className="inline-flex items-center">
                       <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.293l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd" />
@@ -263,73 +263,8 @@ export default function LoginPage() {
                       Click to fill
                     </span>
                   </div>
-                </div>
-
-                {/* Admin Credentials */}
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <div className="flex items-center mb-3">
-                    <div className="w-5 h-5 text-blue-500 mr-2">
-                      <svg fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <p className="text-sm font-semibold text-gray-800">Admin Accounts</p>
-                  </div>
-                  <div className="space-y-3 text-xs text-gray-700">
-                    {/* Admin User */}
-                    <div className="p-2 bg-white rounded border hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => fillCredentials('admin123@example.com', 'password')}>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-gray-600 font-medium">Admin User:</span>
-                        <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-semibold">admin</span>
-                      </div>
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between">
-                          <span className="text-gray-500">Email:</span>
-                          <span className="font-mono bg-gray-100 px-2 py-1 rounded text-gray-800">admin123@example.com</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-gray-500">Password:</span>
-                          <span className="font-mono bg-gray-100 px-2 py-1 rounded text-gray-800">password</span>
-                        </div>
-                      </div>
-                      <div className="mt-2 text-xs text-blue-600 text-center">
-                        <span className="inline-flex items-center">
-                          <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.293l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd" />
-                          </svg>
-                          Click to fill
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Super Admin User */}
-                    <div className="p-2 bg-white rounded border hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => fillCredentials('superadmin@example.com', 'password')}>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-gray-600 font-medium">Super Admin:</span>
-                        <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded text-xs font-semibold">super_admin</span>
-                      </div>
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between">
-                          <span className="text-gray-500">Email:</span>
-                          <span className="font-mono bg-gray-100 px-2 py-1 rounded text-gray-800">superadmin@example.com</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-gray-500">Password:</span>
-                          <span className="font-mono bg-gray-100 px-2 py-1 rounded text-gray-800">password</span>
-                        </div>
-                      </div>
-                      <div className="mt-2 text-xs text-purple-600 text-center">
-                        <span className="inline-flex items-center">
-                          <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.293l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd" />
-                          </svg>
-                          Click to fill
-                        </span>
-                      </div>
-                    </div>
-                  </div>
                   <div className="mt-2 text-xs text-blue-600">
-                    <p>💡 Admin accounts have access to Admin Panel and Reports</p>
+                    <p>💡 Admin account has access to Admin Panel and Reports</p>
                   </div>
                 </div>
               </motion.div>

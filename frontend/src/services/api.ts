@@ -6,7 +6,19 @@ class ApiService {
 
   constructor() {
     this.baseURL = API_BASE_URL
+    this.updateToken()
+  }
+
+  updateToken() {
     this.token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+    // Validate token format (should have 2 dots for JWT)
+    if (this.token && this.token.split('.').length !== 3) {
+      console.warn('Invalid JWT token format, clearing token')
+      this.token = null
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('auth_token')
+      }
+    }
   }
 
   private getHeaders(): HeadersInit {
@@ -14,6 +26,8 @@ class ApiService {
       'Accept': 'application/json',
     }
 
+    // Always get the latest token
+    this.updateToken()
     if (this.token) {
       headers.Authorization = `Bearer ${this.token}`
     }

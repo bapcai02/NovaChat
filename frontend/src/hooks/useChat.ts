@@ -432,7 +432,39 @@ export function useChat() {
   // Send message via WebSocket
   const sendMessage = useCallback(async (conversationId: number, content: string, type: string = 'text') => {
     try {
-      
+      // Check if this is a temporary conversation (created from user search)
+      const isTemporaryConversation = currentConversation?.type === 'direct' && 
+        currentConversation?.other_member && 
+        !currentConversation?.members?.some(m => m.id !== currentConversation?.other_member?.id)
+
+      if (isTemporaryConversation) {
+        // Create the conversation first
+        try {
+          const response = await fetch('/api/conversations', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+            },
+            body: JSON.stringify({
+              type: 'direct',
+              participant_id: currentConversation.other_member?.id
+            })
+          })
+          
+          if (response.ok) {
+            const data = await response.json()
+            const newConversation = data.data
+            setCurrentConversation(newConversation)
+            // Refresh conversations list
+            loadConversations()
+            // Update conversationId to the real one
+            conversationId = newConversation.id
+          }
+        } catch (error) {
+          console.error('Error creating conversation:', error)
+        }
+      }
       
       const wsClient = getWebSocketClient()
       
@@ -495,7 +527,7 @@ export function useChat() {
       console.error('Error sending message:', err)
       throw err
     }
-  }, [currentUser])
+  }, [currentUser, currentConversation, loadConversations])
 
   const editMessage = useCallback(async (messageId: number, content: string) => {
     try {
@@ -706,6 +738,18 @@ export function useChat() {
 
   // Wrapper for setCurrentConversation that also resets unread count
   const handleSelectConversation = useCallback(async (conversation: Conversation) => {
+    // Check if this is a temporary conversation (created from user search)
+    const isTemporaryConversation = conversation.type === 'direct' && 
+      conversation.other_member && 
+      !conversation.members?.some(m => m.id !== conversation.other_member?.id)
+    
+    if (isTemporaryConversation) {
+      // For temporary conversations, just set it directly and show empty state
+      setCurrentConversation(conversation)
+      setMessages([]) // Clear messages to show empty state
+      return
+    }
+    
     // Load full conversation details with members
     try {
       const res: any = await apiService.getConversation(conversation.id.toString())
@@ -876,6 +920,7 @@ export function useChat() {
     teams,
     channels,
     conversations,
+    setConversations,
     currentConversation,
     messages,
     onlineUsers,

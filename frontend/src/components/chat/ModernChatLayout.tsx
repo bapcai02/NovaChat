@@ -23,6 +23,7 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
     teams,
     channels,
     conversations,
+    setConversations,
     currentConversation,
     messages,
     onlineUsers,
@@ -269,6 +270,9 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
           conversations={conversations}
           currentConversation={currentConversation}
           onSelectConversation={handleSelectConversation}
+          onAddConversation={(conversation) => {
+            setConversations(prev => [conversation, ...prev])
+          }}
           currentUser={currentUser}
           onlineUserIds={onlineUserIds}
         />

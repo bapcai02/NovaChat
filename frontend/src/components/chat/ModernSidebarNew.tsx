@@ -18,12 +18,14 @@ import { UserSearchResult } from '@/services/userSearchService'
 import UserOnlineStatus from './UserOnlineStatus'
 import { LogoutButton } from '@/components/auth/LogoutButton'
 import { useTranslation } from 'react-i18next'
+import { apiService } from '@/services/api'
 
 interface ModernSidebarProps {
   teams: Team[]
   conversations: Conversation[]
   currentConversation: Conversation | null
   onSelectConversation: (conversation: Conversation) => void
+  onAddConversation?: (conversation: Conversation) => void
   currentUser: User | null
   onlineUserIds?: Set<number>
 }
@@ -33,6 +35,7 @@ export default function ModernSidebar({
   conversations,
   currentConversation,
   onSelectConversation,
+  onAddConversation,
   currentUser,
   onlineUserIds = new Set()
 }: ModernSidebarProps) {
@@ -99,36 +102,116 @@ export default function ModernSidebar({
     setIsUserSearchOpen(value.trim().length > 0)
   }
 
-  const handleUserSelect = (user: UserSearchResult) => {
-    // Create a direct conversation with the selected user
-    const directConversation: Conversation = {
-      id: user.id,
-      type: 'direct',
-      title: user.name,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      other_member: {
+  const handleUserSelect = async (user: UserSearchResult) => {
+    try {
+      // Check if conversation already exists
+      const existingConversation = conversations?.find(conv => 
+        conv.type === 'direct' && 
+        conv.other_member?.id === user.id
+      )
+      
+      if (existingConversation) {
+        // Use existing conversation
+        onSelectConversation(existingConversation)
+      } else {
+        // Create new direct conversation
+        try {
+          console.log('Creating conversation for user:', user.id, user.name)
+          const response = await apiService.createDirectConversation(user.id.toString())
+          const newConversation = (response as any).data
+          console.log('API Response:', response)
+          console.log('New conversation:', newConversation)
+          
+          // Ensure the conversation has user info
+          if (newConversation && !newConversation.other_member) {
+            newConversation.other_member = {
+              id: user.id,
+              name: user.name,
+              username: (user as any).username || `user${user.id}`,
+              avatar: user.avatar,
+              is_online: user.status === 'online'
+            }
+            newConversation.user_name = user.name
+            newConversation.participant_name = user.name
+          }
+          
+          // Add to conversations list so it appears in sidebar
+          onAddConversation?.(newConversation)
+          onSelectConversation(newConversation)
+        } catch (error) {
+          console.error('Error creating conversation:', error)
+          // Fallback: create temporary conversation object and add to list
+          const directConversation: Conversation = {
+            id: user.id,
+            type: 'direct',
+            title: user.name,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            other_member: {
+              id: user.id,
+              name: user.name,
+              email: (user as any).email || '',
+              username: (user as any).username ? String((user as any).username) : `user${user.id}`,
+              avatar: user.avatar || undefined,
+              is_online: user.status === 'online'
+            } as unknown as User,
+            members: [{
+              id: user.id,
+              name: user.name,
+              email: (user as any).email || '',
+              username: (user as any).username ? String((user as any).username) : `user${user.id}`,
+              avatar: user.avatar || undefined,
+              is_online: user.status === 'online'
+            } as unknown as User],
+            unread_count: 0,
+            // Add extra fields for fallback
+            user_name: user.name,
+            participant_name: user.name
+          } as any
+          // Add to conversations list so it appears in sidebar
+          onAddConversation?.(directConversation)
+          onSelectConversation(directConversation)
+        }
+      }
+      
+      setSearchQuery('')
+      setIsUserSearchOpen(false)
+    } catch (error) {
+      console.error('Error creating conversation:', error)
+      // Fallback: create temporary conversation object and add to list
+      const directConversation: Conversation = {
         id: user.id,
-        name: user.name,
-        email: (user as any).email || '',
-        username: (user as any).username ? String((user as any).username) : `user${user.id}`,
-        avatar: user.avatar || undefined,
-        is_online: user.status === 'online'
-      } as unknown as User,
-      members: [{
-        id: user.id,
-        name: user.name,
-        email: (user as any).email || '',
-        username: (user as any).username ? String((user as any).username) : `user${user.id}`,
-        avatar: user.avatar || undefined,
-        is_online: user.status === 'online'
-      } as unknown as User],
-      unread_count: 0
+        type: 'direct',
+        title: user.name,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        other_member: {
+          id: user.id,
+          name: user.name,
+          email: (user as any).email || '',
+          username: (user as any).username ? String((user as any).username) : `user${user.id}`,
+          avatar: user.avatar || undefined,
+          is_online: user.status === 'online'
+        } as unknown as User,
+        members: [{
+          id: user.id,
+          name: user.name,
+          email: (user as any).email || '',
+          username: (user as any).username ? String((user as any).username) : `user${user.id}`,
+          avatar: user.avatar || undefined,
+          is_online: user.status === 'online'
+        } as unknown as User],
+        unread_count: 0,
+        // Add extra fields for fallback
+        user_name: user.name,
+        participant_name: user.name
+      } as any
+      // Add to conversations list so it appears in sidebar
+      onAddConversation?.(directConversation)
+      onSelectConversation(directConversation)
+      setSearchQuery('')
+      setIsUserSearchOpen(false)
     }
-    
-    onSelectConversation(directConversation)
-    setSearchQuery('')
-    setIsUserSearchOpen(false)
   }
 
   const handleSearchInputFocus = () => {
@@ -323,6 +406,17 @@ export default function ModernSidebar({
                   member => member.id !== currentUser?.id
                 )
                 
+                // Debug log
+                console.log('Conversation:', conversation)
+                console.log('Other user:', otherUser)
+                
+                // Fallback: if no other_member, try to get name from conversation data
+                const displayName = otherUser?.name || 
+                  (conversation as any).user_name || 
+                  (conversation as any).participant_name ||
+                  conversation.title ||
+                  'Unknown User'
+                
                 return (
                   <motion.button
                     key={conversation.id}
@@ -351,7 +445,7 @@ export default function ModernSidebar({
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center space-x-1">
                           <p className="text-sm font-medium text-gray-800 group-hover:text-blue-600 truncate">
-                            {conversation.title || otherUser?.name || 'Unknown User'}
+                            {displayName}
                           </p>
                         </div>
                         {conversation.last_message && (

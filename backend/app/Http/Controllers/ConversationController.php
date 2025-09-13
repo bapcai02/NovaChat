@@ -38,9 +38,16 @@ class ConversationController extends Controller
             return $this->unauthorizedResponse('Unauthenticated');
         }
 
+        \Log::info('ConversationController@store called', [
+            'user_id' => $user->id,
+            'request_data' => $request->all()
+        ]);
+
         return $this->executeInTransactionWithResponse(function () use ($request, $user) {
             $data = $request->validated();
             $data['creator_id'] = $user->id;
+
+            \Log::info('Creating conversation with data:', $data);
 
             $result = $this->conversations->createConversation($data);
             
@@ -87,7 +94,7 @@ class ConversationController extends Controller
 
         return $this->executeInTransactionWithResponse(function () use ($request, $conversationId, $user) {
             $conversationId = (int) $conversationId;
-            $limit = $request->query('limit', 50);
+            $limit = $request->query('limit', $request->query('per_page', 50));
             $beforeId = $request->query('before_id');
 
             $messages = $this->conversations->getConversationMessages($conversationId, $user->id, $limit, $beforeId);

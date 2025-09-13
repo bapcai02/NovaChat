@@ -126,7 +126,54 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
             }
         }
 
-        return $conversation->fresh()->toArray();
+        // For direct messages, add both creator and participant as members
+        if ($data['type'] === 'direct' && isset($data['participant_id'])) {
+            \Log::info('Creating direct conversation members:', [
+                'conversation_id' => $conversation->id,
+                'creator_id' => $data['creator_id'],
+                'participant_id' => $data['participant_id']
+            ]);
+            
+            // Add creator (User A)
+            $creatorMember = ConversationMember::create([
+                'conversation_id' => $conversation->id,
+                'user_id' => $data['creator_id'],
+                'joined_at' => now(),
+            ]);
+            \Log::info('Created creator member:', $creatorMember->toArray());
+            
+            // Add participant (User B)
+            $participantMember = ConversationMember::create([
+                'conversation_id' => $conversation->id,
+                'user_id' => $data['participant_id'],
+                'joined_at' => now(),
+            ]);
+            \Log::info('Created participant member:', $participantMember->toArray());
+        }
+
+        // Return formatted data like getUserConversations
+        $conversation = $conversation->fresh(['members']);
+        $otherMember = $conversation->members()->where('user_id', '!=', $data['creator_id'])->with('user')->first();
+        
+        return [
+            'id' => $conversation->id,
+            'type' => $conversation->type,
+            'title' => $conversation->title,
+            'name' => $conversation->name,
+            'team_id' => $conversation->team_id,
+            'channel_id' => $conversation->channel_id,
+            'messages_count' => 0,
+            'unread_count' => 0,
+            'other_member' => $otherMember ? [
+                'id' => $otherMember->user_id,
+                'name' => $otherMember->user->name,
+                'username' => $otherMember->user->username,
+                'avatar' => $otherMember->user->avatar,
+            ] : null,
+            'last_message' => null,
+            'created_at' => $conversation->created_at,
+            'updated_at' => $conversation->updated_at,
+        ];
     }
 
     public function findById(int $id): ?array
