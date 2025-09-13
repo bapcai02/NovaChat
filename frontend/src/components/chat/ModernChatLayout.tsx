@@ -8,6 +8,8 @@ import ModernChatMessages from './ModernChatMessagesNew'
 import ModernChatInput from './ModernChatInput'
 import ModernThreadChat from './ModernThreadChat'
 import RightSidebar from './RightSidebar'
+import AddMemberModal from '../modals/AddMemberModal'
+import ConfirmModal from '../modals/ConfirmModal'
 import { useChat } from '@/hooks/useChat'
 import { getWebSocketClient } from '@/lib/websocket'
 import { unreadService } from '@/services/unreadService'
@@ -59,6 +61,14 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
   const [isMuted, setIsMuted] = useState(false)
   const [isPinned, setIsPinned] = useState(false)
   const [conversationMembers, setConversationMembers] = useState<any[]>([])
+  const [showAddMemberModal, setShowAddMemberModal] = useState(false)
+  const [addMemberType, setAddMemberType] = useState<'team' | 'channel'>('team')
+  const [addMemberTargetId, setAddMemberTargetId] = useState<string>('')
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null)
+  const [confirmTitle, setConfirmTitle] = useState('')
+  const [confirmMessage, setConfirmMessage] = useState('')
+  const [isConfirmLoading, setIsConfirmLoading] = useState(false)
   const [threadMessage, setThreadMessage] = useState<{
     id: string
     content: string
@@ -115,17 +125,21 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
   }, [currentConversation, loadMessages])
 
   // Load members when conversation changes
+  const loadConversationMembers = async (conversationId: number) => {
+    try {
+      const response = await apiService.getConversationMembers(conversationId.toString())
+      const members = (response as any)?.data?.data || (response as any)?.data || []
+      setConversationMembers(members)
+    } catch (error) {
+      console.error('Failed to load members:', error)
+      setConversationMembers([])
+    }
+  }
+
   useEffect(() => {
     const loadMembers = async () => {
       if (currentConversation) {
-        try {
-          const response = await apiService.getConversationMembers(currentConversation.id.toString())
-          const members = response?.data?.data || response?.data || []
-          setConversationMembers(members)
-        } catch (error) {
-          console.error('Failed to load members:', error)
-          setConversationMembers([])
-        }
+        await loadConversationMembers(currentConversation.id)
       } else {
         setConversationMembers([])
       }
@@ -326,8 +340,76 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
     setIsRightSidebarOpen(true)
   }
 
+  const handleAddMember = () => {
+    if (currentConversation?.type === 'team') {
+      setAddMemberType('team')
+      setAddMemberTargetId(currentConversation.team_id?.toString() || currentConversation.id.toString())
+      setShowAddMemberModal(true)
+    } else if (currentConversation?.type === 'channel') {
+      setAddMemberType('channel')
+      setAddMemberTargetId(currentConversation.channel_id?.toString() || currentConversation.id.toString())
+      setShowAddMemberModal(true)
+    }
+  }
+
+  const handleRemoveMember = (memberId: number) => {
+    if (!currentConversation) return
+
+    const member = conversationMembers.find(m => m.id === memberId)
+    const memberName = member?.name || member?.username || 'thành viên này'
+
+    setConfirmTitle('Xóa thành viên khỏi nhóm')
+    setConfirmMessage(`Bạn có chắc chắn muốn xóa ${memberName} khỏi nhóm? Hành động này không thể hoàn tác.`)
+    setConfirmAction(() => async () => {
+      setIsConfirmLoading(true)
+      try {
+        if (currentConversation.type === 'team') {
+          await apiService.removeMemberFromTeam(
+            currentConversation.team_id?.toString() || currentConversation.id.toString(),
+            memberId.toString()
+          )
+        } else if (currentConversation.type === 'channel') {
+          await apiService.removeMemberFromChannel(
+            currentConversation.team_id?.toString() || currentConversation.id.toString(),
+            currentConversation.channel_id?.toString() || currentConversation.id.toString(),
+            memberId.toString()
+          )
+        }
+        
+        // Reload conversation members
+        if (currentConversation.id) {
+          loadConversationMembers(currentConversation.id)
+        }
+        
+        setShowConfirmModal(false)
+      } catch (error) {
+        console.error('Failed to remove member:', error)
+        alert('Có lỗi xảy ra khi xóa thành viên')
+      } finally {
+        setIsConfirmLoading(false)
+      }
+    })
+    setShowConfirmModal(true)
+  }
+
   const handleToggleRightSidebar = () => {
     setIsRightSidebarOpen(prev => !prev)
+  }
+
+  const isCurrentUserOwner = () => {
+    if (!currentConversation || !currentUser) return false
+    
+    // For team conversations, check if current user is the team owner
+    if (currentConversation.type === 'team' && currentConversation.team?.owner_id) {
+      return currentConversation.team.owner_id === currentUser.id
+    }
+    
+    // For channel conversations, check if current user is the team owner
+    if (currentConversation.type === 'channel' && currentConversation.team?.owner_id) {
+      return currentConversation.team.owner_id === currentUser.id
+    }
+    
+    return false
   }
 
   const handleOpenThread = (message: { id: string; content: string; sender: string; timestamp: string; conversation_id: string }) => {
@@ -483,6 +565,10 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
         onDeleteConversation={handleDeleteConversation}
         onToggleMute={handleToggleMute}
         onTogglePin={handleTogglePin}
+        onAddMember={handleAddMember}
+        onRemoveMember={handleRemoveMember}
+        currentUserId={currentUser?.id}
+        isOwner={isCurrentUserOwner()}
       />
 
       {/* Global search overlay for jump-to-message */}
@@ -505,6 +591,36 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Add Member Modal */}
+      <AddMemberModal
+        isOpen={showAddMemberModal}
+        onClose={() => setShowAddMemberModal(false)}
+        onMemberAdded={() => {
+          setShowAddMemberModal(false)
+          // Reload conversation members
+          if (currentConversation?.id) {
+            loadConversationMembers(currentConversation.id)
+          }
+        }}
+        type={addMemberType}
+        teamId={addMemberType === 'team' ? addMemberTargetId : undefined}
+        channelId={addMemberType === 'channel' ? addMemberTargetId : undefined}
+        existingMembers={conversationMembers}
+      />
+
+      {/* Confirm Modal */}
+      <ConfirmModal
+        isOpen={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        onConfirm={() => confirmAction?.()}
+        title={confirmTitle}
+        message={confirmMessage}
+        confirmText="Xóa"
+        cancelText="Hủy"
+        type="danger"
+        isLoading={isConfirmLoading}
+      />
     </div>
   )
 }

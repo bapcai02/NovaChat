@@ -10,6 +10,8 @@ interface ChannelRepositoryInterface
     public function update(int $id, array $data): array;
     public function delete(int $id): bool;
     public function getByTeam(int $teamId): array;
+    public function addMember(int $teamId, int $channelId, int $userId): bool;
+    public function removeMember(int $teamId, int $channelId, int $userId): bool;
 }
 
 

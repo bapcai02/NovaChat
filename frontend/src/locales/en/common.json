@@ -63,7 +63,9 @@
   "loading": "Loading...",
   "no_results": "No results",
   "delete_conversation": "Delete Conversation",
-  "leave_group": "Leave Group"
+  "leave_group": "Leave Group",
+  "create_team": "Create Team",
+  "create_channel": "Create Channel"
 }
 
 

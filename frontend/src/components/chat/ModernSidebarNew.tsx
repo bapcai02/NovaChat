@@ -19,6 +19,9 @@ import UserOnlineStatus from './UserOnlineStatus'
 import { LogoutButton } from '@/components/auth/LogoutButton'
 import { useTranslation } from 'react-i18next'
 import { apiService } from '@/services/api'
+import CreateTeamModal from '@/components/modals/CreateTeamModal'
+import CreateChannelModal from '@/components/modals/CreateChannelModalNew'
+import AddMemberModal from '@/components/modals/AddMemberModal'
 
 interface ModernSidebarProps {
   teams: Team[]
@@ -40,6 +43,11 @@ export default function ModernSidebar({
   onlineUserIds = new Set()
 }: ModernSidebarProps) {
   const [openSettings, setOpenSettings] = useState(false)
+  const [showCreateTeamModal, setShowCreateTeamModal] = useState(false)
+  const [showCreateChannelModal, setShowCreateChannelModal] = useState(false)
+  const [showAddMemberModal, setShowAddMemberModal] = useState(false)
+  const [addMemberType, setAddMemberType] = useState<'team' | 'channel'>('team')
+  const [addMemberTargetId, setAddMemberTargetId] = useState<string>('')
   const { t } = useTranslation('common')
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
@@ -90,6 +98,7 @@ export default function ModernSidebar({
   })
   
   const directConversations = sortedConversations.filter(conv => conv.type === 'direct')
+  const teamConversations = sortedConversations.filter(conv => conv.type === 'team')
   const channelConversations = sortedConversations.filter(conv => conv.type === 'channel')
 
   const timeAgo = (iso?: string) => {
@@ -350,36 +359,61 @@ export default function ModernSidebar({
       {/* Content */}
       <ScrollArea className="flex-1">
         <div className="p-3 space-y-6">
+
           {/* Teams */}
           <div className="space-y-3">
-            <div className="flex items-center space-x-2 mb-2">
-              <Users className="h-4 w-4 text-gray-500" />
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('teams')}</span>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center space-x-2">
+                <Users className="h-4 w-4 text-gray-500" />
+                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Teams</span>
+              </div>
+              <button
+                onClick={() => setShowCreateTeamModal(true)}
+                className="h-6 w-6 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+                title={t('create_team')}
+              >
+                <svg className="h-3 w-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+              </button>
             </div>
             <div className="space-y-1">
-              {(teams || []).map((team, index) => (
+              {teamConversations.map((conversation) => (
                 <button
-                  key={team.id}
-                  onClick={() => onSelectConversation({ id: team.id, type: 'group', title: team.name, team_id: team.id } as Conversation)}
+                  key={conversation.id}
+                  onClick={() => onSelectConversation(conversation)}
                   className={cn(
                     "flex items-center justify-between w-full text-left hover:bg-gray-50 rounded-lg p-2 transition-all duration-200 group",
-                    (currentConversation?.team_id === team.id || currentConversation?.id === team.id) && "bg-gray-50 border border-gray-200"
+                    currentConversation?.id === conversation.id && "bg-gray-50 border border-gray-200"
                   )}
                 >
-                  <div className="flex items-center space-x-2">
-                    <div className={cn("h-8 w-8 flex items-center justify-center bg-gradient-to-br rounded-lg", getTeamGradient(index))}>
-                      {getTeamIcon(team.name)}
+                  <div className="flex items-center space-x-3 flex-1 min-w-0">
+                    <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+                      <Users className="h-4 w-4 text-white" />
                     </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-800 group-hover:text-blue-600">{team.name}</span>
-                      <p className="text-xs text-gray-500">Team workspace</p>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-1">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {conversation.name || conversation.title || 'Team Chat'}
+                        </p>
+                        {conversation.is_pinned && (
+                          <svg className="h-3 w-3 text-yellow-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10 2L3 7v11h4v-6h6v6h4V7l-7-5z"/>
+                          </svg>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500 truncate">
+                        Team conversation
+                      </p>
                     </div>
+                    {conversation.unread_count > 0 && (
+                      <div className="h-5 w-5 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0">
+                        <span className="text-xs font-medium text-white">
+                          {conversation.unread_count > 99 ? '99+' : conversation.unread_count}
+                        </span>
+                      </div>
+                    )}
                   </div>
-                  {(team.members_count ?? 0) > 0 && (
-                    <Badge className="bg-gray-100 text-gray-600 text-xs font-medium px-1.5 py-0.5">
-                      {team.members_count}
-                    </Badge>
-                  )}
                 </button>
               ))}
             </div>
@@ -387,9 +421,20 @@ export default function ModernSidebar({
 
           {/* Channels */}
           <div className="space-y-3">
-            <div className="flex items-center space-x-2 mb-2">
-              <Hash className="h-4 w-4 text-gray-500" />
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('channels')}</span>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center space-x-2">
+                <Hash className="h-4 w-4 text-gray-500" />
+                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('channels')}</span>
+              </div>
+              <button
+                onClick={() => setShowCreateChannelModal(true)}
+                className="h-6 w-6 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+                title={t('create_channel')}
+              >
+                <svg className="h-3 w-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+              </button>
             </div>
             <div className="space-y-1">
               {channelConversations.map((conversation) => (
@@ -401,20 +446,22 @@ export default function ModernSidebar({
                     currentConversation?.id === conversation.id && "bg-gray-50 border border-gray-200"
                   )}
                 >
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 flex-1">
                     <div className="h-8 w-8 flex items-center justify-center bg-gray-100 rounded-lg">
                       {getChannelIcon(conversation.title || '')}
                     </div>
-                    <div>
+                    <div className="flex-1">
                       <span className="text-sm font-medium text-gray-800 group-hover:text-blue-600">{conversation.title}</span>
                       <p className="text-xs text-gray-500">Channel</p>
                     </div>
                   </div>
-                  {(conversation.unread_count ?? 0) > 0 && (
-                    <Badge className="bg-red-500 text-white text-[10px] font-bold px-1 py-0.5 h-4 min-w-[16px] flex items-center justify-center">
-                      {conversation.unread_count}
-                    </Badge>
-                  )}
+                  <div className="flex items-center space-x-2">
+                    {(conversation.unread_count ?? 0) > 0 && (
+                      <Badge className="bg-red-500 text-white text-[10px] font-bold px-1 py-0.5 h-4 min-w-[16px] flex items-center justify-center">
+                        {conversation.unread_count}
+                      </Badge>
+                    )}
+                  </div>
                 </button>
               ))}
             </div>
@@ -553,6 +600,41 @@ export default function ModernSidebar({
             </div>
           </div>
           <SettingsModal open={openSettings} onClose={() => setOpenSettings(false)} />
+          
+          {/* Create Team Modal */}
+          <CreateTeamModal
+            isOpen={showCreateTeamModal}
+            onClose={() => setShowCreateTeamModal(false)}
+            onTeamCreated={(team) => {
+              console.log('Team created:', team)
+              // TODO: Add team to teams list
+            }}
+          />
+          
+          {/* Create Channel Modal */}
+          <CreateChannelModal
+            isOpen={showCreateChannelModal}
+            onClose={() => setShowCreateChannelModal(false)}
+            onChannelCreated={(channel) => {
+              console.log('Channel created:', channel)
+              // TODO: Add channel to conversations list
+            }}
+            teams={teams}
+          />
+          
+          {/* Add Member Modal */}
+          <AddMemberModal
+            isOpen={showAddMemberModal}
+            onClose={() => setShowAddMemberModal(false)}
+            onMemberAdded={(members) => {
+              console.log('Members added:', members)
+              // TODO: Refresh team/channel data
+            }}
+            type={addMemberType}
+            teamId={addMemberType === 'team' ? addMemberTargetId : undefined}
+            channelId={addMemberType === 'channel' ? addMemberTargetId : undefined}
+            existingMembers={[]} // TODO: Get existing members
+          />
           
           {/* Bookmark modal - simplified */}
           {openBookmarks && (

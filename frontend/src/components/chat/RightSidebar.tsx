@@ -16,6 +16,10 @@ interface RightSidebarProps {
   onDeleteConversation?: () => void
   onToggleMute: () => void
   onTogglePin: () => void
+  onAddMember?: () => void
+  onRemoveMember?: (memberId: number) => void
+  currentUserId?: number
+  isOwner?: boolean
 }
 
 const RightSidebar: React.FC<RightSidebarProps> = ({
@@ -30,6 +34,10 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
   onDeleteConversation,
   onToggleMute,
   onTogglePin,
+  onAddMember,
+  onRemoveMember,
+  currentUserId,
+  isOwner = false,
 }) => {
   const { t } = useTranslation('common')
   return (
@@ -61,8 +69,27 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
           <div className="p-4 overflow-auto flex-1">
             {mode === 'members' && (
               <div className="space-y-3">
+                {/* Add Member Button - Only show for owners */}
+                {isOwner && onAddMember && (
+                  <button
+                    onClick={onAddMember}
+                    className="w-full flex items-center gap-3 p-3 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition-colors"
+                  >
+                    <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center">
+                      <svg className="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                    </div>
+                    <div className="text-left">
+                      <div className="text-sm font-medium text-blue-700">Thêm thành viên</div>
+                      <div className="text-xs text-blue-500">Mời người dùng vào nhóm</div>
+                    </div>
+                  </button>
+                )}
+                
+                {/* Members List */}
                 {(members || []).map((m) => (
-                  <div key={m.id} className="flex items-center gap-3">
+                  <div key={m.id} className="flex items-center gap-3 group">
                     {m.avatar ? (
                       <img 
                         src={m.avatar} 
@@ -80,6 +107,21 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                         <div className="text-xs text-gray-500 truncate">@{m.username}</div>
                       )}
                     </div>
+                    {/* Remove member button - only show for owners and not for current user */}
+                    {(conversationType === 'team' || conversationType === 'channel') && 
+                     onRemoveMember && 
+                     isOwner && 
+                     m.id !== currentUserId && (
+                      <button
+                        onClick={() => onRemoveMember(m.id)}
+                        className="opacity-0 group-hover:opacity-100 h-6 w-6 rounded-full bg-red-100 hover:bg-red-200 flex items-center justify-center transition-all"
+                        title="Xóa khỏi nhóm"
+                      >
+                        <svg className="h-3 w-3 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    )}
                   </div>
                 ))}
                 {(!members || members.length === 0) && (

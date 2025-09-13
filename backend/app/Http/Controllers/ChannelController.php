@@ -71,6 +71,54 @@ class ChannelController extends Controller
             return $this->successResponse($data, 'Team channels retrieved successfully');
         }, 'Team channels retrieved', 'Failed to retrieve team channels');
     }
+
+    public function addMember(string $teamId, string $channelId, Request $request): JsonResponse
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return $this->unauthorizedResponse('Unauthenticated');
+        }
+
+        $request->validate([
+            'user_id' => 'required|integer|exists:users,id',
+        ]);
+
+        return $this->executeInTransactionWithResponse(function () use ($teamId, $channelId, $request, $user) {
+            $result = $this->channels->addMember((int)$teamId, (int)$channelId, (int)$request->user_id, (int)$user->id);
+            
+            if (!$result['success']) {
+                return $this->errorResponse(
+                    $result['message'] ?? 'Failed to add member',
+                    $result['errors'] ?? null,
+                    $result['code'] ?? 500
+                );
+            }
+            
+            return $this->successResponse($result['data'] ?? null, $result['message'] ?? 'Member added successfully');
+        }, 'Member added', 'Failed to add member');
+    }
+
+    public function removeMember(string $teamId, string $channelId, string $userId): JsonResponse
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return $this->unauthorizedResponse('Unauthenticated');
+        }
+
+        return $this->executeInTransactionWithResponse(function () use ($teamId, $channelId, $userId, $user) {
+            $result = $this->channels->removeMember((int)$teamId, (int)$channelId, (int)$userId, (int)$user->id);
+            
+            if (!$result['success']) {
+                return $this->errorResponse(
+                    $result['message'] ?? 'Failed to remove member',
+                    $result['errors'] ?? null,
+                    $result['code'] ?? 500
+                );
+            }
+            
+            return $this->successResponse($result['data'] ?? null, $result['message'] ?? 'Member removed successfully');
+        }, 'Member removed', 'Failed to remove member');
+    }
 }
 
 

@@ -63,7 +63,9 @@
   "loading": "Đang tải...",
   "no_results": "Không có kết quả",
   "delete_conversation": "Xóa cuộc trò chuyện",
-  "leave_group": "Rời nhóm"
+  "leave_group": "Rời nhóm",
+  "create_team": "Tạo nhóm",
+  "create_channel": "Tạo kênh"
 }
 
 

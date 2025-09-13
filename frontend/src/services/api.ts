@@ -131,6 +131,19 @@ class ApiService {
     })
   }
 
+  async addMemberToTeam(teamId: string, userId: string) {
+    return this.request(`/teams/${teamId}/members`, {
+      method: 'POST',
+      body: JSON.stringify({ user_id: userId }),
+    })
+  }
+
+  async removeMemberFromTeam(teamId: string, userId: string) {
+    return this.request(`/teams/${teamId}/members/${userId}`, {
+      method: 'DELETE',
+    })
+  }
+
   // Channels endpoints
   async getChannels(teamId: string) {
     return this.request(`/teams/${teamId}/channels`)
@@ -156,6 +169,19 @@ class ApiService {
 
   async deleteChannel(teamId: string, channelId: string) {
     return this.request(`/teams/${teamId}/channels/${channelId}`, {
+      method: 'DELETE',
+    })
+  }
+
+  async addMemberToChannel(teamId: string, channelId: string, userId: string) {
+    return this.request(`/teams/${teamId}/channels/${channelId}/members`, {
+      method: 'POST',
+      body: JSON.stringify({ user_id: userId }),
+    })
+  }
+
+  async removeMemberFromChannel(teamId: string, channelId: string, userId: string) {
+    return this.request(`/teams/${teamId}/channels/${channelId}/members/${userId}`, {
       method: 'DELETE',
     })
   }
@@ -348,6 +374,11 @@ class ApiService {
   // Generic DELETE method
   async delete(endpoint: string) {
     return this.request(endpoint, { method: 'DELETE' })
+  }
+
+  // Users endpoints
+  async getUsers() {
+    return this.request('/users')
   }
 }
 

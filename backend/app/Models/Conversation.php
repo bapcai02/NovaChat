@@ -44,8 +44,12 @@ class Conversation extends Model
     public function getTitleAttribute()
     {
         if ($this->type === 'direct') {
-            $otherMember = $this->members()->where('user_id', '!=', auth()->id())->first();
-            return $otherMember ? $otherMember->name : 'Direct Message';
+            $authId = auth()->id();
+            if ($authId) {
+                $otherMember = $this->members()->where('user_id', '!=', $authId)->first();
+                return $otherMember ? $otherMember->name : 'Direct Message';
+            }
+            return 'Direct Message';
         }
         
         if ($this->type === 'channel' && $this->channel) {

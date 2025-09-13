@@ -4,6 +4,8 @@ namespace App\Repositories\Eloquent;
 
 use App\Repositories\Contracts\ChannelRepositoryInterface;
 use App\Models\Channel;
+use App\Models\Conversation;
+use App\Models\ConversationMember;
 
 class EloquentChannelRepository implements ChannelRepositoryInterface
 {
@@ -26,7 +28,33 @@ class EloquentChannelRepository implements ChannelRepositoryInterface
             'description' => $data['description'] ?? null,
             'is_private' => (bool)($data['is_private'] ?? false),
             'created_by' => $createdBy,
+            'team_id' => $data['team_id'] ?? null,
         ]);
+        
+        // Create channel conversation
+        if ($channel->team_id) {
+            $conversation = Conversation::create([
+                'type' => 'channel',
+                'name' => $channel->name,
+                'team_id' => $channel->team_id,
+                'channel_id' => $channel->id,
+                'metadata' => null,
+            ]);
+            
+            // Add all team members to channel conversation
+            $teamMembers = \DB::table('team_members')
+                ->where('team_id', $channel->team_id)
+                ->get();
+                
+            foreach ($teamMembers as $member) {
+                ConversationMember::create([
+                    'conversation_id' => $conversation->id,
+                    'user_id' => $member->user_id,
+                    'joined_at' => now(),
+                ]);
+            }
+        }
+        
         return $channel->toArray();
     }
 
@@ -63,6 +91,46 @@ class EloquentChannelRepository implements ChannelRepositoryInterface
             ->orderBy('name', 'asc')
             ->get()
             ->toArray();
+    }
+
+    public function addMember(int $teamId, int $channelId, int $userId): bool
+    {
+        // Find the channel conversation
+        $conversation = Conversation::where('type', 'channel')
+            ->where('team_id', $teamId)
+            ->where('channel_id', $channelId)
+            ->first();
+            
+        if (!$conversation) {
+            return false;
+        }
+        
+        // Add user to conversation
+        $conversationMember = ConversationMember::create([
+            'conversation_id' => $conversation->id,
+            'user_id' => $userId,
+            'joined_at' => now(),
+        ]);
+        
+        return (bool) $conversationMember;
+    }
+
+    public function removeMember(int $teamId, int $channelId, int $userId): bool
+    {
+        // Find the channel conversation
+        $conversation = Conversation::where('type', 'channel')
+            ->where('team_id', $teamId)
+            ->where('channel_id', $channelId)
+            ->first();
+            
+        if (!$conversation) {
+            return false;
+        }
+        
+        // Remove user from conversation
+        return ConversationMember::where('conversation_id', $conversation->id)
+            ->where('user_id', $userId)
+            ->delete() > 0;
     }
 }
 

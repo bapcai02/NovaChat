@@ -52,6 +52,14 @@ Route::middleware('auth:api')->group(function () {
         Route::delete('/{teamId}', [TeamController::class, 'destroy']);
         Route::get('/{teamId}/channels', [ChannelController::class, 'getTeamChannels']);
         Route::post('/{teamId}/channels', [ChannelController::class, 'store']);
+        
+        // Team members management
+        Route::post('/{teamId}/members', [TeamController::class, 'addMember']);
+        Route::delete('/{teamId}/members/{userId}', [TeamController::class, 'removeMember']);
+        
+        // Channel members management
+        Route::post('/{teamId}/channels/{channelId}/members', [ChannelController::class, 'addMember']);
+        Route::delete('/{teamId}/channels/{channelId}/members/{userId}', [ChannelController::class, 'removeMember']);
     });
 
     // Channels
