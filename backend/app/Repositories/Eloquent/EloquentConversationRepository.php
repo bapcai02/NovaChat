@@ -8,6 +8,7 @@ use App\Models\ConversationMember;
 use App\Models\Message;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class EloquentConversationRepository implements ConversationRepositoryInterface
 {
@@ -21,7 +22,7 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
         ->orderByDesc('updated_at')
         ->get()
         ->map(function ($conversation) use ($userId) {
-            $otherMember = $conversation->members()->where('user_id', '!=', $userId)->first();
+            $otherMember = $conversation->members()->where('users.id', '!=', $userId)->first();
             $unreadCount = $this->getUnreadCount($conversation->id, $userId);
             
             return [
@@ -98,6 +99,19 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
 
     public function create(array $data): array
     {
+        // For direct messages, check if conversation already exists between these two users
+        if ($data['type'] === 'direct' && isset($data['participant_id'])) {
+            $existingConversation = $this->findDirectConversation($data['creator_id'], $data['participant_id']);
+            if ($existingConversation) {
+                Log::info('Direct conversation already exists:', [
+                    'conversation_id' => $existingConversation['id'],
+                    'creator_id' => $data['creator_id'],
+                    'participant_id' => $data['participant_id']
+                ]);
+                return $existingConversation;
+            }
+        }
+
         $conversation = Conversation::create([
             'type' => $data['type'],
             'name' => $data['name'] ?? null,
@@ -106,29 +120,9 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
             'metadata' => $data['metadata'] ?? null,
         ]);
 
-        // Add creator as member
-        ConversationMember::create([
-            'conversation_id' => $conversation->id,
-            'user_id' => $data['creator_id'],
-            'joined_at' => now(),
-        ]);
-
-        // Add other members if provided
-        if (isset($data['user_ids']) && is_array($data['user_ids'])) {
-            foreach ($data['user_ids'] as $userId) {
-                if ($userId != $data['creator_id']) {
-                    ConversationMember::create([
-                        'conversation_id' => $conversation->id,
-                        'user_id' => $userId,
-                        'joined_at' => now(),
-                    ]);
-                }
-            }
-        }
-
         // For direct messages, add both creator and participant as members
         if ($data['type'] === 'direct' && isset($data['participant_id'])) {
-            \Log::info('Creating direct conversation members:', [
+            Log::info('Creating direct conversation members:', [
                 'conversation_id' => $conversation->id,
                 'creator_id' => $data['creator_id'],
                 'participant_id' => $data['participant_id']
@@ -140,7 +134,7 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
                 'user_id' => $data['creator_id'],
                 'joined_at' => now(),
             ]);
-            \Log::info('Created creator member:', $creatorMember->toArray());
+            Log::info('Created creator member:', $creatorMember->toArray());
             
             // Add participant (User B)
             $participantMember = ConversationMember::create([
@@ -148,12 +142,46 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
                 'user_id' => $data['participant_id'],
                 'joined_at' => now(),
             ]);
-            \Log::info('Created participant member:', $participantMember->toArray());
+            Log::info('Created participant member:', $participantMember->toArray());
+        } else {
+            // For other conversation types, add creator as member
+            ConversationMember::create([
+                'conversation_id' => $conversation->id,
+                'user_id' => $data['creator_id'],
+                'joined_at' => now(),
+            ]);
+
+            // Add other members if provided
+            if (isset($data['user_ids']) && is_array($data['user_ids'])) {
+                foreach ($data['user_ids'] as $userId) {
+                    if ($userId != $data['creator_id']) {
+                        ConversationMember::create([
+                            'conversation_id' => $conversation->id,
+                            'user_id' => $userId,
+                            'joined_at' => now(),
+                        ]);
+                    }
+                }
+            }
         }
 
         // Return formatted data like getUserConversations
         $conversation = $conversation->fresh(['members']);
-        $otherMember = $conversation->members()->where('user_id', '!=', $data['creator_id'])->with('user')->first();
+        $otherMember = $conversation->members()->where('users.id', '!=', $data['creator_id'])->first();
+        
+        Log::info('Other member found:', [
+            'other_member' => $otherMember ? $otherMember->toArray() : null
+        ]);
+        
+        $otherMemberData = null;
+        if ($otherMember) {
+            $otherMemberData = [
+                'id' => $otherMember->id,
+                'name' => $otherMember->name,
+                'username' => $otherMember->username,
+                'avatar' => $otherMember->avatar,
+            ];
+        }
         
         return [
             'id' => $conversation->id,
@@ -164,12 +192,7 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
             'channel_id' => $conversation->channel_id,
             'messages_count' => 0,
             'unread_count' => 0,
-            'other_member' => $otherMember ? [
-                'id' => $otherMember->user_id,
-                'name' => $otherMember->user->name,
-                'username' => $otherMember->user->username,
-                'avatar' => $otherMember->user->avatar,
-            ] : null,
+            'other_member' => $otherMemberData,
             'last_message' => null,
             'created_at' => $conversation->created_at,
             'updated_at' => $conversation->updated_at,
@@ -248,6 +271,48 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
         return Message::where('conversation_id', $conversationId)
             ->where('created_at', '>', $lastRead)
             ->count();
+    }
+
+    private function findDirectConversation(int $userId1, int $userId2): ?array
+    {
+        // Find conversation where both users are members
+        $conversation = Conversation::where('type', 'direct')
+            ->whereHas('members', function ($query) use ($userId1) {
+                $query->where('user_id', $userId1);
+            })
+            ->whereHas('members', function ($query) use ($userId2) {
+                $query->where('user_id', $userId2);
+            })
+            ->with(['members'])
+            ->first();
+
+        if (!$conversation) {
+            return null;
+        }
+
+        // Return formatted data like getUserConversations
+        $otherMember = $conversation->members()->where('users.id', '!=', $userId1)->first();
+        $unreadCount = $this->getUnreadCount($conversation->id, $userId1);
+        
+        return [
+            'id' => $conversation->id,
+            'type' => $conversation->type,
+            'title' => $conversation->title,
+            'name' => $conversation->name,
+            'team_id' => $conversation->team_id,
+            'channel_id' => $conversation->channel_id,
+            'messages_count' => $conversation->messages()->count(),
+            'unread_count' => $unreadCount,
+            'other_member' => $otherMember ? [
+                'id' => $otherMember->id,
+                'name' => $otherMember->name,
+                'username' => $otherMember->username,
+                'avatar' => $otherMember->avatar,
+            ] : null,
+            'last_message' => $this->getLastMessage($conversation->id),
+            'created_at' => $conversation->created_at,
+            'updated_at' => $conversation->updated_at,
+        ];
     }
 
     private function getLastMessage(int $conversationId): ?array

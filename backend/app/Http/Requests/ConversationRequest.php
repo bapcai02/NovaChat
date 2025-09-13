@@ -28,6 +28,7 @@ class ConversationRequest extends FormRequest
             'channel_id' => 'nullable|integer|exists:channels,id',
             'user_ids' => 'nullable|array',
             'user_ids.*' => 'integer|exists:users,id',
+            'participant_id' => 'nullable|integer|exists:users,id',
         ];
     }
 
@@ -51,6 +52,8 @@ class ConversationRequest extends FormRequest
             'user_ids.array' => 'Danh sách user phải là mảng.',
             'user_ids.*.integer' => 'User ID phải là số nguyên.',
             'user_ids.*.exists' => 'User không tồn tại.',
+            'participant_id.integer' => 'Participant ID phải là số nguyên.',
+            'participant_id.exists' => 'Participant không tồn tại.',
         ];
     }
 }
