@@ -13,6 +13,8 @@ services:
       - db
       - redis
     command: supervisord -c /etc/supervisor/supervisord.conf
+    ports:
+      - "7001:7001"
 
   nginx:
     image: nginx:alpine
