@@ -4,10 +4,7 @@ vendor/
 
 # Environment files
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*
 
 # Build outputs
 dist/
@@ -64,3 +61,11 @@ coverage/
 
 backend/storage/
 backend/vendor/
+backend/.env
+backend/.env.*
+frontend/.env
+frontend/.env.*
+backend/bootstrap/cache/*.php
+backend/bootstrap/cache/*.json
+backend/public/storage
+backend/storage/logs/*
