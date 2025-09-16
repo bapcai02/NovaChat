@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\WebSocket;
 
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
 use Ratchet\ConnectionInterface;
 use Ratchet\MessageComponentInterface;
@@ -37,6 +38,7 @@ class ChatServer implements MessageComponentInterface
 
     public function onOpen(ConnectionInterface $conn): void
     {
+        Log::info('[WS] onOpen', ['resourceId' => $conn->resourceId ?? null]);
         $this->connectionToChannels[$conn] = [];
         $this->connectionState[$conn] = [
             'client_id' => bin2hex(random_bytes(8)),
@@ -62,10 +64,12 @@ class ChatServer implements MessageComponentInterface
 
     public function onMessage(ConnectionInterface $from, $msg): void
     {
+        Log::info('[WS] onMessage:raw', ['from' => $from->resourceId ?? null, 'msg' => (string)$msg]);
         $payload = json_decode((string) $msg, true);
         if (!is_array($payload) || !isset($payload['action'])) {
             // Support Node-like protocol by `type`
             if (!isset($payload['type'])) {
+                Log::warning('[WS] invalid_message', ['from' => $from->resourceId ?? null, 'raw' => (string)$msg]);
                 return;
             }
             $payload['action'] = $payload['type'];
@@ -73,6 +77,7 @@ class ChatServer implements MessageComponentInterface
 
         switch ($payload['action']) {
             case 'subscribe':
+                Log::info('[WS] action:subscribe', ['from' => $from->resourceId ?? null, 'channel' => $payload['channel'] ?? null]);
                 $channel = (string)($payload['channel'] ?? '');
                 if ($channel === '') {
                     return;
@@ -81,6 +86,7 @@ class ChatServer implements MessageComponentInterface
                 $from->send(json_encode(['type' => 'subscribed', 'channel' => $channel], JSON_UNESCAPED_UNICODE));
                 break;
             case 'unsubscribe':
+                Log::info('[WS] action:unsubscribe', ['from' => $from->resourceId ?? null, 'channel' => $payload['channel'] ?? null]);
                 $channel = (string)($payload['channel'] ?? '');
                 if ($channel === '') {
                     return;
@@ -91,9 +97,14 @@ class ChatServer implements MessageComponentInterface
 
             // === PING/PONG ===
             case 'ping':
+                Log::info('[WS] action:ping', ['from' => $from->resourceId ?? null, 'user_id' => $payload['user_id'] ?? null]);
                 $userId = isset($payload['user_id']) ? (int)$payload['user_id'] : null;
                 if ($userId) {
-                    $this->connectionState[$from]['user_id'] = $this->connectionState[$from]['user_id'] ?? $userId;
+                    $state = $this->getState($from);
+                    if (!$state['user_id']) {
+                        $state['user_id'] = $userId;
+                        $this->setState($from, $state);
+                    }
                     $this->touchOnline($userId);
                 }
                 $from->send(json_encode(['type' => 'pong'], JSON_UNESCAPED_UNICODE));
@@ -101,9 +112,12 @@ class ChatServer implements MessageComponentInterface
 
             // === LOGIN (user_online) ===
             case 'user_online':
+                Log::info('[WS] action:user_online', ['from' => $from->resourceId ?? null, 'user_id' => $payload['user_id'] ?? null]);
                 $userId = (int)($payload['user_id'] ?? 0);
                 if ($userId <= 0) { break; }
-                $this->connectionState[$from]['user_id'] = $userId;
+                $state = $this->getState($from);
+                $state['user_id'] = $userId;
+                $this->setState($from, $state);
                 $this->attachToUser($from, $userId);
                 $this->setOnline($userId);
                 $this->publishUserPresenceEvent('user_connected', $userId);
@@ -112,6 +126,7 @@ class ChatServer implements MessageComponentInterface
 
             // === LOGOUT ===
             case 'logout':
+                Log::info('[WS] action:logout', ['from' => $from->resourceId ?? null, 'user_id' => $payload['user_id'] ?? null]);
                 $userId = (int)($payload['user_id'] ?? 0);
                 if ($userId > 0) {
                     $this->setOffline($userId);
@@ -122,6 +137,7 @@ class ChatServer implements MessageComponentInterface
 
             // === explicit user_offline ===
             case 'user_offline':
+                Log::info('[WS] action:user_offline', ['from' => $from->resourceId ?? null, 'user_id' => $payload['user_id'] ?? null]);
                 $userId = (int)($payload['user_id'] ?? 0);
                 if ($userId > 0) {
                     $this->detachFromUser($from, $userId);
@@ -132,27 +148,33 @@ class ChatServer implements MessageComponentInterface
 
             // === JOIN CONVERSATION ===
             case 'join_conversation':
+                Log::info('[WS] action:join_conversation', ['from' => $from->resourceId ?? null, 'conversation_id' => $payload['conversation_id'] ?? null]);
                 $cid = (int)($payload['conversation_id'] ?? 0);
                 if ($cid <= 0) { break; }
-                $this->connectionState[$from]['conversation_id'] = $cid;
+                $state = $this->getState($from);
+                $state['conversation_id'] = $cid;
+                $this->setState($from, $state);
                 $this->attachToConversation($from, $cid);
                 $from->send(json_encode([
                     'type' => 'joined_conversation',
                     'conversation_id' => $cid,
-                    'client_id' => $this->connectionState[$from]['client_id'],
+                    'client_id' => $state['client_id'],
                 ], JSON_UNESCAPED_UNICODE));
                 break;
 
             // === SUBSCRIBE ALL CONVERSATIONS ===
             case 'subscribe_all_conversations':
+                Log::info('[WS] action:subscribe_all_conversations', ['from' => $from->resourceId ?? null, 'user_id' => $payload['user_id'] ?? null, 'count' => isset($payload['conversation_ids']) && is_array($payload['conversation_ids']) ? count($payload['conversation_ids']) : 0]);
                 $userId = (int)($payload['user_id'] ?? 0);
                 $cids = isset($payload['conversation_ids']) && is_array($payload['conversation_ids']) ? array_map('intval', $payload['conversation_ids']) : [];
-                $this->connectionState[$from]['user_id'] = $userId;
+                $state = $this->getState($from);
+                $state['user_id'] = $userId;
                 $this->attachToUser($from, $userId);
                 foreach ($cids as $cid) {
                     $this->attachToConversation($from, $cid);
-                    $this->connectionState[$from]['subs'][$cid] = true;
+                    $state['subs'][$cid] = true;
                 }
+                $this->setState($from, $state);
                 $this->setOnline($userId);
                 $this->publishUserPresenceEvent('user_connected', $userId);
                 $this->broadcastAll(['type' => 'user_online', 'user_id' => $userId]);
@@ -167,15 +189,17 @@ class ChatServer implements MessageComponentInterface
                 $from->send(json_encode([
                     'type' => 'subscribed_all_conversations',
                     'conversation_ids' => $cids,
-                    'client_id' => $this->connectionState[$from]['client_id'],
+                    'client_id' => $state['client_id'],
                     'online_users' => $onlineUsers,
                 ], JSON_UNESCAPED_UNICODE));
                 break;
 
             // === CHAT MESSAGE ===
             case 'chat_message':
+                Log::info('[WS] action:chat_message', ['from' => $from->resourceId ?? null, 'conversation_id' => $payload['conversation_id'] ?? null, 'sender_id' => $payload['sender_id'] ?? null]);
                 $targetCid = (int)($payload['conversation_id'] ?? 0);
                 if ($targetCid <= 0) {
+                    Log::warning('[WS] chat_message_missing_conversation_id', ['from' => $from->resourceId ?? null]);
                     $from->send(json_encode(['type' => 'error', 'message' => 'Missing conversation_id'], JSON_UNESCAPED_UNICODE));
                     break;
                 }
@@ -216,31 +240,27 @@ class ChatServer implements MessageComponentInterface
                 $clients = $this->clientsByConversation[$targetCid] ?? null;
                 if ($clients instanceof SplObjectStorage) {
                     foreach ($clients as $c) {
-                        if ($c !== $from) {
-                            $c->send(json_encode([
-                                'type' => 'chat_message',
-                                'conversation_id' => $targetCid,
-                                'sender_id' => $chat['sender_id'],
-                                'content' => $chat['content'],
-                                'timestamp' => $chat['timestamp'],
-                                'parent_id' => $payload['parent_id'] ?? null,
-                            ], JSON_UNESCAPED_UNICODE));
-                        }
+                        $c->send(json_encode([
+                            'type' => 'chat_message',
+                            'conversation_id' => $targetCid,
+                            'sender_id' => $chat['sender_id'],
+                            'content' => $chat['content'],
+                            'timestamp' => $chat['timestamp'],
+                            'parent_id' => $payload['parent_id'] ?? null,
+                        ], JSON_UNESCAPED_UNICODE));
                     }
                 }
                 if (!empty($payload['parent_id'])) {
                     if ($clients instanceof SplObjectStorage) {
                         foreach ($clients as $c) {
-                            if ($c !== $from) {
-                                $c->send(json_encode([
-                                    'type' => 'thread_reply',
-                                    'conversation_id' => $targetCid,
-                                    'parent_id' => (int)$payload['parent_id'],
-                                    'sender_id' => $chat['sender_id'],
-                                    'content' => $chat['content'],
-                                    'timestamp' => $chat['timestamp'],
-                                ], JSON_UNESCAPED_UNICODE));
-                            }
+                            $c->send(json_encode([
+                                'type' => 'thread_reply',
+                                'conversation_id' => $targetCid,
+                                'parent_id' => (int)$payload['parent_id'],
+                                'sender_id' => $chat['sender_id'],
+                                'content' => $chat['content'],
+                                'timestamp' => $chat['timestamp'],
+                            ], JSON_UNESCAPED_UNICODE));
                         }
                     }
                 }
@@ -250,7 +270,9 @@ class ChatServer implements MessageComponentInterface
             // === TYPING ===
             case 'typing_start':
             case 'typing_stop':
-                $cid = $this->connectionState[$from]['conversation_id'];
+                Log::info('[WS] action:typing', ['from' => $from->resourceId ?? null, 'action' => $payload['action'] ?? null]);
+                $cidState = $this->getState($from);
+                $cid = $cidState['conversation_id'];
                 if (!$cid) { break; }
                 $typing = [
                     'type' => $payload['action'],
@@ -272,6 +294,7 @@ class ChatServer implements MessageComponentInterface
 
     public function onClose(ConnectionInterface $conn): void
     {
+        Log::info('[WS] onClose', ['resourceId' => $conn->resourceId ?? null]);
         if (!isset($this->connectionToChannels[$conn])) {
             return;
         }
@@ -283,7 +306,7 @@ class ChatServer implements MessageComponentInterface
 
         // Detach presence/bookkeeping
         if (isset($this->connectionState[$conn])) {
-            $state = $this->connectionState[$conn];
+            $state = $this->getState($conn);
             if (!empty($state['user_id'])) {
                 $this->detachFromUser($conn, (int)$state['user_id']);
                 // Rely on TTL for offline to avoid flapping
@@ -303,6 +326,7 @@ class ChatServer implements MessageComponentInterface
 
     public function onError(ConnectionInterface $conn, \Exception $e): void
     {
+        Log::error('[WS] onError', ['resourceId' => $conn->resourceId ?? null, 'error' => $e->getMessage()]);
         $conn->close();
     }
 
@@ -425,6 +449,31 @@ class ChatServer implements MessageComponentInterface
         foreach ($this->connectionState as $conn) {
             $conn->send($encoded);
         }
+    }
+
+    /**
+     * Safely get connection state stored in SplObjectStorage.
+     *
+     * @return array{client_id:string|null,user_id:int|null,conversation_id:int|null,subs:array<int,bool>}
+     */
+    private function getState(ConnectionInterface $conn): array
+    {
+        return $this->connectionState[$conn] ?? [
+            'client_id' => null,
+            'user_id' => null,
+            'conversation_id' => null,
+            'subs' => [],
+        ];
+    }
+
+    /**
+     * Safely set connection state back into SplObjectStorage.
+     *
+     * @param array{client_id:string|null,user_id:int|null,conversation_id:int|null,subs:array<int,bool>} $state
+     */
+    private function setState(ConnectionInterface $conn, array $state): void
+    {
+        $this->connectionState[$conn] = $state;
     }
 }
 

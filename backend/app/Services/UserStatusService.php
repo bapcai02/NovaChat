@@ -31,10 +31,6 @@ class UserStatusService
             'timestamp' => now()->toISOString()
         ];
 
-        if (class_exists(\App\Events\UserStatusChanged::class)) {
-            broadcast(new \App\Events\UserStatusChanged($payload))->toOthers();
-        }
-
         return ['success' => true, 'data' => $payload];
     }
 
@@ -59,9 +55,7 @@ class UserStatusService
             'timestamp' => now()->toISOString()
         ];
 
-        if (class_exists(\App\Events\UserTyping::class)) {
-            broadcast(new \App\Events\UserTyping($payload))->toOthers();
-        }
+        // Realtime is handled by WS; skip Laravel broadcast
 
         return ['success' => true, 'data' => $payload];
     }
@@ -81,9 +75,7 @@ class UserStatusService
             'timestamp' => now()->toISOString()
         ];
 
-        if (class_exists(\App\Events\UserStoppedTyping::class)) {
-            broadcast(new \App\Events\UserStoppedTyping($payload))->toOthers();
-        }
+        // Realtime is handled by WS; skip Laravel broadcast
 
         return ['success' => true, 'data' => $payload];
     }

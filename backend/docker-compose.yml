@@ -46,20 +46,6 @@ services:
     container_name: laravel_redis
     ports:
       - "6379:6379"
-
-  ws-gateway:
-    build:
-      context: ./ws-gateway
-      dockerfile: Dockerfile
-    container_name: ws_gateway
-    ports:
-      - "7000:7000"
-    depends_on:
-      - redis
-    environment:
-      - REDIS_URL=redis://redis:6379
-      - REDIS_CHAT_LIST_KEY=chatbackend_database_chat_messages_list
-
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     container_name: laravel_phpmyadmin

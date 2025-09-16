@@ -39,7 +39,7 @@ class NovaChatWebSocket implements WebSocketClient {
   private pingTimer: any = null;
   private sendQueue: WebSocketMessage[] = [];
 
-  constructor(private url: string = 'ws://localhost:7000') {}
+  constructor(private url: string = (process.env.NEXT_PUBLIC_WS_URL as string) || 'ws://localhost:7001') {}
 
   connect(): void {
     if (this.isConnecting || (this.ws && this.ws.readyState === WebSocket.OPEN)) {

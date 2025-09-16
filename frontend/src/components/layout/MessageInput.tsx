@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils'
 import { useAppSelector } from '@/hooks/useAppSelector'
 import { useAppDispatch } from '@/hooks/useAppDispatch'
 import { apiService } from '@/services/api'
-import { userStatusService } from '@/services/userStatusService'
+import { getWebSocketClient } from '@/lib/websocket'
 import { loadUserFromStorage, setUser } from '@/store/slices/authSlice'
 
 // Message formatting utilities
@@ -129,7 +129,9 @@ export const MessageInput: React.FC<MessageInputProps> = ({ roomId = '1', type =
     if (!isLocalTyping) {
       setIsLocalTyping(true)
       try {
-        await userStatusService.startTyping(roomId)
+        const ws = getWebSocketClient()
+        const convId = parseInt(roomId || '0') || undefined
+        ws.send({ type: 'typing_start', user_id: user.id, conversation_id: convId } as any)
       } catch (error) {
         console.error('Failed to send typing event:', error)
       }
@@ -144,7 +146,9 @@ export const MessageInput: React.FC<MessageInputProps> = ({ roomId = '1', type =
     const timeout = setTimeout(async () => {
       setIsLocalTyping(false)
       try {
-        await userStatusService.stopTyping(roomId)
+        const ws = getWebSocketClient()
+        const convId = parseInt(roomId || '0') || undefined
+        ws.send({ type: 'typing_stop', user_id: user.id, conversation_id: convId } as any)
       } catch (error) {
         console.error('Failed to send stop typing event:', error)
       }
@@ -163,7 +167,9 @@ export const MessageInput: React.FC<MessageInputProps> = ({ roomId = '1', type =
     }
 
     try {
-      await userStatusService.stopTyping(roomId)
+      const ws = getWebSocketClient()
+      const convId = parseInt(roomId || '0') || undefined
+      ws.send({ type: 'typing_stop', user_id: user.id, conversation_id: convId } as any)
     } catch (error) {
       console.error('Failed to send stop typing event:', error)
     }

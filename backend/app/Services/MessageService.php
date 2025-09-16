@@ -79,12 +79,7 @@ class MessageService
             'parent_id' => isset($messageData['parent_id']) ? (string) $messageData['parent_id'] : null,
         ];
 
-        Log::info('Broadcasting MessageSent event with payload:', $payload);
-
-        // Broadcast the event
-        broadcast(new \App\Events\MessageSent($payload))->toOthers();
-
-        Log::info('MessageSent event broadcasted successfully');
+        // Realtime is handled by WS; skip Laravel broadcast
 
         return ['success' => true, 'data' => (array) $message];
     }
@@ -114,8 +109,7 @@ class MessageService
             'created_at' => now()->toISOString(),
         ];
 
-        // Broadcast the event
-        broadcast(new \App\Events\ReactionAdded($payload))->toOthers();
+        // Realtime is handled by WS; skip Laravel broadcast
 
         return ['success' => true, 'message' => 'Reaction added successfully', 'data' => $reaction];
     }
@@ -147,8 +141,7 @@ class MessageService
             'removed_at' => now()->toISOString(),
         ];
 
-        // Broadcast the event
-        broadcast(new \App\Events\ReactionRemoved($payload))->toOthers();
+        // Realtime is handled by WS; skip Laravel broadcast
 
         return ['success' => true, 'message' => 'Reaction removed successfully'];
     }
@@ -181,8 +174,7 @@ class MessageService
             'edited_at' => now()->toISOString(),
         ];
 
-        // Broadcast the event
-        broadcast(new \App\Events\MessageEdited($payload))->toOthers();
+        // Realtime is handled by WS; skip Laravel broadcast
 
         return ['success' => true, 'message' => 'Message updated successfully', 'data' => $payload];
     }
@@ -208,7 +200,7 @@ class MessageService
             'user_id' => (string) $userId,
             'deleted_at' => now()->toISOString(),
         ];
-        broadcast(new \App\Events\MessageEdited($payload))->toOthers();
+        // Realtime is handled by WS; skip Laravel broadcast
         return ['success' => true, 'message' => 'Message deleted successfully'];
     }
 

@@ -9,12 +9,8 @@ export interface UserStatus {
   timestamp: string
 }
 
-export interface TypingEvent {
-  roomId: string
-  userId: string
-  userName: string
-  timestamp: string
-}
+// Typing events moved to WebSocket; keep types minimal if needed elsewhere
+export interface TypingEvent {}
 
 export interface OnlineUser {
   id: string
@@ -40,27 +36,7 @@ export const userStatusService = {
     }
   },
 
-  // Start typing
-  startTyping: async (roomId: string = '1'): Promise<TypingEvent> => {
-    // Note: Typing events not implemented in apiService yet
-    return {
-      roomId,
-      userId: 'current-user',
-      userName: 'Current User',
-      timestamp: new Date().toISOString()
-    }
-  },
-
-  // Stop typing
-  stopTyping: async (roomId: string = '1'): Promise<TypingEvent> => {
-    // Note: Typing events not implemented in apiService yet
-    return {
-      roomId,
-      userId: 'current-user',
-      userName: 'Current User',
-      timestamp: new Date().toISOString()
-    }
-  },
+  // Typing moved to WebSocket in MessageInput
 
   // Get online users
   getOnlineUsers: async (): Promise<OnlineUser[]> => {

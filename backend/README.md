@@ -64,3 +64,24 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## Docker services
+
+- app: PHP + WebSocket (Ratchet)
+  - Port: 7001 (WS)
+- nginx: HTTP reverse proxy for Laravel
+  - Port: 8000 (HTTP)
+- db: MySQL 8
+  - Port: 3306
+- redis: Redis 7
+  - Port: 6379
+- phpmyadmin: Database admin UI
+  - Port: 8080
+
+Khởi động nhanh:
+
+```
+docker compose -f backend/docker-compose.yml up -d --build
+```
+
+WebSocket URL mặc định cho frontend: `ws://localhost:7001` (có thể cấu hình qua biến môi trường `NEXT_PUBLIC_WS_URL`).
