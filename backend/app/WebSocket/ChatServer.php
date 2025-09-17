@@ -267,6 +267,39 @@ class ChatServer implements MessageComponentInterface
                 $from->send(json_encode(['type' => 'message_sent', 'conversation_id' => $targetCid], JSON_UNESCAPED_UNICODE));
                 break;
 
+            // === READ RECEIPT ===
+            case 'message_read':
+                $cid = (int)($payload['conversation_id'] ?? 0);
+                $messageId = isset($payload['message_id']) ? (int)$payload['message_id'] : 0;
+                $readerId = isset($payload['user_id']) ? (int)$payload['user_id'] : null;
+                if ($cid <= 0 || $messageId <= 0 || $readerId === null) { break; }
+                
+                // Update MessageRead table
+                try {
+                    \App\Models\MessageRead::markAsRead($messageId, $readerId);
+                } catch (\Throwable $e) {
+                    Log::error('[WS] message_read_update_failed', [
+                        'message_id' => $messageId,
+                        'user_id' => $readerId,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+                
+                $event = [
+                    'type' => 'message_read',
+                    'conversation_id' => $cid,
+                    'message_id' => $messageId,
+                    'user_id' => $readerId,
+                    'timestamp' => gmdate('c'),
+                ];
+                $clients = $this->clientsByConversation[$cid] ?? null;
+                if ($clients instanceof SplObjectStorage) {
+                    foreach ($clients as $c) {
+                        $c->send(json_encode($event, JSON_UNESCAPED_UNICODE));
+                    }
+                }
+                break;
+
             // === TYPING ===
             case 'typing_start':
             case 'typing_stop':

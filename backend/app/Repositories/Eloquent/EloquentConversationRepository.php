@@ -261,17 +261,8 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
 
     private function getUnreadCount(int $conversationId, int $userId): int
     {
-        $lastRead = ConversationMember::where('conversation_id', $conversationId)
-            ->where('user_id', $userId)
-            ->value('last_read_at');
-
-        if (!$lastRead) {
-            return Message::where('conversation_id', $conversationId)->count();
-        }
-
-        return Message::where('conversation_id', $conversationId)
-            ->where('created_at', '>', $lastRead)
-            ->count();
+        // Use MessageRead model to get unread count for this user and conversation
+        return \App\Models\MessageRead::getUnreadCount($conversationId, $userId);
     }
 
     private function findDirectConversation(int $userId1, int $userId2): ?array

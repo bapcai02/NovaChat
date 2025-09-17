@@ -68,10 +68,12 @@ const MessageBubble = ({
   const currentUserId = currentUser?.id;
   const isOwn = String(currentUserId) === String(messageUserId);
   const testIsOwn = isOwn;
+  const isDeleted = Boolean((message as any).is_deleted || (message as any).deleted_at || (message.content || "").trim() === "[deleted]");
   const sender = message.sender ||
     message.user || { name: "Unknown", avatar: undefined };
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editValue, setEditValue] = useState(message.content);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
@@ -110,6 +112,7 @@ const MessageBubble = ({
     if (!editValue.trim()) return;
     await onEditMessage?.(message.id, editValue.trim());
     setIsEditing(false);
+    setIsEditModalOpen(false);
     setIsMenuOpen(false);
   };
 
@@ -196,43 +199,15 @@ const MessageBubble = ({
               : "bg-gray-100 text-gray-800 rounded-bl-md",
           )}
         >
-          {/* Content or editor */}
-          {isEditing ? (
-            <div className="space-y-2">
-              <textarea
-                className={cn(
-                  "w-full text-sm rounded-md border px-2 py-1",
-                  testIsOwn ? "text-gray-900" : "text-gray-900",
-                )}
-                value={editValue}
-                onChange={(e) => setEditValue(e.target.value)}
-                rows={3}
-              />
-              <div className="flex items-center gap-2 justify-end">
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  className="h-7 px-2"
-                  onClick={() => {
-                    setIsEditing(false);
-                    setEditValue(message.content);
-                  }}
-                >
-                  Hủy
-                </Button>
-                <Button size="sm" className="h-7 px-3" onClick={handleEditSave}>
-                  Lưu
-                </Button>
-              </div>
-            </div>
-          ) : (
+          {/* Content */}
+          {
             <p
               className="text-sm whitespace-pre-wrap break-words leading-relaxed"
               dangerouslySetInnerHTML={{
                 __html: renderWithMentions(message.content),
               }}
             />
-          )}
+          }
 
           {/* Thread hint below the message */}
           {((message as any).parent_id ||
@@ -254,8 +229,22 @@ const MessageBubble = ({
             </div>
           )}
 
-          {/* Message actions - shown on hover */}
-          <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1 bg-white border border-gray-300 rounded-lg px-3 py-2 shadow-lg z-10 pointer-events-none group-hover:pointer-events-auto">
+          {/* Message actions - shown on hover (flip outward by side) */}
+          <div
+            className={cn(
+              "absolute top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1 bg-white border border-gray-200 rounded-lg px-2.5 py-1.5 shadow-xl z-10 pointer-events-none group-hover:pointer-events-auto backdrop-blur-sm",
+              testIsOwn ? "right-full mr-2" : "left-full ml-2",
+            )}
+          >
+            {/* caret */}
+            <span
+              className={cn(
+                "absolute w-0 h-0 border-y-8 border-y-transparent",
+                testIsOwn
+                  ? "-right-2 border-l-8 border-l-white drop-shadow"
+                  : "-left-2 border-r-8 border-r-white drop-shadow",
+              )}
+            />
             <Button
               variant="ghost"
               size="sm"
@@ -307,16 +296,24 @@ const MessageBubble = ({
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
                 {isMenuOpen && (
-                  <div className="absolute right-0 top-8 min-w-[140px] bg-white border rounded-md shadow z-20">
-                    <button
-                      className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
-                      onClick={() => {
-                        setIsEditing(true);
-                        setIsMenuOpen(false);
-                      }}
-                    >
-                      Chỉnh sửa
-                    </button>
+                  <div
+                    className={cn(
+                      "absolute top-8 min-w-[140px] bg-white text-gray-800 border rounded-md shadow z-20",
+                      testIsOwn ? "right-0" : "left-0",
+                    )}
+                  >
+                    {!isDeleted && (
+                      <button
+                        className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                        onClick={() => {
+                          setIsEditing(true);
+                          setIsEditModalOpen(true);
+                          setIsMenuOpen(false);
+                        }}
+                      >
+                        Chỉnh sửa
+                      </button>
+                    )}
                     <button
                       className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50"
                       onClick={async () => {
@@ -332,7 +329,14 @@ const MessageBubble = ({
             )}
           </div>
           {showEmojiPicker && (
-            <div ref={emojiPickerRef} className="absolute z-20 mt-2">
+            <div
+              ref={emojiPickerRef}
+              className={cn(
+                "absolute z-20",
+                // place picker outward to avoid covering bubble
+                testIsOwn ? "top-1/2 -translate-y-1/2 right-full mr-2" : "top-1/2 -translate-y-1/2 left-full ml-2",
+              )}
+            >
               <EmojiPicker
                 onEmojiClick={(data: any) => {
                   setShowEmojiPicker(false);
@@ -391,6 +395,45 @@ const MessageBubble = ({
             </>
           )}
         </div>
+
+        {/* Edit Modal (centered, light backdrop) */}
+        {isEditing && isEditModalOpen && (
+          <div className="fixed inset-0 z-[9999] pointer-events-auto">
+            {/* light backdrop */}
+            <div className="absolute inset-0 bg-white/40 backdrop-blur-sm" />
+            <div className="absolute inset-0 flex items-center justify-center p-4">
+              <div className="w-full max-w-md bg-white border border-gray-200 rounded-xl shadow-2xl">
+                <div className="px-4 py-3 border-b border-gray-100">
+                  <h3 className="text-sm font-semibold text-gray-800">Chỉnh sửa tin nhắn</h3>
+                </div>
+                <div className="p-4">
+                  <textarea
+                    className="w-full min-h-[120px] text-sm rounded-md border px-3 py-2 bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:bg-white"
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                  />
+                </div>
+                <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-end gap-2">
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="h-8 px-3"
+                    onClick={() => {
+                      setIsEditing(false);
+                      setIsEditModalOpen(false);
+                      setEditValue(message.content);
+                    }}
+                  >
+                    Hủy
+                  </Button>
+                  <Button size="sm" className="h-8 px-3" onClick={handleEditSave}>
+                    Lưu
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Timestamp for own messages */}
         {testIsOwn && (

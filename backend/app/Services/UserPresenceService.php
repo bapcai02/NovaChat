@@ -185,7 +185,7 @@ class UserPresenceService
             return [
                 'user_id' => $user->id,
                 'is_online' => (bool) $user->is_online,
-                'last_seen_at' => $user->last_seen_at?->toISOString()
+                'last_seen_at' => $user->last_seen_at
             ];
         } catch (\Exception $e) {
             Log::error('Error getting user status', [
@@ -208,7 +208,7 @@ class UserPresenceService
                 return [
                     'user_id' => $user->id,
                     'is_online' => (bool) $user->is_online,
-                    'last_seen_at' => $user->last_seen_at?->toISOString()
+                    'last_seen_at' => $user->last_seen_at
                 ];
             })->toArray();
         } catch (\Exception $e) {

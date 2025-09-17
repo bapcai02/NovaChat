@@ -41,15 +41,9 @@ class MessageRead extends Model
      */
     public static function markAsRead(int $messageId, int $userId): void
     {
-        static::updateOrCreate(
-            [
-                'message_id' => $messageId,
-                'user_id' => $userId,
-            ],
-            [
-                'read_at' => now(),
-            ]
-        );
+        static::where('message_id', $messageId)
+            ->where('user_id', $userId)
+            ->delete();
     }
 
     /**
@@ -57,12 +51,11 @@ class MessageRead extends Model
      */
     public static function markConversationAsRead(int $conversationId, int $userId): void
     {
-        $messageIds = Message::where('conversation_id', $conversationId)
-            ->pluck('id');
-
-        foreach ($messageIds as $messageId) {
-            static::markAsRead($messageId, $userId);
-        }
+        static::whereHas('message', function ($query) use ($conversationId) {
+            $query->where('conversation_id', $conversationId);
+        })
+        ->where('user_id', $userId)
+        ->delete();
     }
 
     /**
@@ -70,12 +63,10 @@ class MessageRead extends Model
      */
     public static function createForNewMessage(int $messageId, int $conversationId, int $senderId): void
     {
-        // Get all members of the conversation except the sender
         $memberIds = ConversationMember::where('conversation_id', $conversationId)
             ->where('user_id', '!=', $senderId)
             ->pluck('user_id');
 
-        // Create read status entries with read_at = null (unread)
         foreach ($memberIds as $memberId) {
             static::create([
                 'message_id' => $messageId,
@@ -94,7 +85,6 @@ class MessageRead extends Model
             $query->where('conversation_id', $conversationId);
         })
         ->where('user_id', $userId)
-        ->whereNull('read_at')
         ->count();
     }
 
@@ -110,7 +100,6 @@ class MessageRead extends Model
         ->from('message_reads as mr')
         ->join('messages as m', 'mr.message_id', '=', 'm.id')
         ->where('mr.user_id', $userId)
-        ->whereNull('mr.read_at')
         ->groupBy('m.conversation_id')
         ->pluck('unread_count', 'conversation_id')
         ->toArray();

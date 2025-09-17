@@ -161,6 +161,22 @@ export function useChat() {
           // Setup WebSocket subscription for new messages
           setupWebSocketSubscription(conversationId);
           setIsMessagesLoaded(true);
+          // Send read receipt for the latest message to reset unread
+          try {
+            const wsClient = getWebSocketClient();
+            if (wsClient.getConnectionState() !== "connected") {
+              wsClient.connect();
+            }
+            const last = messagesArray[messagesArray.length - 1];
+            if (last && currentUser?.id) {
+              wsClient.send({
+                type: "message_read",
+                conversation_id: conversationId,
+                message_id: (last as any).id,
+                user_id: currentUser.id,
+              } as any);
+            }
+          } catch {}
         } else {
           setMessages((prev) => [...messagesArray, ...prev]);
         }
@@ -291,6 +307,12 @@ export function useChat() {
                 return m;
               }),
             );
+            // If current user is the reader, reset unread count for that conversation in sidebar
+            if (readerId && currentUser?.id && readerId === currentUser.id && convId) {
+              setConversations((prev) =>
+                prev.map((conv) => (Number((conv as any).id) === convId ? { ...conv, unread_count: 0 } : conv)),
+              );
+            }
             return;
           }
           // Typing indicators
@@ -924,8 +946,6 @@ export function useChat() {
           conversation.id.toString(),
         );
         const fullConversation = res?.data?.data ?? res?.data ?? res;
-        console.log("Loaded conversation details:", fullConversation);
-        console.log("Members from API:", fullConversation?.members);
         setCurrentConversation(fullConversation);
       } catch (error) {
         console.error("Failed to load conversation details:", error);
