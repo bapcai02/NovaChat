@@ -66,45 +66,45 @@
   body {
     @apply bg-background text-foreground;
   }
-  
+
   /* Use light mode by default */
   html {
     @apply light;
   }
-  
+
   /* Smooth transitions for theme switching */
   * {
-    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+    transition:
+      background-color 0.3s ease,
+      border-color 0.3s ease,
+      color 0.3s ease;
   }
-  
+
   /* Ensure chat container fits properly */
-html, body {
-  height: 100%;
-  overflow: hidden;
-}
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+  }
 
-#__next {
-  height: 100%;
-}
+  #__next {
+    height: 100%;
+  }
 
-
-  
-
-  
   /* Custom scrollbar styles */
   .scrollbar-thin::-webkit-scrollbar {
     width: 6px;
   }
-  
+
   .scrollbar-thin::-webkit-scrollbar-track {
     background: transparent;
   }
-  
+
   .scrollbar-thin::-webkit-scrollbar-thumb {
     background: hsl(var(--chat-border));
     border-radius: 3px;
   }
-  
+
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
     background: hsl(var(--chat-text-muted));
   }
@@ -115,40 +115,40 @@ html, body {
   .chat-sidebar {
     @apply bg-[hsl(var(--chat-sidebar))] border-r border-[hsl(var(--chat-border))];
   }
-  
+
   .chat-message {
     @apply bg-[hsl(var(--chat-message-bg))] hover:bg-[hsl(var(--chat-message-hover))] transition-colors duration-200;
   }
-  
+
   .chat-input {
     @apply bg-[hsl(var(--chat-input-bg))] border border-[hsl(var(--chat-border))] focus:border-[hsl(var(--chat-accent))] focus:ring-2 focus:ring-[hsl(var(--chat-accent-light))];
   }
-  
+
   .chat-button {
     @apply bg-[hsl(var(--chat-accent))] hover:bg-[hsl(var(--chat-accent)/0.9)] text-white transition-all duration-200;
   }
-  
+
   .chat-button-secondary {
     @apply bg-[hsl(var(--chat-sidebar))] hover:bg-[hsl(var(--chat-message-hover))] border border-[hsl(var(--chat-border))] text-[hsl(var(--chat-text))] transition-all duration-200;
   }
-  
+
   /* Default avatar styles */
   .avatar-default {
     @apply bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold;
   }
-  
+
   .avatar-default-sm {
     @apply from-green-500 to-blue-600;
   }
-  
+
   .avatar-default-md {
     @apply from-purple-500 to-pink-600;
   }
-  
+
   .avatar-default-lg {
     @apply from-orange-500 to-red-600;
   }
-  
+
   .avatar-default-xl {
     @apply from-teal-500 to-cyan-600;
   }
@@ -174,7 +174,10 @@ html, body {
 
 /* Smooth transitions */
 * {
-  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
 }
 
 /* Message animations */
@@ -195,7 +198,9 @@ html, body {
 
 /* Typing indicator */
 @keyframes typing {
-  0%, 60%, 100% {
+  0%,
+  60%,
+  100% {
     transform: translateY(0);
   }
   30% {
@@ -207,8 +212,12 @@ html, body {
   animation: typing 1.4s infinite ease-in-out;
 }
 
-.typing-dot:nth-child(1) { animation-delay: -0.32s; }
-.typing-dot:nth-child(2) { animation-delay: -0.16s; }
+.typing-dot:nth-child(1) {
+  animation-delay: -0.32s;
+}
+.typing-dot:nth-child(2) {
+  animation-delay: -0.16s;
+}
 
 /* Force light background */
 html.light {
@@ -236,7 +245,9 @@ html.light body {
 
 /* Typing animation */
 @keyframes typing-bounce {
-  0%, 80%, 100% {
+  0%,
+  80%,
+  100% {
     transform: scale(0);
   }
   40% {

@@ -1,23 +1,23 @@
-"use client"
+"use client";
 
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { useAuth } from '@/contexts/AuthContext'
-import { AuthGuard } from '@/components/auth/AuthGuard'
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import { AuthGuard } from "@/components/auth/AuthGuard";
 
 export default function Home() {
-  const router = useRouter()
-  const { isAuthenticated, isLoading } = useAuth()
+  const router = useRouter();
+  const { isAuthenticated, isLoading } = useAuth();
 
   useEffect(() => {
     if (!isLoading) {
       if (isAuthenticated) {
-        router.push('/chat')
+        router.push("/chat");
       } else {
-        router.push('/login')
+        router.push("/login");
       }
     }
-  }, [isAuthenticated, isLoading, router])
+  }, [isAuthenticated, isLoading, router]);
 
   return (
     <AuthGuard requireAuth={false}>
@@ -28,5 +28,5 @@ export default function Home() {
         </div>
       </div>
     </AuthGuard>
-  )
+  );
 }

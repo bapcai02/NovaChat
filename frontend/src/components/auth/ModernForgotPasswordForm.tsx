@@ -1,25 +1,26 @@
-"use client"
+"use client";
 
-import React, { useState } from 'react'
-import { motion } from 'framer-motion'
-import { 
-  Mail, 
-  ArrowLeft, 
-  CheckCircle,
-  Loader2
-} from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { cn } from '@/lib/utils'
+import React, { useState } from "react";
+import { motion } from "framer-motion";
+import { Mail, ArrowLeft, CheckCircle, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 interface ForgotPasswordFormProps {
-  onSubmit: (email: string) => void
-  onBackToLogin: () => void
-  isLoading?: boolean
-  error?: string
-  success?: boolean
+  onSubmit: (email: string) => void;
+  onBackToLogin: () => void;
+  isLoading?: boolean;
+  error?: string;
+  success?: boolean;
 }
 
 export default function ModernForgotPasswordForm({
@@ -27,38 +28,38 @@ export default function ModernForgotPasswordForm({
   onBackToLogin,
   isLoading = false,
   error,
-  success = false
+  success = false,
 }: ForgotPasswordFormProps) {
-  const [email, setEmail] = useState('')
-  const [emailError, setEmailError] = useState('')
+  const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
-    setEmail(value)
-    
+    const value = e.target.value;
+    setEmail(value);
+
     // Clear error when user starts typing
     if (emailError) {
-      setEmailError('')
+      setEmailError("");
     }
-  }
+  };
 
   const validateEmail = () => {
     if (!email) {
-      setEmailError('Email is required')
-      return false
+      setEmailError("Email is required");
+      return false;
     } else if (!/\S+@\S+\.\S+/.test(email)) {
-      setEmailError('Please enter a valid email')
-      return false
+      setEmailError("Please enter a valid email");
+      return false;
     }
-    return true
-  }
+    return true;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (validateEmail()) {
-      onSubmit(email)
+      onSubmit(email);
     }
-  }
+  };
 
   if (success) {
     return (
@@ -79,8 +80,12 @@ export default function ModernForgotPasswordForm({
             >
               <CheckCircle className="h-8 w-8 text-gray-800" />
             </motion.div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">Check your email</h1>
-            <p className="text-slate-400">We've sent a password reset link to your email</p>
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">
+              Check your email
+            </h1>
+            <p className="text-slate-400">
+              We've sent a password reset link to your email
+            </p>
           </div>
 
           {/* Success Card */}
@@ -90,11 +95,14 @@ export default function ModernForgotPasswordForm({
                 <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto">
                   <CheckCircle className="h-8 w-8 text-green-400" />
                 </div>
-                
+
                 <div className="space-y-2">
-                  <h3 className="text-xl font-semibold text-gray-800">Email sent successfully!</h3>
+                  <h3 className="text-xl font-semibold text-gray-800">
+                    Email sent successfully!
+                  </h3>
                   <p className="text-slate-300">
-                    We've sent a password reset link to <span className="font-medium text-blue-400">{email}</span>
+                    We've sent a password reset link to{" "}
+                    <span className="font-medium text-blue-400">{email}</span>
                   </p>
                 </div>
 
@@ -112,7 +120,7 @@ export default function ModernForgotPasswordForm({
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Back to login
                   </Button>
-                  
+
                   <Button
                     variant="outline"
                     onClick={() => onSubmit(email)}
@@ -125,7 +133,7 @@ export default function ModernForgotPasswordForm({
                         Resending...
                       </>
                     ) : (
-                      'Resend email'
+                      "Resend email"
                     )}
                   </Button>
                 </div>
@@ -134,7 +142,7 @@ export default function ModernForgotPasswordForm({
           </Card>
         </motion.div>
       </div>
-    )
+    );
   }
 
   return (
@@ -155,23 +163,33 @@ export default function ModernForgotPasswordForm({
           >
             <span className="text-2xl font-bold text-gray-800">N</span>
           </motion.div>
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Forgot password?</h1>
-          <p className="text-slate-400">No worries, we'll send you reset instructions</p>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">
+            Forgot password?
+          </h1>
+          <p className="text-slate-400">
+            No worries, we'll send you reset instructions
+          </p>
         </div>
 
         {/* Forgot Password Form */}
         <Card className="backdrop-blur-sm bg-white/10 border-white/20 shadow-2xl">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl text-center text-gray-800">Reset password</CardTitle>
+            <CardTitle className="text-2xl text-center text-gray-800">
+              Reset password
+            </CardTitle>
             <CardDescription className="text-center text-slate-300">
-              Enter your email address and we'll send you a link to reset your password
+              Enter your email address and we'll send you a link to reset your
+              password
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Email Field */}
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium text-slate-200">
+                <Label
+                  htmlFor="email"
+                  className="text-sm font-medium text-slate-200"
+                >
                   Email address
                 </Label>
                 <div className="relative">
@@ -185,7 +203,8 @@ export default function ModernForgotPasswordForm({
                     onChange={handleInputChange}
                     className={cn(
                       "pl-10 bg-white/5 border-white/20 text-gray-800 placeholder:text-slate-400 focus:border-blue-400 focus:ring-blue-400/20",
-                      emailError && "border-red-400 focus:border-red-400 focus:ring-red-400/20"
+                      emailError &&
+                        "border-red-400 focus:border-red-400 focus:ring-red-400/20",
                     )}
                     disabled={isLoading}
                   />
@@ -224,7 +243,7 @@ export default function ModernForgotPasswordForm({
                     Sending...
                   </>
                 ) : (
-                  'Send reset link'
+                  "Send reset link"
                 )}
               </Button>
             </form>
@@ -245,7 +264,7 @@ export default function ModernForgotPasswordForm({
             {/* Help Text */}
             <div className="text-center">
               <p className="text-xs text-slate-500">
-                Remember your password?{' '}
+                Remember your password?{" "}
                 <Button
                   variant="link"
                   className="text-blue-400 hover:text-blue-300 p-0 text-xs"
@@ -260,5 +279,5 @@ export default function ModernForgotPasswordForm({
         </Card>
       </motion.div>
     </div>
-  )
+  );
 }

@@ -1,75 +1,80 @@
-"use client"
+"use client";
 
-import React, { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { X, Hash } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { useTranslation } from 'react-i18next'
-import { apiService } from '@/services/api'
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { X, Hash } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useTranslation } from "react-i18next";
+import { apiService } from "@/services/api";
 
 interface CreateChannelModalProps {
-  isOpen: boolean
-  onClose: () => void
-  onChannelCreated?: (channel: any) => void
-  teams?: any[]
+  isOpen: boolean;
+  onClose: () => void;
+  onChannelCreated?: (channel: any) => void;
+  teams?: any[];
 }
 
-export default function CreateChannelModal({ isOpen, onClose, onChannelCreated, teams = [] }: CreateChannelModalProps) {
-  const { t } = useTranslation('common')
-  const [isLoading, setIsLoading] = useState(false)
-  const [currentStep, setCurrentStep] = useState(1) // 1: Basic info, 2: Add members
+export default function CreateChannelModal({
+  isOpen,
+  onClose,
+  onChannelCreated,
+  teams = [],
+}: CreateChannelModalProps) {
+  const { t } = useTranslation("common");
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
-    description: '',
+    name: "",
+    description: "",
     is_private: false,
-    team_id: ''
-  })
-  const [searchQuery, setSearchQuery] = useState('')
-  const [users, setUsers] = useState<any[]>([])
-  const [selectedUsers, setSelectedUsers] = useState<any[]>([])
-
-  // Load teams when modal opens
-  useEffect(() => {
-    if (isOpen && teams.length === 0) {
-      // TODO: Load teams if not provided
-    }
-  }, [isOpen, teams])
+    team_id: "",
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!formData.name.trim() || !formData.team_id) return
+    e.preventDefault();
+    if (!formData.name.trim() || !formData.team_id) return;
 
-    setIsLoading(true)
+    setIsLoading(true);
     try {
       const response = await apiService.createChannel(formData.team_id, {
         name: formData.name.trim(),
         description: formData.description.trim() || undefined,
-        is_private: formData.is_private
-      })
+        is_private: formData.is_private,
+      });
 
       if (response?.data?.data) {
-        onChannelCreated?.(response.data.data)
-        onClose()
-        setFormData({ name: '', description: '', is_private: false, team_id: '' })
+        onChannelCreated?.(response.data.data);
+        onClose();
+        setFormData({
+          name: "",
+          description: "",
+          is_private: false,
+          team_id: "",
+        });
       }
     } catch (error) {
-      console.error('Failed to create channel:', error)
-      alert('Có lỗi xảy ra khi tạo kênh')
+      console.error("Failed to create channel:", error);
+      alert("Có lỗi xảy ra khi tạo kênh");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleInputChange = (field: string, value: string | boolean) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
-  }
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   return (
     <AnimatePresence>
@@ -97,7 +102,9 @@ export default function CreateChannelModal({ isOpen, onClose, onChannelCreated, 
                 <Hash className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-gray-900">{t('create_channel')}</h2>
+                <h2 className="text-lg font-semibold text-gray-900">
+                  {t("create_channel")}
+                </h2>
                 <p className="text-sm text-gray-500">Tạo kênh mới trong nhóm</p>
               </div>
             </div>
@@ -115,7 +122,7 @@ export default function CreateChannelModal({ isOpen, onClose, onChannelCreated, 
               <Label htmlFor="team">Nhóm *</Label>
               <Select
                 value={formData.team_id}
-                onValueChange={(value) => handleInputChange('team_id', value)}
+                onValueChange={(value) => handleInputChange("team_id", value)}
                 disabled={isLoading}
               >
                 <SelectTrigger>
@@ -132,11 +139,11 @@ export default function CreateChannelModal({ isOpen, onClose, onChannelCreated, 
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="name">{t('name')} *</Label>
+              <Label htmlFor="name">{t("name")} *</Label>
               <Input
                 id="name"
                 value={formData.name}
-                onChange={(e) => handleInputChange('name', e.target.value)}
+                onChange={(e) => handleInputChange("name", e.target.value)}
                 placeholder="Tên kênh"
                 required
                 disabled={isLoading}
@@ -148,7 +155,9 @@ export default function CreateChannelModal({ isOpen, onClose, onChannelCreated, 
               <Textarea
                 id="description"
                 value={formData.description}
-                onChange={(e) => handleInputChange('description', e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("description", e.target.value)
+                }
                 placeholder="Mô tả về kênh (tùy chọn)"
                 rows={3}
                 disabled={isLoading}
@@ -158,12 +167,16 @@ export default function CreateChannelModal({ isOpen, onClose, onChannelCreated, 
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <Label htmlFor="private">Kênh riêng tư</Label>
-                <p className="text-xs text-gray-500">Chỉ thành viên được mời mới có thể tham gia</p>
+                <p className="text-xs text-gray-500">
+                  Chỉ thành viên được mời mới có thể tham gia
+                </p>
               </div>
               <Switch
                 id="private"
                 checked={formData.is_private}
-                onCheckedChange={(checked) => handleInputChange('is_private', checked)}
+                onCheckedChange={(checked) =>
+                  handleInputChange("is_private", checked)
+                }
                 disabled={isLoading}
               />
             </div>
@@ -181,15 +194,17 @@ export default function CreateChannelModal({ isOpen, onClose, onChannelCreated, 
               </Button>
               <Button
                 type="submit"
-                disabled={isLoading || !formData.name.trim() || !formData.team_id}
+                disabled={
+                  isLoading || !formData.name.trim() || !formData.team_id
+                }
                 className="flex-1 bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700"
               >
-                {isLoading ? 'Đang tạo...' : 'Tạo kênh'}
+                {isLoading ? "Đang tạo..." : "Tạo kênh"}
               </Button>
             </div>
           </form>
         </motion.div>
       </div>
     </AnimatePresence>
-  )
+  );
 }

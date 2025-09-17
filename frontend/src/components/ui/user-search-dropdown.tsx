@@ -1,18 +1,21 @@
-"use client"
+"use client";
 
-import React, { useState, useEffect, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { User, Loader2 } from 'lucide-react'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { userSearchService, UserSearchResult } from '@/services/userSearchService'
-import { cn } from '@/lib/utils'
+import React, { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { User, Loader2 } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  userSearchService,
+  UserSearchResult,
+} from "@/services/userSearchService";
+import { cn } from "@/lib/utils";
 
 interface UserSearchDropdownProps {
-  isOpen: boolean
-  onClose: () => void
-  onUserSelect: (user: UserSearchResult) => void
-  searchQuery: string
-  className?: string
+  isOpen: boolean;
+  onClose: () => void;
+  onUserSelect: (user: UserSearchResult) => void;
+  searchQuery: string;
+  className?: string;
 }
 
 export function UserSearchDropdown({
@@ -20,86 +23,89 @@ export function UserSearchDropdown({
   onClose,
   onUserSelect,
   searchQuery,
-  className
+  className,
 }: UserSearchDropdownProps) {
-  const [users, setUsers] = useState<UserSearchResult[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [selectedIndex, setSelectedIndex] = useState(-1)
-  const dropdownRef = useRef<HTMLDivElement>(null)
+  const [users, setUsers] = useState<UserSearchResult[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!isOpen || !searchQuery.trim()) {
-      setUsers([])
-      return
+      setUsers([]);
+      return;
     }
 
     const searchUsers = async () => {
-      setIsLoading(true)
+      setIsLoading(true);
       try {
-        const results = await userSearchService.searchUsers(searchQuery)
-        setUsers(results)
-        setSelectedIndex(-1)
+        const results = await userSearchService.searchUsers(searchQuery);
+        setUsers(results);
+        setSelectedIndex(-1);
       } catch (error) {
-        console.error('Failed to search users:', error)
-        setUsers([])
+        console.error("Failed to search users:", error);
+        setUsers([]);
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
-    const timeoutId = setTimeout(searchUsers, 300) // Debounce search
-    return () => clearTimeout(timeoutId)
-  }, [searchQuery, isOpen])
+    const timeoutId = setTimeout(searchUsers, 300); // Debounce search
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery, isOpen]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        onClose()
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        onClose();
       }
-    }
+    };
 
     if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside)
+      document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [isOpen, onClose])
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen, onClose]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (!isOpen) return
+    if (!isOpen) return;
 
     switch (e.key) {
-      case 'ArrowDown':
-        e.preventDefault()
-        setSelectedIndex(prev => Math.min(prev + 1, users.length - 1))
-        break
-      case 'ArrowUp':
-        e.preventDefault()
-        setSelectedIndex(prev => Math.max(prev - 1, -1))
-        break
-      case 'Enter':
-        e.preventDefault()
+      case "ArrowDown":
+        e.preventDefault();
+        setSelectedIndex((prev) => Math.min(prev + 1, users.length - 1));
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        setSelectedIndex((prev) => Math.max(prev - 1, -1));
+        break;
+      case "Enter":
+        e.preventDefault();
         if (selectedIndex >= 0 && users[selectedIndex]) {
-          onUserSelect(users[selectedIndex])
+          onUserSelect(users[selectedIndex]);
         }
-        break
-      case 'Escape':
-        e.preventDefault()
-        onClose()
-        break
+        break;
+      case "Escape":
+        e.preventDefault();
+        onClose();
+        break;
     }
-  }
+  };
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   return (
     <div
       ref={dropdownRef}
       className={cn(
         "absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto",
-        className
+        className,
       )}
       onKeyDown={handleKeyDown}
     >
@@ -112,7 +118,9 @@ export function UserSearchDropdown({
             className="flex items-center justify-center p-4"
           >
             <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Searching users...</span>
+            <span className="ml-2 text-sm text-gray-500">
+              Searching users...
+            </span>
           </motion.div>
         ) : users.length > 0 ? (
           <motion.div
@@ -129,7 +137,7 @@ export function UserSearchDropdown({
                 transition={{ delay: index * 0.05 }}
                 className={cn(
                   "w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-50 transition-colors",
-                  selectedIndex === index && "bg-blue-50"
+                  selectedIndex === index && "bg-blue-50",
                 )}
                 onClick={() => onUserSelect(user)}
                 onMouseEnter={() => setSelectedIndex(index)}
@@ -144,7 +152,7 @@ export function UserSearchDropdown({
                   <div
                     className={cn(
                       "absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white",
-                      user.status === 'online' ? 'bg-green-500' : 'bg-gray-400'
+                      user.status === "online" ? "bg-green-500" : "bg-gray-400",
                     )}
                   />
                 </div>
@@ -153,7 +161,7 @@ export function UserSearchDropdown({
                     {user.name}
                   </p>
                   <p className="text-xs text-gray-500">
-                    {user.status === 'online' ? 'Online' : 'Offline'}
+                    {user.status === "online" ? "Online" : "Offline"}
                   </p>
                 </div>
               </motion.button>
@@ -172,5 +180,5 @@ export function UserSearchDropdown({
         ) : null}
       </AnimatePresence>
     </div>
-  )
+  );
 }

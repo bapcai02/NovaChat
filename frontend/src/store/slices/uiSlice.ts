@@ -1,233 +1,243 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 // UI state interface
 interface UIState {
   // Theme
-  theme: 'light' | 'dark'
-  
-  
+  theme: "light" | "dark";
+
   // Modal states
-  isCreateChannelModalOpen: boolean
-  isCreateDirectMessageModalOpen: boolean
-  isSearchModalOpen: boolean
-  isMessageAnalyticsModalOpen: boolean
-  isVoiceRecorderModalOpen: boolean
-  
+  isCreateChannelModalOpen: boolean;
+  isCreateDirectMessageModalOpen: boolean;
+  isSearchModalOpen: boolean;
+  isMessageAnalyticsModalOpen: boolean;
+  isVoiceRecorderModalOpen: boolean;
+
   // Chat states
-  selectedThread: number | null
-  isTyping: boolean
-  typingUsers: string[]
-  
+  selectedThread: number | null;
+  isTyping: boolean;
+  typingUsers: string[];
+
   // Notifications
-  notifications: Notification[]
-  unreadCount: number
-  
+  notifications: Notification[];
+  unreadCount: number;
+
   // Loading states
-  isLoading: boolean
-  loadingMessage: string
-  
+  isLoading: boolean;
+  loadingMessage: string;
+
   // Error states
-  error: string | null
-  showError: boolean
+  error: string | null;
+  showError: boolean;
 }
 
 // Notification interface
 interface Notification {
-  id: string
-  type: 'success' | 'error' | 'warning' | 'info'
-  title: string
-  message: string
-  timestamp: number
-  read: boolean
+  id: string;
+  type: "success" | "error" | "warning" | "info";
+  title: string;
+  message: string;
+  timestamp: number;
+  read: boolean;
 }
 
 // Initial state
 const initialState: UIState = {
   // Theme
-  theme: typeof window !== 'undefined' ? (localStorage.getItem('theme') as 'light' | 'dark') || 'dark' : 'dark',
-  
-  
+  theme:
+    typeof window !== "undefined"
+      ? (localStorage.getItem("theme") as "light" | "dark") || "dark"
+      : "dark",
+
   // Modal states
   isCreateChannelModalOpen: false,
   isCreateDirectMessageModalOpen: false,
   isSearchModalOpen: false,
   isMessageAnalyticsModalOpen: false,
   isVoiceRecorderModalOpen: false,
-  
+
   // Chat states
   selectedThread: null,
   isTyping: false,
   typingUsers: [],
-  
+
   // Notifications
   notifications: [],
   unreadCount: 0,
-  
+
   // Loading states
   isLoading: false,
-  loadingMessage: '',
-  
+  loadingMessage: "",
+
   // Error states
   error: null,
   showError: false,
-}
+};
 
 // UI slice
 const uiSlice = createSlice({
-  name: 'ui',
+  name: "ui",
   initialState,
   reducers: {
     // Theme actions
-    setTheme: (state, action: PayloadAction<'light' | 'dark'>) => {
-      state.theme = action.payload
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('theme', action.payload)
+    setTheme: (state, action: PayloadAction<"light" | "dark">) => {
+      state.theme = action.payload;
+      if (typeof window !== "undefined") {
+        localStorage.setItem("theme", action.payload);
       }
     },
     toggleTheme: (state) => {
-      state.theme = state.theme === 'light' ? 'dark' : 'light'
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('theme', state.theme)
+      state.theme = state.theme === "light" ? "dark" : "light";
+      if (typeof window !== "undefined") {
+        localStorage.setItem("theme", state.theme);
       }
     },
-    
-    
+
     // Modal actions
     openCreateChannelModal: (state) => {
-      state.isCreateChannelModalOpen = true
+      state.isCreateChannelModalOpen = true;
     },
     closeCreateChannelModal: (state) => {
-      state.isCreateChannelModalOpen = false
+      state.isCreateChannelModalOpen = false;
     },
     openCreateDirectMessageModal: (state) => {
-      state.isCreateDirectMessageModalOpen = true
+      state.isCreateDirectMessageModalOpen = true;
     },
     closeCreateDirectMessageModal: (state) => {
-      state.isCreateDirectMessageModalOpen = false
+      state.isCreateDirectMessageModalOpen = false;
     },
     openSearchModal: (state) => {
-      state.isSearchModalOpen = true
+      state.isSearchModalOpen = true;
     },
     closeSearchModal: (state) => {
-      state.isSearchModalOpen = false
+      state.isSearchModalOpen = false;
     },
     openKeyboardShortcutsModal: (state) => {
-      state.isKeyboardShortcutsModalOpen = true
+      state.isKeyboardShortcutsModalOpen = true;
     },
     closeKeyboardShortcutsModal: (state) => {
-      state.isKeyboardShortcutsModalOpen = false
+      state.isKeyboardShortcutsModalOpen = false;
     },
     openMessageAnalyticsModal: (state) => {
-      state.isMessageAnalyticsModalOpen = true
+      state.isMessageAnalyticsModalOpen = true;
     },
     closeMessageAnalyticsModal: (state) => {
-      state.isMessageAnalyticsModalOpen = false
+      state.isMessageAnalyticsModalOpen = false;
     },
     openVoiceRecorderModal: (state) => {
-      state.isVoiceRecorderModalOpen = true
+      state.isVoiceRecorderModalOpen = true;
     },
     closeVoiceRecorderModal: (state) => {
-      state.isVoiceRecorderModalOpen = false
+      state.isVoiceRecorderModalOpen = false;
     },
     openThemeManagerModal: (state) => {
-      state.isThemeManagerModalOpen = true
+      state.isThemeManagerModalOpen = true;
     },
     closeThemeManagerModal: (state) => {
-      state.isThemeManagerModalOpen = false
+      state.isThemeManagerModalOpen = false;
     },
     openThemeCustomizerModal: (state) => {
-      state.isThemeCustomizerModalOpen = true
+      state.isThemeCustomizerModalOpen = true;
     },
     closeThemeCustomizerModal: (state) => {
-      state.isThemeCustomizerModalOpen = false
+      state.isThemeCustomizerModalOpen = false;
     },
-    
+
     // Chat actions
     setSelectedThread: (state, action: PayloadAction<number | null>) => {
-      state.selectedThread = action.payload
+      state.selectedThread = action.payload;
     },
     setTyping: (state, action: PayloadAction<boolean>) => {
-      state.isTyping = action.payload
+      state.isTyping = action.payload;
     },
     addTypingUser: (state, action: PayloadAction<string>) => {
       if (!state.typingUsers.includes(action.payload)) {
-        state.typingUsers.push(action.payload)
+        state.typingUsers.push(action.payload);
       }
     },
     removeTypingUser: (state, action: PayloadAction<string>) => {
-      state.typingUsers = state.typingUsers.filter(user => user !== action.payload)
+      state.typingUsers = state.typingUsers.filter(
+        (user) => user !== action.payload,
+      );
     },
     clearTypingUsers: (state) => {
-      state.typingUsers = []
+      state.typingUsers = [];
     },
-    
+
     // Notification actions
-    addNotification: (state, action: PayloadAction<Omit<Notification, 'id' | 'timestamp' | 'read'>>) => {
+    addNotification: (
+      state,
+      action: PayloadAction<Omit<Notification, "id" | "timestamp" | "read">>,
+    ) => {
       const notification: Notification = {
         ...action.payload,
         id: Date.now().toString(),
         timestamp: Date.now(),
         read: false,
-      }
-      state.notifications.unshift(notification)
+      };
+      state.notifications.unshift(notification);
       if (!notification.read) {
-        state.unreadCount += 1
+        state.unreadCount += 1;
       }
     },
     markNotificationAsRead: (state, action: PayloadAction<string>) => {
-      const notification = state.notifications.find(n => n.id === action.payload)
+      const notification = state.notifications.find(
+        (n) => n.id === action.payload,
+      );
       if (notification && !notification.read) {
-        notification.read = true
-        state.unreadCount -= 1
+        notification.read = true;
+        state.unreadCount -= 1;
       }
     },
     markAllNotificationsAsRead: (state) => {
-      state.notifications.forEach(notification => {
-        notification.read = true
-      })
-      state.unreadCount = 0
+      state.notifications.forEach((notification) => {
+        notification.read = true;
+      });
+      state.unreadCount = 0;
     },
     removeNotification: (state, action: PayloadAction<string>) => {
-      const notification = state.notifications.find(n => n.id === action.payload)
+      const notification = state.notifications.find(
+        (n) => n.id === action.payload,
+      );
       if (notification && !notification.read) {
-        state.unreadCount -= 1
+        state.unreadCount -= 1;
       }
-      state.notifications = state.notifications.filter(n => n.id !== action.payload)
+      state.notifications = state.notifications.filter(
+        (n) => n.id !== action.payload,
+      );
     },
     clearNotifications: (state) => {
-      state.notifications = []
-      state.unreadCount = 0
+      state.notifications = [];
+      state.unreadCount = 0;
     },
-    
+
     // Loading actions
     setLoading: (state, action: PayloadAction<boolean>) => {
-      state.isLoading = action.payload
+      state.isLoading = action.payload;
     },
     setLoadingMessage: (state, action: PayloadAction<string>) => {
-      state.loadingMessage = action.payload
+      state.loadingMessage = action.payload;
     },
-    
+
     // Error actions
     setError: (state, action: PayloadAction<string | null>) => {
-      state.error = action.payload
-      state.showError = !!action.payload
+      state.error = action.payload;
+      state.showError = !!action.payload;
     },
     clearError: (state) => {
-      state.error = null
-      state.showError = false
+      state.error = null;
+      state.showError = false;
     },
     setShowError: (state, action: PayloadAction<boolean>) => {
-      state.showError = action.payload
+      state.showError = action.payload;
     },
   },
-})
+});
 
 export const {
   // Theme
   setTheme,
   toggleTheme,
-  
-  
+
   // Modals
   openCreateChannelModal,
   closeCreateChannelModal,
@@ -245,29 +255,29 @@ export const {
   closeThemeManagerModal,
   openThemeCustomizerModal,
   closeThemeCustomizerModal,
-  
+
   // Chat
   setSelectedThread,
   setTyping,
   addTypingUser,
   removeTypingUser,
   clearTypingUsers,
-  
+
   // Notifications
   addNotification,
   markNotificationAsRead,
   markAllNotificationsAsRead,
   removeNotification,
   clearNotifications,
-  
+
   // Loading
   setLoading,
   setLoadingMessage,
-  
+
   // Error
   setError,
   clearError,
   setShowError,
-} = uiSlice.actions
+} = uiSlice.actions;
 
-export default uiSlice.reducer
+export default uiSlice.reducer;

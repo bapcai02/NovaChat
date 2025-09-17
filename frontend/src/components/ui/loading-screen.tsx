@@ -1,27 +1,38 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { cn } from "@/lib/utils"
+import * as React from "react";
+import { cn } from "@/lib/utils";
 
 interface LoadingScreenProps {
-  className?: string
+  className?: string;
 }
 
 export const LoadingScreen: React.FC<LoadingScreenProps> = ({ className }) => {
   return (
-    <div className={cn("h-screen w-screen flex bg-[hsl(222.2_84%_4.9%)] text-[hsl(210_40%_98%)]", className)}>
+    <div
+      className={cn(
+        "h-screen w-screen flex bg-[hsl(222.2_84%_4.9%)] text-[hsl(210_40%_98%)]",
+        className,
+      )}
+    >
       {/* Left sidebar skeleton */}
       <div className="w-56 flex-shrink-0 bg-[hsl(217.2_32.6%_17.5%)] border-r border-[hsl(var(--chat-border))] p-3 space-y-3">
         <div className="h-6 w-28 rounded bg-[hsl(var(--chat-message-hover))] animate-pulse" />
         <div className="space-y-2">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-6 rounded bg-[hsl(var(--chat-message-hover))] animate-pulse" />
+            <div
+              key={i}
+              className="h-6 rounded bg-[hsl(var(--chat-message-hover))] animate-pulse"
+            />
           ))}
         </div>
         <div className="h-4 w-20 rounded bg-[hsl(var(--chat-message-hover))] animate-pulse" />
         <div className="space-y-2">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-6 rounded bg-[hsl(var(--chat-message-hover))] animate-pulse" />
+            <div
+              key={i}
+              className="h-6 rounded bg-[hsl(var(--chat-message-hover))] animate-pulse"
+            />
           ))}
         </div>
       </div>
@@ -57,14 +68,15 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ className }) => {
         <div className="space-y-3 w-full">
           <div className="h-6 w-24 rounded bg-[hsl(var(--chat-message-hover))] animate-pulse" />
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="h-8 rounded bg-[hsl(var(--chat-message-hover))] animate-pulse" />
+            <div
+              key={i}
+              className="h-8 rounded bg-[hsl(var(--chat-message-hover))] animate-pulse"
+            />
           ))}
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default LoadingScreen
-
-
+export default LoadingScreen;

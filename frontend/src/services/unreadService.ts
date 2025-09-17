@@ -1,22 +1,22 @@
-import { apiService } from './api'
+import { apiService } from "./api";
 
 export interface UnreadCount {
-  conversation_id: number
-  unread_count: number
-  conversation?: any
+  conversation_id: number;
+  unread_count: number;
+  conversation?: any;
 }
 
 export interface UnreadResponse {
-  success: boolean
-  data: UnreadCount[]
+  success: boolean;
+  data: UnreadCount[];
 }
 
 export interface ConversationUnreadResponse {
-  success: boolean
+  success: boolean;
   data: {
-    conversation_id: number
-    unread_count: number
-  }
+    conversation_id: number;
+    unread_count: number;
+  };
 }
 
 export const unreadService = {
@@ -25,11 +25,11 @@ export const unreadService = {
    */
   async getUnreadCounts(): Promise<UnreadCount[]> {
     try {
-      const response = await apiService.get('/conversations/unread')
-      return response.data.data || []
+      const response = await apiService.get("/conversations/unread");
+      return response.data.data || [];
     } catch (error) {
-      console.error('Failed to fetch unread counts:', error)
-      return []
+      console.error("Failed to fetch unread counts:", error);
+      return [];
     }
   },
 
@@ -39,17 +39,21 @@ export const unreadService = {
   async markConversationAsRead(conversationId: number): Promise<boolean> {
     try {
       // Prefer legacy/likely-available route first
-      const response = await apiService.post(`/conversations/${conversationId}/read`)
-      return response.status >= 200 && response.status < 300
+      const response = await apiService.post(
+        `/conversations/${conversationId}/read`,
+      );
+      return response.status >= 200 && response.status < 300;
     } catch (error) {
-      console.error('Failed to mark conversation as read:', error)
+      console.error("Failed to mark conversation as read:", error);
       // Fallback to alternative route if primary is unavailable
       try {
-        const fallback = await apiService.post(`/conversations/${conversationId}/mark-as-read`)
-        return fallback.status >= 200 && fallback.status < 300
+        const fallback = await apiService.post(
+          `/conversations/${conversationId}/mark-as-read`,
+        );
+        return fallback.status >= 200 && fallback.status < 300;
       } catch (err) {
-        console.error('Failed to mark conversation as read:', err)
-        return false
+        console.error("Failed to mark conversation as read:", err);
+        return false;
       }
     }
   },
@@ -59,11 +63,13 @@ export const unreadService = {
    */
   async getConversationUnreadCount(conversationId: number): Promise<number> {
     try {
-      const response = await apiService.get(`/conversations/${conversationId}/unread`)
-      return response.data.data?.unread_count || 0
+      const response = await apiService.get(
+        `/conversations/${conversationId}/unread`,
+      );
+      return response.data.data?.unread_count || 0;
     } catch (error) {
-      console.error('Failed to fetch conversation unread count:', error)
-      return 0
+      console.error("Failed to fetch conversation unread count:", error);
+      return 0;
     }
-  }
-}
+  },
+};

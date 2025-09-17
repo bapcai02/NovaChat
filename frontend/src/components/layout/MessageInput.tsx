@@ -1,254 +1,295 @@
-"use client"
+"use client";
 
-import React, { useState, useRef, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { EmojiPicker } from '@/components/ui/emoji-picker'
-import { VoiceRecorder } from '@/components/ui/voice-recorder'
-import { TypingIndicator } from '@/components/ui/typing-indicator'
-import { MessageRenderer } from '@/components/ui/message-renderer'
-import { cn } from '@/lib/utils'
-import { useAppSelector } from '@/hooks/useAppSelector'
-import { useAppDispatch } from '@/hooks/useAppDispatch'
-import { apiService } from '@/services/api'
-import { getWebSocketClient } from '@/lib/websocket'
-import { loadUserFromStorage, setUser } from '@/store/slices/authSlice'
+import React, { useState, useRef, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { EmojiPicker } from "@/components/ui/emoji-picker";
+import { VoiceRecorder } from "@/components/ui/voice-recorder";
+import { MessageRenderer } from "@/components/ui/message-renderer";
+import { cn } from "@/lib/utils";
+import { useAppSelector } from "@/hooks/useAppSelector";
+import { useAppDispatch } from "@/hooks/useAppDispatch";
+import { getWebSocketClient } from "@/lib/websocket";
+import { setUser } from "@/store/slices/authSlice";
 
 // Message formatting utilities
-const formatText = (text: string, format: 'bold' | 'italic' | 'code' | 'strike') => {
+const formatText = (
+  text: string,
+  format: "bold" | "italic" | "code" | "strike",
+) => {
   const formats = {
-    bold: { prefix: '**', suffix: '**' },
-    italic: { prefix: '*', suffix: '*' },
-    code: { prefix: '`', suffix: '`' },
-    strike: { prefix: '~~', suffix: '~~' }
-  }
-  
-  const { prefix, suffix } = formats[format]
-  return `${prefix}${text}${suffix}`
-}
+    bold: { prefix: "**", suffix: "**" },
+    italic: { prefix: "*", suffix: "*" },
+    code: { prefix: "`", suffix: "`" },
+    strike: { prefix: "~~", suffix: "~~" },
+  };
+
+  const { prefix, suffix } = formats[format];
+  return `${prefix}${text}${suffix}`;
+};
 
 interface MessageInputProps {
-  roomId?: string
-  type?: 'channel' | 'direct' | 'conversation'
-  onMessageSent?: () => void
+  roomId?: string;
+  type?: "channel" | "direct" | "conversation";
+  onMessageSent?: () => void;
 }
 
-export const MessageInput: React.FC<MessageInputProps> = ({ roomId = '1', type = 'channel', onMessageSent }) => {
-  const [message, setMessage] = useState('')
-  const [isTyping, setIsTyping] = useState(false)
-  const [isSending, setIsSending] = useState(false)
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
-  const [showVoiceRecorder, setShowVoiceRecorder] = useState(false)
-  const [isLocalTyping, setIsLocalTyping] = useState(false)
-  const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
-  
-  const { user } = useAppSelector(state => state.auth)
-  const dispatch = useAppDispatch()
+export const MessageInput: React.FC<MessageInputProps> = ({
+  roomId = "1",
+  type = "channel",
+  onMessageSent,
+}) => {
+  const [message, setMessage] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
+  const [isLocalTyping, setIsLocalTyping] = useState(false);
+  const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(
+    null,
+  );
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const { user } = useAppSelector((state) => state.auth);
+  const dispatch = useAppDispatch();
 
   // Auto load user from localStorage on mount
   useEffect(() => {
-    if (!user && typeof window !== 'undefined') {
-      const token = localStorage.getItem('auth_token')
-      const userStr = localStorage.getItem('user')
+    if (!user && typeof window !== "undefined") {
+      const token = localStorage.getItem("auth_token");
+      const userStr = localStorage.getItem("user");
       if (token && userStr) {
         try {
-          const userData = JSON.parse(userStr)
-          dispatch(setUser(userData))
+          const userData = JSON.parse(userStr);
+          dispatch(setUser(userData));
         } catch (error) {
-          console.error('Failed to parse user from localStorage:', error)
+          console.error("Failed to parse user from localStorage:", error);
         }
       }
     }
-  }, [user, dispatch])
+  }, [user, dispatch]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (message.trim() && !isSending && user) {
-      setIsSending(true)
+      setIsSending(true);
       try {
-        const submitButton = document.querySelector('button[type="submit"]')
+        const submitButton = document.querySelector('button[type="submit"]');
         if (submitButton) {
-          const originalText = submitButton.innerHTML
-          submitButton.innerHTML = '✓ Sent'
-          submitButton.classList.add('bg-green-600')
+          const originalText = submitButton.innerHTML;
+          submitButton.innerHTML = "✓ Sent";
+          submitButton.classList.add("bg-green-600");
           setTimeout(() => {
-            submitButton.innerHTML = originalText
-            submitButton.classList.remove('bg-green-600')
-          }, 2000)
+            submitButton.innerHTML = originalText;
+            submitButton.classList.remove("bg-green-600");
+          }, 2000);
         }
-        
-        setMessage('')
-        setIsTyping(false)
-        onMessageSent?.()
-        
+
+        setMessage("");
+        setIsTyping(false);
+        onMessageSent?.();
+
         // Force refresh message list after sending
         setTimeout(() => {
-          onMessageSent?.()
-        }, 100)
+          onMessageSent?.();
+        }, 100);
       } catch (error: any) {
-        console.error('Failed to send message:', error)
+        console.error("Failed to send message:", error);
         // TODO: Show error notification
       } finally {
-        setIsSending(false)
+        setIsSending(false);
       }
     } else {
-      console.log('Cannot send - conditions not met:', {
+      console.log("Cannot send - conditions not met:", {
         hasMessage: !!message.trim(),
         isSending,
-        hasUser: !!user
-      })
+        hasUser: !!user,
+      });
     }
-  }
+  };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSubmit(e)
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e);
     }
-  }
+  };
 
   // Handle typing events
   const handleTyping = async () => {
-    if (!user) return
+    if (!user) return;
 
     if (!isLocalTyping) {
-      setIsLocalTyping(true)
+      setIsLocalTyping(true);
       try {
-        const ws = getWebSocketClient()
-        const convId = parseInt(roomId || '0') || undefined
-        ws.send({ type: 'typing_start', user_id: user.id, conversation_id: convId } as any)
+        const ws = getWebSocketClient();
+        const convId = parseInt(roomId || "0") || undefined;
+        ws.send({
+          type: "typing_start",
+          user_id: user.id,
+          conversation_id: convId,
+        } as any);
       } catch (error) {
-        console.error('Failed to send typing event:', error)
+        console.error("Failed to send typing event:", error);
       }
     }
 
     // Clear existing timeout
     if (typingTimeout) {
-      clearTimeout(typingTimeout)
+      clearTimeout(typingTimeout);
     }
 
     // Set new timeout to stop typing
     const timeout = setTimeout(async () => {
-      setIsLocalTyping(false)
+      setIsLocalTyping(false);
       try {
-        const ws = getWebSocketClient()
-        const convId = parseInt(roomId || '0') || undefined
-        ws.send({ type: 'typing_stop', user_id: user.id, conversation_id: convId } as any)
+        const ws = getWebSocketClient();
+        const convId = parseInt(roomId || "0") || undefined;
+        ws.send({
+          type: "typing_stop",
+          user_id: user.id,
+          conversation_id: convId,
+        } as any);
       } catch (error) {
-        console.error('Failed to send stop typing event:', error)
+        console.error("Failed to send stop typing event:", error);
       }
-    }, 3000) // Stop typing after 3 seconds of inactivity
+    }, 3000); // Stop typing after 3 seconds of inactivity
 
-    setTypingTimeout(timeout)
-  }
+    setTypingTimeout(timeout);
+  };
 
   const handleStopTyping = async () => {
-    if (!user || !isLocalTyping) return
+    if (!user || !isLocalTyping) return;
 
-    setIsLocalTyping(false)
+    setIsLocalTyping(false);
     if (typingTimeout) {
-      clearTimeout(typingTimeout)
-      setTypingTimeout(null)
+      clearTimeout(typingTimeout);
+      setTypingTimeout(null);
     }
 
     try {
-      const ws = getWebSocketClient()
-      const convId = parseInt(roomId || '0') || undefined
-      ws.send({ type: 'typing_stop', user_id: user.id, conversation_id: convId } as any)
+      const ws = getWebSocketClient();
+      const convId = parseInt(roomId || "0") || undefined;
+      ws.send({
+        type: "typing_stop",
+        user_id: user.id,
+        conversation_id: convId,
+      } as any);
     } catch (error) {
-      console.error('Failed to send stop typing event:', error)
+      console.error("Failed to send stop typing event:", error);
     }
-  }
+  };
 
   // Cleanup typing timeout on unmount
   useEffect(() => {
     return () => {
       if (typingTimeout) {
-        clearTimeout(typingTimeout)
+        clearTimeout(typingTimeout);
       }
-    }
-  }, [typingTimeout])
+    };
+  }, [typingTimeout]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     // Formatting shortcuts (only when not in input)
     if (e.target === textareaRef.current) {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
-        e.preventDefault()
-        applyFormatting('bold')
-      } else if ((e.ctrlKey || e.metaKey) && e.key === 'i') {
-        e.preventDefault()
-        applyFormatting('italic')
-      } else if ((e.ctrlKey || e.metaKey) && e.key === '`') {
-        e.preventDefault()
-        applyFormatting('code')
+      if ((e.ctrlKey || e.metaKey) && e.key === "b") {
+        e.preventDefault();
+        applyFormatting("bold");
+      } else if ((e.ctrlKey || e.metaKey) && e.key === "i") {
+        e.preventDefault();
+        applyFormatting("italic");
+      } else if ((e.ctrlKey || e.metaKey) && e.key === "`") {
+        e.preventDefault();
+        applyFormatting("code");
       }
     }
-  }
+  };
 
   const handleFileUpload = () => {
-    fileInputRef.current?.click()
-  }
+    fileInputRef.current?.click();
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
+    const files = e.target.files;
     if (files && files.length > 0) {
-      console.log('Files selected:', files)
+      console.log("Files selected:", files);
       // Handle file upload logic here
     }
-  }
+  };
 
-  const applyFormatting = (format: 'bold' | 'italic' | 'code' | 'strike') => {
-    const textarea = textareaRef.current
-    if (!textarea) return
+  const applyFormatting = (format: "bold" | "italic" | "code" | "strike") => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
 
-    const start = textarea.selectionStart
-    const end = textarea.selectionEnd
-    const selectedText = message.substring(start, end)
-    
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = message.substring(start, end);
+
     if (selectedText) {
-      const formattedText = formatText(selectedText, format)
-      const newMessage = message.substring(0, start) + formattedText + message.substring(end)
-      setMessage(newMessage)
-      
+      const formattedText = formatText(selectedText, format);
+      const newMessage =
+        message.substring(0, start) + formattedText + message.substring(end);
+      setMessage(newMessage);
+
       // Set cursor position after formatting
       setTimeout(() => {
-        textarea.focus()
-        textarea.setSelectionRange(start + formattedText.length, start + formattedText.length)
-      }, 0)
+        textarea.focus();
+        textarea.setSelectionRange(
+          start + formattedText.length,
+          start + formattedText.length,
+        );
+      }, 0);
     } else {
       // If no text selected, insert format markers
-      const formatMarkers = format === 'bold' ? '**bold text**' : 
-                           format === 'italic' ? '*italic text*' :
-                           format === 'code' ? '`code`' : '~~strikethrough~~'
-      
-      const newMessage = message.substring(0, start) + formatMarkers + message.substring(end)
-      setMessage(newMessage)
-      
+      const formatMarkers =
+        format === "bold"
+          ? "**bold text**"
+          : format === "italic"
+            ? "*italic text*"
+            : format === "code"
+              ? "`code`"
+              : "~~strikethrough~~";
+
+      const newMessage =
+        message.substring(0, start) + formatMarkers + message.substring(end);
+      setMessage(newMessage);
+
       // Set cursor position between markers
       setTimeout(() => {
-        textarea.focus()
-        const cursorPos = start + (format === 'code' ? 1 : format === 'bold' ? 2 : 1)
-        textarea.setSelectionRange(cursorPos, cursorPos + (format === 'bold' ? 9 : format === 'italic' ? 12 : format === 'code' ? 4 : 13))
-      }, 0)
+        textarea.focus();
+        const cursorPos =
+          start + (format === "code" ? 1 : format === "bold" ? 2 : 1);
+        textarea.setSelectionRange(
+          cursorPos,
+          cursorPos +
+            (format === "bold"
+              ? 9
+              : format === "italic"
+                ? 12
+                : format === "code"
+                  ? 4
+                  : 13),
+        );
+      }, 0);
     }
-  }
+  };
 
   const handleEmojiSelect = (emoji: string) => {
-    const textarea = textareaRef.current
-    if (!textarea) return
+    const textarea = textareaRef.current;
+    if (!textarea) return;
 
-    const start = textarea.selectionStart
-    const end = textarea.selectionEnd
-    const newMessage = message.substring(0, start) + emoji + message.substring(end)
-    setMessage(newMessage)
-    
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const newMessage =
+      message.substring(0, start) + emoji + message.substring(end);
+    setMessage(newMessage);
+
     // Set cursor position after emoji
     setTimeout(() => {
-      textarea.focus()
-      textarea.setSelectionRange(start + emoji.length, start + emoji.length)
-    }, 0)
-  }
+      textarea.focus();
+      textarea.setSelectionRange(start + emoji.length, start + emoji.length);
+    }, 0);
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
@@ -277,11 +318,21 @@ export const MessageInput: React.FC<MessageInputProps> = ({ roomId = '1', type =
               className="h-8 w-8 text-[hsl(var(--chat-text-muted))] hover:text-[hsl(var(--chat-text))] hover:bg-[hsl(var(--chat-message-hover))]"
               title="Attach file"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
+                />
               </svg>
             </Button>
-            
+
             <Button
               type="button"
               variant="ghost"
@@ -290,11 +341,21 @@ export const MessageInput: React.FC<MessageInputProps> = ({ roomId = '1', type =
               className="h-8 w-8 text-[hsl(var(--chat-text-muted))] hover:text-[hsl(var(--chat-text))] hover:bg-[hsl(var(--chat-message-hover))]"
               title="Emoji picker"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
             </Button>
-            
+
             <Button
               type="button"
               variant="ghost"
@@ -302,51 +363,96 @@ export const MessageInput: React.FC<MessageInputProps> = ({ roomId = '1', type =
               className="h-8 w-8 text-[hsl(var(--chat-text-muted))] hover:text-[hsl(var(--chat-text))] hover:bg-[hsl(var(--chat-message-hover))]"
               title="Insert image"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
               </svg>
             </Button>
 
             {/* Formatting toolbar */}
             <div className="w-px h-6 bg-[hsl(var(--chat-border))] mx-1"></div>
-            
+
             <Button
               type="button"
               variant="ghost"
               size="icon"
-              onClick={() => applyFormatting('bold')}
+              onClick={() => applyFormatting("bold")}
               className="h-8 w-8 text-[hsl(var(--chat-text-muted))] hover:text-[hsl(var(--chat-text))] hover:bg-[hsl(var(--chat-message-hover))]"
               title="Bold (Ctrl+B)"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 4h8a4 4 0 014 4 4 4 0 01-4 4H6z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 12h9a4 4 0 014 4 4 4 0 01-4 4H6z" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 4h8a4 4 0 014 4 4 4 0 01-4 4H6z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 12h9a4 4 0 014 4 4 4 0 01-4 4H6z"
+                />
               </svg>
             </Button>
-            
+
             <Button
               type="button"
               variant="ghost"
               size="icon"
-              onClick={() => applyFormatting('italic')}
+              onClick={() => applyFormatting("italic")}
               className="h-8 w-8 text-[hsl(var(--chat-text-muted))] hover:text-[hsl(var(--chat-text))] hover:bg-[hsl(var(--chat-message-hover))]"
               title="Italic (Ctrl+I)"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+                />
               </svg>
             </Button>
-            
+
             <Button
               type="button"
               variant="ghost"
               size="icon"
-              onClick={() => applyFormatting('code')}
+              onClick={() => applyFormatting("code")}
               className="h-8 w-8 text-[hsl(var(--chat-text-muted))] hover:text-[hsl(var(--chat-text))] hover:bg-[hsl(var(--chat-message-hover))]"
               title="Code (Ctrl+`)"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+                />
               </svg>
             </Button>
           </div>
@@ -357,9 +463,9 @@ export const MessageInput: React.FC<MessageInputProps> = ({ roomId = '1', type =
               ref={textareaRef}
               value={message}
               onChange={(e) => {
-                setMessage(e.target.value)
-                setIsTyping(e.target.value.length > 0)
-                handleTyping() // Send typing event
+                setMessage(e.target.value);
+                setIsTyping(e.target.value.length > 0);
+                handleTyping(); // Send typing event
               }}
               onKeyPress={handleKeyPress}
               onKeyDown={handleKeyDown}
@@ -368,15 +474,17 @@ export const MessageInput: React.FC<MessageInputProps> = ({ roomId = '1', type =
               className="w-full min-h-[20px] max-h-32 resize-none bg-transparent border-none outline-none text-[hsl(var(--chat-text))] placeholder-[hsl(var(--chat-text-muted))] text-xs leading-relaxed"
               rows={1}
               style={{
-                height: 'auto',
-                minHeight: '20px',
-                maxHeight: '128px'
+                height: "auto",
+                minHeight: "20px",
+                maxHeight: "128px",
               }}
             />
             {/* Formatting Preview */}
             {message && (
               <div className="mt-2 p-3 bg-[hsl(var(--chat-message-bg))] border border-[hsl(var(--chat-border))] rounded-lg text-sm">
-                <div className="text-[hsl(var(--chat-text-muted))] mb-2 text-xs font-medium">Preview:</div>
+                <div className="text-[hsl(var(--chat-text-muted))] mb-2 text-xs font-medium">
+                  Preview:
+                </div>
                 <MessageRenderer content={message} />
               </div>
             )}
@@ -393,11 +501,11 @@ export const MessageInput: React.FC<MessageInputProps> = ({ roomId = '1', type =
               title="Voice Message"
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z"/>
-                <path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/>
+                <path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z" />
+                <path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8" />
               </svg>
             </Button>
-            
+
             <Button
               type="submit"
               disabled={!message.trim() || isSending}
@@ -405,16 +513,26 @@ export const MessageInput: React.FC<MessageInputProps> = ({ roomId = '1', type =
                 "h-8 px-3 text-xs transition-all duration-200",
                 message.trim() && !isSending
                   ? "chat-button"
-                  : "bg-[hsl(var(--chat-message-hover))] text-[hsl(var(--chat-text-muted))] cursor-not-allowed"
+                  : "bg-[hsl(var(--chat-message-hover))] text-[hsl(var(--chat-text-muted))] cursor-not-allowed",
               )}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                />
               </svg>
             </Button>
           </div>
         </div>
-        
+
         {/* Emoji Picker */}
         {showEmojiPicker && (
           <EmojiPicker
@@ -429,7 +547,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({ roomId = '1', type =
             <VoiceRecorder
               onRecordingComplete={(audioBlob, duration) => {
                 // TODO: Send voice message to backend
-                setShowVoiceRecorder(false)
+                setShowVoiceRecorder(false);
               }}
               onCancel={() => setShowVoiceRecorder(false)}
               maxDuration={60}
@@ -442,11 +560,13 @@ export const MessageInput: React.FC<MessageInputProps> = ({ roomId = '1', type =
       <div className="flex items-center justify-between text-xs text-neutral-500 px-1">
         <div className="flex items-center space-x-4">
           <span>Press Enter to send, Shift+Enter for new line</span>
-          {isTyping && <span className="flex items-center space-x-1">
-            <div className="typing-dot w-1 h-1 bg-[hsl(var(--chat-text-muted))] rounded-full"></div>
-            <div className="typing-dot w-1 h-1 bg-[hsl(var(--chat-text-muted))] rounded-full"></div>
-            <div className="typing-dot w-1 h-1 bg-[hsl(var(--chat-text-muted))] rounded-full"></div>
-          </span>}
+          {isTyping && (
+            <span className="flex items-center space-x-1">
+              <div className="typing-dot w-1 h-1 bg-[hsl(var(--chat-text-muted))] rounded-full"></div>
+              <div className="typing-dot w-1 h-1 bg-[hsl(var(--chat-text-muted))] rounded-full"></div>
+              <div className="typing-dot w-1 h-1 bg-[hsl(var(--chat-text-muted))] rounded-full"></div>
+            </span>
+          )}
         </div>
         <div className="flex items-center space-x-2">
           <span>Message length: {message.length}</span>
@@ -455,5 +575,5 @@ export const MessageInput: React.FC<MessageInputProps> = ({ roomId = '1', type =
         </div>
       </div>
     </form>
-  )
-}
+  );
+};

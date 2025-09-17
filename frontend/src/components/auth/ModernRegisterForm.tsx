@@ -1,124 +1,138 @@
-"use client"
+"use client";
 
-import React, { useState } from 'react'
-import { motion } from 'framer-motion'
-import { 
-  Mail, 
-  Lock, 
-  Eye, 
-  EyeOff, 
-  User, 
-  ArrowRight, 
-  Github, 
+import React, { useState } from "react";
+import { motion } from "framer-motion";
+import {
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  User,
+  ArrowRight,
+  Github,
   Chrome,
   Loader2,
-  Check
-} from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
-import { cn } from '@/lib/utils'
+  Check,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
 interface RegisterFormProps {
-  onSubmit: (data: { name: string; email: string; username: string; password: string; confirmPassword: string }) => void
-  isLoading?: boolean
-  error?: string
-  onSwitchToLogin?: () => void
+  onSubmit: (data: {
+    name: string;
+    email: string;
+    username: string;
+    password: string;
+    confirmPassword: string;
+  }) => void;
+  isLoading?: boolean;
+  error?: string;
+  onSwitchToLogin?: () => void;
 }
 
 export default function ModernRegisterForm({
   onSubmit,
   isLoading = false,
   error,
-  onSwitchToLogin
+  onSwitchToLogin,
 }: RegisterFormProps) {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    username: '',
-    password: '',
-    confirmPassword: ''
-  })
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [errors, setErrors] = useState<{ [key: string]: string }>({})
+    name: "",
+    email: "",
+    username: "",
+    password: "",
+    confirmPassword: "",
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
-    
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+
     // Clear error when user starts typing
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }))
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
-  }
+  };
 
   const validateForm = () => {
-    const newErrors: { [key: string]: string } = {}
-    
+    const newErrors: { [key: string]: string } = {};
+
     if (!formData.name.trim()) {
-      newErrors.name = 'Full name is required'
+      newErrors.name = "Full name is required";
     } else if (formData.name.trim().length < 2) {
-      newErrors.name = 'Name must be at least 2 characters'
+      newErrors.name = "Name must be at least 2 characters";
     }
-    
+
     if (!formData.email) {
-      newErrors.email = 'Email is required'
+      newErrors.email = "Email is required";
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email'
+      newErrors.email = "Please enter a valid email";
     }
-    
+
     if (!formData.username) {
-      newErrors.username = 'Username is required'
+      newErrors.username = "Username is required";
     } else if (formData.username.length < 3) {
-      newErrors.username = 'Username must be at least 3 characters'
+      newErrors.username = "Username must be at least 3 characters";
     } else if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
-      newErrors.username = 'Username can only contain letters, numbers, and underscores'
+      newErrors.username =
+        "Username can only contain letters, numbers, and underscores";
     }
-    
+
     if (!formData.password) {
-      newErrors.password = 'Password is required'
+      newErrors.password = "Password is required";
     } else if (formData.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters'
+      newErrors.password = "Password must be at least 8 characters";
     } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
-      newErrors.password = 'Password must contain at least one uppercase letter, one lowercase letter, and one number'
+      newErrors.password =
+        "Password must contain at least one uppercase letter, one lowercase letter, and one number";
     }
-    
+
     if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password'
+      newErrors.confirmPassword = "Please confirm your password";
     } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match'
+      newErrors.confirmPassword = "Passwords do not match";
     }
-    
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (validateForm()) {
-      onSubmit(formData)
+      onSubmit(formData);
     }
-  }
+  };
 
   const handleSocialRegister = (provider: string) => {
-    console.log(`Register with ${provider}`)
+    console.log(`Register with ${provider}`);
     // Implement social register logic here
-  }
+  };
 
   const getPasswordStrength = (password: string) => {
-    let strength = 0
-    if (password.length >= 8) strength++
-    if (/[a-z]/.test(password)) strength++
-    if (/[A-Z]/.test(password)) strength++
-    if (/\d/.test(password)) strength++
-    if (/[^a-zA-Z0-9]/.test(password)) strength++
-    return strength
-  }
+    let strength = 0;
+    if (password.length >= 8) strength++;
+    if (/[a-z]/.test(password)) strength++;
+    if (/[A-Z]/.test(password)) strength++;
+    if (/\d/.test(password)) strength++;
+    if (/[^a-zA-Z0-9]/.test(password)) strength++;
+    return strength;
+  };
 
-  const passwordStrength = getPasswordStrength(formData.password)
+  const passwordStrength = getPasswordStrength(formData.password);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4 overflow-y-auto">
@@ -145,7 +159,9 @@ export default function ModernRegisterForm({
         {/* Register Form */}
         <Card className="backdrop-blur-sm bg-white/10 border-white/20 shadow-2xl">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl text-center text-white">Sign up</CardTitle>
+            <CardTitle className="text-2xl text-center text-white">
+              Sign up
+            </CardTitle>
             <CardDescription className="text-center text-slate-300">
               Fill in your details to create your account
             </CardDescription>
@@ -154,7 +170,10 @@ export default function ModernRegisterForm({
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Full Name Field */}
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-sm font-medium text-slate-200">
+                <Label
+                  htmlFor="name"
+                  className="text-sm font-medium text-slate-200"
+                >
                   Full name
                 </Label>
                 <div className="relative">
@@ -168,7 +187,8 @@ export default function ModernRegisterForm({
                     onChange={handleInputChange}
                     className={cn(
                       "pl-10 bg-white/5 border-white/20 text-white placeholder:text-slate-400 focus:border-blue-400 focus:ring-blue-400/20",
-                      errors.name && "border-red-400 focus:border-red-400 focus:ring-red-400/20"
+                      errors.name &&
+                        "border-red-400 focus:border-red-400 focus:ring-red-400/20",
                     )}
                     disabled={isLoading}
                   />
@@ -186,7 +206,10 @@ export default function ModernRegisterForm({
 
               {/* Email Field */}
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium text-slate-200">
+                <Label
+                  htmlFor="email"
+                  className="text-sm font-medium text-slate-200"
+                >
                   Email address
                 </Label>
                 <div className="relative">
@@ -200,7 +223,8 @@ export default function ModernRegisterForm({
                     onChange={handleInputChange}
                     className={cn(
                       "pl-10 bg-white/5 border-white/20 text-white placeholder:text-slate-400 focus:border-blue-400 focus:ring-blue-400/20",
-                      errors.email && "border-red-400 focus:border-red-400 focus:ring-red-400/20"
+                      errors.email &&
+                        "border-red-400 focus:border-red-400 focus:ring-red-400/20",
                     )}
                     disabled={isLoading}
                   />
@@ -218,7 +242,10 @@ export default function ModernRegisterForm({
 
               {/* Username Field */}
               <div className="space-y-2">
-                <Label htmlFor="username" className="text-sm font-medium text-slate-200">
+                <Label
+                  htmlFor="username"
+                  className="text-sm font-medium text-slate-200"
+                >
                   Username
                 </Label>
                 <div className="relative">
@@ -232,7 +259,8 @@ export default function ModernRegisterForm({
                     onChange={handleInputChange}
                     className={cn(
                       "pl-10 bg-white/5 border-white/20 text-white placeholder:text-slate-400 focus:border-blue-400 focus:ring-blue-400/20",
-                      errors.username && "border-red-400 focus:border-red-400 focus:ring-red-400/20"
+                      errors.username &&
+                        "border-red-400 focus:border-red-400 focus:ring-red-400/20",
                     )}
                     disabled={isLoading}
                   />
@@ -250,7 +278,10 @@ export default function ModernRegisterForm({
 
               {/* Password Field */}
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium text-slate-200">
+                <Label
+                  htmlFor="password"
+                  className="text-sm font-medium text-slate-200"
+                >
                   Password
                 </Label>
                 <div className="relative">
@@ -264,7 +295,8 @@ export default function ModernRegisterForm({
                     onChange={handleInputChange}
                     className={cn(
                       "pl-10 pr-10 bg-white/5 border-white/20 text-white placeholder:text-slate-400 focus:border-blue-400 focus:ring-blue-400/20",
-                      errors.password && "border-red-400 focus:border-red-400 focus:ring-red-400/20"
+                      errors.password &&
+                        "border-red-400 focus:border-red-400 focus:ring-red-400/20",
                     )}
                     disabled={isLoading}
                   />
@@ -283,7 +315,7 @@ export default function ModernRegisterForm({
                     )}
                   </Button>
                 </div>
-                
+
                 {/* Password Strength Indicator */}
                 {formData.password && (
                   <div className="space-y-2">
@@ -297,54 +329,86 @@ export default function ModernRegisterForm({
                               ? passwordStrength <= 2
                                 ? "bg-red-500"
                                 : passwordStrength <= 3
-                                ? "bg-yellow-500"
-                                : "bg-green-500"
-                              : "bg-slate-600"
+                                  ? "bg-yellow-500"
+                                  : "bg-green-500"
+                              : "bg-slate-600",
                           )}
                         />
                       ))}
                     </div>
                     <div className="flex items-center space-x-2 text-xs">
-                      <Check className={cn(
-                        "h-3 w-3",
-                        formData.password.length >= 8 ? "text-green-400" : "text-slate-400"
-                      )} />
-                      <span className={cn(
-                        formData.password.length >= 8 ? "text-green-400" : "text-slate-400"
-                      )}>
+                      <Check
+                        className={cn(
+                          "h-3 w-3",
+                          formData.password.length >= 8
+                            ? "text-green-400"
+                            : "text-slate-400",
+                        )}
+                      />
+                      <span
+                        className={cn(
+                          formData.password.length >= 8
+                            ? "text-green-400"
+                            : "text-slate-400",
+                        )}
+                      >
                         At least 8 characters
                       </span>
-                      <Check className={cn(
-                        "h-3 w-3",
-                        /[a-z]/.test(formData.password) ? "text-green-400" : "text-slate-400"
-                      )} />
-                      <span className={cn(
-                        /[a-z]/.test(formData.password) ? "text-green-400" : "text-slate-400"
-                      )}>
+                      <Check
+                        className={cn(
+                          "h-3 w-3",
+                          /[a-z]/.test(formData.password)
+                            ? "text-green-400"
+                            : "text-slate-400",
+                        )}
+                      />
+                      <span
+                        className={cn(
+                          /[a-z]/.test(formData.password)
+                            ? "text-green-400"
+                            : "text-slate-400",
+                        )}
+                      >
                         Lowercase
                       </span>
-                      <Check className={cn(
-                        "h-3 w-3",
-                        /[A-Z]/.test(formData.password) ? "text-green-400" : "text-slate-400"
-                      )} />
-                      <span className={cn(
-                        /[A-Z]/.test(formData.password) ? "text-green-400" : "text-slate-400"
-                      )}>
+                      <Check
+                        className={cn(
+                          "h-3 w-3",
+                          /[A-Z]/.test(formData.password)
+                            ? "text-green-400"
+                            : "text-slate-400",
+                        )}
+                      />
+                      <span
+                        className={cn(
+                          /[A-Z]/.test(formData.password)
+                            ? "text-green-400"
+                            : "text-slate-400",
+                        )}
+                      >
                         Uppercase
                       </span>
-                      <Check className={cn(
-                        "h-3 w-3",
-                        /\d/.test(formData.password) ? "text-green-400" : "text-slate-400"
-                      )} />
-                      <span className={cn(
-                        /\d/.test(formData.password) ? "text-green-400" : "text-slate-400"
-                      )}>
+                      <Check
+                        className={cn(
+                          "h-3 w-3",
+                          /\d/.test(formData.password)
+                            ? "text-green-400"
+                            : "text-slate-400",
+                        )}
+                      />
+                      <span
+                        className={cn(
+                          /\d/.test(formData.password)
+                            ? "text-green-400"
+                            : "text-slate-400",
+                        )}
+                      >
                         Number
                       </span>
                     </div>
                   </div>
                 )}
-                
+
                 {errors.password && (
                   <motion.p
                     initial={{ opacity: 0, y: -10 }}
@@ -358,7 +422,10 @@ export default function ModernRegisterForm({
 
               {/* Confirm Password Field */}
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-sm font-medium text-slate-200">
+                <Label
+                  htmlFor="confirmPassword"
+                  className="text-sm font-medium text-slate-200"
+                >
                   Confirm password
                 </Label>
                 <div className="relative">
@@ -372,7 +439,8 @@ export default function ModernRegisterForm({
                     onChange={handleInputChange}
                     className={cn(
                       "pl-10 pr-10 bg-white/5 border-white/20 text-white placeholder:text-slate-400 focus:border-blue-400 focus:ring-blue-400/20",
-                      errors.confirmPassword && "border-red-400 focus:border-red-400 focus:ring-red-400/20"
+                      errors.confirmPassword &&
+                        "border-red-400 focus:border-red-400 focus:ring-red-400/20",
                     )}
                     disabled={isLoading}
                   />
@@ -421,11 +489,18 @@ export default function ModernRegisterForm({
                   className="w-4 h-4 text-blue-600 bg-white/5 border-white/20 rounded focus:ring-blue-500 focus:ring-2 mt-0.5"
                   required
                 />
-                <Label htmlFor="terms" className="text-sm text-slate-300 leading-relaxed">
-                  I agree to the{' '}
-                  <a href="#" className="text-blue-400 hover:text-blue-300">Terms of Service</a>
-                  {' '}and{' '}
-                  <a href="#" className="text-blue-400 hover:text-blue-300">Privacy Policy</a>
+                <Label
+                  htmlFor="terms"
+                  className="text-sm text-slate-300 leading-relaxed"
+                >
+                  I agree to the{" "}
+                  <a href="#" className="text-blue-400 hover:text-blue-300">
+                    Terms of Service
+                  </a>{" "}
+                  and{" "}
+                  <a href="#" className="text-blue-400 hover:text-blue-300">
+                    Privacy Policy
+                  </a>
                 </Label>
               </div>
 
@@ -456,7 +531,9 @@ export default function ModernRegisterForm({
                   <Separator className="w-full bg-white/20" />
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-transparent text-slate-400">Or continue with</span>
+                  <span className="px-2 bg-transparent text-slate-400">
+                    Or continue with
+                  </span>
                 </div>
               </div>
 
@@ -464,7 +541,7 @@ export default function ModernRegisterForm({
                 <Button
                   variant="outline"
                   className="bg-white/5 border-white/20 text-slate-300 hover:bg-white/10 hover:text-white"
-                  onClick={() => handleSocialRegister('github')}
+                  onClick={() => handleSocialRegister("github")}
                   disabled={isLoading}
                 >
                   <Github className="mr-2 h-4 w-4" />
@@ -473,7 +550,7 @@ export default function ModernRegisterForm({
                 <Button
                   variant="outline"
                   className="bg-white/5 border-white/20 text-slate-300 hover:bg-white/10 hover:text-white"
-                  onClick={() => handleSocialRegister('google')}
+                  onClick={() => handleSocialRegister("google")}
                   disabled={isLoading}
                 >
                   <Chrome className="mr-2 h-4 w-4" />
@@ -485,7 +562,7 @@ export default function ModernRegisterForm({
             {/* Switch to Login */}
             <div className="text-center">
               <p className="text-sm text-slate-400">
-                Already have an account?{' '}
+                Already have an account?{" "}
                 <Button
                   variant="link"
                   className="text-blue-400 hover:text-blue-300 p-0 font-medium"
@@ -500,5 +577,5 @@ export default function ModernRegisterForm({
         </Card>
       </motion.div>
     </div>
-  )
+  );
 }

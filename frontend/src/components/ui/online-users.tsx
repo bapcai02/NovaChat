@@ -1,59 +1,72 @@
-"use client"
+"use client";
 
-import React, { useEffect, useState } from 'react'
-import { Avatar } from '@/components/ui/avatar'
-import { cn } from '@/lib/utils'
-import { userStatusService, OnlineUser } from '@/services/userStatusService'
+import React, { useEffect, useState } from "react";
+import { Avatar } from "@/components/ui/avatar";
+import { cn } from "@/lib/utils";
+import { userStatusService, OnlineUser } from "@/services/userStatusService";
 // WebSocket functionality moved to useChat hook
 
 interface OnlineUsersProps {
-  roomId?: string
-  className?: string
+  roomId?: string;
+  className?: string;
 }
 
-export const OnlineUsers: React.FC<OnlineUsersProps> = ({ roomId = '1', className }) => {
-  const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+export const OnlineUsers: React.FC<OnlineUsersProps> = ({
+  roomId = "1",
+  className,
+}) => {
+  const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Fetch online users
   const fetchOnlineUsers = async () => {
     try {
-      const users = await userStatusService.getOnlineUsers(roomId)
-      setOnlineUsers(users)
+      const users = await userStatusService.getOnlineUsers(roomId);
+      setOnlineUsers(users);
     } catch (error) {
-      console.error('Failed to fetch online users:', error)
+      console.error("Failed to fetch online users:", error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   // Listen for status changes
   useEffect(() => {
-    fetchOnlineUsers()
+    fetchOnlineUsers();
 
     // WebSocket functionality moved to useChat hook
     // Real-time status updates are handled centrally
-  }, [roomId])
+  }, [roomId]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'online': return 'bg-green-500'
-      case 'away': return 'bg-yellow-500'
-      case 'busy': return 'bg-red-500'
-      case 'offline': return 'bg-gray-500'
-      default: return 'bg-gray-500'
+      case "online":
+        return "bg-green-500";
+      case "away":
+        return "bg-yellow-500";
+      case "busy":
+        return "bg-red-500";
+      case "offline":
+        return "bg-gray-500";
+      default:
+        return "bg-gray-500";
     }
-  }
+  };
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'online': return 'Online'
-      case 'away': return 'Away'
-      case 'busy': return 'Busy'
-      case 'offline': return 'Offline'
-      default: return 'Unknown'
+      case "online":
+        return "Online";
+      case "away":
+        return "Away";
+      case "busy":
+        return "Busy";
+      case "offline":
+        return "Offline";
+      default:
+        return "Unknown";
     }
-  }
+  };
 
   if (isLoading) {
     return (
@@ -75,7 +88,7 @@ export const OnlineUsers: React.FC<OnlineUsersProps> = ({ roomId = '1', classNam
           ))}
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -85,7 +98,7 @@ export const OnlineUsers: React.FC<OnlineUsersProps> = ({ roomId = '1', classNam
           Online — {onlineUsers.length}
         </h3>
       </div>
-      
+
       <div className="space-y-1">
         {onlineUsers.length === 0 ? (
           <div className="text-gray-500 text-xs py-2 text-center">
@@ -98,15 +111,13 @@ export const OnlineUsers: React.FC<OnlineUsersProps> = ({ roomId = '1', classNam
               className="flex items-center px-2 py-1 rounded cursor-pointer text-gray-300 hover:bg-gray-700 hover:text-white group transition-colors"
             >
               <div className="relative">
-                <Avatar
-                  fallback={user.name}
-                  size="sm"
-                  className="w-6 h-6"
-                />
-                <div className={cn(
-                  "absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-gray-800",
-                  getStatusColor(user.status)
-                )}></div>
+                <Avatar fallback={user.name} size="sm" className="w-6 h-6" />
+                <div
+                  className={cn(
+                    "absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-gray-800",
+                    getStatusColor(user.status),
+                  )}
+                ></div>
               </div>
               <div className="flex-1 min-w-0 ml-2">
                 <div className="flex items-center">
@@ -121,5 +132,5 @@ export const OnlineUsers: React.FC<OnlineUsersProps> = ({ roomId = '1', classNam
         )}
       </div>
     </div>
-  )
-}
+  );
+};

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { appWithTranslation } from "next-i18next";
 import { ReduxProvider } from "@/store/provider";
 import { ThemeProvider } from "@/components/ui/theme-provider";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -30,9 +29,7 @@ function RootLayout({
         >
           <AuthProvider>
             <ReduxProvider>
-              <I18nProvider>
-                {children}
-              </I18nProvider>
+              <I18nProvider>{children}</I18nProvider>
             </ReduxProvider>
           </AuthProvider>
         </ThemeProvider>
@@ -41,4 +38,4 @@ function RootLayout({
   );
 }
 
-export default RootLayout
+export default RootLayout;

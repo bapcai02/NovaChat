@@ -1,38 +1,37 @@
-"use client"
+"use client";
 
-import React, { useState, useRef, useEffect } from 'react'
-import { useTranslation } from 'react-i18next'
-import { motion, AnimatePresence } from 'framer-motion'
-import { 
-  Smile, 
-  Paperclip, 
-  Image, 
-  File,
-  X,
-} from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
-import EmojiPicker from 'emoji-picker-react'
-import { uploadService } from '@/services/uploadService'
+import React, { useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import { motion, AnimatePresence } from "framer-motion";
+import { Smile, Paperclip, Image, File, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import EmojiPicker from "emoji-picker-react";
+import { uploadService } from "@/services/uploadService";
 
 interface Attachment {
-  id: string
-  name: string
-  size: number
-  type: string
-  preview?: string
-  progress?: number
-  remoteKey?: string
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  preview?: string;
+  progress?: number;
+  remoteKey?: string;
 }
 
 interface ChatInputProps {
-  onSendMessage: (content: string, attachments?: Attachment[]) => void
-  onTyping?: (isTyping: boolean) => void
-  placeholder?: string
-  disabled?: boolean
-  maxLength?: number
-  typingUsers?: string[]
-  mentionUsers?: Array<{ id: number; name?: string; username?: string; avatar?: string }>
+  onSendMessage: (content: string, attachments?: Attachment[]) => void;
+  onTyping?: (isTyping: boolean) => void;
+  placeholder?: string;
+  disabled?: boolean;
+  maxLength?: number;
+  typingUsers?: string[];
+  mentionUsers?: Array<{
+    id: number;
+    name?: string;
+    username?: string;
+    avatar?: string;
+  }>;
 }
 
 export default function ModernChatInput({
@@ -42,207 +41,262 @@ export default function ModernChatInput({
   disabled = false,
   maxLength = 2000,
   typingUsers = [],
-  mentionUsers = []
+  mentionUsers = [],
 }: ChatInputProps) {
-  const [message, setMessage] = useState('')
-  const [isRecording, setIsRecording] = useState(false)
-  const [showEmojis, setShowEmojis] = useState(false)
-  const [attachments, setAttachments] = useState<Attachment[]>([])
-  const [isTyping, setIsTyping] = useState(false)
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const imageInputRef = useRef<HTMLInputElement>(null)
-  const emojiPickerRef = useRef<HTMLDivElement>(null)
-  const { t } = useTranslation('common')
-  const [showMentions, setShowMentions] = useState(false)
-  const [mentionQuery, setMentionQuery] = useState('')
-  const [activeIdx, setActiveIdx] = useState(-1)
+  const [message, setMessage] = useState("");
+  const [showEmojis, setShowEmojis] = useState(false);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [isTyping, setIsTyping] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const { t } = useTranslation("common");
+  const [showMentions, setShowMentions] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState("");
+  const [activeIdx, setActiveIdx] = useState(-1);
 
   const handleSend = () => {
     if (message.trim() || attachments.length > 0) {
-      onSendMessage(message.trim(), attachments)
-      setMessage('')
-      setAttachments([])
-      setIsTyping(false)
+      onSendMessage(message.trim(), attachments);
+      setMessage("");
+      setAttachments([]);
+      setIsTyping(false);
     }
-  }
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSend()
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
     }
     // Mentions keyboard nav
-    if (showMentions && (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === 'Escape')) {
-      const list = filteredMentions
-      if (e.key === 'ArrowDown') { e.preventDefault(); setActiveIdx(prev => Math.min(prev + 1, list.length - 1)) }
-      if (e.key === 'ArrowUp') { e.preventDefault(); setActiveIdx(prev => Math.max(prev - 1, 0)) }
-      if (e.key === 'Escape') { setShowMentions(false) }
-      if (e.key === 'Enter' && activeIdx >= 0) {
-        e.preventDefault()
-        applyMention(list[activeIdx])
+    if (
+      showMentions &&
+      (e.key === "ArrowDown" ||
+        e.key === "ArrowUp" ||
+        e.key === "Enter" ||
+        e.key === "Escape")
+    ) {
+      const list = filteredMentions;
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setActiveIdx((prev) => Math.min(prev + 1, list.length - 1));
+      }
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setActiveIdx((prev) => Math.max(prev - 1, 0));
+      }
+      if (e.key === "Escape") {
+        setShowMentions(false);
+      }
+      if (e.key === "Enter" && activeIdx >= 0) {
+        e.preventDefault();
+        applyMention(list[activeIdx]);
       }
     }
-  }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const value = e.target.value
+    const value = e.target.value;
     if (value.length <= maxLength) {
-      setMessage(value)
-      
+      setMessage(value);
+
       // Typing indicator
       if (value.trim() && !isTyping) {
-        setIsTyping(true)
-        onTyping?.(true)
+        setIsTyping(true);
+        onTyping?.(true);
       } else if (!value.trim() && isTyping) {
-        setIsTyping(false)
-        onTyping?.(false)
+        setIsTyping(false);
+        onTyping?.(false);
       }
 
       // Mentions detection (last token like @abc)
-      const m = /(^|\s)@(\w{0,30})$/.exec(value)
+      const m = /(^|\s)@(\w{0,30})$/.exec(value);
       if (m) {
-        setMentionQuery(m[2] || '')
-        setShowMentions(true)
-        setActiveIdx(-1)
+        setMentionQuery(m[2] || "");
+        setShowMentions(true);
+        setActiveIdx(-1);
       } else {
-        setShowMentions(false)
-        setMentionQuery('')
+        setShowMentions(false);
+        setMentionQuery("");
       }
     }
-  }
+  };
 
   const handleEmojiSelect = (emojiData: any) => {
-    setMessage(prev => prev + emojiData.emoji)
-    setShowEmojis(false)
-    textareaRef.current?.focus()
-  }
+    setMessage((prev) => prev + emojiData.emoji);
+    setShowEmojis(false);
+    textareaRef.current?.focus();
+  };
 
   // Paste-to-upload (images/files from clipboard)
   useEffect(() => {
-    const el = textareaRef.current
-    if (!el) return
+    const el = textareaRef.current;
+    if (!el) return;
     const onPaste = async (e: ClipboardEvent) => {
-      if (!e.clipboardData) return
-      const files = Array.from(e.clipboardData.files || [])
-      if (files.length === 0) return
-      e.preventDefault()
-      const evt = { target: { files } } as unknown as React.ChangeEvent<HTMLInputElement>
-      await handleFileSelect(evt)
-    }
-    el.addEventListener('paste', onPaste as any)
-    return () => el.removeEventListener('paste', onPaste as any)
-  }, [])
+      if (!e.clipboardData) return;
+      const files = Array.from(e.clipboardData.files || []);
+      if (files.length === 0) return;
+      e.preventDefault();
+      const evt = {
+        target: { files },
+      } as unknown as React.ChangeEvent<HTMLInputElement>;
+      await handleFileSelect(evt);
+    };
+    el.addEventListener("paste", onPaste as any);
+    return () => el.removeEventListener("paste", onPaste as any);
+  }, []);
 
   // Click outside to close emoji picker
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
-        setShowEmojis(false)
+      if (
+        emojiPickerRef.current &&
+        !emojiPickerRef.current.contains(event.target as Node)
+      ) {
+        setShowEmojis(false);
       }
-    }
+    };
 
     if (showEmojis) {
-      document.addEventListener('mousedown', handleClickOutside)
+      document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [showEmojis])
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showEmojis]);
 
-  const filteredMentions = mentionUsers.filter(u => {
-    const q = mentionQuery.toLowerCase()
-    const name = (u.name || '').toLowerCase()
-    const user = (u.username || '').toLowerCase()
-    return !q || name.includes(q) || user.includes(q)
-  }).slice(0, 8)
+  const filteredMentions = mentionUsers
+    .filter((u) => {
+      const q = mentionQuery.toLowerCase();
+      const name = (u.name || "").toLowerCase();
+      const user = (u.username || "").toLowerCase();
+      return !q || name.includes(q) || user.includes(q);
+    })
+    .slice(0, 8);
 
-  const applyMention = (u: { id: number; name?: string; username?: string }) => {
-    setMessage(prev => prev.replace(/(^|\s)@(\w{0,30})$/, `$1@${u.username || (u.name || `user${u.id}`).replace(/\s+/g,'').toLowerCase()}`) + ' ')
-    setShowMentions(false)
-    setMentionQuery('')
-    textareaRef.current?.focus()
-  }
+  const applyMention = (u: {
+    id: number;
+    name?: string;
+    username?: string;
+  }) => {
+    setMessage(
+      (prev) =>
+        prev.replace(
+          /(^|\s)@(\w{0,30})$/,
+          `$1@${u.username || (u.name || `user${u.id}`).replace(/\s+/g, "").toLowerCase()}`,
+        ) + " ",
+    );
+    setShowMentions(false);
+    setMentionQuery("");
+    textareaRef.current?.focus();
+  };
 
   const validateFile = (file: File) => {
-    const maxSize = 25 * 1024 * 1024
+    const maxSize = 25 * 1024 * 1024;
     const allowed = [
-      'image/', 'video/', 'application/pdf', 'text/plain',
-      'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'application/zip', 'application/x-rar-compressed'
-    ]
-    const okType = allowed.some(prefix => file.type.startsWith(prefix) || file.type === prefix)
-    const okSize = file.size <= maxSize
-    return okType && okSize
-  }
+      "image/",
+      "video/",
+      "application/pdf",
+      "text/plain",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/zip",
+      "application/x-rar-compressed",
+    ];
+    const okType = allowed.some(
+      (prefix) => file.type.startsWith(prefix) || file.type === prefix,
+    );
+    const okSize = file.size <= maxSize;
+    return okType && okSize;
+  };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || [])
-    const newAttachments: Attachment[] = files.map(file => ({
+    const files = Array.from(e.target.files || []);
+    const newAttachments: Attachment[] = files.map((file) => ({
       id: Math.random().toString(36).substr(2, 9),
       name: file.name,
       size: file.size,
       type: file.type,
-      preview: file.type.startsWith('image/') ? URL.createObjectURL(file) : undefined,
-      progress: 0
-    }))
-    setAttachments(prev => [...prev, ...newAttachments])
+      preview: file.type.startsWith("image/")
+        ? URL.createObjectURL(file)
+        : undefined,
+      progress: 0,
+    }));
+    setAttachments((prev) => [...prev, ...newAttachments]);
 
     for (let i = 0; i < files.length; i++) {
-      const file = files[i]
-      if (!validateFile(file)) continue
+      const file = files[i];
+      if (!validateFile(file)) continue;
       try {
-        const { url, key } = await uploadService.getSignedUrl(file.name, file.type)
+        const { url, key } = await uploadService.getSignedUrl(
+          file.name,
+          file.type,
+        );
         await uploadService.uploadToSignedUrl(url, file, (percent) => {
-          setAttachments(prev => prev.map(att => att.name === file.name ? { ...att, progress: percent } : att))
-        })
-        setAttachments(prev => prev.map(att => att.name === file.name ? { ...att, remoteKey: key, progress: 100 } : att))
+          setAttachments((prev) =>
+            prev.map((att) =>
+              att.name === file.name ? { ...att, progress: percent } : att,
+            ),
+          );
+        });
+        setAttachments((prev) =>
+          prev.map((att) =>
+            att.name === file.name
+              ? { ...att, remoteKey: key, progress: 100 }
+              : att,
+          ),
+        );
       } catch (err) {
-        console.error('Upload failed:', err)
-        setAttachments(prev => prev.filter(att => att.name !== file.name))
+        console.error("Upload failed:", err);
+        setAttachments((prev) => prev.filter((att) => att.name !== file.name));
       }
     }
-  }
+  };
 
   const removeAttachment = (id: string) => {
-    setAttachments(prev => prev.filter(att => att.id !== id))
-  }
+    setAttachments((prev) => prev.filter((att) => att.id !== id));
+  };
 
   const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes'
-    const k = 1024
-    const sizes = ['Bytes', 'KB', 'MB', 'GB']
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-  }
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  };
 
   const getFileIcon = (type: string) => {
-    if (type.startsWith('image/')) return <Image className="h-4 w-4" />
-    return <File className="h-4 w-4" />
-  }
+    if (type.startsWith("image/")) return <Image className="h-4 w-4" />;
+    return <File className="h-4 w-4" />;
+  };
 
   const escapeHtml = (str: string) =>
     str
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;')
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
 
   const renderWithMentions = (text: string) => {
-    const safe = escapeHtml(text)
+    const safe = escapeHtml(text);
     // highlight @mentions
-    return safe.replace(/(^|\s)(@\w{1,30})/g, (_m, p1, p2) => `${p1}<span class='text-red-600'>${p2}</span>`)
-  }
+    return safe.replace(
+      /(^|\s)(@\w{1,30})/g,
+      (_m, p1, p2) => `${p1}<span class='text-red-600'>${p2}</span>`,
+    );
+  };
 
   // Auto-resize textarea
   useEffect(() => {
     if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto'
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
-  }, [message])
+  }, [message]);
 
   return (
     <div className="border-t border-gray-100 bg-white">
@@ -251,7 +305,7 @@ export default function ModernChatInput({
         {attachments.length > 0 && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
+            animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             className="p-4 border-b border-gray-100"
           >
@@ -266,14 +320,18 @@ export default function ModernChatInput({
                 >
                   {attachment.preview ? (
                     <div className="relative">
-                      {attachment.type.startsWith('image/') ? (
+                      {attachment.type.startsWith("image/") ? (
                         <img
                           src={attachment.preview}
                           alt={attachment.name}
                           className="h-20 w-20 object-cover rounded-lg border border-gray-200"
                         />
-                      ) : attachment.type.startsWith('video/') ? (
-                        <video src={attachment.preview} className="h-20 w-20 rounded-lg border border-gray-200 object-cover" controls />
+                      ) : attachment.type.startsWith("video/") ? (
+                        <video
+                          src={attachment.preview}
+                          className="h-20 w-20 rounded-lg border border-gray-200 object-cover"
+                          controls
+                        />
                       ) : null}
                       <Button
                         variant="destructive"
@@ -316,13 +374,24 @@ export default function ModernChatInput({
       <div className="p-4 relative">
         <div className="flex items-end gap-2">
           {/* Attachment buttons */}
-          <div className="flex items-center gap-1" onDragOver={(e)=>e.preventDefault()} onDrop={(e)=>{e.preventDefault(); const files = Array.from(e.dataTransfer.files||[]); const evt = { target: { files } } as unknown as React.ChangeEvent<HTMLInputElement>; handleFileSelect(evt)}}>
+          <div
+            className="flex items-center gap-1"
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => {
+              e.preventDefault();
+              const files = Array.from(e.dataTransfer.files || []);
+              const evt = {
+                target: { files },
+              } as unknown as React.ChangeEvent<HTMLInputElement>;
+              handleFileSelect(evt);
+            }}
+          >
             <Button
               variant="ghost"
               size="sm"
               className="h-8 w-8 p-0 hover:bg-gray-200 text-gray-600 hover:text-gray-800"
               onClick={() => {
-                setShowEmojis(!showEmojis)
+                setShowEmojis(!showEmojis);
               }}
               disabled={disabled}
             >
@@ -354,35 +423,52 @@ export default function ModernChatInput({
             <div
               className="absolute inset-0 px-3 py-2 whitespace-pre-wrap break-words text-sm text-gray-800 pointer-events-none z-0"
               aria-hidden
-              dangerouslySetInnerHTML={{ __html: renderWithMentions(message || '') }}
+              dangerouslySetInnerHTML={{
+                __html: renderWithMentions(message || ""),
+              }}
             />
             <Textarea
               ref={textareaRef}
               value={message}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
-              placeholder={placeholder || t('type_message')}
+              placeholder={placeholder || t("type_message")}
               disabled={disabled}
               className="relative z-10 min-h-[40px] max-h-28 resize-none pr-12 bg-transparent border border-gray-200 hover:border-gray-300 focus:ring-1 focus:ring-blue-400 focus:border-blue-400 focus:outline-none text-sm text-transparent placeholder-gray-400 transition-all duration-200 rounded-lg px-3 py-2"
               style={{
-                border: '1px solid #e5e7eb',
-                boxShadow: 'none',
-                caretColor: '#111827'
+                border: "1px solid #e5e7eb",
+                boxShadow: "none",
+                caretColor: "#111827",
               }}
               rows={1}
             />
             {showMentions && filteredMentions.length > 0 && (
               <div className="absolute bottom-full left-0 mb-2 bg-white border rounded-md shadow min-w-[220px] z-30 max-h-56 overflow-auto">
                 {filteredMentions.map((u, idx) => (
-                  <button key={u.id} className={`flex items-center gap-2 w-full text-left px-3 py-2 text-sm ${activeIdx===idx?'bg-gray-100':''}`} onMouseDown={(e)=>{e.preventDefault(); applyMention(u)}}>
-                    {u.avatar ? <img src={u.avatar} className="w-5 h-5 rounded-full"/> : <div className="w-5 h-5 rounded-full bg-gray-200"/>}
+                  <button
+                    key={u.id}
+                    className={`flex items-center gap-2 w-full text-left px-3 py-2 text-sm ${activeIdx === idx ? "bg-gray-100" : ""}`}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      applyMention(u);
+                    }}
+                  >
+                    {u.avatar ? (
+                      <img src={u.avatar} className="w-5 h-5 rounded-full" />
+                    ) : (
+                      <div className="w-5 h-5 rounded-full bg-gray-200" />
+                    )}
                     <span className="truncate">{u.name || u.username}</span>
-                    {u.username && <span className="text-xs text-gray-500">@{u.username}</span>}
+                    {u.username && (
+                      <span className="text-xs text-gray-500">
+                        @{u.username}
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>
             )}
-            
+
             {/* Character count */}
             {message.length > maxLength * 0.8 && (
               <div className="absolute bottom-1 right-12 text-xs text-gray-500">
@@ -397,8 +483,18 @@ export default function ModernChatInput({
             disabled={disabled || (!message.trim() && attachments.length === 0)}
             className="h-8 w-8 p-0 bg-blue-500 hover:bg-blue-600 text-white rounded-full flex items-center justify-center"
           >
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+              />
             </svg>
           </Button>
         </div>
@@ -413,7 +509,12 @@ export default function ModernChatInput({
               exit={{ opacity: 0, y: 10, scale: 0.95 }}
               transition={{ duration: 0.2 }}
               className="absolute bottom-full left-0 mb-2 z-50"
-              style={{ position: 'absolute', bottom: '100%', left: '0', marginBottom: '8px' }}
+              style={{
+                position: "absolute",
+                bottom: "100%",
+                left: "0",
+                marginBottom: "8px",
+              }}
             >
               <EmojiPicker
                 onEmojiClick={handleEmojiSelect}
@@ -422,9 +523,9 @@ export default function ModernChatInput({
                 searchDisabled={false}
                 skinTonesDisabled={false}
                 previewConfig={{
-                  showPreview: false
+                  showPreview: false,
                 }}
-                searchPlaceHolder={t('search_messages')}
+                searchPlaceHolder={t("search_messages")}
                 theme={"light" as any}
               />
             </motion.div>
@@ -439,7 +540,9 @@ export default function ModernChatInput({
             exit={{ opacity: 0, y: 10 }}
             className="mt-2 text-xs text-gray-500"
           >
-            {typingUsers.length > 0 ? `${typingUsers.slice(0,2).join(', ')}${typingUsers.length>2?'…':''} đang nhập…` : t('you_are_typing')}
+            {typingUsers.length > 0
+              ? `${typingUsers.slice(0, 2).join(", ")}${typingUsers.length > 2 ? "…" : ""} đang nhập…`
+              : t("you_are_typing")}
           </motion.div>
         )}
       </div>
@@ -462,5 +565,5 @@ export default function ModernChatInput({
         accept="image/*"
       />
     </div>
-  )
+  );
 }

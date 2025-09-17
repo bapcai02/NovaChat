@@ -1,41 +1,41 @@
-"use client"
+"use client";
 
-import React, { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
-import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
-  const { login } = useAuth()
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+  const { login } = useAuth();
 
   const fillCredentials = (email: string, password: string) => {
-    setEmail(email)
-    setPassword(password)
-    setError('')
-  }
+    setEmail(email);
+    setPassword(password);
+    setError("");
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError('')
-    
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
+
     try {
-      await login(email, password)
+      await login(email, password);
       // Redirect to chat page
-      router.push('/chat')
+      router.push("/chat");
     } catch (err: any) {
-      setError(err.message || 'Login failed')
+      setError(err.message || "Login failed");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   // Loading screen
   if (isLoading) {
@@ -49,28 +49,39 @@ export default function LoginPage() {
         >
           <div className="inline-flex items-center justify-center w-20 h-20 mb-6">
             <div className="w-16 h-16 bg-gradient-to-r from-amber-500 to-orange-600 rounded-2xl shadow-lg flex items-center justify-center">
-              <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+              <svg
+                className="w-8 h-8 text-white"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
               </svg>
             </div>
           </div>
           <div className="w-8 h-8 border-4 border-amber-200 border-t-amber-600 rounded-full animate-spin mx-auto mb-4"></div>
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">Signing you in...</h2>
-          <p className="text-gray-600">Please wait while we authenticate your account</p>
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">
+            Signing you in...
+          </h2>
+          <p className="text-gray-600">
+            Please wait while we authenticate your account
+          </p>
         </motion.div>
       </div>
-    )
+    );
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 p-4">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-30">
-        <div className="w-full h-full" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23D97706' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-        }}></div>
+        <div
+          className="w-full h-full"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23D97706' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+          }}
+        ></div>
       </div>
-      
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -86,12 +97,18 @@ export default function LoginPage() {
         >
           <div className="inline-flex items-center justify-center w-20 h-20 mb-4">
             <div className="w-16 h-16 bg-gradient-to-r from-amber-500 to-orange-600 rounded-2xl shadow-lg flex items-center justify-center">
-              <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+              <svg
+                className="w-8 h-8 text-white"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
               </svg>
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Welcome Back</h1>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">
+            Welcome Back
+          </h1>
         </motion.div>
 
         {/* Login Card */}
@@ -102,9 +119,11 @@ export default function LoginPage() {
         >
           <div className="backdrop-blur-sm bg-white/80 border border-amber-200/50 shadow-2xl rounded-2xl p-8">
             <div className="space-y-1 pb-6">
-              <h2 className="text-2xl text-center text-gray-800 font-semibold">Sign In</h2>
+              <h2 className="text-2xl text-center text-gray-800 font-semibold">
+                Sign In
+              </h2>
             </div>
-            
+
             <div className="space-y-6">
               <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Email Field */}
@@ -114,7 +133,10 @@ export default function LoginPage() {
                   transition={{ delay: 0.4, duration: 0.5 }}
                   className="space-y-2"
                 >
-                  <label htmlFor="email" className="text-sm font-medium text-gray-700 block">
+                  <label
+                    htmlFor="email"
+                    className="text-sm font-medium text-gray-700 block"
+                  >
                     Email Address
                   </label>
                   <div className="relative">
@@ -138,7 +160,10 @@ export default function LoginPage() {
                   transition={{ delay: 0.5, duration: 0.5 }}
                   className="space-y-2"
                 >
-                  <label htmlFor="password" className="text-sm font-medium text-gray-700 block">
+                  <label
+                    htmlFor="password"
+                    className="text-sm font-medium text-gray-700 block"
+                  >
                     Password
                   </label>
                   <div className="relative">
@@ -236,35 +261,60 @@ export default function LoginPage() {
                 className="mt-6 space-y-4"
               >
                 {/* Admin Credentials */}
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors cursor-pointer" onClick={() => fillCredentials('admin@example.com', 'password')}>
+                <div
+                  className="p-4 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors cursor-pointer"
+                  onClick={() =>
+                    fillCredentials("admin@example.com", "password")
+                  }
+                >
                   <div className="flex items-center mb-3">
                     <div className="w-5 h-5 text-blue-500 mr-2">
                       <svg fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" clipRule="evenodd" />
+                        <path
+                          fillRule="evenodd"
+                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                          clipRule="evenodd"
+                        />
                       </svg>
                     </div>
-                    <p className="text-sm font-semibold text-gray-800">Admin Account</p>
+                    <p className="text-sm font-semibold text-gray-800">
+                      Admin Account
+                    </p>
                   </div>
                   <div className="space-y-2 text-xs text-gray-700">
                     <div className="flex items-center justify-between">
                       <span className="text-gray-600">Email:</span>
-                      <span className="font-mono bg-gray-100 px-2 py-1 rounded text-gray-800">admin@example.com</span>
+                      <span className="font-mono bg-gray-100 px-2 py-1 rounded text-gray-800">
+                        admin@example.com
+                      </span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-gray-600">Password:</span>
-                      <span className="font-mono bg-gray-100 px-2 py-1 rounded text-gray-800">password</span>
+                      <span className="font-mono bg-gray-100 px-2 py-1 rounded text-gray-800">
+                        password
+                      </span>
                     </div>
                   </div>
                   <div className="mt-2 text-xs text-blue-600 text-center">
                     <span className="inline-flex items-center">
-                      <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.293l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd" />
+                      <svg
+                        className="w-3 h-3 mr-1"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.293l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z"
+                          clipRule="evenodd"
+                        />
                       </svg>
                       Click to fill
                     </span>
                   </div>
                   <div className="mt-2 text-xs text-blue-600">
-                    <p>💡 Admin account has access to Admin Panel and Reports</p>
+                    <p>
+                      💡 Admin account has access to Admin Panel and Reports
+                    </p>
                   </div>
                 </div>
               </motion.div>
@@ -277,10 +327,14 @@ export default function LoginPage() {
                 className="text-center"
               >
                 <p className="text-xs text-gray-500">
-                  By signing in, you agree to our{' '}
-                  <a href="#" className="text-amber-600 hover:text-amber-500">Terms of Service</a>
-                  {' '}and{' '}
-                  <a href="#" className="text-amber-600 hover:text-amber-500">Privacy Policy</a>
+                  By signing in, you agree to our{" "}
+                  <a href="#" className="text-amber-600 hover:text-amber-500">
+                    Terms of Service
+                  </a>{" "}
+                  and{" "}
+                  <a href="#" className="text-amber-600 hover:text-amber-500">
+                    Privacy Policy
+                  </a>
                 </p>
               </motion.div>
             </div>
@@ -288,5 +342,5 @@ export default function LoginPage() {
         </motion.div>
       </motion.div>
     </div>
-  )
+  );
 }

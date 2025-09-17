@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { X, BookmarkIcon } from 'lucide-react';
-import BookmarkList from './BookmarkList';
+import React from "react";
+import { X, BookmarkIcon } from "lucide-react";
+import BookmarkList from "./BookmarkList";
 
 interface BookmarkModalProps {
   isOpen: boolean;
@@ -13,8 +13,8 @@ export default function BookmarkModal({ isOpen, onClose }: BookmarkModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div 
-      className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center" 
+    <div
+      className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center"
       style={{ zIndex: 99999 }}
       onClick={(e) => {
         if (e.target === e.currentTarget) {

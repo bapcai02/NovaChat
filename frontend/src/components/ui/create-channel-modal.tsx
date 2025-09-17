@@ -1,79 +1,78 @@
-"use client"
+"use client";
 
-import React, { useState } from 'react'
-import { Button } from './button'
-import { Input } from './input'
-import { Textarea } from './textarea'
-import { Switch } from './switch'
-import { apiService } from '@/services/api'
+import React, { useState } from "react";
+import { Button } from "./button";
+import { Input } from "./input";
+import { Textarea } from "./textarea";
+import { Switch } from "./switch";
 
 interface CreateChannelModalProps {
-  isOpen: boolean
-  onClose: () => void
-  onChannelCreated?: (channel: any) => void
+  isOpen: boolean;
+  onClose: () => void;
+  onChannelCreated?: (channel: any) => void;
 }
 
-export const CreateChannelModal: React.FC<CreateChannelModalProps> = ({ 
-  isOpen, 
-  onClose, 
-  onChannelCreated 
+export const CreateChannelModal: React.FC<CreateChannelModalProps> = ({
+  isOpen,
+  onClose,
+  onChannelCreated,
 }) => {
   const [formData, setFormData] = useState({
-    name: '',
-    display_name: '',
-    description: '',
+    name: "",
+    display_name: "",
+    description: "",
     is_private: false,
-  })
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
+    e.preventDefault();
+
     if (!formData.name.trim()) {
-      setError('Channel name is required')
-      return
+      setError("Channel name is required");
+      return;
     }
 
-    setIsLoading(true)
-    setError(null)
+    setIsLoading(true);
+    setError(null);
 
     try {
-      const response = await api.post('/channels', formData)
-      const newChannel = response.data?.data
+      const response = await api.post("/channels", formData);
+      const newChannel = response.data?.data;
 
       if (newChannel) {
-        onChannelCreated?.(newChannel)
-        handleClose()
+        onChannelCreated?.(newChannel);
+        handleClose();
       }
     } catch (error: any) {
-      console.error('Failed to create channel:', error)
-      setError(error.response?.data?.message || 'Failed to create channel')
+      console.error("Failed to create channel:", error);
+      setError(error.response?.data?.message || "Failed to create channel");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleClose = () => {
     setFormData({
-      name: '',
-      display_name: '',
-      description: '',
+      name: "",
+      display_name: "",
+      description: "",
       is_private: false,
-    })
-    setError(null)
-    setIsLoading(false)
-    onClose()
-  }
+    });
+    setError(null);
+    setIsLoading(false);
+    onClose();
+  };
 
   const handleInputChange = (field: string, value: string | boolean) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
-    }))
-  }
+      [field]: value,
+    }));
+  };
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-white/90 backdrop-blur-sm flex items-center justify-center z-50">
@@ -86,9 +85,24 @@ export const CreateChannelModal: React.FC<CreateChannelModalProps> = ({
             </div>
             <h2 className="text-lg font-semibold">Create New Channel</h2>
           </div>
-          <Button variant="ghost" size="icon" onClick={handleClose} className="h-6 w-6">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleClose}
+            className="h-6 w-6"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </Button>
         </div>
@@ -102,7 +116,7 @@ export const CreateChannelModal: React.FC<CreateChannelModalProps> = ({
             </label>
             <Input
               value={formData.name}
-              onChange={(e) => handleInputChange('name', e.target.value)}
+              onChange={(e) => handleInputChange("name", e.target.value)}
               placeholder="e.g., general, random, announcements"
               className="w-full"
               disabled={isLoading}
@@ -119,7 +133,9 @@ export const CreateChannelModal: React.FC<CreateChannelModalProps> = ({
             </label>
             <Input
               value={formData.display_name}
-              onChange={(e) => handleInputChange('display_name', e.target.value)}
+              onChange={(e) =>
+                handleInputChange("display_name", e.target.value)
+              }
               placeholder="e.g., General Discussion"
               className="w-full"
               disabled={isLoading}
@@ -136,7 +152,7 @@ export const CreateChannelModal: React.FC<CreateChannelModalProps> = ({
             </label>
             <Textarea
               value={formData.description}
-              onChange={(e) => handleInputChange('description', e.target.value)}
+              onChange={(e) => handleInputChange("description", e.target.value)}
               placeholder="What is this channel about?"
               className="w-full min-h-[80px] resize-none"
               disabled={isLoading}
@@ -158,7 +174,9 @@ export const CreateChannelModal: React.FC<CreateChannelModalProps> = ({
             </div>
             <Switch
               checked={formData.is_private}
-              onCheckedChange={(checked) => handleInputChange('is_private', checked)}
+              onCheckedChange={(checked) =>
+                handleInputChange("is_private", checked)
+              }
               disabled={isLoading}
             />
           </div>
@@ -191,12 +209,12 @@ export const CreateChannelModal: React.FC<CreateChannelModalProps> = ({
                   <span>Creating...</span>
                 </div>
               ) : (
-                'Create Channel'
+                "Create Channel"
               )}
             </Button>
           </div>
         </form>
       </div>
     </div>
-  )
-}
+  );
+};

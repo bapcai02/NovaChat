@@ -1,274 +1,318 @@
-"use client"
+"use client";
 
-import React, { useState, useRef, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { 
-  ArrowLeft, 
-  MoreHorizontal, 
-  Reply, 
-  Heart, 
-  Smile, 
-  Trash2, 
+import React, { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  ArrowLeft,
+  MoreHorizontal,
+  Reply,
+  Heart,
+  Smile,
+  Trash2,
   Edit3,
   Copy,
   Flag,
   Paperclip,
   Image,
   X,
-  MessageCircle
-} from 'lucide-react'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
-import { 
+  MessageCircle,
+} from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import EmojiPicker from 'emoji-picker-react'
-import { apiService } from '@/services/api'
-import { getWebSocketClient } from '@/lib/websocket'
-import { useChat } from '@/hooks/useChat'
+} from "@/components/ui/dropdown-menu";
+import EmojiPicker from "emoji-picker-react";
+import { apiService } from "@/services/api";
+import { getWebSocketClient } from "@/lib/websocket";
+import { useChat } from "@/hooks/useChat";
 
 interface ThreadMessage {
-  id: string
-  content: string
+  id: string;
+  content: string;
   sender: {
-    id: string
-    name: string
-    avatar?: string
-    isOnline?: boolean
-  }
-  timestamp: string
-  isOwn: boolean
-  isEdited?: boolean
-  reactions?: { emoji: string; count: number; users: string[] }[]
-  attachments?: { name: string; url: string; type: string }[]
+    id: string;
+    name: string;
+    avatar?: string;
+    isOnline?: boolean;
+  };
+  timestamp: string;
+  isOwn: boolean;
+  isEdited?: boolean;
+  reactions?: { emoji: string; count: number; users: string[] }[];
+  attachments?: { name: string; url: string; type: string }[];
 }
 
 interface ThreadChatProps {
   parentMessage: {
-    id: string
-    content: string
-    sender: string
-    timestamp: string
-    conversation_id: string
-  }
-  onClose: () => void
+    id: string;
+    content: string;
+    sender: string;
+    timestamp: string;
+    conversation_id: string;
+  };
+  onClose: () => void;
 }
 
-export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatProps) {
-  const { currentUser } = useChat()
-  const [messages, setMessages] = useState<ThreadMessage[]>([])
-  const [newMessage, setNewMessage] = useState('')
-  const [isTyping, setIsTyping] = useState(false)
-  const [showEmojis, setShowEmojis] = useState(false)
-  const [attachments, setAttachments] = useState<any[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const hasLoadedRef = useRef<boolean>(false)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-  const emojiPickerRef = useRef<HTMLDivElement>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const imageInputRef = useRef<HTMLInputElement>(null)
-
+export default function ModernThreadChat({
+  parentMessage,
+  onClose,
+}: ThreadChatProps) {
+  const { currentUser } = useChat();
+  const [messages, setMessages] = useState<ThreadMessage[]>([]);
+  const [newMessage, setNewMessage] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const [showEmojis, setShowEmojis] = useState(false);
+  const [attachments, setAttachments] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const hasLoadedRef = useRef<boolean>(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   // Load thread messages from API (only on first open for this parent id)
   useEffect(() => {
     const loadThreadMessages = async () => {
       try {
-        setIsLoading(true)
-        const response = await apiService.getThreadMessages(parentMessage.id)
-        const raw = (response as any)?.data ?? []
+        setIsLoading(true);
+        const response = await apiService.getThreadMessages(parentMessage.id);
+        const raw = (response as any)?.data ?? [];
         const threadMessages: ThreadMessage[] = raw.map((msg: any) => ({
           id: msg.id.toString(),
           content: msg.content,
           sender: {
-            id: msg.user_id?.toString() || msg.sender?.id?.toString() || 'unknown',
-            name: msg.sender?.name || msg.user?.name || 'Unknown User',
+            id:
+              msg.user_id?.toString() ||
+              msg.sender?.id?.toString() ||
+              "unknown",
+            name: msg.sender?.name || msg.user?.name || "Unknown User",
             avatar: msg.sender?.avatar || msg.user?.avatar,
-            isOnline: msg.sender?.is_online || msg.user?.is_online || false
+            isOnline: msg.sender?.is_online || msg.user?.is_online || false,
           },
-          timestamp: new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          timestamp: new Date(msg.created_at).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
           isOwn: false,
           isEdited: msg.is_edited || false,
           reactions: msg.reactions || [],
-          attachments: msg.attachments || []
-        }))
-        setMessages(threadMessages)
+          attachments: msg.attachments || [],
+        }));
+        setMessages(threadMessages);
       } catch (error) {
-        console.error('Error loading thread messages:', error)
-        setMessages([])
+        console.error("Error loading thread messages:", error);
+        setMessages([]);
       } finally {
-        setIsLoading(false)
-        hasLoadedRef.current = true
+        setIsLoading(false);
+        hasLoadedRef.current = true;
       }
-    }
+    };
 
-    if (!parentMessage.id) return
+    if (!parentMessage.id) return;
     // Reset state if parent changed
-    setMessages([])
-    setIsLoading(true)
-    hasLoadedRef.current = false
+    setMessages([]);
+    setIsLoading(true);
+    hasLoadedRef.current = false;
     // Defer load to next tick to batch state updates
     Promise.resolve().then(() => {
-      if (!hasLoadedRef.current) loadThreadMessages()
-    })
-  }, [parentMessage.id])
+      if (!hasLoadedRef.current) loadThreadMessages();
+    });
+  }, [parentMessage.id]);
 
   // Realtime: append replies without reloading entire thread
   useEffect(() => {
     try {
-      const ws = getWebSocketClient()
+      const ws = getWebSocketClient();
       // Avoid duplicate handler registration across rerenders
-      const key = `__nc_thread_${parentMessage.id}`
-      if ((window as any)[key]) return
-      ;(window as any)[key] = true
+      const key = `__nc_thread_${parentMessage.id}`;
+      if ((window as any)[key]) return;
+      (window as any)[key] = true;
       const handler = (raw: any) => {
-        const message = raw as any
+        const message = raw as any;
         // Accept either dedicated thread event or chat_message carrying parent_id
-        const isThreadEvt = message?.type === 'thread_reply'
-        const isReplyChat = message?.type === 'chat_message' && !!message?.parent_id
-        if (!isThreadEvt && !isReplyChat) return
-        const parentId = parseInt((message.parent_id || '0').toString() || '0')
-        if (!parentId || parentId.toString() !== parentMessage.id.toString()) return
+        const isThreadEvt = message?.type === "thread_reply";
+        const isReplyChat =
+          message?.type === "chat_message" && !!message?.parent_id;
+        if (!isThreadEvt && !isReplyChat) return;
+        const parentId = parseInt((message.parent_id || "0").toString() || "0");
+        if (!parentId || parentId.toString() !== parentMessage.id.toString())
+          return;
 
-        const ts = message.timestamp || new Date().toISOString()
+        const ts = message.timestamp || new Date().toISOString();
         const newMsg = {
-          id: (Date.now()).toString(),
-          content: message.content || '',
+          id: Date.now().toString(),
+          content: message.content || "",
           sender: {
-            id: (message.sender_id || '').toString(),
-            name: '',
+            id: (message.sender_id || "").toString(),
+            name: "",
             avatar: undefined,
             isOnline: false,
           },
-          timestamp: new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          timestamp: new Date(ts).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
           isOwn: false,
-        } as any
+        } as any;
 
-        setMessages(prev => {
+        setMessages((prev) => {
           // prevent duplicate by content+time close
-          const exists = prev.some(m => m.content === newMsg.content)
-          return exists ? prev : [...prev, newMsg]
-        })
-      }
-      ws.onMessage(handler)
-      return () => { /* no-op */ }
+          const exists = prev.some((m) => m.content === newMsg.content);
+          return exists ? prev : [...prev, newMsg];
+        });
+      };
+      ws.onMessage(handler);
+      return () => {
+        /* no-op */
+      };
     } catch {}
-  }, [parentMessage.id])
+  }, [parentMessage.id]);
 
   // Click outside to close emoji picker
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
-        setShowEmojis(false)
+      if (
+        emojiPickerRef.current &&
+        !emojiPickerRef.current.contains(event.target as Node)
+      ) {
+        setShowEmojis(false);
       }
-    }
+    };
 
     if (showEmojis) {
-      document.addEventListener('mousedown', handleClickOutside)
+      document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [showEmojis])
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showEmojis]);
 
   useEffect(() => {
-    scrollToBottom()
-  }, [messages])
+    scrollToBottom();
+  }, [messages]);
 
   const handleSendMessage = async () => {
     if (newMessage.trim() || attachments.length > 0) {
       try {
         // Send via WebSocket with parent_id
-        const ws = getWebSocketClient()
+        const ws = getWebSocketClient();
         const optimistic: ThreadMessage = {
           id: Date.now().toString(),
           content: newMessage.trim(),
-          sender: { id: 'current-user', name: 'You', avatar: 'https://ui-avatars.com/api/?name=You&background=random', isOnline: true },
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          isOwn: true
-        }
-        setMessages(prev => [...prev, optimistic])
-        const currentUserId = currentUser?.id || null
+          sender: {
+            id: "current-user",
+            name: "You",
+            avatar: "https://ui-avatars.com/api/?name=You&background=random",
+            isOnline: true,
+          },
+          timestamp: new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+          isOwn: true,
+        };
+        setMessages((prev) => [...prev, optimistic]);
+        const currentUserId = currentUser?.id || null;
         const messagePayload = {
-          type: 'chat_message',
+          type: "chat_message",
           conversation_id: parentMessage.conversation_id,
           parent_id: parentMessage.id,
           sender_id: currentUserId || 0,
           content: newMessage.trim(),
-          client_id: `${currentUserId || 0}-${Date.now()}`
-        }
-        ws.send(messagePayload as any)
-        setNewMessage('')
-        setAttachments([])
-        setIsTyping(false)
+          client_id: `${currentUserId || 0}-${Date.now()}`,
+        };
+        ws.send(messagePayload as any);
+        setNewMessage("");
+        setAttachments([]);
+        setIsTyping(false);
       } catch (error) {
-        console.error('Error sending thread message:', error)
+        console.error("Error sending thread message:", error);
         // Fallback to API if WS fails
         try {
-          const response = await apiService.sendThreadMessage(parentMessage.id, newMessage.trim())
-          const data = (response as any)?.data ?? {}
-          const patchedId = (data.id ?? Date.now()).toString()
-          setMessages(prev => prev.map(m => m.id === optimistic.id ? { ...m, id: patchedId } : m))
+          const response = await apiService.sendThreadMessage(
+            parentMessage.id,
+            newMessage.trim(),
+          );
+          const data = (response as any)?.data ?? {};
+          const patchedId = (data.id ?? Date.now()).toString();
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === optimistic.id ? { ...m, id: patchedId } : m,
+            ),
+          );
         } catch {}
       }
     }
-  }
+  };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || [])
-    const newAttachments = files.map(file => ({
+    const files = Array.from(e.target.files || []);
+    const newAttachments = files.map((file) => ({
       id: Math.random().toString(36).substr(2, 9),
       name: file.name,
       size: file.size,
       type: file.type,
-      file: file
-    }))
-    setAttachments(prev => [...prev, ...newAttachments])
-  }
+      file: file,
+    }));
+    setAttachments((prev) => [...prev, ...newAttachments]);
+  };
 
   const removeAttachment = (id: string) => {
-    setAttachments(prev => prev.filter(att => att.id !== id))
-  }
+    setAttachments((prev) => prev.filter((att) => att.id !== id));
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSendMessage()
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
     }
-  }
+  };
 
   const addReaction = (messageId: string, emoji: string) => {
-    setMessages(messages.map(msg => {
-      if (msg.id === messageId) {
-        const existingReaction = msg.reactions?.find(r => r.emoji === emoji)
-        if (existingReaction) {
-          return {
-            ...msg,
-            reactions: msg.reactions?.map(r => 
-              r.emoji === emoji 
-                ? { ...r, count: r.count + 1, users: [...r.users, 'current-user'] }
-                : r
-            )
-          }
-        } else {
-          return {
-            ...msg,
-            reactions: [...(msg.reactions || []), { emoji, count: 1, users: ['current-user'] }]
+    setMessages(
+      messages.map((msg) => {
+        if (msg.id === messageId) {
+          const existingReaction = msg.reactions?.find(
+            (r) => r.emoji === emoji,
+          );
+          if (existingReaction) {
+            return {
+              ...msg,
+              reactions: msg.reactions?.map((r) =>
+                r.emoji === emoji
+                  ? {
+                      ...r,
+                      count: r.count + 1,
+                      users: [...r.users, "current-user"],
+                    }
+                  : r,
+              ),
+            };
+          } else {
+            return {
+              ...msg,
+              reactions: [
+                ...(msg.reactions || []),
+                { emoji, count: 1, users: ["current-user"] },
+              ],
+            };
           }
         }
-      }
-      return msg
-    }))
-  }
+        return msg;
+      }),
+    );
+  };
 
   const ThreadMessageBubble = ({ message }: { message: ThreadMessage }) => (
     <motion.div
@@ -281,7 +325,10 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
       <Avatar className="h-6 w-6 flex-shrink-0">
         <AvatarImage src={message.sender.avatar} />
         <AvatarFallback className="text-xs font-semibold bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-          {message.sender.name.split(' ').map(n => n[0]).join('')}
+          {message.sender.name
+            .split(" ")
+            .map((n) => n[0])
+            .join("")}
         </AvatarFallback>
       </Avatar>
 
@@ -291,9 +338,7 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
         <div className="flex items-center gap-1 text-xs text-gray-500 mb-1">
           <span className="font-medium">{message.sender.name}</span>
           <span>{message.timestamp}</span>
-          {message.isEdited && (
-            <span className="italic">(edited)</span>
-          )}
+          {message.isEdited && <span className="italic">(edited)</span>}
         </div>
 
         {/* Message bubble */}
@@ -310,9 +355,9 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
                 size="sm"
                 className="h-7 w-7 p-0 hover:bg-gray-200 text-gray-600 hover:text-gray-800"
                 onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  addReaction(message.id, '👍')
+                  e.preventDefault();
+                  e.stopPropagation();
+                  addReaction(message.id, "👍");
                 }}
               >
                 <Smile className="h-4 w-4" />
@@ -322,20 +367,27 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
                 size="sm"
                 className="h-7 w-7 p-0 hover:bg-gray-200 text-gray-600 hover:text-gray-800"
                 onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  addReaction(message.id, '❤️')
+                  e.preventDefault();
+                  e.stopPropagation();
+                  addReaction(message.id, "❤️");
                 }}
               >
                 <Heart className="h-4 w-4" />
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0 hover:bg-gray-700 text-white hover:text-white">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 w-7 p-0 hover:bg-gray-700 text-white hover:text-white"
+                  >
                     <MoreHorizontal className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-white border-gray-300 z-20">
+                <DropdownMenuContent
+                  align="end"
+                  className="bg-white border-gray-300 z-20"
+                >
                   <DropdownMenuItem className="text-gray-600 hover:bg-gray-100 hover:text-gray-800">
                     <Copy className="mr-2 h-4 w-4" />
                     Copy
@@ -384,7 +436,7 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
         </div>
       </div>
     </motion.div>
-  )
+  );
 
   return (
     <motion.div
@@ -408,10 +460,14 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
           <div className="flex-1">
             <h3 className="text-lg font-semibold text-gray-800">Thread</h3>
             <p className="text-sm text-gray-500">
-              {messages.length} {messages.length === 1 ? 'reply' : 'replies'}
+              {messages.length} {messages.length === 1 ? "reply" : "replies"}
             </p>
           </div>
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-gray-100">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0 hover:bg-gray-100"
+          >
             <MoreHorizontal className="h-4 w-4" />
           </Button>
         </div>
@@ -423,12 +479,14 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
             <span>{parentMessage.timestamp}</span>
           </div>
           <div className="text-sm text-gray-800">{parentMessage.content}</div>
-          
+
           {/* Thread indicator */}
           <div className="flex items-center gap-1 mt-2 text-xs text-gray-500">
             <MessageCircle className="h-3 w-3" />
             <span>
-              {isLoading ? 'Loading...' : `${messages.length} ${messages.length === 1 ? 'reply' : 'replies'}`}
+              {isLoading
+                ? "Loading..."
+                : `${messages.length} ${messages.length === 1 ? "reply" : "replies"}`}
             </span>
           </div>
         </div>
@@ -439,7 +497,9 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
         <div className="h-full overflow-y-auto p-4 space-y-2">
           {isLoading ? (
             <div className="flex items-center justify-center h-32">
-              <div className="text-sm text-gray-500">Loading thread messages...</div>
+              <div className="text-sm text-gray-500">
+                Loading thread messages...
+              </div>
             </div>
           ) : messages.length > 0 ? (
             messages.map((message) => (
@@ -460,9 +520,14 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
         {attachments.length > 0 && (
           <div className="mb-3 space-y-2">
             {attachments.map((attachment) => (
-              <div key={attachment.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+              <div
+                key={attachment.id}
+                className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg"
+              >
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">{attachment.name}</p>
+                  <p className="text-sm font-medium text-gray-900 truncate">
+                    {attachment.name}
+                  </p>
                   <p className="text-xs text-gray-500">
                     {(attachment.size / 1024).toFixed(1)} KB
                   </p>
@@ -513,19 +578,19 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
             <Textarea
               value={newMessage}
               onChange={(e) => {
-                setNewMessage(e.target.value)
+                setNewMessage(e.target.value);
                 if (e.target.value.trim() && !isTyping) {
-                  setIsTyping(true)
+                  setIsTyping(true);
                 } else if (!e.target.value.trim() && isTyping) {
-                  setIsTyping(false)
+                  setIsTyping(false);
                 }
               }}
               onKeyDown={handleKeyDown}
               placeholder="Reply in thread..."
               className="min-h-[40px] max-h-28 resize-none bg-gray-50 border-gray-200 focus:ring-1 focus:ring-blue-400 focus:border-blue-400 focus:outline-none text-sm text-gray-800 placeholder-gray-500 transition-all duration-200 rounded-lg"
               style={{
-                border: '1px solid #e5e7eb',
-                boxShadow: 'none'
+                border: "1px solid #e5e7eb",
+                boxShadow: "none",
               }}
               rows={1}
             />
@@ -535,8 +600,18 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
             disabled={!newMessage.trim() && attachments.length === 0}
             className="h-8 w-8 p-0 bg-blue-500 hover:bg-blue-600 text-white rounded-full flex items-center justify-center"
           >
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+              />
             </svg>
           </Button>
         </div>
@@ -550,19 +625,24 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
               exit={{ opacity: 0, y: 10, scale: 0.95 }}
               transition={{ duration: 0.2 }}
               className="absolute bottom-full left-0 mb-2 z-50"
-              style={{ position: 'absolute', bottom: '100%', left: '0', marginBottom: '8px' }}
+              style={{
+                position: "absolute",
+                bottom: "100%",
+                left: "0",
+                marginBottom: "8px",
+              }}
             >
               <EmojiPicker
                 onEmojiClick={(emojiData) => {
-                  setNewMessage(prev => prev + emojiData.emoji)
-                  setShowEmojis(false)
+                  setNewMessage((prev) => prev + emojiData.emoji);
+                  setShowEmojis(false);
                 }}
                 width={320}
                 height={300}
                 searchDisabled={false}
                 skinTonesDisabled={false}
                 previewConfig={{
-                  showPreview: false
+                  showPreview: false,
                 }}
                 searchPlaceHolder="Search emojis..."
                 theme={undefined}
@@ -572,9 +652,7 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
         </AnimatePresence>
 
         {isTyping && (
-          <div className="mt-2 text-xs text-gray-500">
-            You are typing...
-          </div>
+          <div className="mt-2 text-xs text-gray-500">You are typing...</div>
         )}
 
         {/* Hidden file inputs */}
@@ -595,5 +673,5 @@ export default function ModernThreadChat({ parentMessage, onClose }: ThreadChatP
         />
       </div>
     </motion.div>
-  )
+  );
 }

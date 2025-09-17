@@ -1,24 +1,30 @@
-"use client"
+"use client";
 
-import React from 'react'
-import ModernLoginForm from './ModernLoginForm'
+import React from "react";
+import ModernLoginForm from "./ModernLoginForm";
 
 interface AuthLayoutProps {
-  onLogin?: (data: { email: string; password: string }) => void
-  onRegister?: (data: { name: string; email: string; username: string; password: string; confirmPassword: string }) => void
-  isLoading?: boolean
-  error?: string
-  onForgotPassword?: () => void
+  onLogin?: (data: { email: string; password: string }) => void;
+  onRegister?: (data: {
+    name: string;
+    email: string;
+    username: string;
+    password: string;
+    confirmPassword: string;
+  }) => void;
+  isLoading?: boolean;
+  error?: string;
+  onForgotPassword?: () => void;
 }
 
 export default function ModernAuthLayout({
   onLogin,
   isLoading = false,
-  error
+  error,
 }: AuthLayoutProps) {
   const handleLogin = (data: { email: string; password: string }) => {
-    onLogin?.(data)
-  }
+    onLogin?.(data);
+  };
 
   return (
     <ModernLoginForm
@@ -28,5 +34,5 @@ export default function ModernAuthLayout({
       onSwitchToRegister={() => {}}
       onForgotPassword={() => {}}
     />
-  )
+  );
 }

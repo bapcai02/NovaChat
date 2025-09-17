@@ -1,29 +1,29 @@
-"use client"
+"use client";
 
-import React from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { User, Search } from 'lucide-react'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
-import { cn } from '@/lib/utils'
-import { SearchResult } from '@/services/searchService'
+import React from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { User, Search } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { SearchResult } from "@/services/searchService";
 
 interface SearchOverlayProps {
-  isVisible: boolean
-  isSearching: boolean
-  results: SearchResult[]
-  onSelectResult: (result: SearchResult) => void
-  onClose: () => void
+  isVisible: boolean;
+  isSearching: boolean;
+  results: SearchResult[];
+  onSelectResult: (result: SearchResult) => void;
+  onClose: () => void;
 }
 
-export function SearchOverlay({ 
-  isVisible, 
-  isSearching, 
-  results, 
-  onSelectResult, 
-  onClose 
+export function SearchOverlay({
+  isVisible,
+  isSearching,
+  results,
+  onSelectResult,
+  onClose,
 }: SearchOverlayProps) {
-  if (!isVisible) return null
+  if (!isVisible) return null;
 
   return (
     <AnimatePresence>
@@ -42,18 +42,18 @@ export function SearchOverlay({
           exit={{ opacity: 0 }}
           className="absolute inset-0 bg-gray-600/20 backdrop-blur-sm"
         />
-        
+
         {/* Search Results Card */}
         <motion.div
           initial={{ opacity: 0, y: -20, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -20, scale: 0.95 }}
-          transition={{ 
-            duration: 0.3, 
+          transition={{
+            duration: 0.3,
             ease: [0.4, 0.0, 0.2, 1],
             type: "spring",
             stiffness: 300,
-            damping: 30
+            damping: 30,
           }}
           className="absolute top-20 left-4 right-4 max-w-md mx-auto"
           onClick={(e) => e.stopPropagation()}
@@ -63,7 +63,9 @@ export function SearchOverlay({
             <div className="px-4 py-3 border-b border-gray-100">
               <div className="flex items-center gap-2">
                 <Search className="h-4 w-4 text-gray-500" />
-                <span className="text-sm font-medium text-gray-700">Search Results</span>
+                <span className="text-sm font-medium text-gray-700">
+                  Search Results
+                </span>
                 <Badge variant="secondary" className="ml-auto text-xs">
                   {results.length} users
                 </Badge>
@@ -76,7 +78,11 @@ export function SearchOverlay({
                 <div className="p-8 text-center">
                   <motion.div
                     animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    transition={{
+                      duration: 1,
+                      repeat: Infinity,
+                      ease: "linear",
+                    }}
                     className="w-6 h-6 border-2 border-amber-200 border-t-amber-500 rounded-full mx-auto mb-3"
                   />
                   <p className="text-sm text-gray-500">Searching users...</p>
@@ -88,10 +94,10 @@ export function SearchOverlay({
                       key={result.id}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ 
+                      transition={{
                         delay: index * 0.05,
                         duration: 0.3,
-                        ease: "easeOut"
+                        ease: "easeOut",
                       }}
                       className="group relative"
                     >
@@ -106,16 +112,19 @@ export function SearchOverlay({
                           <Avatar className="h-10 w-10 ring-2 ring-white shadow-sm">
                             <AvatarImage src={result.avatar} />
                             <AvatarFallback className="bg-gradient-to-br from-amber-100 to-orange-100 text-amber-700 font-medium">
-                              {result.name.split(' ').map(n => n[0]).join('')}
+                              {result.name
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")}
                             </AvatarFallback>
                           </Avatar>
                           {/* Online status dot */}
-                          <div className={cn(
-                            "absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white shadow-sm",
-                            result.isOnline 
-                              ? "bg-green-500" 
-                              : "bg-gray-400"
-                          )} />
+                          <div
+                            className={cn(
+                              "absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white shadow-sm",
+                              result.isOnline ? "bg-green-500" : "bg-gray-400",
+                            )}
+                          />
                         </div>
 
                         {/* User info */}
@@ -124,15 +133,15 @@ export function SearchOverlay({
                             <h3 className="font-medium text-gray-900 truncate group-hover:text-amber-700 transition-colors">
                               {result.name}
                             </h3>
-                            <Badge 
-                              variant="secondary" 
+                            <Badge
+                              variant="secondary"
                               className="text-xs bg-amber-100 text-amber-700 border-amber-200"
                             >
                               User
                             </Badge>
                           </div>
                           <p className="text-sm text-gray-500 truncate group-hover:text-gray-600 transition-colors">
-                            {result.description || 'User'}
+                            {result.description || "User"}
                           </p>
                         </div>
 
@@ -158,7 +167,9 @@ export function SearchOverlay({
                   >
                     <Search className="h-8 w-8 text-gray-400" />
                   </motion.div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No users found</h3>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    No users found
+                  </h3>
                   <p className="text-sm text-gray-500">
                     Try searching with a different keyword
                   </p>
@@ -180,5 +191,5 @@ export function SearchOverlay({
         </motion.div>
       </motion.div>
     </AnimatePresence>
-  )
+  );
 }

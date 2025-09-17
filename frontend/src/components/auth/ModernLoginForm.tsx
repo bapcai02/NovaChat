@@ -1,30 +1,36 @@
-"use client"
+"use client";
 
-import React, { useState } from 'react'
-import { motion } from 'framer-motion'
-import { 
-  Mail, 
-  Lock, 
-  Eye, 
-  EyeOff, 
-  ArrowRight, 
-  Github, 
+import React, { useState } from "react";
+import { motion } from "framer-motion";
+import {
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  ArrowRight,
+  Github,
   Chrome,
-  Loader2
-} from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
-import { cn } from '@/lib/utils'
+  Loader2,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
 interface LoginFormProps {
-  onSubmit: (data: { email: string; password: string }) => void
-  isLoading?: boolean
-  error?: string
-  onSwitchToRegister?: () => void
-  onForgotPassword?: () => void
+  onSubmit: (data: { email: string; password: string }) => void;
+  isLoading?: boolean;
+  error?: string;
+  onSwitchToRegister?: () => void;
+  onForgotPassword?: () => void;
 }
 
 export default function ModernLoginForm({
@@ -32,55 +38,55 @@ export default function ModernLoginForm({
   isLoading = false,
   error,
   onSwitchToRegister,
-  onForgotPassword
+  onForgotPassword,
 }: LoginFormProps) {
   const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  })
-  const [showPassword, setShowPassword] = useState(false)
-  const [errors, setErrors] = useState<{ [key: string]: string }>({})
+    email: "",
+    password: "",
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
-    
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+
     // Clear error when user starts typing
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }))
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
-  }
+  };
 
   const validateForm = () => {
-    const newErrors: { [key: string]: string } = {}
-    
+    const newErrors: { [key: string]: string } = {};
+
     if (!formData.email) {
-      newErrors.email = 'Email is required'
+      newErrors.email = "Email is required";
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email'
+      newErrors.email = "Please enter a valid email";
     }
-    
+
     if (!formData.password) {
-      newErrors.password = 'Password is required'
+      newErrors.password = "Password is required";
     } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters'
+      newErrors.password = "Password must be at least 6 characters";
     }
-    
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (validateForm()) {
-      onSubmit(formData)
+      onSubmit(formData);
     }
-  }
+  };
 
   const handleSocialLogin = (provider: string) => {
-    console.log(`Login with ${provider}`)
+    console.log(`Login with ${provider}`);
     // Implement social login logic here
-  }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 overflow-y-auto">
@@ -100,14 +106,18 @@ export default function ModernLoginForm({
           >
             <span className="text-2xl font-bold text-white">N</span>
           </motion.div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome back</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Welcome back
+          </h1>
           <p className="text-gray-600">Sign in to your NovaChat account</p>
         </div>
 
         {/* Login Form */}
         <Card className="bg-white/80 backdrop-blur-sm border-gray-200 shadow-2xl">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl text-center text-gray-900">Sign in</CardTitle>
+            <CardTitle className="text-2xl text-center text-gray-900">
+              Sign in
+            </CardTitle>
             <CardDescription className="text-center text-gray-600">
               Enter your credentials to access your account
             </CardDescription>
@@ -116,7 +126,10 @@ export default function ModernLoginForm({
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Email Field */}
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+                <Label
+                  htmlFor="email"
+                  className="text-sm font-medium text-gray-700"
+                >
                   Email address
                 </Label>
                 <div className="relative">
@@ -130,7 +143,8 @@ export default function ModernLoginForm({
                     onChange={handleInputChange}
                     className={cn(
                       "pl-10 bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500/20",
-                      errors.email && "border-red-500 focus:border-red-500 focus:ring-red-500/20"
+                      errors.email &&
+                        "border-red-500 focus:border-red-500 focus:ring-red-500/20",
                     )}
                     disabled={isLoading}
                   />
@@ -148,7 +162,10 @@ export default function ModernLoginForm({
 
               {/* Password Field */}
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+                <Label
+                  htmlFor="password"
+                  className="text-sm font-medium text-gray-700"
+                >
                   Password
                 </Label>
                 <div className="relative">
@@ -162,7 +179,8 @@ export default function ModernLoginForm({
                     onChange={handleInputChange}
                     className={cn(
                       "pl-10 pr-10 bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500/20",
-                      errors.password && "border-red-500 focus:border-red-500 focus:ring-red-500/20"
+                      errors.password &&
+                        "border-red-500 focus:border-red-500 focus:ring-red-500/20",
                     )}
                     disabled={isLoading}
                   />
@@ -253,7 +271,9 @@ export default function ModernLoginForm({
                   <Separator className="w-full bg-gray-200" />
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                  <span className="px-2 bg-white text-gray-500">
+                    Or continue with
+                  </span>
                 </div>
               </div>
 
@@ -261,7 +281,7 @@ export default function ModernLoginForm({
                 <Button
                   variant="outline"
                   className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-gray-900"
-                  onClick={() => handleSocialLogin('github')}
+                  onClick={() => handleSocialLogin("github")}
                   disabled={isLoading}
                 >
                   <Github className="mr-2 h-4 w-4" />
@@ -270,7 +290,7 @@ export default function ModernLoginForm({
                 <Button
                   variant="outline"
                   className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-gray-900"
-                  onClick={() => handleSocialLogin('google')}
+                  onClick={() => handleSocialLogin("google")}
                   disabled={isLoading}
                 >
                   <Chrome className="mr-2 h-4 w-4" />
@@ -282,7 +302,7 @@ export default function ModernLoginForm({
             {/* Switch to Register */}
             <div className="text-center">
               <p className="text-sm text-gray-600">
-                Don't have an account?{' '}
+                Don't have an account?{" "}
                 <Button
                   variant="link"
                   className="text-blue-600 hover:text-blue-500 p-0 font-medium"
@@ -299,19 +319,31 @@ export default function ModernLoginForm({
               <div className="flex items-center mb-3">
                 <div className="w-5 h-5 text-yellow-500 mr-2">
                   <svg fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    <path
+                      fillRule="evenodd"
+                      d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                 </div>
-                <p className="text-sm font-semibold text-gray-800">Demo Accounts</p>
+                <p className="text-sm font-semibold text-gray-800">
+                  Demo Accounts
+                </p>
               </div>
               <div className="space-y-2 text-xs text-gray-700">
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Admin:</span>
                   <div className="flex items-center space-x-2">
-                    <span className="font-mono bg-gray-200 px-2 py-1 rounded text-gray-800">john@example.com</span>
+                    <span className="font-mono bg-gray-200 px-2 py-1 rounded text-gray-800">
+                      john@example.com
+                    </span>
                     <button
                       onClick={() => {
-                        setFormData(prev => ({ ...prev, email: 'john@example.com', password: 'password' }))
+                        setFormData((prev) => ({
+                          ...prev,
+                          email: "john@example.com",
+                          password: "password",
+                        }));
                       }}
                       className="text-blue-600 hover:text-blue-500 text-xs"
                     >
@@ -322,10 +354,16 @@ export default function ModernLoginForm({
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">User 1:</span>
                   <div className="flex items-center space-x-2">
-                    <span className="font-mono bg-gray-200 px-2 py-1 rounded text-gray-800">jane@example.com</span>
+                    <span className="font-mono bg-gray-200 px-2 py-1 rounded text-gray-800">
+                      jane@example.com
+                    </span>
                     <button
                       onClick={() => {
-                        setFormData(prev => ({ ...prev, email: 'jane@example.com', password: 'password' }))
+                        setFormData((prev) => ({
+                          ...prev,
+                          email: "jane@example.com",
+                          password: "password",
+                        }));
                       }}
                       className="text-blue-600 hover:text-blue-500 text-xs"
                     >
@@ -336,10 +374,16 @@ export default function ModernLoginForm({
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">User 2:</span>
                   <div className="flex items-center space-x-2">
-                    <span className="font-mono bg-gray-200 px-2 py-1 rounded text-gray-800">mike@example.com</span>
+                    <span className="font-mono bg-gray-200 px-2 py-1 rounded text-gray-800">
+                      mike@example.com
+                    </span>
                     <button
                       onClick={() => {
-                        setFormData(prev => ({ ...prev, email: 'mike@example.com', password: 'password' }))
+                        setFormData((prev) => ({
+                          ...prev,
+                          email: "mike@example.com",
+                          password: "password",
+                        }));
                       }}
                       className="text-blue-600 hover:text-blue-500 text-xs"
                     >
@@ -348,7 +392,10 @@ export default function ModernLoginForm({
                   </div>
                 </div>
                 <div className="text-center text-gray-600 mt-2">
-                  Password: <span className="font-mono bg-gray-200 px-1 py-0.5 rounded">password</span>
+                  Password:{" "}
+                  <span className="font-mono bg-gray-200 px-1 py-0.5 rounded">
+                    password
+                  </span>
                 </div>
               </div>
             </div>
@@ -358,13 +405,17 @@ export default function ModernLoginForm({
         {/* Footer */}
         <div className="text-center mt-8">
           <p className="text-xs text-gray-500">
-            By signing in, you agree to our{' '}
-            <a href="#" className="text-blue-600 hover:text-blue-500">Terms of Service</a>
-            {' '}and{' '}
-            <a href="#" className="text-blue-600 hover:text-blue-500">Privacy Policy</a>
+            By signing in, you agree to our{" "}
+            <a href="#" className="text-blue-600 hover:text-blue-500">
+              Terms of Service
+            </a>{" "}
+            and{" "}
+            <a href="#" className="text-blue-600 hover:text-blue-500">
+              Privacy Policy
+            </a>
           </p>
         </div>
       </motion.div>
     </div>
-  )
+  );
 }

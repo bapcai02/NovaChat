@@ -1,26 +1,24 @@
-import { getWebSocketClient, WebSocketMessage } from '@/lib/websocket'
+import { getWebSocketClient, WebSocketMessage } from "@/lib/websocket";
 
 export function ensureSubscribeAll(
   userId: number,
   conversationIds: number[],
-  onMessage: (m: WebSocketMessage) => void
+  onMessage: (m: WebSocketMessage) => void,
 ) {
-  const wsClient = getWebSocketClient()
+  const wsClient = getWebSocketClient();
   const checkConnection = () => {
     if (wsClient.isConnected()) {
-      wsClient.subscribeAllConversations(userId, conversationIds)
-      wsClient.onMessage(onMessage)
+      wsClient.subscribeAllConversations(userId, conversationIds);
+      wsClient.onMessage(onMessage);
     } else {
-      setTimeout(checkConnection, 1000)
+      setTimeout(checkConnection, 1000);
     }
-  }
-  checkConnection()
+  };
+  checkConnection();
 }
 
 export function joinConversation(conversationId: number) {
-  const wsClient = getWebSocketClient()
-  if (wsClient.getConnectionState() !== 'connected') wsClient.connect()
-  wsClient.joinConversation(conversationId)
+  const wsClient = getWebSocketClient();
+  if (wsClient.getConnectionState() !== "connected") wsClient.connect();
+  wsClient.joinConversation(conversationId);
 }
-
-
