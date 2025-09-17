@@ -82,6 +82,7 @@ export const verifyToken = createAsyncThunk(
       }
       return isValid
     } catch (error: any) {
+      console.error('Failed to verify token:', error)
       return rejectWithValue('Token verification failed')
     }
   }

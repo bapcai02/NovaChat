@@ -2,7 +2,7 @@
 
 import React, { useRef, useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { MessageCircle, Star, MoreHorizontal, Smile } from 'lucide-react'
+import { MessageCircle, MoreHorizontal, Smile } from 'lucide-react'
 import EmojiPicker from 'emoji-picker-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'

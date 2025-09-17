@@ -17,8 +17,6 @@ import {
 } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -56,7 +54,6 @@ export default function ModernChatHeader({
   channelType,
   memberCount,
   isOnline,
-  lastSeen,
   avatar,
   isMuted = false,
   isPinned = false,
@@ -72,7 +69,6 @@ export default function ModernChatHeader({
 }: ChatHeaderProps) {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const { t } = useTranslation('common')
-  const { handleSelectConversation, loadMessages } = ({} as any)
 
   const getChannelIcon = () => {
     switch (channelType) {

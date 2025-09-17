@@ -8,7 +8,7 @@ export const userSettingsService = {
   async updateProfile(payload: any) {
     // payload can be FormData for file upload or plain object
     let body: any = payload
-    let headers: any = {}
+    const headers: any = {}
     if (!(payload instanceof FormData)) {
       body = JSON.stringify(payload)
       headers['Content-Type'] = 'application/json'

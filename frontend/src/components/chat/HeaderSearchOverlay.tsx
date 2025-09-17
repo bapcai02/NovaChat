@@ -59,7 +59,6 @@ const HeaderSearchOverlay: React.FC<HeaderSearchOverlayProps> = ({ open, onClose
       } finally {
         setLoading(false)
       }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, filter])
 
   useEffect(() => {

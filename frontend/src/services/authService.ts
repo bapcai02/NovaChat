@@ -84,6 +84,7 @@ export const authService = {
       await apiService.getCurrentUser()
       return true
     } catch (error) {
+      console.error('Failed to verify token:', error)
       return false
     }
   },

@@ -46,6 +46,7 @@ class SearchService {
       
       return results
     } catch (error) {
+      console.error('Error searching users:', error)
       return this.getMockUsers(query)
     }
   }

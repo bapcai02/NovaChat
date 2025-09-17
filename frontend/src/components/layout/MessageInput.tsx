@@ -38,12 +38,6 @@ export const MessageInput: React.FC<MessageInputProps> = ({ roomId = '1', type =
   const [isSending, setIsSending] = useState(false)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [showVoiceRecorder, setShowVoiceRecorder] = useState(false)
-  const [typingUsers, setTypingUsers] = useState<Array<{
-    id: string
-    name: string
-    username: string
-    avatar?: string
-  }>>([])
   const [isLocalTyping, setIsLocalTyping] = useState(false)
   const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -73,14 +67,6 @@ export const MessageInput: React.FC<MessageInputProps> = ({ roomId = '1', type =
     if (message.trim() && !isSending && user) {
       setIsSending(true)
       try {
-        const response = await api.post('/messages', {
-          type: type === 'conversation' ? 'direct' : type,
-          roomId,
-          senderId: user.id.toString(),
-          content: message.trim()
-        })
-                
-        // Show success feedback
         const submitButton = document.querySelector('button[type="submit"]')
         if (submitButton) {
           const originalText = submitButton.innerHTML
@@ -448,13 +434,6 @@ export const MessageInput: React.FC<MessageInputProps> = ({ roomId = '1', type =
               onCancel={() => setShowVoiceRecorder(false)}
               maxDuration={60}
             />
-          </div>
-        )}
-
-        {/* Typing Indicator */}
-        {typingUsers.length > 0 && (
-          <div className="absolute bottom-full left-0 right-0 mb-2">
-            <TypingIndicator users={typingUsers} />
           </div>
         )}
       </div>

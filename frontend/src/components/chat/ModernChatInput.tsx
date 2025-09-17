@@ -4,22 +4,14 @@ import React, { useState, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
-  Send, 
   Smile, 
   Paperclip, 
-  Mic, 
-  MicOff, 
   Image, 
   File,
   X,
-  Plus,
-  Video,
-  Calendar
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { Badge } from '@/components/ui/badge'
-import { cn } from '@/lib/utils'
 import EmojiPicker from 'emoji-picker-react'
 import { uploadService } from '@/services/uploadService'
 
@@ -42,7 +34,6 @@ interface ChatInputProps {
   typingUsers?: string[]
   mentionUsers?: Array<{ id: number; name?: string; username?: string; avatar?: string }>
 }
-
 
 export default function ModernChatInput({
   onSendMessage,

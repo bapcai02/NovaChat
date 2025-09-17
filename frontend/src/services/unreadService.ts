@@ -42,6 +42,7 @@ export const unreadService = {
       const response = await apiService.post(`/conversations/${conversationId}/read`)
       return response.status >= 200 && response.status < 300
     } catch (error) {
+      console.error('Failed to mark conversation as read:', error)
       // Fallback to alternative route if primary is unavailable
       try {
         const fallback = await apiService.post(`/conversations/${conversationId}/mark-as-read`)

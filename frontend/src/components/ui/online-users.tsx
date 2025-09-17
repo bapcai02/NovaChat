@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react'
 import { Avatar } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { userStatusService, OnlineUser } from '@/services/userStatusService'
 // WebSocket functionality moved to useChat hook

@@ -1,5 +1,4 @@
 import { getWebSocketClient, WebSocketMessage } from '@/lib/websocket'
-import type { Message } from '@/types/chat'
 
 export type ChatWsHandlers = {
   onConnectedOnlineUsers?: (ids: number[]) => void

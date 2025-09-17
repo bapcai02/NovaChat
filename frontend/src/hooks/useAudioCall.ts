@@ -8,7 +8,7 @@ interface UseAudioCallOptions {
   turnConfig?: { urls: string[]; username: string; credential: string } | null
 }
 
-export function useAudioCall({ conversationId, currentUserId, peerUserId, stunUrls = ['stun:stun.l.google.com:19302'], turnConfig = null }: UseAudioCallOptions) {
+export function useAudioCall({ conversationId, currentUserId, stunUrls = ['stun:stun.l.google.com:19302'], turnConfig = null }: UseAudioCallOptions) {
   let pc: RTCPeerConnection | null = null
   let localStream: MediaStream | null = null
   let remoteAudioEl: HTMLAudioElement | null = null
@@ -66,6 +66,7 @@ export function useAudioCall({ conversationId, currentUserId, peerUserId, stunUr
         ws.send({ type: 'rtc_offer', conversation_id: conversationId, from: currentUserId, sdp: offer })
       }
     } catch (e) {
+      console.error('Failed to call:', e)
       state = 'error'
     }
   }
@@ -83,6 +84,7 @@ export function useAudioCall({ conversationId, currentUserId, peerUserId, stunUr
       }
       state = 'in_call'
     } catch (e) {
+      console.error('Failed to answer:', e)
       state = 'error'
     }
   }
@@ -100,6 +102,7 @@ export function useAudioCall({ conversationId, currentUserId, peerUserId, stunUr
       }
       state = 'ringing'
     } catch (e) {
+      console.error('Failed to handle remote offer:', e)
       state = 'error'
     }
   }
@@ -110,6 +113,7 @@ export function useAudioCall({ conversationId, currentUserId, peerUserId, stunUr
       await peer.setRemoteDescription(new RTCSessionDescription(sdp))
       state = 'in_call'
     } catch (e) {
+      console.error('Failed to handle remote answer:', e)
       state = 'error'
     }
   }

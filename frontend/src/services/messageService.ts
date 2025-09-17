@@ -1,5 +1,3 @@
-import { apiService } from './api'
-
 // Message types
 export interface Message {
   id: number

@@ -8,7 +8,7 @@ interface RightSidebarProps {
   open: boolean
   mode: 'members' | 'settings' | 'call' | 'video' | null
   onClose: () => void
-  members?: Array<{ id: number; name?: string; username?: string }>
+  members?: Array<{ id: number; name?: string; username?: string; avatar?: string }>
   isMuted: boolean
   isPinned: boolean
   conversationType?: 'direct' | 'group' | 'channel' | 'team'

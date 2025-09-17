@@ -4,8 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { adminService } from '@/services/adminService';
 import {
-  LineChart,
-  Line,
   AreaChart,
   Area,
   BarChart,
@@ -24,19 +22,14 @@ import {
   BarChart3, 
   Users, 
   MessageSquare, 
-  TrendingUp, 
   Calendar,
   Download,
-  Filter,
   RefreshCw,
   Activity,
-  Clock,
-  Eye,
   Heart
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 
 interface ReportData {
   period: string;

@@ -19,8 +19,6 @@ interface MessageReactionsProps {
   className?: string
 }
 
-const COMMON_REACTIONS = ['👍', '❤️', '😄', '😮', '😢', '😡', '🎉', '🚀']
-
 export const MessageReactions: React.FC<MessageReactionsProps> = ({
   reactions,
   messageId,
@@ -28,8 +26,6 @@ export const MessageReactions: React.FC<MessageReactionsProps> = ({
   onReactionRemove,
   className
 }) => {
-  const [showReactionPicker, setShowReactionPicker] = useState(false)
-
   const handleReactionClick = (emoji: string) => {
     const existingReaction = reactions.find(r => r.emoji === emoji)
     
@@ -38,10 +34,6 @@ export const MessageReactions: React.FC<MessageReactionsProps> = ({
     } else {
       onReactionAdd?.(messageId, emoji)
     }
-  }
-
-  const handleQuickReaction = (emoji: string) => {
-    handleReactionClick(emoji)
   }
 
   return (

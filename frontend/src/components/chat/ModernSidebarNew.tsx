@@ -54,13 +54,6 @@ export default function ModernSidebar({
   const [isUserSearchOpen, setIsUserSearchOpen] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
 
-  // Get team icon based on team name or index
-  const getTeamIcon = (teamName: string) => {
-    const name = teamName.toLowerCase()
-    if (name.includes('dev') || name.includes('development')) return <Users className="h-4 w-4 text-white" />
-    return <Hash className="h-4 w-4 text-white" />
-  }
-
   // Get team gradient based on index
   const getTeamGradient = (index: number) => {
     const gradients = [

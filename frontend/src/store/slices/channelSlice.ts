@@ -262,7 +262,7 @@ const channelSlice = createSlice({
       })
       .addCase(joinChannel.fulfilled, (state, action: PayloadAction<number>) => {
         state.isLoading = false
-        // Optionally refresh channels list
+        console.log(action.payload);
         state.error = null
       })
       .addCase(joinChannel.rejected, (state, action) => {

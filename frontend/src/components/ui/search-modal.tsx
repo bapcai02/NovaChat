@@ -6,7 +6,6 @@ import { Input } from './input'
 import { Avatar } from './avatar'
 import { Badge } from './badge'
 import { cn } from '@/lib/utils'
-import { apiService } from '@/services/api'
 
 interface SearchResult {
   id: string

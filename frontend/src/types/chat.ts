@@ -70,12 +70,13 @@ export interface Message {
   reactions?: MessageReaction[]
   is_bookmarked?: boolean
   thread_messages_count?: number
-  replies_count?: number
+  replies_count?: number,
+  status?: 'sent' | 'delivered' | 'read'
 }
 
 export interface Conversation {
   id: number
-  type: 'direct' | 'channel' | 'group'
+  type: 'direct' | 'channel' | 'group' | 'team'
   name?: string
   title?: string
   team_id?: number
@@ -90,6 +91,7 @@ export interface Conversation {
   last_message?: Message
   unread_count?: number
   messages_count?: number
+  is_pinned?: boolean
 }
 
 export interface Bookmark {

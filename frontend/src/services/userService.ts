@@ -1,4 +1,3 @@
-import { apiService } from './api'
 import { User } from './authService'
 
 // User types

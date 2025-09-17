@@ -33,7 +33,7 @@ export const TypingIndicator: React.FC<TypingIndicatorProps> = ({ users, classNa
     <div className={cn("flex items-center space-x-3 p-3", className)}>
       {/* User avatars */}
       <div className="flex -space-x-2">
-        {users.slice(0, 3).map((user, index) => (
+        {users.slice(0, 3).map((user) => (
           <Avatar
             key={user.id}
             fallback={user.name}

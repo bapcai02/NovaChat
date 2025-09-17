@@ -158,7 +158,7 @@ export const TouchGestures: React.FC<TouchGesturesProps> = ({
     }
   }
 
-  const handleTouchEnd = (e: React.TouchEvent) => {
+  const handleTouchEnd = () => {
     if (disabled) return
 
     const now = Date.now()

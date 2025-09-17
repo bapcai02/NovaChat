@@ -32,15 +32,13 @@ const eslintConfig = [
       "jsx-a11y/alt-text": "off",
       "@next/next/no-img-element": "off",
     },
-    overrides: [
-      {
-        files: ["**/*.ts", "**/*.tsx"],
-        rules: {
-          // Allow temporary any in hooks/services while integrating APIs
-          "@typescript-eslint/no-explicit-any": "off",
-        }
-      }
-    ]
+  },
+  {
+    files: ["**/*.ts", "**/*.tsx"],
+    rules: {
+      // Allow temporary any in hooks/services while integrating APIs
+      "@typescript-eslint/no-explicit-any": "off",
+    }
   },
 ];
 

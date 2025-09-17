@@ -15,8 +15,6 @@ interface VoicePlayerProps {
 export const VoicePlayer: React.FC<VoicePlayerProps> = ({
   audioUrl,
   duration,
-  author,
-  timestamp,
   className
 }) => {
   const [isPlaying, setIsPlaying] = useState(false)

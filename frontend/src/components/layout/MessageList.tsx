@@ -159,7 +159,7 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, select
           .map((m: any) => String(m.id))
         setBookmarkedMessages(new Set(bookmarkedIds))
       } catch (e) {
-        // Fallback to empty array
+        console.error('Failed to fetch messages:', e)
         setMessages([] as any)
       }
     }
@@ -216,6 +216,7 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, select
             el.scrollTop = newHeight - prevHeight
           }, 0)
         } catch (e) {
+          console.error('Failed to fetch messages:', e)
           setHasMore(false)
         } finally {
           setIsTopLoading(false)
@@ -405,7 +406,7 @@ export const MessageList: React.FC<MessageListProps> = ({ onThreadSelect, select
           Loading older messages...
         </div>
       )}
-      {messages.map((message, index) => (
+      {messages.map((message) => (
         <div key={message.id} className="message-enter">
           <div className="flex space-x-3 group hover:bg-neutral-50 rounded-lg p-1.5 -m-1.5 transition-colors duration-200">
             <Avatar 

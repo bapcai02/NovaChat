@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import ModernSidebar from './ModernSidebarNew'
 import ModernChatHeader from './ModernChatHeader'
@@ -25,17 +25,14 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
   const {
     currentUser,
     teams,
-    channels,
     conversations,
     setConversations,
     currentConversation,
     messages,
-    onlineUsers,
     onlineUserIds,
     isLoading,
     isAppReady,
     wsStatus,
-    error,
     setCurrentConversation,
     handleSelectConversation,
     loadMessages,
@@ -46,16 +43,11 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
     removeBookmark,
     editMessage,
     deleteMessage,
-    updateUserStatus,
     loadUnreadCounts,
     loadConversations,
     readPointers,
     typingByConversation,
   } = useChat()
-  const reloadedRef = useRef(false)
-
-  // No auto-select/reload; user must pick a conversation explicitly
-
   const [showThread, setShowThread] = useState(false)
   const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false)
   const [rightSidebarMode, setRightSidebarMode] = useState<'members' | 'settings' | 'call' | 'video' | null>(null)
@@ -166,14 +158,13 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
   // Sync pin state with conversation data
   useEffect(() => {
     if (currentConversation) {
-      console.log('Current conversation pin state:', currentConversation.is_pinned)
       setIsPinned(currentConversation.is_pinned || false)
     } else {
       setIsPinned(false)
     }
   }, [currentConversation])
 
-  const handleSendMessage = async (content: string, attachments?: any[]) => {
+  const handleSendMessage = async (content: string) => {
     if (!currentConversation) return
     
     try {
@@ -222,12 +213,7 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
     return names
   })()
 
-  const handleSearch = () => {
-    // Search overlay handled in header; no-op hook for now
-  }
-
   const jumpToMessage = (conversationId: number, messageId: number, q?: string) => {
-    // If jumping within current conversation, scroll to message; else switch then fetch and scroll.
     const doScroll = () => {
       const el = document.querySelector(`[data-message-id="${messageId}"]`)
       if (el) {
@@ -536,7 +522,6 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
               avatar={getConversationAvatar(currentConversation)}
               isMuted={isMuted}
               isPinned={isPinned}
-              onSearch={handleSearch}
               onCall={handleCall}
               onVideoCall={handleVideoCall}
               onViewMembers={handleViewMembers}
@@ -630,10 +615,6 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
         isOwner={isCurrentUserOwner()}
       />
 
-      {/* Global search overlay for jump-to-message */}
-      {/* The overlay is managed in header, but we pass the jumper here */}
-
-      {/* Thread Chat */}
       <AnimatePresence>
         {showThread && threadMessage && (
           <motion.div
