@@ -289,6 +289,27 @@ class ChatServer implements MessageComponentInterface
                     }
                 }
                 break;
+
+            // === WebRTC signaling (audio/video) ===
+            case 'rtc_offer':
+            case 'rtc_answer':
+            case 'rtc_candidate':
+            case 'rtc_end':
+                $cidState = $this->getState($from);
+                $cid = isset($payload['conversation_id']) ? (int)$payload['conversation_id'] : ($cidState['conversation_id'] ?? null);
+                if (!$cid) { break; }
+                $signal = $payload;
+                $signal['type'] = $payload['action'];
+                unset($signal['action']);
+                $clients = $this->clientsByConversation[$cid] ?? null;
+                if ($clients instanceof SplObjectStorage) {
+                    foreach ($clients as $c) {
+                        if ($c !== $from) {
+                            $c->send(json_encode($signal, JSON_UNESCAPED_UNICODE));
+                        }
+                    }
+                }
+                break;
         }
     }
 

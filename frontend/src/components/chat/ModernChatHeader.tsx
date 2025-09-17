@@ -89,7 +89,7 @@ export default function ModernChatHeader({
 
   const getStatusText = () => {
     if (channelType === 'direct') {
-      return isOnline ? t('online') : lastSeen ? t('last_seen', { time: lastSeen }) : t('offline')
+      return isOnline ? t('online') : t('offline')
     }
     return memberCount ? `${memberCount} ${t('members')}` : ''
   }

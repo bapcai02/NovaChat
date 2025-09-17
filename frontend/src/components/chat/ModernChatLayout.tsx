@@ -14,7 +14,8 @@ import { useChat } from '@/hooks/useChat'
 import { getWebSocketClient } from '@/lib/websocket'
 import { unreadService } from '@/services/unreadService'
 import { apiService } from '@/services/api'
-import UserOnlineStatus from './UserOnlineStatus'
+import { useAudioCall } from '@/hooks/useAudioCall'
+import CallOverlay from '@/components/call/CallOverlay'
 
 interface ChatLayoutProps {
   className?: string
@@ -77,6 +78,10 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
     conversation_id: string
   } | null>(null)
 
+  // Call UI state
+  const [isCallOpen, setIsCallOpen] = useState(false)
+  const [callStatus, setCallStatus] = useState('Calling…')
+
   // Helper function to get conversation display name
   const getConversationDisplayName = (conversation: any) => {
     if (!conversation) return 'Select a conversation'
@@ -115,6 +120,16 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
     }
     
     return null
+  }
+
+  // Compute direct chat online status like sidebar
+  const getHeaderIsOnline = () => {
+    if (!currentConversation || currentConversation.type !== 'direct') return undefined
+    const otherUser = currentConversation.other_member || currentConversation.members?.find(
+      (member: any) => member.id !== currentUser?.id
+    )
+    if (!otherUser?.id) return false
+    return onlineUserIds.has(otherUser.id)
   }
 
   // Load messages when conversation changes
@@ -248,8 +263,43 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
   }
 
   const handleCall = () => {
-    setRightSidebarMode('call')
-    setIsRightSidebarOpen(true)
+    if (!currentConversation || !currentUser) return
+    try {
+      const audio = useAudioCall({ conversationId: currentConversation.id, currentUserId: currentUser.id })
+      // Register WS handlers
+      const ws = getWebSocketClient()
+      ws.onMessage((message: any) => {
+        if (message.type === 'rtc_offer' && message.conversation_id === currentConversation.id && message.from !== currentUser.id) {
+          audio.handleRemoteOffer(message.sdp)
+          setCallStatus('Incoming call…')
+          setIsCallOpen(true)
+        }
+        if (message.type === 'rtc_answer' && message.conversation_id === currentConversation.id && message.from !== currentUser.id) {
+          audio.handleRemoteAnswer(message.sdp)
+          setCallStatus('In call')
+          setIsCallOpen(true)
+        }
+        if (message.type === 'rtc_candidate' && message.conversation_id === currentConversation.id && message.from !== currentUser.id) {
+          audio.addIceCandidate(message.candidate)
+        }
+        if (message.type === 'rtc_end' && message.conversation_id === currentConversation.id) {
+          audio.hangup()
+          setIsCallOpen(false)
+          setCallStatus('Ended')
+        }
+      })
+      // Start call
+      audio.call()
+      setIsCallOpen(true)
+      setCallStatus('Calling…')
+      setRightSidebarMode(null)
+      setIsRightSidebarOpen(false)
+      
+      // Attach hangup to window for now (can be improved)
+      ;(window as any).__ncHangup = () => audio.hangup()
+    } catch (e) {
+      console.error('Failed to start audio call', e)
+    }
   }
 
   const handleVideoCall = () => {
@@ -458,6 +508,15 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
         />
       </motion.div>
 
+      {/* Call Overlay */}
+      <CallOverlay
+        open={isCallOpen}
+        onClose={() => setIsCallOpen(false)}
+        calleeName={currentConversation?.type === 'direct' ? (currentConversation?.other_member?.name || currentConversation?.members?.find((m:any)=>m.id!==currentUser?.id)?.name) : getConversationDisplayName(currentConversation)}
+        statusText={callStatus}
+        onHangup={() => { (window as any).__ncHangup?.(); setIsCallOpen(false) }}
+      />
+
       {/* Main chat area */}
       <div className="flex-1 flex flex-col min-w-0 bg-white h-screen">
         {/* Chat header (or placeholder when no conversation) */}
@@ -472,7 +531,7 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
               channelName={getConversationDisplayName(currentConversation)}
               channelType={currentConversation.type}
               memberCount={currentConversation.members?.length || 0}
-              isOnline={true}
+              isOnline={getHeaderIsOnline()}
               lastSeen="now"
               avatar={getConversationAvatar(currentConversation)}
               isMuted={isMuted}
