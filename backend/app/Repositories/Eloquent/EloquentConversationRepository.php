@@ -7,6 +7,7 @@ use App\Models\Conversation;
 use App\Models\ConversationMember;
 use App\Models\Message;
 use App\Models\User;
+use App\Models\Bookmark;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -357,6 +358,50 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
             Log::error('EloquentConversationRepository@unpinConversation failed: ' . $e->getMessage());
             return false;
         }
+    }
+
+    public function getMentions(int $userId, int $page = 1, int $limit = 20): array
+    {
+        // Simple mention detection: content contains @username of target user
+        $user = User::find($userId);
+        if (!$user) return ['data' => [], 'pagination' => ['current_page' => $page, 'last_page' => 0, 'per_page' => $limit, 'total' => 0]];
+
+        $username = $user->username ?: $user->name;
+        if (!$username) {
+            return ['data' => [], 'pagination' => ['current_page' => 1, 'last_page' => 1, 'per_page' => $limit, 'total' => 0]];
+        }
+
+        $pattern = '@' . preg_quote($username, '/');
+        $query = Message::where('content', 'like', '%'.$username.'%')
+            ->orderByDesc('id');
+
+        $total = $query->count();
+        $items = $query->skip(($page - 1) * $limit)->take($limit)->with('user')->get();
+
+        $data = $items->map(function ($m) {
+            return [
+                'id' => $m->id,
+                'conversation_id' => $m->conversation_id,
+                'content' => $m->content,
+                'sender' => [
+                    'id' => $m->user->id,
+                    'name' => $m->user->name,
+                    'username' => $m->user->username,
+                    'avatar' => $m->user->avatar,
+                ],
+                'created_at' => $m->created_at,
+            ];
+        })->toArray();
+
+        return [
+            'data' => $data,
+            'pagination' => [
+                'current_page' => $page,
+                'last_page' => (int)ceil($total / $limit),
+                'per_page' => $limit,
+                'total' => $total,
+            ],
+        ];
     }
 
     private function getLastMessage(int $conversationId): ?array

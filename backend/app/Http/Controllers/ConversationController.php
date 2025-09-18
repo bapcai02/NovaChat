@@ -221,4 +221,56 @@ class ConversationController extends Controller
             return $this->successResponse($result['data'] ?? null, $result['message'] ?? 'Conversation unpinned successfully');
         }, 'Conversation unpinned', 'Failed to unpin conversation');
     }
+
+    public function muteConversation(string $conversationId): JsonResponse
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return $this->unauthorizedResponse('Unauthenticated');
+        }
+
+        return $this->executeInTransactionWithResponse(function () use ($conversationId, $user) {
+            $result = $this->conversations->muteConversation($conversationId, $user->id);
+            if (!$result['success']) {
+                return $this->errorResponse($result['message'] ?? 'Failed to mute conversation');
+            }
+            return $this->successResponse(null, 'Conversation muted');
+        }, 'Conversation muted', 'Failed to mute conversation');
+    }
+
+    public function unmuteConversation(string $conversationId): JsonResponse
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return $this->unauthorizedResponse('Unauthenticated');
+        }
+
+        return $this->executeInTransactionWithResponse(function () use ($conversationId, $user) {
+            $result = $this->conversations->unmuteConversation($conversationId, $user->id);
+            if (!$result['success']) {
+                return $this->errorResponse($result['message'] ?? 'Failed to unmute conversation');
+            }
+            return $this->successResponse(null, 'Conversation unmuted');
+        }, 'Conversation unmuted', 'Failed to unmute conversation');
+    }
+
+    public function getMentions(Request $request): JsonResponse
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return $this->unauthorizedResponse('Unauthenticated');
+        }
+
+        $page = (int)$request->query('page', 1);
+        $limit = (int)$request->query('limit', 20);
+
+        $result = $this->conversations->getMentions($user->id, $page, $limit);
+        if (!$result['success']) {
+            return $this->errorResponse($result['message'] ?? 'Failed to load mentions');
+        }
+        return $this->successResponse([
+            'items' => $result['data'] ?? [],
+            'pagination' => $result['pagination'] ?? null,
+        ], 'Mentions loaded');
+    }
 }

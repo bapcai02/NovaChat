@@ -18,6 +18,7 @@ import { useAudioCall } from "@/hooks/useAudioCall";
 import { useVideoCall } from "@/hooks/useVideoCall";
 import CallOverlay from "@/components/call/CallOverlay";
 import VideoCallOverlay from "@/components/call/VideoCallOverlay";
+import { useIdlePresence } from "@/hooks/useIdlePresence";
 
 interface ChatLayoutProps {
   className?: string;
@@ -91,6 +92,9 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
   const [isVideoOpen, setIsVideoOpen] = useState(false);
   const [videoStatus, setVideoStatus] = useState("Calling…");
   const [isVideoMinimized, setIsVideoMinimized] = useState(false);
+
+  // Auto presence: online/away based on idle
+  useIdlePresence(currentUser?.id || 0, 60_000);
 
   // Helper function to get conversation display name
   const getConversationDisplayName = (conversation: any) => {
@@ -182,6 +186,26 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
 
     loadMembers();
   }, [currentConversation]);
+
+  // Global event listener: jump from mentions
+  useEffect(() => {
+    const handler = (e: any) => {
+      const item = e.detail;
+      if (!item) return;
+      const convId = Number(item.conversation_id);
+      const msgId = Number(item.id);
+      if (!convId || !msgId) return;
+      if (currentConversation?.id !== convId) {
+        const conv = conversations.find((c) => c.id === convId);
+        if (conv) handleSelectConversation(conv);
+        setTimeout(() => jumpToMessage(convId, msgId), 400);
+      } else {
+        jumpToMessage(convId, msgId);
+      }
+    };
+    window.addEventListener("__nc_jump_to_message", handler as any);
+    return () => window.removeEventListener("__nc_jump_to_message", handler as any);
+  }, [currentConversation, conversations]);
 
   // Sync pin state with conversation data
   useEffect(() => {
@@ -420,7 +444,17 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
   };
 
   const handleToggleMute = () => {
+    if (!currentConversation) return;
     setIsMuted((prev) => !prev);
+    try {
+      if (!isMuted) {
+        apiService.muteConversation(currentConversation.id.toString());
+      } else {
+        apiService.unmuteConversation(currentConversation.id.toString());
+      }
+    } catch (e) {
+      console.error("Failed to toggle mute", e);
+    }
   };
 
   const handleTogglePin = async () => {

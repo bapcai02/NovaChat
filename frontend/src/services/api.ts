@@ -259,6 +259,18 @@ class ApiService {
     });
   }
 
+  async muteConversation(conversationId: string) {
+    return this.request(`/conversations/${conversationId}/mute`, {
+      method: "POST",
+    });
+  }
+
+  async unmuteConversation(conversationId: string) {
+    return this.request(`/conversations/${conversationId}/unmute`, {
+      method: "POST",
+    });
+  }
+
   // Messages endpoints
   async getMessages(
     conversationId: string,
@@ -337,6 +349,11 @@ class ApiService {
       params.append("conversation_id", conversationId);
     }
     return this.request(`/search/messages?${params}`);
+  }
+
+  // Mentions endpoints
+  async getMentions(page: number = 1, limit: number = 20) {
+    return this.request(`/conversations/mentions/list?page=${page}&limit=${limit}`);
   }
 
   async searchUsers(query: string) {

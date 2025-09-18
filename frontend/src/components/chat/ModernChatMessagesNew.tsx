@@ -582,6 +582,7 @@ export default function ModernChatMessages({
                   <div
                     key={m.id}
                     className="w-4 h-4 rounded-full overflow-hidden border border-white shadow"
+                    title={`${m.name || "User"} đã xem`}
                   >
                     {m.avatar ? (
                       <img

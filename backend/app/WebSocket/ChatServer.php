@@ -27,6 +27,17 @@ class ChatServer implements MessageComponentInterface
     /** @var array<int, SplObjectStorage<ConnectionInterface, bool>> */
     private array $clientsByConversation;
 
+    /**
+     * Simple per-connection token bucket for rate limiting.
+     * @var SplObjectStorage<ConnectionInterface, array{tokens:float,last:float,violations:int}>
+     */
+    private SplObjectStorage $rateState;
+
+    /** tokens added per second */
+    private float $ratePerSecond = 20.0;
+    /** maximum burst tokens */
+    private float $rateBurst = 40.0;
+
     public function __construct()
     {
         $this->connectionToChannels = new SplObjectStorage();
@@ -34,6 +45,7 @@ class ChatServer implements MessageComponentInterface
         $this->connectionState = new SplObjectStorage();
         $this->clientsByUser = [];
         $this->clientsByConversation = [];
+        $this->rateState = new SplObjectStorage();
     }
 
     public function onOpen(ConnectionInterface $conn): void
@@ -45,6 +57,12 @@ class ChatServer implements MessageComponentInterface
             'user_id' => null,
             'conversation_id' => null,
             'subs' => [],
+        ];
+        $now = microtime(true);
+        $this->rateState[$conn] = [
+            'tokens' => $this->rateBurst,
+            'last' => $now,
+            'violations' => 0,
         ];
 
         // Send initial connected event with online users list
@@ -64,6 +82,19 @@ class ChatServer implements MessageComponentInterface
 
     public function onMessage(ConnectionInterface $from, $msg): void
     {
+        if (!$this->consumeToken($from)) {
+            $state = $this->rateState[$from] ?? ['violations' => 0, 'tokens' => 0.0, 'last' => microtime(true)];
+            $state['violations'] = (int)$state['violations'] + 1;
+            $this->rateState[$from] = $state;
+            if ($state['violations'] >= 5) {
+                Log::warning('[WS] rate_limit_disconnect', ['rid' => $from->resourceId ?? null]);
+                $from->send(json_encode(['type' => 'error', 'code' => 'rate_limited', 'message' => 'Too many messages'], JSON_UNESCAPED_UNICODE));
+                $from->close();
+                return;
+            }
+            $from->send(json_encode(['type' => 'error', 'code' => 'rate_limited', 'message' => 'Slow down'], JSON_UNESCAPED_UNICODE));
+            return;
+        }
         Log::info('[WS] onMessage:raw', ['from' => $from->resourceId ?? null, 'msg' => (string)$msg]);
         $payload = json_decode((string) $msg, true);
         Log::error('[WS] onMessage:payload', ['payload' => $payload]);
@@ -204,10 +235,17 @@ class ChatServer implements MessageComponentInterface
                     $from->send(json_encode(['type' => 'error', 'message' => 'Missing conversation_id'], JSON_UNESCAPED_UNICODE));
                     break;
                 }
+                // Basic anti-spam/content guard
+                $content = (string)($payload['content'] ?? '');
+                $content = trim($content);
+                if ($content === '' || mb_strlen($content) > 4000) {
+                    $from->send(json_encode(['type' => 'error', 'message' => 'Invalid content'], JSON_UNESCAPED_UNICODE));
+                    break;
+                }
                 $chat = [
                     'conversation_id' => $targetCid,
                     'sender_id' => isset($payload['sender_id']) ? (int)$payload['sender_id'] : null,
-                    'content' => (string)($payload['content'] ?? ''),
+                    'content' => $content,
                     'timestamp' => gmdate('c'),
                     'client_id' => $this->connectionState[$from]['client_id'],
                 ];
@@ -380,6 +418,9 @@ class ChatServer implements MessageComponentInterface
             }
             $this->connectionState->detach($conn);
         }
+        if (isset($this->rateState[$conn])) {
+            $this->rateState->detach($conn);
+        }
     }
 
     public function onError(ConnectionInterface $conn, \Exception $e): void
@@ -532,6 +573,26 @@ class ChatServer implements MessageComponentInterface
     private function setState(ConnectionInterface $conn, array $state): void
     {
         $this->connectionState[$conn] = $state;
+    }
+
+    /**
+     * Token bucket: refill by elapsed * rate, cap at burst; consume 1 per message
+     */
+    private function consumeToken(ConnectionInterface $conn): bool
+    {
+        $now = microtime(true);
+        $state = $this->rateState[$conn] ?? ['tokens' => $this->rateBurst, 'last' => $now, 'violations' => 0];
+        $elapsed = max(0.0, $now - (float)$state['last']);
+        $refilled = (float)$state['tokens'] + $elapsed * $this->ratePerSecond;
+        $state['tokens'] = min($this->rateBurst, $refilled);
+        $state['last'] = $now;
+        if ($state['tokens'] < 1.0) {
+            $this->rateState[$conn] = $state;
+            return false;
+        }
+        $state['tokens'] -= 1.0;
+        $this->rateState[$conn] = $state;
+        return true;
     }
 }
 

@@ -15,6 +15,7 @@ interface ConversationRepositoryInterface
     public function canManageMembers(int $conversationId, int $userId): bool;
     public function pinConversation(int $conversationId): bool;
     public function unpinConversation(int $conversationId): bool;
+    public function getMentions(int $userId, int $page = 1, int $limit = 20): array;
 }
 
 

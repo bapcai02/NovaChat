@@ -84,6 +84,9 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/{conversationId}', [ConversationController::class, 'show']);
         Route::get('/{conversationId}/messages', [ConversationController::class, 'getMessages']);
         Route::post('/{conversationId}/messages', [MessageController::class, 'store']);
+
+        // Mentions (for current user)
+        Route::get('/mentions/list', [ConversationController::class, 'getMentions']);
         
         // Members management
         Route::get('/{conversationId}/members', [ConversationController::class, 'getMembers']);
@@ -97,6 +100,10 @@ Route::middleware('auth:api')->group(function () {
         // Pin/Unpin conversation
         Route::post('/{conversationId}/pin', [ConversationController::class, 'pinConversation']);
         Route::post('/{conversationId}/unpin', [ConversationController::class, 'unpinConversation']);
+
+        // Mute/Unmute conversation
+        Route::post('/{conversationId}/mute', [ConversationController::class, 'muteConversation']);
+        Route::post('/{conversationId}/unmute', [ConversationController::class, 'unmuteConversation']);
     });
 
     // Messages
@@ -135,8 +142,8 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/{userId}/status', [UserStatusController::class, 'getUserStatus']);
     });
 
-    // Admin routes (protected)
-    Route::middleware('auth:api')->prefix('admin')->group(function () {
+    // Admin routes (protected + throttled)
+    Route::middleware(['auth:api','throttle:admin'])->prefix('admin')->group(function () {
         // User management
         Route::get('/users', [\App\Http\Controllers\AdminController::class, 'getUsers']);
         Route::get('/stats', [\App\Http\Controllers\AdminController::class, 'getStats']);

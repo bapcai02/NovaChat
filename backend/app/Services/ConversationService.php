@@ -207,4 +207,52 @@ class ConversationService
             return ['success' => false, 'message' => 'Failed to unpin conversation'];
         }
     }
+
+    public function muteConversation(string $conversationId, int $userId): array
+    {
+        try {
+            $isMember = $this->conversations->isMember((int)$conversationId, $userId);
+            if (!$isMember) {
+                return ['success' => false, 'message' => 'Access denied'];
+            }
+
+            \App\Models\ConversationMute::updateOrCreate(
+                ['conversation_id' => (int)$conversationId, 'user_id' => $userId],
+                ['muted_at' => now()]
+            );
+            return ['success' => true, 'message' => 'Conversation muted'];
+        } catch (\Throwable $e) {
+            Log::error('ConversationService@muteConversation failed: ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Failed to mute conversation'];
+        }
+    }
+
+    public function unmuteConversation(string $conversationId, int $userId): array
+    {
+        try {
+            $isMember = $this->conversations->isMember((int)$conversationId, $userId);
+            if (!$isMember) {
+                return ['success' => false, 'message' => 'Access denied'];
+            }
+
+            \App\Models\ConversationMute::where('conversation_id', (int)$conversationId)
+                ->where('user_id', $userId)
+                ->delete();
+            return ['success' => true, 'message' => 'Conversation unmuted'];
+        } catch (\Throwable $e) {
+            Log::error('ConversationService@unmuteConversation failed: ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Failed to unmute conversation'];
+        }
+    }
+
+    public function getMentions(int $userId, int $page = 1, int $limit = 20): array
+    {
+        try {
+            $result = $this->conversations->getMentions($userId, $page, $limit);
+            return ['success' => true, 'data' => $result['data'], 'pagination' => $result['pagination']];
+        } catch (\Throwable $e) {
+            Log::error('ConversationService@getMentions failed: ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Failed to load mentions'];
+        }
+    }
 }

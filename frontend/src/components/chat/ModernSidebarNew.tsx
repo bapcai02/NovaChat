@@ -367,29 +367,55 @@ export default function ModernSidebar({
         )}
       </div>
 
-      {/* Search */}
+      {/* Search + Mentions */}
       <div className="p-3 border-b border-gray-100">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input
-            ref={searchInputRef}
-            placeholder={t("search_messages")}
-            value={searchQuery}
-            onChange={handleSearchInputChange}
-            onFocus={handleSearchInputFocus}
-            onBlur={handleSearchInputBlur}
-            className="pl-10 h-9 bg-gray-50 border-gray-200 focus:ring-1 focus:ring-blue-400 focus:border-blue-400 focus:outline-none text-sm text-gray-700 placeholder-gray-500 transition-all duration-200"
-            style={{
-              border: "1px solid #e5e7eb",
-              boxShadow: "none",
+        <div className="relative flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              ref={searchInputRef}
+              placeholder={t("search_messages")}
+              value={searchQuery}
+              onChange={handleSearchInputChange}
+              onFocus={handleSearchInputFocus}
+              onBlur={handleSearchInputBlur}
+              className="pl-10 h-9 bg-gray-50 border-gray-200 focus:ring-1 focus:ring-blue-400 focus:border-blue-400 focus:outline-none text-sm text-gray-700 placeholder-gray-500 transition-all duration-200"
+              style={{
+                border: "1px solid #e5e7eb",
+                boxShadow: "none",
+              }}
+            />
+            <UserSearchDropdown
+              isOpen={isUserSearchOpen}
+              onClose={() => setIsUserSearchOpen(false)}
+              onUserSelect={handleUserSelect}
+              searchQuery={searchQuery}
+            />
+          </div>
+          <Button
+            variant="secondary"
+            size="sm"
+            className="h-9"
+            onClick={async () => {
+              try {
+                const res = await apiService.getMentions(1, 20);
+                const payload: any = (res as any)?.data || res;
+                const items = payload?.items || [];
+                if (!items.length) {
+                  alert("Không có mentions mới");
+                  return;
+                }
+                const first = items[0];
+                const ev = new CustomEvent("__nc_jump_to_message", { detail: first });
+                window.dispatchEvent(ev);
+              } catch (e) {
+                console.error("Load mentions failed", e);
+                alert("Không tải được mentions");
+              }
             }}
-          />
-          <UserSearchDropdown
-            isOpen={isUserSearchOpen}
-            onClose={() => setIsUserSearchOpen(false)}
-            onUserSelect={handleUserSelect}
-            searchQuery={searchQuery}
-          />
+          >
+            @ Mentions
+          </Button>
         </div>
       </div>
 

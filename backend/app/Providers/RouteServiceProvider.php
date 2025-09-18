@@ -40,6 +40,12 @@ class RouteServiceProvider extends ServiceProvider
             return Limit::perMinute(100)->by($userId ?: $request->ip());
         });
 
+        // Admin routes limiter (tighter)
+        RateLimiter::for('admin', function (Request $request) {
+            $userId = $request->user() ? $request->user()->id : null;
+            return Limit::perMinute(60)->by($userId ?: $request->ip());
+        });
+
         $this->routes(function () {
             Route::middleware('api')
                 ->prefix('api')
