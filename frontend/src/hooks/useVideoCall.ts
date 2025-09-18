@@ -20,11 +20,25 @@ export function useVideoCall(options: UseVideoCallOptions) {
 
   const ensurePeer = () => {
     if (pcRef.current) return pcRef.current;
+    const turn: any = (typeof window !== "undefined" && (window as any).NC_TURN) || null;
+    const forceRelay: boolean = Boolean(
+      typeof window !== "undefined" && (window as any).NC_TURN_FORCE,
+    );
+    const iceServers: RTCIceServer[] = [
+      { urls: "stun:stun.l.google.com:19302" },
+      { urls: "stun:global.stun.twilio.com:3478" },
+    ];
+    if (turn && turn.urls && turn.username && turn.credential) {
+      iceServers.push({
+        urls: Array.isArray(turn.urls) ? turn.urls : [turn.urls],
+        username: turn.username,
+        credential: turn.credential,
+      });
+    }
     const pc = new RTCPeerConnection({
-      iceServers: [
-        { urls: "stun:stun.l.google.com:19302" },
-        { urls: "stun:global.stun.twilio.com:3478" },
-      ],
+      iceServers,
+      // @ts-ignore: allow optional policy
+      iceTransportPolicy: forceRelay ? "relay" : "all",
     });
     pc.onicecandidate = (ev) => {
       if (ev.candidate) {

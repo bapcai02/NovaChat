@@ -3,6 +3,7 @@
 import React, { useRef, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { MessageCircle, MoreHorizontal, Smile } from "lucide-react";
+import { apiService } from "@/services/api";
 import EmojiPicker from "emoji-picker-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -77,6 +78,9 @@ const MessageBubble = ({
   const [editValue, setEditValue] = useState(message.content);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const [readers, setReaders] = useState<Array<{ id: number; name?: string; username?: string; avatar?: string }>>([]);
+  const [versions, setVersions] = useState<Array<{ id: number; action: string; old_content?: string; new_content?: string; created_at: string; editor_id?: number }>>([]);
+  const [showVersions, setShowVersions] = useState(false);
 
   const handleReaction = (emoji: string) => {
     if (testIsOwn) return;
@@ -269,6 +273,48 @@ const MessageBubble = ({
             >
               <MessageCircle className="h-4 w-4" />
             </Button>
+            <div className="relative">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-[11px] hover:bg-gray-200 text-gray-600 hover:text-gray-800"
+                onMouseEnter={async (e) => {
+                  try {
+                    const res = await apiService.getMessageReaders(String(message.id));
+                    const list = (res as any)?.data || (res as any) || [];
+                    setReaders(list as any);
+                  } catch (err) {
+                    console.error("Failed to load readers", err);
+                  }
+                }}
+              >
+                Đã xem
+              </Button>
+              {/* Tooltip under bubble */}
+              {readers && readers.length > 0 && (
+                <div
+                  className={cn(
+                    "absolute mt-1 top-full bg-white border border-gray-200 rounded-md shadow px-2 py-1 z-20",
+                    testIsOwn ? "right-0" : "left-0",
+                  )}
+                >
+                  <div className="flex -space-x-1 items-center">
+                    {readers.slice(0, 5).map((r) => (
+                      <div key={r.id} className="w-4 h-4 rounded-full overflow-hidden border border-white">
+                        {r.avatar ? (
+                          <img src={r.avatar} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full bg-gray-200" />
+                        )}
+                      </div>
+                    ))}
+                    {readers.length > 5 && (
+                      <div className="ml-1 text-[10px] text-gray-500">+{readers.length - 5}</div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
             <BookmarkButton
               messageId={message.id}
               size="sm"
@@ -314,6 +360,23 @@ const MessageBubble = ({
                         Chỉnh sửa
                       </button>
                     )}
+                    <button
+                      className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                      onClick={async () => {
+                        try {
+                          const res = await apiService.getMessageVersions(String(message.id));
+                          const list = (res as any)?.data || (res as any) || [];
+                          setVersions(list as any);
+                          setShowVersions(true);
+                        } catch (e) {
+                          console.error('Failed to load versions', e);
+                        } finally {
+                          setIsMenuOpen(false);
+                        }
+                      }}
+                    >
+                      Lịch sử chỉnh sửa
+                    </button>
                     <button
                       className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50"
                       onClick={async () => {
@@ -429,6 +492,53 @@ const MessageBubble = ({
                   <Button size="sm" className="h-8 px-3" onClick={handleEditSave}>
                     Lưu
                   </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Versions Modal */}
+        {showVersions && (
+          <div className="fixed inset-0 z-[9999] pointer-events-auto">
+            <div className="absolute inset-0 bg-white/40 backdrop-blur-sm" onClick={() => setShowVersions(false)} />
+            <div className="absolute inset-0 flex items-center justify-center p-4">
+              <div className="w-full max-w-lg bg-white border border-gray-200 rounded-xl shadow-2xl max-h-[70vh] overflow-hidden">
+                <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-gray-800">Lịch sử chỉnh sửa</h3>
+                  <button className="text-gray-500 hover:text-gray-700" onClick={() => setShowVersions(false)}>✕</button>
+                </div>
+                <div className="p-4 space-y-3 overflow-auto max-h-[60vh]">
+                  {versions.length === 0 ? (
+                    <div className="text-sm text-gray-500">Không có lịch sử</div>
+                  ) : (
+                    versions.map((v) => (
+                      <div key={v.id} className="border rounded-md p-2 bg-gray-50">
+                        <div className="text-xs text-gray-500 mb-1">{new Date(v.created_at).toLocaleString()} • {v.action}</div>
+                        {v.old_content !== undefined && (
+                          <div className="text-xs text-gray-600"><span className="font-semibold">Cũ:</span> {v.old_content}</div>
+                        )}
+                        {v.new_content !== undefined && (
+                          <div className="text-xs text-gray-700"><span className="font-semibold">Mới:</span> {v.new_content}</div>
+                        )}
+                        <div className="mt-2">
+                          <button
+                            className="text-xs text-blue-600 hover:underline"
+                            onClick={async () => {
+                              try {
+                                await apiService.restoreMessageVersion(String(message.id), String(v.id));
+                                setShowVersions(false);
+                              } catch (e) {
+                                console.error('Restore failed', e);
+                              }
+                            }}
+                          >
+                            Khôi phục phiên bản này
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             </div>

@@ -87,6 +87,7 @@ Route::middleware('auth:api')->group(function () {
 
         // Mentions (for current user)
         Route::get('/mentions/list', [ConversationController::class, 'getMentions']);
+        Route::get('/mentions/count', [ConversationController::class, 'getMentionsCount']);
         
         // Members management
         Route::get('/{conversationId}/members', [ConversationController::class, 'getMembers']);
@@ -112,6 +113,9 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/{roomId}', [MessageController::class, 'index']);
         Route::put('/{messageId}', [MessageController::class, 'edit']);
         Route::delete('/{messageId}', [MessageController::class, 'destroy']);
+        Route::get('/{messageId}/readers', [MessageController::class, 'readers']);
+        Route::get('/{messageId}/versions', [MessageController::class, 'versions']);
+        Route::post('/{messageId}/versions/{versionId}/restore', [MessageController::class, 'restoreVersion']);
         
         // Message reactions
         Route::post('/{messageId}/reactions', [MessageController::class, 'addReaction']);

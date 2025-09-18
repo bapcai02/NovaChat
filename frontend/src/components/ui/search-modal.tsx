@@ -6,6 +6,7 @@ import { Input } from "./input";
 import { Avatar } from "./avatar";
 import { Badge } from "./badge";
 import { cn } from "@/lib/utils";
+import { apiService } from "@/services/api";
 
 interface SearchResult {
   id: string;
@@ -86,15 +87,38 @@ export const SearchModal: React.FC<SearchModalProps> = ({
     setIsLoading(true);
 
     try {
-      const params = new URLSearchParams({
-        q: searchQuery.trim(),
-        type: activeFilter,
-        time: timeFilter,
-      });
-
-      const response = await api.get(`/search?${params}`);
-      const searchResults = response.data?.data || [];
-
+      const q = searchQuery.trim();
+      let searchResults: any[] = [];
+      if (activeFilter === "users") {
+        const res = await apiService.searchUsers(q);
+        const data = (res as any)?.data || (res as any);
+        searchResults = (data || []).map((u: any) => ({
+          id: String(u.id),
+          type: "user",
+          title: u.name || u.username,
+          avatar: u.avatar,
+        }));
+      } else if (activeFilter === "channels") {
+        const res = await apiService.searchConversations(q);
+        const data = (res as any)?.data || (res as any);
+        searchResults = (data || []).map((c: any) => ({
+          id: String(c.id),
+          type: "channel",
+          title: c.title || c.name,
+        }));
+      } else {
+        // messages/files/all → use message search with optional conversation filter future
+        const res = await apiService.searchMessages(q);
+        const data = (res as any)?.data || (res as any);
+        searchResults = (data || []).map((m: any) => ({
+          id: String(m.id),
+          type: "message",
+          title: m.sender?.name || `Message #${m.id}`,
+          content: m.content,
+          timestamp: m.created_at,
+          channel: m.conversation_id,
+        }));
+      }
       setResults(searchResults);
     } catch (error) {
       console.error("Search failed:", error);
@@ -131,6 +155,11 @@ export const SearchModal: React.FC<SearchModalProps> = ({
   };
 
   const handleResultSelect = (result: SearchResult) => {
+    if (result.type === "message") {
+      const detail = { id: result.id, conversation_id: result.channel } as any;
+      const ev = new CustomEvent("__nc_jump_to_message", { detail });
+      window.dispatchEvent(ev);
+    }
     onResultSelect?.(result);
     onClose();
   };

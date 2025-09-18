@@ -19,6 +19,7 @@ import { useVideoCall } from "@/hooks/useVideoCall";
 import CallOverlay from "@/components/call/CallOverlay";
 import VideoCallOverlay from "@/components/call/VideoCallOverlay";
 import { useIdlePresence } from "@/hooks/useIdlePresence";
+import { TypingIndicator } from "@/components/ui/typing-indicator";
 
 interface ChatLayoutProps {
   className?: string;
@@ -807,6 +808,22 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
             </div>
           )}
         </motion.div>
+
+        {/* Typing indicator bar for group chats */}
+        {currentConversation && typingNames.length > 0 && (
+          <div className="px-4 py-1 border-t border-gray-100 bg-white/80">
+            <TypingIndicator
+              users={(currentConversation?.members || [])
+                .filter((m: any) => typingNames.includes(m.name))
+                .map((m: any) => ({
+                  id: String(m.id),
+                  name: m.name,
+                  username: m.username,
+                  avatar: m.avatar,
+                }))}
+            />
+          </div>
+        )}
 
         {/* Chat input */}
         <motion.div

@@ -273,4 +273,15 @@ class ConversationController extends Controller
             'pagination' => $result['pagination'] ?? null,
         ], 'Mentions loaded');
     }
+
+    public function getMentionsCount(): JsonResponse
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return $this->unauthorizedResponse('Unauthenticated');
+        }
+        $result = $this->conversations->getMentions($user->id, 1, 1);
+        $total = $result['pagination']['total'] ?? 0;
+        return $this->successResponse(['count' => (int)$total], 'Mentions count');
+    }
 }

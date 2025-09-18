@@ -249,6 +249,102 @@ class MessageController extends Controller
             return $this->successResponse(['isBookmarked' => $isBookmarked], 'Bookmark status retrieved successfully');
         }, 'Bookmark status retrieved', 'Failed to check bookmark status');
     }
+
+    public function readers(string $messageId): JsonResponse
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return $this->unauthorizedResponse('Unauthenticated');
+        }
+
+        $message = \App\Models\Message::find((int)$messageId);
+        if (!$message) {
+            return $this->errorResponse('Message not found', null, 404);
+        }
+
+        // Ensure requester is member
+        $isMember = \App\Models\ConversationMember::where('conversation_id', $message->conversation_id)
+            ->where('user_id', $user->id)
+            ->exists();
+        if (!$isMember) {
+            return $this->errorResponse('Forbidden', null, 403);
+        }
+
+        $readers = \App\Models\MessageRead::getReadersForMessage(
+            (int)$message->conversation_id,
+            (int)$message->id,
+            (int)$message->user_id
+        );
+
+        return $this->successResponse($readers, 'Readers retrieved');
+    }
+
+    public function versions(string $messageId): JsonResponse
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return $this->unauthorizedResponse('Unauthenticated');
+        }
+        $message = \App\Models\Message::find((int)$messageId);
+        if (!$message) {
+            return $this->errorResponse('Message not found', null, 404);
+        }
+        $versions = \App\Models\MessageVersion::where('message_id', (int)$messageId)
+            ->orderByDesc('id')
+            ->limit(50)
+            ->get(['id','action','old_content','new_content','created_at','editor_id']);
+        return $this->successResponse($versions, 'Versions retrieved');
+    }
+
+    public function restoreVersion(string $messageId, string $versionId): JsonResponse
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return $this->unauthorizedResponse('Unauthenticated');
+        }
+
+        $message = \App\Models\Message::find((int)$messageId);
+        if (!$message) {
+            return $this->errorResponse('Message not found', null, 404);
+        }
+
+        // Only original sender can restore (simple rule)
+        if ((int)$message->user_id !== (int)$user->id) {
+            return $this->errorResponse('Forbidden', null, 403);
+        }
+
+        $version = \App\Models\MessageVersion::where('id', (int)$versionId)
+            ->where('message_id', (int)$messageId)
+            ->first();
+        if (!$version) {
+            return $this->errorResponse('Version not found', null, 404);
+        }
+
+        $old = $message->content;
+        $new = $version->old_content ?? $version->new_content ?? $old;
+
+        // persist
+        $message->content = (string)$new;
+        $message->is_edited = true;
+        $message->edited_at = now();
+        $message->save();
+
+        // record version entry
+        try {
+            \App\Models\MessageVersion::create([
+                'message_id' => (int)$messageId,
+                'editor_id' => (int)$user->id,
+                'action' => 'restore',
+                'old_content' => $old,
+                'new_content' => (string)$new,
+            ]);
+        } catch (\Throwable $e) {}
+
+        return $this->successResponse([
+            'id' => (int)$messageId,
+            'content' => (string)$new,
+        ], 'Message restored');
+    }
 }
 
 

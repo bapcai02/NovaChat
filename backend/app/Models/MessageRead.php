@@ -106,4 +106,47 @@ class MessageRead extends Model
         ->pluck('unread_count', 'conversation_id')
         ->toArray();
     }
+
+    /**
+     * Readers of a message computed from complement of unread rows.
+     * Since we delete read rows, any member without a row for this message is a reader.
+     * read_at is not tracked after deletion, so it will be null.
+     *
+     * @return array<int, array{id:int,name:string,username?:string,avatar?:string,read_at:string|null}>
+     */
+    public static function getReadersForMessage(int $conversationId, int $messageId, ?int $senderId = null): array
+    {
+        $memberIds = ConversationMember::where('conversation_id', $conversationId)
+            ->pluck('user_id')
+            ->toArray();
+
+        if ($senderId) {
+            $memberIds = array_filter($memberIds, fn($id) => (int)$id !== (int)$senderId);
+        }
+        if (empty($memberIds)) {
+            return [];
+        }
+
+        $unreadUserIds = static::where('message_id', $messageId)
+            ->whereIn('user_id', $memberIds)
+            ->pluck('user_id')
+            ->toArray();
+
+        $readIds = array_values(array_diff($memberIds, $unreadUserIds));
+        if (empty($readIds)) {
+            return [];
+        }
+
+        $users = User::whereIn('id', $readIds)->get(['id','name','username','avatar']);
+
+        return $users->map(function ($u) {
+            return [
+                'id' => (int)$u->id,
+                'name' => (string)$u->name,
+                'username' => $u->username,
+                'avatar' => $u->avatar,
+                'read_at' => null,
+            ];
+        })->toArray();
+    }
 }

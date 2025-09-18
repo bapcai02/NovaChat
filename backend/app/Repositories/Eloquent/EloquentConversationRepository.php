@@ -7,6 +7,7 @@ use App\Models\Conversation;
 use App\Models\ConversationMember;
 use App\Models\Message;
 use App\Models\User;
+use App\Models\ConversationMute;
 use App\Models\Bookmark;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -25,6 +26,9 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
         ->map(function ($conversation) use ($userId) {
             $otherMember = $conversation->members()->where('users.id', '!=', $userId)->first();
             $unreadCount = $this->getUnreadCount($conversation->id, $userId);
+            $isMuted = ConversationMute::where('conversation_id', $conversation->id)
+                ->where('user_id', $userId)
+                ->exists();
             
             return [
                 'id' => $conversation->id,
@@ -36,6 +40,7 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
                 'messages_count' => $conversation->messages_count,
                 'unread_count' => $unreadCount,
                 'is_pinned' => $conversation->is_pinned ?? false,
+                'is_muted' => $isMuted,
                 'other_member' => $otherMember ? [
                     'id' => $otherMember->id,
                     'name' => $otherMember->name,

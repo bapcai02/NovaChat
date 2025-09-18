@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
@@ -66,6 +66,22 @@ export default function ModernSidebar({
   const [searchQuery, setSearchQuery] = useState("");
   const [isUserSearchOpen, setIsUserSearchOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const [mentionsCount, setMentionsCount] = useState(0);
+  const [showPinnedOnly, setShowPinnedOnly] = useState(false);
+  const [hideMuted, setHideMuted] = useState(false);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await apiService.getMentionsCount();
+        const payload: any = (res as any)?.data || res;
+        setMentionsCount(Number(payload?.count || 0));
+      } catch {}
+    };
+    load();
+    const t = setInterval(load, 30000);
+    return () => clearInterval(t);
+  }, []);
 
   // Get team gradient based on index
   const getTeamGradient = (index: number) => {
@@ -99,7 +115,7 @@ export default function ModernSidebar({
   };
 
   // Sort conversations: pinned first, then by updated_at
-  const sortedConversations = (conversations || []).sort((a, b) => {
+  let sortedConversations = (conversations || []).sort((a, b) => {
     // Pinned conversations first
     if (a.is_pinned && !b.is_pinned) return -1;
     if (!a.is_pinned && b.is_pinned) return 1;
@@ -107,6 +123,14 @@ export default function ModernSidebar({
     // Then by updated_at
     return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
   });
+
+  // Apply filters
+  if (showPinnedOnly) {
+    sortedConversations = sortedConversations.filter((c) => c.is_pinned);
+  }
+  if (hideMuted) {
+    sortedConversations = sortedConversations.filter((c: any) => !c.is_muted);
+  }
 
   const directConversations = sortedConversations.filter(
     (conv) => conv.type === "direct",
@@ -395,28 +419,45 @@ export default function ModernSidebar({
           <Button
             variant="secondary"
             size="sm"
-            className="h-9"
-            onClick={async () => {
-              try {
-                const res = await apiService.getMentions(1, 20);
-                const payload: any = (res as any)?.data || res;
-                const items = payload?.items || [];
-                if (!items.length) {
-                  alert("Không có mentions mới");
-                  return;
-                }
-                const first = items[0];
-                const ev = new CustomEvent("__nc_jump_to_message", { detail: first });
-                window.dispatchEvent(ev);
-              } catch (e) {
-                console.error("Load mentions failed", e);
-                alert("Không tải được mentions");
-              }
-            }}
+            className="h-9 relative"
+            onClick={() => router.push("/mentions")}
           >
             @ Mentions
+            {mentionsCount > 0 && (
+              <span className="absolute -top-2 -right-2 h-5 min-w-5 px-1 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center">
+                {mentionsCount > 99 ? "99+" : mentionsCount}
+              </span>
+            )}
           </Button>
         </div>
+      </div>
+
+      {/* Filters */}
+      <div className="px-3 py-2 border-b border-gray-100 flex items-center gap-2 bg-white">
+        <button
+          className={cn(
+            "text-xs px-2 h-7 rounded-full border",
+            showPinnedOnly
+              ? "bg-yellow-50 border-yellow-200 text-yellow-700"
+              : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100",
+          )}
+          onClick={() => setShowPinnedOnly((v) => !v)}
+          title="Show pinned only"
+        >
+          Pinned
+        </button>
+        <button
+          className={cn(
+            "text-xs px-2 h-7 rounded-full border",
+            hideMuted
+              ? "bg-gray-200 border-gray-300 text-gray-800"
+              : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100",
+          )}
+          onClick={() => setHideMuted((v) => !v)}
+          title="Hide muted"
+        >
+          Hide muted
+        </button>
       </div>
 
       {/* Content */}

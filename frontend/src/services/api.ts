@@ -356,6 +356,10 @@ class ApiService {
     return this.request(`/conversations/mentions/list?page=${page}&limit=${limit}`);
   }
 
+  async getMentionsCount() {
+    return this.request(`/conversations/mentions/count`);
+  }
+
   async searchUsers(query: string) {
     return this.request(`/search/users?q=${encodeURIComponent(query)}`);
   }
@@ -403,6 +407,18 @@ class ApiService {
     return this.request(
       `/messages/${messageId}/thread?page=${page}&per_page=${perPage}`,
     );
+  }
+
+  async getMessageReaders(messageId: string) {
+    return this.request(`/messages/${messageId}/readers`);
+  }
+
+  async getMessageVersions(messageId: string) {
+    return this.request(`/messages/${messageId}/versions`);
+  }
+
+  async restoreMessageVersion(messageId: string, versionId: string) {
+    return this.request(`/messages/${messageId}/versions/${versionId}/restore`, { method: "POST" });
   }
 
   async sendThreadMessage(messageId: string, content: string) {

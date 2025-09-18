@@ -157,6 +157,17 @@ class MessageService
             return ['success' => false, 'message' => 'You can only edit your own messages'];
         }
 
+        // Save version
+        try {
+            \App\Models\MessageVersion::create([
+                'message_id' => (int)$messageId,
+                'editor_id' => $userId,
+                'action' => 'edit',
+                'old_content' => $message['content'] ?? null,
+                'new_content' => $newContent,
+            ]);
+        } catch (\Throwable $e) {}
+
         $this->messages->edit((int)$messageId, $newContent);
 
         // Get conversation type for channel selection
