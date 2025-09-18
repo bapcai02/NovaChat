@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Log;
 
 class MessageRead extends Model
 {
@@ -51,6 +52,7 @@ class MessageRead extends Model
      */
     public static function markConversationAsRead(int $conversationId, int $userId): void
     {
+        Log::info('Marking conversation as read', ['conversationId' => $conversationId, 'userId' => $userId]);
         static::whereHas('message', function ($query) use ($conversationId) {
             $query->where('conversation_id', $conversationId);
         })

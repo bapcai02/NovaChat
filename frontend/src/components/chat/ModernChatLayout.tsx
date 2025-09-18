@@ -15,7 +15,9 @@ import { getWebSocketClient } from "@/lib/websocket";
 import { unreadService } from "@/services/unreadService";
 import { apiService } from "@/services/api";
 import { useAudioCall } from "@/hooks/useAudioCall";
+import { useVideoCall } from "@/hooks/useVideoCall";
 import CallOverlay from "@/components/call/CallOverlay";
+import VideoCallOverlay from "@/components/call/VideoCallOverlay";
 
 interface ChatLayoutProps {
   className?: string;
@@ -53,6 +55,10 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
     conversationId: currentConversation?.id || 0,
     currentUserId: currentUser?.id || 0,
   });
+  const video = useVideoCall({
+    conversationId: currentConversation?.id || 0,
+    currentUserId: currentUser?.id || 0,
+  });
   const [showThread, setShowThread] = useState(false);
   const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
   const [rightSidebarMode, setRightSidebarMode] = useState<
@@ -82,6 +88,9 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
   // Call UI state
   const [isCallOpen, setIsCallOpen] = useState(false);
   const [callStatus, setCallStatus] = useState("Calling…");
+  const [isVideoOpen, setIsVideoOpen] = useState(false);
+  const [videoStatus, setVideoStatus] = useState("Calling…");
+  const [isVideoMinimized, setIsVideoMinimized] = useState(false);
 
   // Helper function to get conversation display name
   const getConversationDisplayName = (conversation: any) => {
@@ -352,9 +361,57 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
     }
   };
 
-  const handleVideoCall = () => {
-    setRightSidebarMode("video");
-    setIsRightSidebarOpen(true);
+  const handleVideoCall = async () => {
+    if (!currentConversation || !currentUser) return;
+    try {
+      const ws = getWebSocketClient();
+      ws.onMessage((message: any) => {
+        if (
+          message.type === "rtc_offer" &&
+          message.media === "video" &&
+          message.conversation_id === currentConversation.id &&
+          message.from !== currentUser.id
+        ) {
+          video.handleRemoteOffer(message.sdp);
+          setVideoStatus("Incoming video call…");
+          setIsVideoOpen(true);
+        }
+        if (
+          message.type === "rtc_answer" &&
+          message.media === "video" &&
+          message.conversation_id === currentConversation.id &&
+          message.from !== currentUser.id
+        ) {
+          video.handleRemoteAnswer(message.sdp);
+          setVideoStatus("In call");
+          setIsVideoOpen(true);
+        }
+        if (
+          message.type === "rtc_candidate" &&
+          message.conversation_id === currentConversation.id &&
+          message.from !== currentUser.id
+        ) {
+          video.addIceCandidate(message.candidate);
+        }
+        if (
+          message.type === "rtc_end" &&
+          message.conversation_id === currentConversation.id
+        ) {
+          video.hangup();
+          setIsVideoOpen(false);
+          setVideoStatus("Ended");
+        }
+      });
+      await video.call();
+      setIsVideoOpen(true);
+      setVideoStatus("Calling…");
+      setRightSidebarMode(null);
+      setIsRightSidebarOpen(false);
+      (window as any).__ncHangupVideo = () => video.hangup();
+    } catch (e) {
+      console.error("Failed to start video call", e);
+      alert("Không thể bắt đầu cuộc gọi video. Vui lòng kiểm tra camera và microphone.");
+    }
   };
 
   const handleViewMembers = () => {
@@ -602,6 +659,29 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
           (window as any).__ncHangup?.();
           setIsCallOpen(false);
         }}
+      />
+
+      {/* Video Call Overlay */}
+      <VideoCallOverlay
+        open={isVideoOpen}
+        onClose={() => setIsVideoOpen(false)}
+        calleeName={
+          currentConversation?.type === "direct"
+            ? currentConversation?.other_member?.name ||
+              currentConversation?.members?.find(
+                (m: any) => m.id !== currentUser?.id,
+              )?.name
+            : getConversationDisplayName(currentConversation)
+        }
+        statusText={videoStatus}
+        localStream={video.localStreamRef.current}
+        remoteStream={video.remoteStreamRef.current}
+        onHangup={() => {
+          (window as any).__ncHangupVideo?.();
+          setIsVideoOpen(false);
+        }}
+        minimized={isVideoMinimized}
+        onToggleMinimize={() => setIsVideoMinimized((v) => !v)}
       />
 
       {/* Main chat area */}

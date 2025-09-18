@@ -66,6 +66,7 @@ class ChatServer implements MessageComponentInterface
     {
         Log::info('[WS] onMessage:raw', ['from' => $from->resourceId ?? null, 'msg' => (string)$msg]);
         $payload = json_decode((string) $msg, true);
+        Log::error('[WS] onMessage:payload', ['payload' => $payload]);
         if (!is_array($payload) || !isset($payload['action'])) {
             // Support Node-like protocol by `type`
             if (!isset($payload['type'])) {
@@ -272,11 +273,14 @@ class ChatServer implements MessageComponentInterface
                 $cid = (int)($payload['conversation_id'] ?? 0);
                 $messageId = isset($payload['message_id']) ? (int)$payload['message_id'] : 0;
                 $readerId = isset($payload['user_id']) ? (int)$payload['user_id'] : null;
-                if ($cid <= 0 || $messageId <= 0 || $readerId === null) { break; }
-                
-                // Update MessageRead table
+                Log::error('[WS] message_read received: ' . json_encode($payload));
+                if ($cid <= 0 || $messageId <= 0 || $readerId === null) { 
+                    Log::error('[WS] message_read invalid params: cid=' . $cid . ', msgId=' . $messageId . ', readerId=' . $readerId);
+                    break; 
+                }
+                Log::info('[WS] action:message_read', ['conversation_id' => $cid, 'message_id' => $messageId, 'user_id' => $readerId]);
                 try {
-                    \App\Models\MessageRead::markAsRead($messageId, $readerId);
+                    \App\Models\MessageRead::markConversationAsRead($cid, $readerId);
                 } catch (\Throwable $e) {
                     Log::error('[WS] message_read_update_failed', [
                         'message_id' => $messageId,
