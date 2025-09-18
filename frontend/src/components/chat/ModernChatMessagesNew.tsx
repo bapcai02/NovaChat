@@ -212,6 +212,18 @@ const MessageBubble = ({
               }}
             />
           }
+          {/* Edited indicator for all messages */}
+          {message.is_edited && (
+            <div
+              className={cn(
+                "mt-1 text-[10px] italic opacity-75",
+                testIsOwn ? "text-white/80 text-right" : "text-gray-500 text-right",
+              )}
+              title={message.edited_at ? new Date(message.edited_at as any).toLocaleString() : undefined}
+            >
+              (đã chỉnh sửa)
+            </div>
+          )}
 
           {/* Thread hint below the message */}
           {((message as any).parent_id ||
@@ -590,6 +602,7 @@ export default function ModernChatMessages({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const virtuosoRef = useRef<VirtuosoHandle>(null);
+  const [showJumpLatest, setShowJumpLatest] = useState(false);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -622,6 +635,9 @@ export default function ModernChatMessages({
       const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 24;
       if (nearBottom) {
         onReachBottom?.();
+        setShowJumpLatest(false);
+      } else {
+        setShowJumpLatest(true);
       }
     };
     el.addEventListener("scroll", handler);
@@ -706,6 +722,19 @@ export default function ModernChatMessages({
                   </div>
                 ) : null,
               )}
+          </div>
+        )}
+        {showJumpLatest && (
+          <div className="fixed right-6 bottom-28 z-[5]">
+            <button
+              className="px-3 h-9 rounded-full bg-blue-600 text-white text-xs shadow hover:bg-blue-700"
+              onClick={() => {
+                virtuosoRef.current?.scrollToIndex({ index: (messages?.length || 1) - 1, align: "end", behavior: "smooth" });
+                setShowJumpLatest(false);
+              }}
+            >
+              Jump to latest
+            </button>
           </div>
         )}
         <div ref={messagesEndRef} />
