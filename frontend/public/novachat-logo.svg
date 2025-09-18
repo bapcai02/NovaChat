@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" width="320" height="80" role="img" aria-label="NovaChat">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#22d3ee"/>
+    </linearGradient>
+    <filter id="s" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <!-- Chat bubble mark -->
+  <g filter="url(#s)">
+    <path d="M40 12c-13.255 0-24 8.954-24 20s10.745 20 24 20c2.76 0 5.42-.38 7.92-1.09l10.1 6.72c1.98 1.32 4.58-.46 4.02-2.7l-2.46-9.85C63.03 41.4 64 37.79 64 32c0-11.046-10.745-20-24-20z" fill="url(#g)"/>
+    <circle cx="30" cy="32" r="3" fill="#fff"/>
+    <circle cx="40" cy="32" r="3" fill="#fff"/>
+    <circle cx="50" cy="32" r="3" fill="#fff"/>
+  </g>
+
+  <!-- Wordmark -->
+  <g fill="#0f172a">
+    <text x="88" y="38" font-family="Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial" font-weight="700" font-size="28">NovaChat</text>
+    <text x="88" y="60" font-family="Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial" font-weight="500" font-size="12" fill="#475569">Laravel • Ratchet • Redis • WebRTC</text>
+  </g>
+</svg>
+

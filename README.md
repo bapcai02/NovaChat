@@ -1,281 +1,177 @@
-# NovaChat - Modern Chat Application
+<p align="center">
+  <img src="frontend/public/novachat-logo.svg" height="64" alt="NovaChat" />
+</p>
 
-![Architecture](/frontend/public/screenshots/architecture.png)
+### NovaChat — Laravel Open Source Chat (WebSocket + WebRTC)
 
-A modern, real-time chat application built with Laravel (Backend) and Next.js (Frontend), featuring a clean UI inspired by Rocket.Chat and Slack.
+Real-time chat built with Laravel 10 + Ratchet (pure PHP WebSocket), Redis, MySQL, and Next.js. Features typing indicators, read receipts, reactions, audio/video calls (WebRTC), and a modern UI.
 
-## 🚀 Features
+Keywords: Laravel chat, Laravel WebSocket, Ratchet PHP, Redis pub/sub, WebRTC, open source chat, self-hosted chat.
 
-### Core Features
-- ✅ **User Authentication** - Register, login, logout with JWT tokens
-- ✅ **Real-time Messaging** - Send and receive messages instantly (WebSocket)
-- ✅ **Channel Management** - Create, join, and manage public/private channels
-- ✅ **Direct Messages** - Private conversations between users
-- ✅ **Message Threading** - Reply to specific messages (right panel)
-- ✅ **Message Reactions** - Emoji popover, toggle/remove, reaction counters
-- ✅ **Mentions** - Autocomplete @members, highlight in input and message bubble
-- ✅ **Read Receipts** - Sent/Delivered/Read ticks, per-user read pointers (avatars)
-- ✅ **File Attachments** - Drag & drop, paste-to-upload, progress, image/video preview
-- ✅ **Voice Messages** - Record and send voice messages
-- ✅ **User Status** - Online, away, busy, offline status
-- ✅ **Dark/Light Theme** - Toggle between themes
-- ✅ **Search** - Global overlay (messages), in-chat jump-to-message, highlight, keyboard nav
-- ✅ **Notifications** - Basis for mentions; per-conversation mute/pin
-- ✅ **Mobile Responsive** - Works on all devices
+## Features
 
-### Advanced Features
-- 🎨 **Custom Themes** - Create and customize themes
-- ⌨️ **Keyboard Shortcuts** - Power user shortcuts
-- 📊 **Message Analytics** - Read receipts and typing indicators (multi-typers)
-- 🔍 **Advanced Search** - Search with filters
-- 📱 **Mobile Optimization** - Touch gestures and responsive design
+- **Realtime messaging (WebSocket)**: Ratchet server in PHP, presence, typing, read receipts
+- **Direct messages & group conversations**: Unread counters per user
+- **Reactions & editing**: Emoji reactions, edit/delete with history
+- **Attachments**: Drag & drop, paste-to-upload, preview
+- **Audio/Video calls (WebRTC)**: 1:1 calls, screen sharing, minimized draggable video modal
+- **Online status**: Presence via Redis + heartbeat
+- **Modern UI**: Tailwind CSS, virtualized message list
+- **Auth**: Laravel Passport (OAuth2) + JWT on frontend
 
-## 🏗️ Architecture
+## Architecture
 
-### Backend (Laravel)
-- Controller + Service + Repository (Eloquent)
-- **Laravel Passport** for OAuth2 authentication
-- **MySQL** database
-- **Redis** for caching and real-time features (Streams for presence/messages)
-- **WebSocket** support for real-time messaging (Node ws gateway)
+![Architecture](frontend/public/screenshots/architecture.png)
 
-### Frontend (Next.js)
-- **Next.js 15** with App Router & Turbopack
-- **TypeScript** for type safety
-- **Tailwind CSS** for styling
-- **React Hooks** for state management + lightweight store
-- **Virtualized Lists** with `react-virtuoso` for smooth chat scrolling
-- **i18n** with `react-i18next` + localStorage language persistence
-- **Modern UI/UX** design
+```mermaid
+flowchart LR
+  subgraph Client
+    A[Next.js Frontend\nhttp://localhost:3000]
+  end
 
-### Architecture components & responsibilities
+  subgraph Server (Docker)
+    N[Nginx\n:8000] --> B[(Laravel API\nphp-fpm)]
+    S[[Supervisor]] --> C
+    C[Ratchet WS Server\nws://:7001]
+    B -- SQL --> D[(MySQL 8\n:3306)]
+    E[(Redis 7\n:6379)]
+    B <-. Pub/Sub .-> E
+    C <-. Pub/Sub .-> E
+  end
 
-- Frontend (Next.js)
-  - UI: `ModernChatLayout`, `ModernChatMessagesNew`, `ModernChatInput`, `ModernChatHeader`, `RightSidebar`.
-  - Logic: `useChat` kết hợp REST API và WebSocket client (`src/lib/websocket.ts`).
-  - Tính năng: virtualized messages, mentions autocomplete, reactions popover, read receipts, search overlay (jump-to-message), uploads kéo-thả/paste (progress).
+  A -- REST --> N
+  A -- WebSocket --> C
+  A <-- Signaling (rtc_offer/answer/candidate) --> C
 
-- WebSocket Gateway (Node ws) — `backend/ws-gateway/server.js`
-  - Nhận kết nối WS, quản lý phòng theo conversation.
-  - Xử lý: `join_conversation`, `subscribe_all_conversations`, `chat_message`, `typing_start/stop`, `message_read`.
-  - Broadcast realtime tới client trong phòng; ghi sự kiện vào Redis Streams (`chat_messages`, `user_presence`).
+  subgraph WebRTC
+    T[(STUN/TURN)]
+  end
+  A -. ICE/NAT traversal .- T
+```
 
-- Backend API (Laravel)
-  - Controllers/Services/Repositories (Eloquent) cho: messages (edit/delete/react/bookmark), conversations, unread/read, settings, search.
-  - Lưu trữ MySQL; có thể tiêu thụ Streams để persist message khi mở rộng hàng đợi.
+- **Backend (Laravel 10)**
+  - REST API: Controllers → Services → Repositories (Eloquent)
+  - WebSocket: `app/WebSocket/ChatServer.php` (Ratchet) + `RedisBridge.php`
+  - Command: `websocket:serve` integrates ReactPHP loop + Redis pub/sub
+  - Supervisor keeps the WS server alive in Docker
+  - MySQL for data, Redis for presence/pubsub
 
-- Redis
-  - Streams: `chat_messages` (hàng đợi tin nhắn), `user_presence` (online/offline) — giao tiếp nhẹ giữa gateway và backend.
+- **Frontend (Next.js 15 + TS)**
+  - WebSocket client at `src/lib/websocket.ts`
+  - Hooks: `useChat`, `useAudioCall`, `useVideoCall`
+  - UI: `ModernChatLayout`, `ModernChatMessagesNew`, `VideoCallOverlay`
 
-### End-to-end flow (tóm tắt)
+## Services & Ports
 
-1) FE gửi tin: `useChat` → WebSocket `chat_message` (đã join room).
-2) WS gateway broadcast ngay tới các client cùng conversation; đồng thời `XADD` vào stream `chat_messages` cho backend.
-3) FE hiển thị tin mới; nếu không ở cuộc trò chuyện đó, tăng `unread`.
-4) Khi cuộn chạm cuối, FE gửi `message_read` → gateway broadcast → FE cập nhật read receipts (ticks/avatars).
-5) Edit/Delete/Reaction: FE gọi REST; Laravel cập nhật DB và (tuỳ chọn) phát sự kiện cho client khác.
+- **nginx**: `http://localhost:8000` → Laravel
+- **app (php-fpm + Ratchet)**: WebSocket `ws://localhost:7001`
+- **db (MySQL 8)**: `localhost:3306`
+- **redis (7.x)**: `localhost:6379`
+- **phpmyadmin**: `http://localhost:8080`
 
-## 📋 Prerequisites
+## Quick Start
 
-- Docker and Docker Compose
-- Node.js 18+ and npm
-- Git
-
-## 🚀 Quick Start
-
-### 1. Clone the Repository
+1) Clone
 ```bash
-git clone <repository-url>
+git clone <your-repo-url>
 cd NovaChat
 ```
 
-### 2. Start Backend (Docker)
+2) Start backend (Docker)
 ```bash
 cd backend
-docker-compose up -d
+docker compose up -d --build
 ```
 
-### 3. Setup Backend Database
+3) Initialize backend
 ```bash
-# Run the setup script
-./setup.sh
+# copy env then adjust DB/REDIS as needed
+cp .env.example .env
+docker compose exec app php artisan key:generate
+docker compose exec app php artisan migrate --seed
 
-# Or manually:
-docker-compose exec app php artisan migrate:fresh
-docker-compose exec app php artisan db:seed
+# ensure WebSocket is running (Supervisor manages it)
+docker compose exec app supervisorctl status ws-server | cat
 ```
 
-### 4. Start Frontend
+4) Start frontend
 ```bash
-cd frontend
+cd ../frontend
 npm install
+echo "NEXT_PUBLIC_API_URL=http://localhost:8000/api" > .env.local
+echo "NEXT_PUBLIC_WS_URL=ws://localhost:7001" >> .env.local
 npm run dev
 ```
 
-### 5. Access the Application
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:8000/api
-- **API Documentation**: `backend/API_DOCUMENTATION.md`
+Open `http://localhost:3000`.
 
-## 👤 Demo Credentials
+## WebSocket (Ratchet) in Laravel
 
-### Admin User
-- **Email**: admin@novachat.com
-- **Password**: password123
+- Command: `php artisan websocket:serve --port=7001`
+- Implementation: `app/WebSocket/ChatServer.php`
+- Redis bridge: `app/WebSocket/RedisBridge.php` subscribes and relays messages
+- Managed by Supervisor: see `backend/supervisor/laravel-worker.conf` (`program:ws-server`)
 
-### Sample Users
-- **Email**: john@example.com
-- **Password**: password123
-
-*All sample users use the same password: `password123`*
-
-## 📁 Project Structure
-
-```
-NovaChat/
-├── backend/                      # Laravel Backend (API + WS gateway under ws-gateway/)
-│   ├── app/
-│   │   ├── Http/Controllers/
-│   │   ├── Models/
-│   │   ├── Services/
-│   │   ├── Repositories/
-│   │   └── ...
-│   ├── config/ routes/ database/
-│   ├── ws-gateway/               # Node ws server
-│   └── ...
-├── frontend/                     # Next.js Frontend
-│   ├── public/                   # Static assets (+ screenshots)
-│   └── src/
-│       ├── app/                  # App Router pages
-│       ├── components/
-│       ├── hooks/ services/ types/
-│       └── ...
-└── README.md
+Client messages (examples):
+```json
+{ "type": "join_conversation", "conversation_id": 19 }
+{ "type": "chat_message", "conversation_id": 19, "content": "Hello" }
+{ "type": "typing_start", "conversation_id": 19, "user_id": 1 }
+{ "type": "message_read", "conversation_id": 19, "message_id": 6, "user_id": 1 }
+{ "type": "rtc_offer", "conversation_id": 19, "sdp": "..." }
 ```
 
-## 🔧 Development
+## WebRTC Calls
 
-### Backend Development
+- Hooks: `src/hooks/useAudioCall.ts`, `src/hooks/useVideoCall.ts`
+- Signaling: over WebSocket (`rtc_offer`, `rtc_answer`, `rtc_candidate`, `rtc_end`)
+- STUN example: `stun:global.stun.twilio.com:3478`
+- Screen share: `getDisplayMedia` in `useVideoCall`
+
+## Environment
+
+- Backend (`backend/.env`): DB_HOST, DB_DATABASE, DB_USERNAME, DB_PASSWORD, REDIS_HOST, APP_URL
+- Frontend (`frontend/.env.local`):
+  - `NEXT_PUBLIC_API_URL=http://localhost:8000/api`
+  - `NEXT_PUBLIC_WS_URL=ws://localhost:7001`
+
+## Common Commands
+
+Backend (inside `backend/`):
 ```bash
-cd backend
-
-# Run migrations
-docker-compose exec app php artisan migrate
-
-# Run seeders
-docker-compose exec app php artisan db:seed
-
-# Clear caches
-docker-compose exec app php artisan cache:clear
-
-# View logs
-docker-compose logs -f app
+docker compose exec app php artisan migrate
+docker compose exec app php artisan db:seed
+docker compose exec app php artisan cache:clear
+docker compose logs -f app | cat
+docker compose exec app supervisorctl restart ws-server
 ```
 
-### Frontend Development
+Frontend (inside `frontend/`):
 ```bash
-cd frontend
-
-# Install dependencies
-npm install
-
-# Start development server
 npm run dev
-
-# Build for production
 npm run build
-
-# Run tests
-npm test
-
-### WebSocket Gateway
-
-The WS gateway runs under `backend/ws-gateway` (Node `ws`). It handles:
-- Connection lifecycle (heartbeat ping)
-- Join/subscribe to conversations
-- Broadcast chat_message, typing_start/stop, message_read
-
-Start (dev): from `backend/ws-gateway`, run `npm i && npm run start` (config matches Laravel URL and Redis).
+npm run lint
 ```
 
-## 🎨 UI Components
+## Troubleshooting
 
-The application includes a comprehensive set of UI components:
+- Port in use (7001): Only one WS server should run. Use Supervisor or `supervisorctl restart ws-server`.
+- Composer PHP version mismatch: run composer inside Docker `app` service.
+- Redis client errors: ensure Redis is up and `REDIS_HOST=redis` in backend `.env`.
+- WebRTC device not found: app falls back to audio-only; check browser permissions.
+- STUN URL invalid: use `stun:global.stun.twilio.com:3478` (no query params).
+- Unread count wrong: logic uses `message_reads` table per-user; verify migrations and seeders.
 
-- **Authentication Forms** - Login and registration
-- **Chat Interface** - Virtualized message list, reactions popover, mentions, receipts
-- **Channel Management** - Channel list, creation, settings
-- **User Management** - User profiles, status, search
-- **Theme System** - Dark/light mode, custom themes
-- **Notifications** - Toast notifications, badges
-- **Modals** - Various modal dialogs
-- **Responsive Design** - Mobile-optimized layouts
+## Contributing
 
-## 🔒 Security Features
+PRs welcome! Please open issues for bugs/ideas. See code style and commit conventions used across the repo.
 
-- OAuth2 authentication with Laravel Passport
-- JWT token authentication
-- Password hashing with bcrypt
-- CSRF protection
-- Input validation and sanitization
-- Rate limiting
-- Secure headers
+## License
 
-## 🚀 Deployment
+MIT
 
-### Backend Deployment
-1. Set up a server with Docker
-2. Configure environment variables
-3. Run `docker-compose up -d`
-4. Run migrations and seeders
+— Built with Laravel, Ratchet, Redis, MySQL, Next.js.
 
-### Frontend Deployment
-1. Build the application: `npm run build`
-2. Deploy to Vercel, Netlify, or any static hosting
-3. Configure environment variables
+## Screenshots
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-## 📄 License
-
-This project is licensed under the MIT License.
-
-## 🆘 Support
-
-If you encounter any issues:
-
-1. Check the logs: `docker-compose logs -f app`
-2. Verify Docker containers are running
-3. Ensure all dependencies are installed
-4. Check the API documentation
-5. Create an issue with detailed information
-
-## 🎯 Roadmap (high-level)
-
-- [x] WebSocket real-time messaging (typing, read)
-- [x] Message editing and deletion
-- [x] Reactions popover + counters
-- [x] Mentions autocomplete + highlight
-- [x] Search overlay + jump-to-message
-- [x] Virtualized messages
-- [x] File upload (drag-drop, paste, progress, preview)
-- [ ] Read receipts avatar row refine (per-user pointer position)
-- [ ] Offline queue + resend with backoff
-- [ ] Push notifications & mentions inbox
-- [ ] Video/audio calls
-- [ ] Message encryption
-- [ ] User roles and permissions
-- [ ] Export chat history
-- [ ] Mobile app (React Native)
-
-## 📸 Screenshots
-
-![Screen](/frontend/public/screenshots/screen.png)
-
-**Built with ❤️ using Laravel and Next.js**
+![Chat UI](frontend/public/screenshots/screen.png)

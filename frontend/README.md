@@ -1,6 +1,6 @@
 # NovaChat Frontend
 
-Modern chat application frontend built with Next.js, TypeScript, Tailwind CSS, and Redux Toolkit.
+Modern chat application frontend built with Next.js, TypeScript, Tailwind CSS. See the root README for full project docs (architecture, Docker, WebSocket, WebRTC).
 
 ## Features
 

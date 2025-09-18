@@ -925,7 +925,6 @@ export function useChat() {
   // Wrapper for setCurrentConversation that also resets unread count
   const handleSelectConversation = useCallback(
     async (conversation: Conversation) => {
-      // Check if this is a temporary conversation (created from user search)
       const isTemporaryConversation =
         conversation.type === "direct" &&
         conversation.other_member &&
@@ -934,9 +933,8 @@ export function useChat() {
         );
 
       if (isTemporaryConversation) {
-        // For temporary conversations, just set it directly and show empty state
         setCurrentConversation(conversation);
-        setMessages([]); // Clear messages to show empty state
+        setMessages([]);
         return;
       }
 
