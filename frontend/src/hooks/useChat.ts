@@ -164,9 +164,6 @@ export function useChat() {
           // Send read receipt for the latest message to reset unread
           try {
             const wsClient = getWebSocketClient();
-            if (wsClient.getConnectionState() !== "connected") {
-              wsClient.connect();
-            }
             const last = messagesArray[messagesArray.length - 1];
             if (last && currentUser?.id) {
               wsClient.send({
@@ -196,11 +193,6 @@ export function useChat() {
     (conversationId: number) => {
       try {
         const wsClient = getWebSocketClient();
-
-        // Connect if not already connected
-        if (wsClient.getConnectionState() !== "connected") {
-          wsClient.connect();
-        }
 
         // Join conversation
         wsClient.joinConversation(conversationId);
@@ -544,7 +536,12 @@ export function useChat() {
 
   // Send message via WebSocket
   const sendMessage = useCallback(
-    async (conversationId: number, content: string, type: string = "text") => {
+    async (
+      conversationId: number,
+      content: string,
+      type: string = "text",
+      attachments?: Array<{ name?: string; type?: string; size?: number; file?: File; remoteKey?: string }>,
+    ) => {
       try {
         // Check if this is a temporary conversation (created from user search)
         const isTemporaryConversation =
@@ -588,11 +585,14 @@ export function useChat() {
         // Create message object for immediate UI update
         const tempId = Date.now();
         const clientId = `${currentUser?.id || 0}-${Date.now()}`;
+        const hasAttachments = (attachments || []).length > 0;
+        const normalizedContent = (content || "").trim() || (hasAttachments ? "[file]" : "");
+
         const tempMessage = {
           id: tempId, // Temporary ID
           conversation_id: conversationId,
           user_id: currentUser?.id || 0,
-          content: content,
+          content: normalizedContent,
           type: type,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
@@ -607,6 +607,14 @@ export function useChat() {
           is_optimistic: true, // Flag for optimistic update
           status: "sent" as any,
           client_id: clientId,
+          attachments: (attachments || []).map((a) => ({
+            name: a.name,
+            type: a.type,
+            size: a.size,
+            remoteKey: a.remoteKey,
+            // @ts-ignore include base64 if present for immediate preview
+            data: (a as any).data,
+          })),
         };
 
         // Add to UI immediately (optimistic update)
@@ -622,11 +630,6 @@ export function useChat() {
 
         // Send via WebSocket
         try {
-          // Connect if not already connected
-          if (wsClient.getConnectionState() !== "connected") {
-            wsClient.connect();
-          }
-
           // Join conversation if not already joined
           wsClient.joinConversation(conversationId);
 
@@ -634,9 +637,16 @@ export function useChat() {
           wsClient.sendMessage(
             conversationId,
             currentUser?.id || 0,
-            content,
+            normalizedContent,
             currentUser?.name,
             currentUser?.avatar,
+            (attachments || []).map((a) => ({
+              name: a.name || (a.file as any)?.name || "file",
+              type: a.type || (a.file as any)?.type || "application/octet-stream",
+              size: a.size || (a.file as any)?.size || 0,
+              remoteKey: (a as any).remoteKey,
+              data: (a as any).data, // base64 data URL for small images
+            })),
           );
         } catch (error) {
           console.error("Failed to send message via WebSocket:", error);
@@ -1064,7 +1074,7 @@ export function useChat() {
       ws.onConnectionChange((status) => {
         setWsStatus((status as any) === "error" ? "error" : (status as any));
       });
-      if (!ws.isConnected()) {
+      if (!ws.isConnected() && ws.getConnectionState() !== "connecting") {
         ws.connect();
       }
       // Ask for notification permission early

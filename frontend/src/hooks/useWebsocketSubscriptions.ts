@@ -19,6 +19,5 @@ export function ensureSubscribeAll(
 
 export function joinConversation(conversationId: number) {
   const wsClient = getWebSocketClient();
-  if (wsClient.getConnectionState() !== "connected") wsClient.connect();
   wsClient.joinConversation(conversationId);
 }

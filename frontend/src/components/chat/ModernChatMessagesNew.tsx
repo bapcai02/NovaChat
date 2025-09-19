@@ -212,6 +212,84 @@ const MessageBubble = ({
               }}
             />
           }
+
+          {/* Attachments preview */}
+          {Array.isArray((message as any).attachments) && (message as any).attachments.length > 0 && (
+            <div className={cn("mt-2 grid gap-2", ((message as any).attachments || []).length > 1 ? "grid-cols-2" : "grid-cols-1")}
+            >
+              {((message as any).attachments || []).map((att: any, idx: number) => {
+                const isImage = typeof att?.type === "string" && att.type.startsWith("image/");
+                const url = att?.data || att?.preview || att?.url || (att?.remoteKey ? `/storage/${att.remoteKey}` : undefined);
+                const filename = att?.name || (isImage ? `image-${idx}` : `file-${idx}`);
+                if (isImage && url) {
+                  return (
+                    <div key={idx} className="relative group">
+                      <div 
+                        className="w-40 h-40 sm:w-48 sm:h-48 rounded-lg overflow-hidden border bg-gray-100 cursor-pointer"
+                        style={{ 
+                          borderColor: testIsOwn ? 'rgba(255,255,255,0.2)' : '#e5e7eb',
+                          backgroundColor: testIsOwn ? 'rgba(255,255,255,0.1)' : '#f3f4f6'
+                        }}
+                        onClick={() => window.open(url as string, '_blank')}
+                      >
+                        <img
+                          src={url}
+                          alt={filename}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="absolute bottom-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <button
+                          className="px-2 py-1 text-[10px] rounded bg-white/90 hover:bg-white border border-gray-200 text-gray-700 shadow-sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.open(url as string, '_blank');
+                          }}
+                        >
+                          Xem
+                        </button>
+                        <button
+                          className="px-2 py-1 text-[10px] rounded bg-white/90 hover:bg-white border border-gray-200 text-gray-700 shadow-sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const link = document.createElement('a');
+                            link.href = url as string;
+                            link.download = filename;
+                            link.click();
+                          }}
+                        >
+                          Tải xuống
+                        </button>
+                      </div>
+                    </div>
+                  );
+                }
+                return (
+                  <a
+                    key={idx}
+                    href={url || "#"}
+                    target={url ? "_blank" : undefined}
+                    rel={url ? "noreferrer" : undefined}
+                    download={url ? filename : undefined}
+                    className={cn(
+                      "flex items-center gap-2 px-3 py-2 rounded-md border text-xs",
+                      testIsOwn ? "bg-white/10 border-white/20 text-white" : "bg-white border-gray-200 text-gray-700",
+                    )}
+                    onClick={(e) => {
+                      if (!url) e.preventDefault();
+                    }}
+                    title={filename}
+                  >
+                    <span className="inline-block w-2 h-2 rounded-full bg-gray-400" />
+                    <span className="truncate max-w-[160px]">{filename}</span>
+                    {typeof att?.size === "number" && (
+                      <span className={cn("ml-auto", testIsOwn ? "text-white/70" : "text-gray-500")}>{Math.ceil(att.size / 1024)} KB</span>
+                    )}
+                  </a>
+                );
+              })}
+            </div>
+          )}
           {/* Edited indicator for all messages */}
           {message.is_edited && (
             <div

@@ -17,6 +17,9 @@ class MessageRequest extends FormRequest
             'content' => 'required|string',
             'type' => 'nullable|string|in:text,image,file,system',
             'metadata' => 'nullable|array',
+            // Optional attachments sent via multipart
+            'files' => 'sometimes|array',
+            'files.*' => 'file|max:20480', // 20MB per file (kilobytes)
         ];
     }
 }

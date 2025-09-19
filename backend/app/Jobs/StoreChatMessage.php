@@ -21,17 +21,19 @@ class StoreChatMessage implements ShouldQueue
     protected $content;
     protected $timestamp;
     protected $parentId;
+    protected $attachments;
 
     /**
      * Create a new job instance.
      */
-    public function __construct($conversationId, $senderId, $content, $timestamp = null, $parentId = null)
+    public function __construct($conversationId, $senderId, $content, $timestamp = null, $parentId = null, $attachments = [])
     {
         $this->conversationId = $conversationId;
         $this->senderId = $senderId;
         $this->content = $content;
         $this->timestamp = $timestamp ?: now();
         $this->parentId = $parentId;
+        $this->attachments = $attachments;
     }
 
     /**
@@ -72,12 +74,20 @@ class StoreChatMessage implements ShouldQueue
                 return;
             }
 
+            // Determine message type based on content and attachments
+            $messageType = 'text';
+            if (!empty($this->attachments)) {
+                $messageType = 'image'; // Default to image if has attachments
+                // Could be more specific based on attachment types
+            }
+
             // Create message
             $message = Message::create([
                 'conversation_id' => $this->conversationId,
                 'user_id' => $this->senderId,  // Changed from sender_id to user_id
                 'content' => $this->content,
-                'type' => 'text',
+                'type' => $messageType,
+                'metadata' => !empty($this->attachments) ? ['attachments' => $this->attachments] : null,
                 'parent_id' => $this->parentId,
                 'created_at' => $this->timestamp,
                 'updated_at' => $this->timestamp

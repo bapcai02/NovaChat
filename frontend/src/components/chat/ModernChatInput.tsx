@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import EmojiPicker from "emoji-picker-react";
 import { uploadService } from "@/services/uploadService";
+import { apiService } from "@/services/api";
 
 interface Attachment {
   id: string;
@@ -17,6 +18,7 @@ interface Attachment {
   preview?: string;
   progress?: number;
   remoteKey?: string;
+  file?: File;
 }
 
 interface ChatInputProps {
@@ -68,17 +70,41 @@ export default function ModernChatInput({
     } catch {}
   }, [conversationId]);
 
-  const handleSend = () => {
-    if (message.trim() || attachments.length > 0) {
-      onSendMessage(message.trim(), attachments);
-      setMessage("");
-      setAttachments([]);
-      setIsTyping(false);
-      // Clear draft
-      try {
-        if (conversationId) localStorage.removeItem(`nc_draft_${conversationId}`);
-      } catch {}
+  const handleSend = async () => {
+    if (!message.trim() && attachments.length === 0) return;
+
+    // Prepare base64 for image attachments so we can send inline over WS
+    const enriched: Attachment[] = [];
+    for (const att of attachments) {
+      if (att.file && att.type?.startsWith("image/") && att.size <= 1024 * 1024 * 2) {
+        // Limit inline base64 to 2MB to avoid huge WS frames
+        try {
+          const dataUrl = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(String(reader.result || ""));
+            reader.onerror = () => reject(new Error("read_error"));
+            reader.readAsDataURL(att.file as File);
+          });
+          enriched.push({ ...att, preview: att.preview,
+            // @ts-ignore add dynamic field for transport
+            data: dataUrl,
+          } as any);
+        } catch {
+          enriched.push(att);
+        }
+      } else {
+        enriched.push(att);
+      }
     }
+
+    // WS-first sending with attachments metadata (including base64 for images when small)
+    onSendMessage(message.trim(), enriched);
+    setMessage("");
+    setAttachments([]);
+    setIsTyping(false);
+    try {
+      if (conversationId) localStorage.removeItem(`nc_draft_${conversationId}`);
+    } catch {}
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -226,7 +252,7 @@ export default function ModernChatInput({
   };
 
   const validateFile = (file: File) => {
-    const maxSize = 25 * 1024 * 1024;
+    const maxSize = 20 * 1024 * 1024; // 20MB limit
     const allowed = [
       "image/",
       "video/",
@@ -246,7 +272,14 @@ export default function ModernChatInput({
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    const newAttachments: Attachment[] = files.map((file) => ({
+    const validFiles = files.filter((file) => {
+      const ok = validateFile(file);
+      if (!ok) {
+        alert("Tệp không hợp lệ hoặc vượt quá 20MB.");
+      }
+      return ok;
+    });
+    const newAttachments: Attachment[] = validFiles.map((file) => ({
       id: Math.random().toString(36).substr(2, 9),
       name: file.name,
       size: file.size,
@@ -255,36 +288,9 @@ export default function ModernChatInput({
         ? URL.createObjectURL(file)
         : undefined,
       progress: 0,
+      file,
     }));
     setAttachments((prev) => [...prev, ...newAttachments]);
-
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      if (!validateFile(file)) continue;
-      try {
-        const { url, key } = await uploadService.getSignedUrl(
-          file.name,
-          file.type,
-        );
-        await uploadService.uploadToSignedUrl(url, file, (percent) => {
-          setAttachments((prev) =>
-            prev.map((att) =>
-              att.name === file.name ? { ...att, progress: percent } : att,
-            ),
-          );
-        });
-        setAttachments((prev) =>
-          prev.map((att) =>
-            att.name === file.name
-              ? { ...att, remoteKey: key, progress: 100 }
-              : att,
-          ),
-        );
-      } catch (err) {
-        console.error("Upload failed:", err);
-        setAttachments((prev) => prev.filter((att) => att.name !== file.name));
-      }
-    }
   };
 
   const removeAttachment = (id: string) => {

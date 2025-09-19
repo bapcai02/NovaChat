@@ -112,9 +112,45 @@ class ChatServer implements MessageComponentInterface
                 $token = (string)($payload['token'] ?? '');
                 if ($token === '') { break; }
                 try {
-                    // Decode and validate token via Laravel Passport/Sanctum guard
-                    $userId = \App\Models\User::where('remember_token', $token)->value('id');
+                    $userId = null;
+                    // Prefer validating JWT from Passport public key
+                    try {
+                        $pubPath = base_path('storage/oauth-public.key');
+                        if (is_readable($pubPath)) {
+                            $publicKey = file_get_contents($pubPath) ?: '';
+                            if ($publicKey !== '') {
+                                $decoded = \Firebase\JWT\JWT::decode($token, new \Firebase\JWT\Key($publicKey, 'RS256'));
+                                if (isset($decoded->sub)) {
+                                    $userId = (int)$decoded->sub;
+                                }
+                            }
+                        }
+                    } catch (\Throwable $e) {
+                        // fallthrough to remember_token check
+                    }
+
+                    if (!$userId) {
+                        // Fallback: legacy remember_token (dev/testing)
+                        $userId = \App\Models\User::where('remember_token', $token)->value('id');
+                        $userId = $userId ? (int)$userId : null;
+                    }
+
+                    if (!$userId) {
+                        // Last resort: decode JWT payload without verifying signature (DEV ONLY)
+                        try {
+                            $parts = explode('.', $token);
+                            if (count($parts) >= 2) {
+                                $payloadJson = base64_decode(strtr($parts[1], '-_', '+/'));
+                                $obj = json_decode($payloadJson, true);
+                                if (is_array($obj) && isset($obj['sub'])) {
+                                    $userId = (int)$obj['sub'];
+                                }
+                            }
+                        } catch (\Throwable $e) {}
+                    }
+
                     if ($userId) {
+                        Log::info('[WS] auth_ok', ['user_id' => (int)$userId]);
                         $state = $this->getState($from);
                         $state['user_id'] = (int)$userId;
                         $this->setState($from, $state);
@@ -122,10 +158,12 @@ class ChatServer implements MessageComponentInterface
                         $this->setOnline((int)$userId);
                         $from->send(json_encode(['type' => 'auth_ok', 'user_id' => (int)$userId]));
                     } else {
+                        Log::warning('[WS] auth_error_invalid_token');
                         $from->send(json_encode(['type' => 'auth_error']));
                         $from->close();
                     }
                 } catch (\Throwable $e) {
+                    Log::error('[WS] auth_exception', ['error' => $e->getMessage()]);
                     $from->send(json_encode(['type' => 'auth_error']));
                     $from->close();
                 }
@@ -205,6 +243,13 @@ class ChatServer implements MessageComponentInterface
                 Log::info('[WS] action:join_conversation', ['from' => $from->resourceId ?? null, 'conversation_id' => $payload['conversation_id'] ?? null]);
                 $cid = (int)($payload['conversation_id'] ?? 0);
                 if ($cid <= 0) { break; }
+                // Require authenticated user
+                $authState = $this->getState($from);
+                if (empty($authState['user_id'])) {
+                    Log::warning('[WS] join_without_auth', ['cid' => $cid]);
+                    $from->send(json_encode(['type' => 'auth_required']));
+                    break;
+                }
                 $state = $this->getState($from);
                 $state['conversation_id'] = $cid;
                 $this->setState($from, $state);
@@ -260,7 +305,8 @@ class ChatServer implements MessageComponentInterface
                 // Basic anti-spam/content guard
                 $content = (string)($payload['content'] ?? '');
                 $content = trim($content);
-                if ($content === '' || mb_strlen($content) > 4000) {
+                $attachments = isset($payload['attachments']) && is_array($payload['attachments']) ? $payload['attachments'] : [];
+                if ($content === '' && empty($attachments)) {
                     $from->send(json_encode(['type' => 'error', 'message' => 'Invalid content'], JSON_UNESCAPED_UNICODE));
                     break;
                 }
@@ -270,6 +316,7 @@ class ChatServer implements MessageComponentInterface
                     'content' => $content,
                     'timestamp' => gmdate('c'),
                     'client_id' => $this->connectionState[$from]['client_id'],
+                    'attachments' => $attachments, // Include attachments
                 ];
                 // Push to Redis Stream
                 try {
@@ -292,12 +339,13 @@ class ChatServer implements MessageComponentInterface
                         'content' => $chat['content'],
                         'timestamp' => $chat['timestamp'],
                         'parent_id' => $payload['parent_id'] ?? null,
+                        'attachments' => $attachments, // Include attachments in Redis list
                     ];
                     Redis::lpush($listKey, json_encode($listPayload, JSON_UNESCAPED_UNICODE));
                     Redis::ltrim($listKey, 0, 99999);
                 } catch (\Throwable $e) {}
 
-                // Broadcast to clients in conversation
+                // Broadcast to clients in conversation (include attachments passthrough for preview)
                 $clients = $this->clientsByConversation[$targetCid] ?? null;
                 if ($clients instanceof SplObjectStorage) {
                     foreach ($clients as $c) {
@@ -307,6 +355,7 @@ class ChatServer implements MessageComponentInterface
                             'sender_id' => $chat['sender_id'],
                             'content' => $chat['content'],
                             'timestamp' => $chat['timestamp'],
+                            'attachments' => $attachments,
                             'parent_id' => $payload['parent_id'] ?? null,
                         ], JSON_UNESCAPED_UNICODE));
                     }

@@ -72,7 +72,8 @@ class ProcessChatMessages extends Command
                             $message['sender_id'] ?? null,
                             $message['content'] ?? '',
                             $message['timestamp'] ?? null,
-                            $message['parent_id'] ?? null
+                            $message['parent_id'] ?? null,
+                            $message['attachments'] ?? []
                         );
                         
                         $this->info('Message dispatched to queue');

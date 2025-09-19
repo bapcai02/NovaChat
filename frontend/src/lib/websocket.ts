@@ -23,6 +23,7 @@ interface WebSocketClient {
     content: string,
     senderName?: string,
     senderAvatar?: string,
+    attachments?: Array<{ name: string; type: string; size: number; data?: string; remoteKey?: string }>,
   ): void;
   sendReadReceipt(
     conversationId: number,
@@ -48,6 +49,7 @@ class NovaChatWebSocket implements WebSocketClient {
   private lastSubscribeAll: { userId: number; ids: number[] } | null = null;
   private pingTimer: any = null;
   private sendQueue: WebSocketMessage[] = [];
+  private lastJoinAt: Map<number, number> = new Map();
 
   constructor(
     private url: string = (process.env.NEXT_PUBLIC_WS_URL as string) ||
@@ -57,7 +59,7 @@ class NovaChatWebSocket implements WebSocketClient {
   connect(): void {
     if (
       this.isConnecting ||
-      (this.ws && this.ws.readyState === WebSocket.OPEN)
+      (this.ws && (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING))
     ) {
       return;
     }
@@ -170,13 +172,25 @@ class NovaChatWebSocket implements WebSocketClient {
   }
 
   joinConversation(conversationId: number): void {
+    // Debounce rapid joins and skip if already joined
+    if (this.joinedConversationIds.has(conversationId)) return;
+    const now = Date.now();
+    const last = this.lastJoinAt.get(conversationId) || 0;
+    if (now - last < 300) return;
+    this.lastJoinAt.set(conversationId, now);
+
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
       this.joinedConversationIds.add(conversationId);
-      console.warn("[WebSocket] Not connected, queue join conversation");
-      this.sendQueue.push({
-        type: "join_conversation",
-        conversation_id: conversationId,
-      } as any);
+      // avoid duplicate queued join messages
+      const alreadyQueued = this.sendQueue.some(
+        (m) => (m as any).type === "join_conversation" && (m as any).conversation_id === conversationId,
+      );
+      if (!alreadyQueued) {
+        this.sendQueue.push({
+          type: "join_conversation",
+          conversation_id: conversationId,
+        } as any);
+      }
       return;
     }
 
@@ -196,6 +210,7 @@ class NovaChatWebSocket implements WebSocketClient {
     content: string,
     senderName?: string,
     senderAvatar?: string,
+    attachments?: Array<{ name: string; type: string; size: number; data?: string; remoteKey?: string }>,
   ): void {
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
       console.warn("[WebSocket] Not connected, cannot send message");
@@ -210,6 +225,7 @@ class NovaChatWebSocket implements WebSocketClient {
       sender_avatar: senderAvatar,
       content: content,
       client_id: `${senderId}-${Date.now()}`,
+      attachments: attachments && attachments.length ? attachments : undefined,
     };
 
     this.send(message);
@@ -295,6 +311,7 @@ class NovaChatWebSocket implements WebSocketClient {
   }
 
   onMessage(callback: (message: WebSocketMessage) => void): void {
+    if (this.messageCallbacks.includes(callback)) return;
     this.messageCallbacks.push(callback);
   }
 
@@ -341,6 +358,13 @@ class NovaChatWebSocket implements WebSocketClient {
 let wsClient: NovaChatWebSocket | null = null;
 
 export const getWebSocketClient = (): NovaChatWebSocket => {
+  if (typeof window !== "undefined") {
+    const w = window as any;
+    if (!w.__nc_ws) {
+      w.__nc_ws = new NovaChatWebSocket();
+    }
+    return w.__nc_ws as NovaChatWebSocket;
+  }
   if (!wsClient) {
     wsClient = new NovaChatWebSocket();
   }

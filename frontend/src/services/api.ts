@@ -287,14 +287,40 @@ class ApiService {
     content: string,
     type: string = "text",
     metadata?: any,
+    attachments?: Array<{ file?: File; name?: string; type?: string }>,
   ) {
+    // If there are attachments with File objects, send as multipart/form-data
+    const hasFiles = Array.isArray(attachments) && attachments.some((a) => a && a.file instanceof File);
+    if (hasFiles) {
+      const form = new FormData();
+      form.append("content", content);
+      form.append("type", type);
+      if (metadata) form.append("metadata", JSON.stringify(metadata));
+      for (const att of attachments || []) {
+        if (att && att.file instanceof File) {
+          form.append("files[]", att.file, att.file.name || att.name || "file");
+        }
+      }
+      return fetch(`${this.baseURL}/conversations/${conversationId}/messages`, {
+        method: "POST",
+        headers: {
+          ...(this.token ? { Authorization: `Bearer ${this.token}` } : {}),
+          Accept: "application/json",
+        },
+        body: form,
+      }).then(async (r) => {
+        if (!r.ok) {
+          const errorData = await r.json().catch(() => ({}));
+          throw new Error(errorData.message || `HTTP error! status: ${r.status}`);
+        }
+        return r.json();
+      });
+    }
+
+    // Fallback to JSON for text-only messages
     return this.request(`/conversations/${conversationId}/messages`, {
       method: "POST",
-      body: JSON.stringify({
-        content,
-        type,
-        metadata,
-      }),
+      body: JSON.stringify({ content, type, metadata }),
     });
   }
 

@@ -82,6 +82,7 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
                 'content' => $message->content,
                 'type' => $message->type,
                 'metadata' => $message->metadata,
+                'attachments' => $message->metadata['attachments'] ?? [],
                 'is_edited' => $message->is_edited,
                 'is_pinned' => $message->is_pinned,
                 'is_deleted' => $message->is_deleted,

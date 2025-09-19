@@ -9,14 +9,13 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { AuthGuard } from "@/components/auth/AuthGuard";
 
 export default function AdminPage() {
-
   const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [hasTimedOut, setHasTimedOut] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -77,6 +76,26 @@ export default function AdminPage() {
     } catch (err) {
       console.error("Error loading stats:", err);
     }
+  };
+
+  // Fallback to avoid infinite spinner if requests hang
+  useEffect(() => {
+    if (!loading) return;
+    const timer = setTimeout(() => {
+      setHasTimedOut(true);
+      setLoading(false);
+      setError((prev) => prev || "Request timed out. Please try again.");
+    }, 15000);
+    return () => clearTimeout(timer);
+  }, [loading]);
+
+  const handleRetry = () => {
+    setError(null);
+    setHasTimedOut(false);
+    setLoading(true);
+    Promise.all([loadUsers(), loadStats()]).finally(() => {
+      // loadUsers has its own finally to set loading=false; ensure no double flip
+    });
   };
 
   const handleCreateUser = () => {
@@ -226,6 +245,18 @@ export default function AdminPage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (error || hasTimedOut) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+        <div className="bg-white shadow rounded-lg p-6 max-w-md w-full text-center">
+          <h2 className="text-lg font-semibold text-gray-800 mb-2">Không thể tải dữ liệu</h2>
+          <p className="text-sm text-gray-600 mb-4">{error || "Đã quá thời gian chờ, vui lòng thử lại."}</p>
+          <Button onClick={handleRetry} className="bg-blue-600 hover:bg-blue-700">Thử lại</Button>
+        </div>
       </div>
     );
   }

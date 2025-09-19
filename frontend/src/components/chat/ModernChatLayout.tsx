@@ -235,11 +235,19 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
     }
   }, [currentConversation]);
 
-  const handleSendMessage = async (content: string) => {
+  const handleSendMessage = async (
+    content: string,
+    attachments?: Array<{ id: string; name: string; size: number; type: string; preview?: string; remoteKey?: string; data?: string }>,
+  ) => {
     if (!currentConversation) return;
 
     try {
-      await sendMessage(currentConversation.id, content, "text");
+      await sendMessage(
+        currentConversation.id,
+        content,
+        attachments && attachments.length > 0 ? "image" : "text",
+        attachments as any,
+      );
     } catch (error) {
       console.error("Failed to send message:", error);
     }
@@ -654,22 +662,6 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
     setShowThread(false);
     setThreadMessage(null);
   };
-
-  // App-level loading gate: wait until data & ws are ready
-  if (!isAppReady) {
-    return (
-      <div
-        className={`flex h-screen bg-white text-gray-900 items-center justify-center ${className || ""}`}
-      >
-        <div className="flex flex-col items-center gap-3">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <div className="text-sm text-gray-500">
-            {wsStatus === "connecting" ? "Connecting…" : "Loading…"}
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div
