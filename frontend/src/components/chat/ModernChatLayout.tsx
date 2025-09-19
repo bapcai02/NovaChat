@@ -8,6 +8,7 @@ import ModernChatMessages from "./ModernChatMessagesNew";
 import ModernChatInput from "./ModernChatInput";
 import ModernThreadChat from "./ModernThreadChat";
 import RightSidebar from "./RightSidebar";
+import FilesTab from "./FilesTab";
 import AddMemberModal from "../modals/AddMemberModal";
 import ConfirmModal from "../modals/ConfirmModal";
 import { useChat } from "@/hooks/useChat";
@@ -65,7 +66,7 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
   const [showThread, setShowThread] = useState(false);
   const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
   const [rightSidebarMode, setRightSidebarMode] = useState<
-    "members" | "settings" | "call" | "video" | null
+    "members" | "settings" | "call" | "video" | "files" | null
   >(null);
   const [isMuted, setIsMuted] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
@@ -751,6 +752,10 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
               onCall={handleCall}
               onVideoCall={handleVideoCall}
               onViewMembers={handleViewMembers}
+              onViewFiles={() => {
+                setRightSidebarMode("files");
+                setIsRightSidebarOpen(true);
+              }}
               onToggleMute={handleToggleMute}
               onTogglePin={handleTogglePin}
               onSettings={handleSettings}
@@ -883,6 +888,17 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
         currentUserId={currentUser?.id}
         isOwner={isCurrentUserOwner()}
       />
+
+        {/* Files Tab */}
+        {rightSidebarMode === "files" && currentConversation && (
+          <div className="fixed right-0 top-0 h-full w-80 bg-white border-l border-gray-200 shadow-lg z-50">
+            <FilesTab
+              conversationId={currentConversation.id}
+              onClose={() => setIsRightSidebarOpen(false)}
+              messages={messages}
+            />
+          </div>
+        )}
 
       <AnimatePresence>
         {showThread && threadMessage && (

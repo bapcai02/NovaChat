@@ -14,6 +14,7 @@ import {
   Hash,
   MessageCircle,
   Settings,
+  File,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -45,6 +46,7 @@ interface ChatHeaderProps {
   onToggleMute?: () => void;
   onTogglePin?: () => void;
   onSettings?: () => void;
+  onViewFiles?: () => void;
   onJumpToMessage?: (
     conversationId: number,
     messageId: number,
@@ -68,6 +70,7 @@ export default function ModernChatHeader({
   onToggleMute,
   onTogglePin,
   onSettings,
+  onViewFiles,
   onJumpToMessage,
   onMarkAllRead,
 }: ChatHeaderProps) {
@@ -191,6 +194,17 @@ export default function ModernChatHeader({
           aria-label={t("members")}
         >
           <Users className="h-4 w-4" />
+        </Button>
+
+        {/* View Files */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onViewFiles}
+          className="h-8 w-8 p-0 hover:bg-gray-100 rounded-full"
+          aria-label="Files"
+        >
+          <File className="h-4 w-4" />
         </Button>
 
         {/* Toggle Mute */}
