@@ -20,6 +20,7 @@ import CallOverlay from "@/components/call/CallOverlay";
 import VideoCallOverlay from "@/components/call/VideoCallOverlay";
 import { useIdlePresence } from "@/hooks/useIdlePresence";
 import { TypingIndicator } from "@/components/ui/typing-indicator";
+import { SearchModal } from "@/components/ui/search-modal";
 
 interface ChatLayoutProps {
   className?: string;
@@ -93,6 +94,7 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
   const [isVideoOpen, setIsVideoOpen] = useState(false);
   const [videoStatus, setVideoStatus] = useState("Calling…");
   const [isVideoMinimized, setIsVideoMinimized] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   // Auto presence: online/away based on idle
   useIdlePresence(currentUser?.id || 0, 60_000);
@@ -207,6 +209,22 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
     window.addEventListener("__nc_jump_to_message", handler as any);
     return () => window.removeEventListener("__nc_jump_to_message", handler as any);
   }, [currentConversation, conversations]);
+
+  // Keyboard shortcuts: Ctrl+K to search, "/" to search
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+        e.preventDefault();
+        setIsSearchOpen(true);
+      }
+      if (!e.ctrlKey && !e.metaKey && e.key === '/') {
+        e.preventDefault();
+        setIsSearchOpen(true);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
 
   // Sync pin state with conversation data
   useEffect(() => {
@@ -839,6 +857,7 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
               placeholder={`Type message...`}
               disabled={isLoading}
               typingUsers={typingNames}
+              conversationId={currentConversation?.id}
               mentionUsers={(currentConversation?.members || []).map(
                 (m: any) => ({
                   id: m.id,
@@ -852,6 +871,7 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
             <div className="h-16 border-t border-gray-100 bg-white" />
           )}
         </motion.div>
+        <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
       </div>
 
       <RightSidebar

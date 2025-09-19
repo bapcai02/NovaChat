@@ -327,6 +327,22 @@ const MessageBubble = ({
                 </div>
               )}
             </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 text-[11px] hover:bg-gray-200 text-gray-600 hover:text-gray-800"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                try {
+                  const cid = (message as any).conversation_id;
+                  const url = `${window.location.origin}/chat?cid=${cid}&mid=${message.id}`;
+                  navigator.clipboard?.writeText(url);
+                } catch {}
+              }}
+            >
+              Copy link
+            </Button>
             <BookmarkButton
               messageId={message.id}
               size="sm"
@@ -583,6 +599,22 @@ const MessageBubble = ({
   );
 };
 
+// Memoize message bubble to avoid unnecessary re-renders
+const MemoMessageBubble = React.memo(
+  MessageBubble,
+  (prev, next) => {
+    // Re-render only if key fields change
+    const a = prev.message as any;
+    const b = next.message as any;
+    return (
+      a.id === b.id &&
+      a.content === b.content &&
+      a.is_edited === b.is_edited &&
+      a.reactions?.length === b.reactions?.length
+    );
+  },
+);
+
 export default function ModernChatMessages({
   messages,
   currentUser,
@@ -603,14 +635,29 @@ export default function ModernChatMessages({
   const containerRef = useRef<HTMLDivElement>(null);
   const virtuosoRef = useRef<VirtuosoHandle>(null);
   const [showJumpLatest, setShowJumpLatest] = useState(false);
+  const [newMsgCount, setNewMsgCount] = useState(0);
+  const lastMsgLenRef = useRef<number>(messages?.length || 0);
+  const atBottomRef = useRef<boolean>(true);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
-    // For non-virtuoso sections (empty state), keep behavior
-    scrollToBottom();
+    // Detect new messages and follow if at bottom
+    const prev = lastMsgLenRef.current;
+    const curr = messages?.length || 0;
+    if (curr > prev) {
+      if (atBottomRef.current) {
+        setTimeout(() => {
+          virtuosoRef.current?.scrollToIndex({ index: curr - 1, align: "end", behavior: "auto" });
+        }, 0);
+        setNewMsgCount(0);
+      } else {
+        setNewMsgCount((c) => c + (curr - prev));
+      }
+    }
+    lastMsgLenRef.current = curr;
   }, [messages]);
 
   // Ensure we jump to bottom when switching conversations and after initial load
@@ -636,8 +683,11 @@ export default function ModernChatMessages({
       if (nearBottom) {
         onReachBottom?.();
         setShowJumpLatest(false);
+        atBottomRef.current = true;
+        setNewMsgCount(0);
       } else {
         setShowJumpLatest(true);
+        atBottomRef.current = false;
       }
     };
     el.addEventListener("scroll", handler);
@@ -678,7 +728,7 @@ export default function ModernChatMessages({
             initialTopMostItemIndex={Math.max(0, messages.length - 1)}
             itemContent={(index, message) => (
               <div className="px-4 py-1">
-                <MessageBubble
+                <MemoMessageBubble
                   key={message.id || `message-${index}`}
                   message={message as any}
                   currentUser={currentUser}
@@ -724,16 +774,17 @@ export default function ModernChatMessages({
               )}
           </div>
         )}
-        {showJumpLatest && (
+        {(showJumpLatest || newMsgCount > 0) && (
           <div className="fixed right-6 bottom-28 z-[5]">
             <button
               className="px-3 h-9 rounded-full bg-blue-600 text-white text-xs shadow hover:bg-blue-700"
               onClick={() => {
                 virtuosoRef.current?.scrollToIndex({ index: (messages?.length || 1) - 1, align: "end", behavior: "smooth" });
                 setShowJumpLatest(false);
+                setNewMsgCount(0);
               }}
             >
-              Jump to latest
+              {newMsgCount > 0 ? `${newMsgCount} new messages` : 'Jump to latest'}
             </button>
           </div>
         )}

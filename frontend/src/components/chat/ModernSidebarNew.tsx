@@ -132,13 +132,15 @@ export default function ModernSidebar({
     sortedConversations = sortedConversations.filter((c: any) => !c.is_muted);
   }
 
-  const directConversations = sortedConversations.filter(
+  const pinnedConversations = sortedConversations.filter((c) => c.is_pinned);
+  const unpinnedConversations = sortedConversations.filter((c) => !c.is_pinned);
+  const directConversations = unpinnedConversations.filter(
     (conv) => conv.type === "direct",
   );
-  const teamConversations = sortedConversations.filter(
+  const teamConversations = unpinnedConversations.filter(
     (conv) => conv.type === "team",
   );
-  const channelConversations = sortedConversations.filter(
+  const channelConversations = unpinnedConversations.filter(
     (conv) => conv.type === "channel",
   );
 
@@ -460,6 +462,43 @@ export default function ModernSidebar({
         </button>
       </div>
 
+      {/* Pinned Conversations */}
+      {pinnedConversations.length > 0 && !showPinnedOnly && (
+        <div className="px-3 py-2 border-b border-gray-100 bg-white">
+          <div className="flex items-center space-x-2 mb-2">
+            <svg className="h-4 w-4 text-yellow-500" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2L3 7v11h4v-6h6v6h4V7l-7-5z" /></svg>
+            <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Pinned</span>
+          </div>
+          <div className="space-y-1">
+            {pinnedConversations.map((conversation) => (
+              <button
+                key={conversation.id}
+                onClick={() => onSelectConversation(conversation)}
+                className={cn(
+                  "flex items-center justify-between w-full text-left hover:bg-gray-50 rounded-lg p-2 transition-all duration-200 group",
+                  currentConversation?.id === conversation.id && "bg-gray-50 border border-gray-200",
+                )}
+              >
+                <div className="flex items-center space-x-2 flex-1 min-w-0">
+                  <div className="h-8 w-8 flex items-center justify-center bg-yellow-50 rounded-lg">
+                    <svg className="h-4 w-4 text-yellow-600" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2L3 7v11h4v-6h6v6h4V7l-7-5z" /></svg>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">{conversation.title || conversation.name || 'Conversation'}</p>
+                    <p className="text-xs text-gray-500 truncate">{conversation.type}</p>
+                  </div>
+                </div>
+                {(conversation.unread_count ?? 0) > 0 && !(conversation as any).is_muted && (
+                  <Badge className="bg-red-500 text-white text-[10px] font-bold px-1 py-0.5 h-4 min-w-[16px] flex items-center justify-center">
+                    {conversation.unread_count}
+                  </Badge>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Content */}
       <ScrollArea className="flex-1">
         <div className="p-3 space-y-6">
@@ -528,7 +567,7 @@ export default function ModernSidebar({
                         Team conversation
                       </p>
                     </div>
-                    {conversation.unread_count > 0 && (
+                    {conversation.unread_count > 0 && !(conversation as any).is_muted && (
                       <div className="h-5 w-5 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0">
                         <span className="text-xs font-medium text-white">
                           {conversation.unread_count > 99
@@ -595,7 +634,7 @@ export default function ModernSidebar({
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    {(conversation.unread_count ?? 0) > 0 && (
+                    {(conversation.unread_count ?? 0) > 0 && !(conversation as any).is_muted && (
                       <Badge className="bg-red-500 text-white text-[10px] font-bold px-1 py-0.5 h-4 min-w-[16px] flex items-center justify-center">
                         {conversation.unread_count}
                       </Badge>
@@ -695,7 +734,7 @@ export default function ModernSidebar({
                             conversation.updated_at,
                         )}
                       </span>
-                      {(conversation.unread_count ?? 0) > 0 && (
+                      {(conversation.unread_count ?? 0) > 0 && !(conversation as any).is_muted && (
                         <Badge className="bg-red-500 text-white text-[10px] font-bold px-1 py-0.5 h-4 min-w-[16px] flex items-center justify-center">
                           {conversation.unread_count}
                         </Badge>

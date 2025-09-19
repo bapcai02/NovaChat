@@ -108,6 +108,28 @@ class ChatServer implements MessageComponentInterface
         }
 
         switch ($payload['action']) {
+            case 'auth':
+                $token = (string)($payload['token'] ?? '');
+                if ($token === '') { break; }
+                try {
+                    // Decode and validate token via Laravel Passport/Sanctum guard
+                    $userId = \App\Models\User::where('remember_token', $token)->value('id');
+                    if ($userId) {
+                        $state = $this->getState($from);
+                        $state['user_id'] = (int)$userId;
+                        $this->setState($from, $state);
+                        $this->attachToUser($from, (int)$userId);
+                        $this->setOnline((int)$userId);
+                        $from->send(json_encode(['type' => 'auth_ok', 'user_id' => (int)$userId]));
+                    } else {
+                        $from->send(json_encode(['type' => 'auth_error']));
+                        $from->close();
+                    }
+                } catch (\Throwable $e) {
+                    $from->send(json_encode(['type' => 'auth_error']));
+                    $from->close();
+                }
+                break;
             case 'subscribe':
                 Log::info('[WS] action:subscribe', ['from' => $from->resourceId ?? null, 'channel' => $payload['channel'] ?? null]);
                 $channel = (string)($payload['channel'] ?? '');

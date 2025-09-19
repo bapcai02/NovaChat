@@ -3,36 +3,16 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { adminService, User, AdminStats } from "@/services/adminService";
-import {
-  Users,
-  UserPlus,
-  Search,
-  MoreHorizontal,
-  Edit,
-  Trash2,
-  Shield,
-  Mail,
-  Calendar,
-  Eye,
-  EyeOff,
-  BarChart3,
-  Ban,
-  UserCheck,
-  X,
-} from "lucide-react";
+import { Users, UserPlus, Search, MoreHorizontal, Edit, Trash2, Shield, Mail, Calendar, Eye, EyeOff, BarChart3, Ban, UserCheck, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { AuthGuard } from "@/components/auth/AuthGuard";
 
 export default function AdminPage() {
+
   const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const [stats, setStats] = useState<AdminStats | null>(null);

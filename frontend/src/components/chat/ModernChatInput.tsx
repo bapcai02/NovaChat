@@ -32,6 +32,7 @@ interface ChatInputProps {
     username?: string;
     avatar?: string;
   }>;
+  conversationId?: number;
 }
 
 export default function ModernChatInput({
@@ -42,6 +43,7 @@ export default function ModernChatInput({
   maxLength = 2000,
   typingUsers = [],
   mentionUsers = [],
+  conversationId,
 }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const [showEmojis, setShowEmojis] = useState(false);
@@ -56,12 +58,26 @@ export default function ModernChatInput({
   const [mentionQuery, setMentionQuery] = useState("");
   const [activeIdx, setActiveIdx] = useState(-1);
 
+  // Load draft on mount / conversation change
+  useEffect(() => {
+    if (!conversationId) return;
+    try {
+      const key = `nc_draft_${conversationId}`;
+      const saved = localStorage.getItem(key);
+      if (saved) setMessage(saved);
+    } catch {}
+  }, [conversationId]);
+
   const handleSend = () => {
     if (message.trim() || attachments.length > 0) {
       onSendMessage(message.trim(), attachments);
       setMessage("");
       setAttachments([]);
       setIsTyping(false);
+      // Clear draft
+      try {
+        if (conversationId) localStorage.removeItem(`nc_draft_${conversationId}`);
+      } catch {}
     }
   };
 
@@ -101,6 +117,10 @@ export default function ModernChatInput({
     const value = e.target.value;
     if (value.length <= maxLength) {
       setMessage(value);
+      // Save draft
+      try {
+        if (conversationId) localStorage.setItem(`nc_draft_${conversationId}`, value);
+      } catch {}
 
       // Typing indicator
       if (value.trim() && !isTyping) {
@@ -123,6 +143,17 @@ export default function ModernChatInput({
       }
     }
   };
+
+  // Auto stop typing after idle 2s
+  useEffect(() => {
+    if (!onTyping) return;
+    if (!isTyping) return;
+    const t = setTimeout(() => {
+      setIsTyping(false);
+      onTyping(false);
+    }, 2000);
+    return () => clearTimeout(t);
+  }, [isTyping, onTyping, message]);
 
   const handleEmojiSelect = (emojiData: any) => {
     setMessage((prev) => prev + emojiData.emoji);

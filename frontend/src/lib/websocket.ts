@@ -65,12 +65,23 @@ class NovaChatWebSocket implements WebSocketClient {
     this.isConnecting = true;
 
     try {
-      this.ws = new WebSocket(this.url);
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("auth_token") : "";
+      const urlWithToken = token
+        ? `${this.url}${this.url.includes("?") ? "&" : "?"}token=${encodeURIComponent(
+            token,
+          )}`
+        : this.url;
+      this.ws = new WebSocket(urlWithToken);
 
       this.ws.onopen = () => {
         this.isConnecting = false;
         this.reconnectAttempts = 0;
         this.notifyConnectionChange("connected");
+        // Authenticate via message fallback (in case server ignores querystring)
+        if (token) {
+          this.send({ type: "auth", token } as any);
+        }
         // Heartbeat
         if (this.pingTimer) clearInterval(this.pingTimer);
         this.pingTimer = setInterval(() => {
