@@ -306,6 +306,7 @@ class ChatServer implements MessageComponentInterface
                 $content = (string)($payload['content'] ?? '');
                 $content = trim($content);
                 $attachments = isset($payload['attachments']) && is_array($payload['attachments']) ? $payload['attachments'] : [];
+                Log::info('[WS] chat_message_attachments', ['attachments' => $attachments, 'count' => count($attachments)]);
                 if ($content === '' && empty($attachments)) {
                     $from->send(json_encode(['type' => 'error', 'message' => 'Invalid content'], JSON_UNESCAPED_UNICODE));
                     break;

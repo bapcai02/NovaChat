@@ -76,8 +76,8 @@ export default function ModernChatInput({
     // Prepare base64 for image attachments so we can send inline over WS
     const enriched: Attachment[] = [];
     for (const att of attachments) {
-      if (att.file && att.type?.startsWith("image/") && att.size <= 1024 * 1024 * 2) {
-        // Limit inline base64 to 2MB to avoid huge WS frames
+      if (att.file) {
+        // Convert ALL files to base64 (not just images)
         try {
           const dataUrl = await new Promise<string>((resolve, reject) => {
             const reader = new FileReader();
@@ -89,7 +89,8 @@ export default function ModernChatInput({
             // @ts-ignore add dynamic field for transport
             data: dataUrl,
           } as any);
-        } catch {
+        } catch (error) {
+          console.error('Failed to convert file to base64:', error);
           enriched.push(att);
         }
       } else {
@@ -279,17 +280,38 @@ export default function ModernChatInput({
       }
       return ok;
     });
-    const newAttachments: Attachment[] = validFiles.map((file) => ({
-      id: Math.random().toString(36).substr(2, 9),
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      preview: file.type.startsWith("image/")
-        ? URL.createObjectURL(file)
-        : undefined,
-      progress: 0,
-      file,
-    }));
+    
+    const newAttachments: Attachment[] = [];
+    
+    for (const file of validFiles) {
+      const attachment: Attachment = {
+        id: Math.random().toString(36).substr(2, 9),
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        preview: file.type.startsWith("image/")
+          ? URL.createObjectURL(file)
+          : undefined,
+        progress: 0,
+        file,
+      };
+      
+      // Convert file to base64 for sending
+      try {
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = () => reject(new Error('Failed to read file'));
+          reader.readAsDataURL(file);
+        });
+        attachment.data = base64;
+      } catch (error) {
+        console.error('Failed to convert file to base64:', error);
+      }
+      
+      newAttachments.push(attachment);
+    }
+    
     setAttachments((prev) => [...prev, ...newAttachments]);
   };
 

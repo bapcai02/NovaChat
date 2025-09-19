@@ -81,6 +81,7 @@ const MessageBubble = ({
   const [readers, setReaders] = useState<Array<{ id: number; name?: string; username?: string; avatar?: string }>>([]);
   const [versions, setVersions] = useState<Array<{ id: number; action: string; old_content?: string; new_content?: string; created_at: string; editor_id?: number }>>([]);
   const [showVersions, setShowVersions] = useState(false);
+  const [previewImage, setPreviewImage] = useState<{ url: string; name: string } | null>(null);
 
   const handleReaction = (emoji: string) => {
     if (testIsOwn) return;
@@ -214,10 +215,11 @@ const MessageBubble = ({
           }
 
           {/* Attachments preview */}
-          {Array.isArray((message as any).attachments) && (message as any).attachments.length > 0 && (
-            <div className={cn("mt-2 grid gap-2", ((message as any).attachments || []).length > 1 ? "grid-cols-2" : "grid-cols-1")}
-            >
-              {((message as any).attachments || []).map((att: any, idx: number) => {
+          {(() => {
+            const attachments = (message as any).attachments || (message as any).metadata?.attachments || [];
+            return Array.isArray(attachments) && attachments.length > 0 && (
+              <div className={cn("mt-2 grid gap-2", attachments.length > 1 ? "grid-cols-2" : "grid-cols-1")}>
+                {attachments.map((att: any, idx: number) => {
                 const isImage = typeof att?.type === "string" && att.type.startsWith("image/");
                 const url = att?.data || att?.preview || att?.url || (att?.remoteKey ? `/storage/${att.remoteKey}` : undefined);
                 const filename = att?.name || (isImage ? `image-${idx}` : `file-${idx}`);
@@ -230,7 +232,7 @@ const MessageBubble = ({
                           borderColor: testIsOwn ? 'rgba(255,255,255,0.2)' : '#e5e7eb',
                           backgroundColor: testIsOwn ? 'rgba(255,255,255,0.1)' : '#f3f4f6'
                         }}
-                        onClick={() => window.open(url as string, '_blank')}
+                        onClick={() => setPreviewImage({ url: url as string, name: filename })}
                       >
                         <img
                           src={url}
@@ -243,7 +245,7 @@ const MessageBubble = ({
                           className="px-2 py-1 text-[10px] rounded bg-white/90 hover:bg-white border border-gray-200 text-gray-700 shadow-sm"
                           onClick={(e) => {
                             e.stopPropagation();
-                            window.open(url as string, '_blank');
+                            setPreviewImage({ url: url as string, name: filename });
                           }}
                         >
                           Xem
@@ -265,31 +267,97 @@ const MessageBubble = ({
                   );
                 }
                 return (
-                  <a
-                    key={idx}
-                    href={url || "#"}
-                    target={url ? "_blank" : undefined}
-                    rel={url ? "noreferrer" : undefined}
-                    download={url ? filename : undefined}
-                    className={cn(
-                      "flex items-center gap-2 px-3 py-2 rounded-md border text-xs",
+                  <div key={idx} className="relative group">
+                    <div className={cn(
+                      "flex items-center gap-2 px-3 py-2 rounded-md border text-xs cursor-pointer",
                       testIsOwn ? "bg-white/10 border-white/20 text-white" : "bg-white border-gray-200 text-gray-700",
                     )}
-                    onClick={(e) => {
-                      if (!url) e.preventDefault();
+                    onClick={() => {
+                      console.log('File clicked:', { url, filename, att, message: message });
+                      console.log('Message metadata:', (message as any).metadata);
+                      console.log('Message attachments:', (message as any).attachments);
+                      
+                      if (url) {
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = filename;
+                        link.target = '_blank';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                      } else if (att?.data) {
+                        // Download from base64 data
+                        const link = document.createElement('a');
+                        link.href = att.data;
+                        link.download = filename;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                      } else if (att?.file) {
+                        // Try to download from File object
+                        const link = document.createElement('a');
+                        link.href = URL.createObjectURL(att.file);
+                        link.download = filename;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(link.href);
+                      } else if (att?.preview) {
+                        // Try to download from preview URL
+                        const link = document.createElement('a');
+                        link.href = att.preview;
+                        link.download = filename;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                      } else {
+                        // File không có nội dung, chỉ có metadata
+                        alert(`File "${filename}" không thể tải xuống vì chỉ có thông tin metadata:\n\n- Tên: ${filename}\n- Kích thước: ${att?.size ? Math.ceil(att.size / 1024) + 'KB' : 'Unknown'}\n- Loại: ${att?.type || 'Unknown'}\n\nFile này được upload trước khi hệ thống cập nhật để lưu nội dung file.`);
+                      }
                     }}
-                    title={filename}
-                  >
-                    <span className="inline-block w-2 h-2 rounded-full bg-gray-400" />
-                    <span className="truncate max-w-[160px]">{filename}</span>
-                    {typeof att?.size === "number" && (
-                      <span className={cn("ml-auto", testIsOwn ? "text-white/70" : "text-gray-500")}>{Math.ceil(att.size / 1024)} KB</span>
-                    )}
-                  </a>
+                    >
+                      <span className="inline-block w-2 h-2 rounded-full bg-gray-400" />
+                      <span className="truncate max-w-[160px]">{filename}</span>
+                      {typeof att?.size === "number" && (
+                        <span className={cn("ml-auto", testIsOwn ? "text-white/70" : "text-gray-500")}>{Math.ceil(att.size / 1024)} KB</span>
+                      )}
+                    </div>
+                    <div className="absolute bottom-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <button
+                        className="px-2 py-1 text-[10px] rounded bg-white/90 hover:bg-white border border-gray-200 text-gray-700 shadow-sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          console.log('Download button clicked:', { url, filename, att });
+                          if (url) {
+                            const link = document.createElement('a');
+                            link.href = url;
+                            link.download = filename;
+                            link.target = '_blank';
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                          } else if (att?.data) {
+                            // Download from base64 data
+                            const link = document.createElement('a');
+                            link.href = att.data;
+                            link.download = filename;
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                          } else {
+                            alert('Không thể tải xuống: File không có dữ liệu');
+                          }
+                        }}
+                      >
+                        Tải xuống
+                      </button>
+                    </div>
+                  </div>
                 );
-              })}
-            </div>
-          )}
+                })}
+              </div>
+            );
+          })()}
           {/* Edited indicator for all messages */}
           {message.is_edited && (
             <div
@@ -670,6 +738,53 @@ const MessageBubble = ({
             {message.is_edited && (
               <span className="ml-1 italic">(đã chỉnh sửa)</span>
             )}
+          </div>
+        )}
+
+        {/* Image Preview Modal */}
+        {previewImage && (
+          <div className="fixed inset-0 z-[9999] pointer-events-auto">
+            <div 
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm" 
+              onClick={() => setPreviewImage(null)}
+            />
+            <div className="absolute inset-0 flex items-center justify-center p-4">
+              <div className="relative max-w-[90vw] max-h-[90vh] bg-white rounded-lg shadow-2xl overflow-hidden">
+                <div className="absolute top-4 right-4 z-10 flex gap-2">
+                  <button
+                    className="w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center"
+                    onClick={() => {
+                      const link = document.createElement('a');
+                      link.href = previewImage.url;
+                      link.download = previewImage.name;
+                      link.click();
+                    }}
+                    title="Tải xuống"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </button>
+                  <button
+                    className="w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center"
+                    onClick={() => setPreviewImage(null)}
+                    title="Đóng"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                <img
+                  src={previewImage.url}
+                  alt={previewImage.name}
+                  className="max-w-full max-h-full object-contain"
+                />
+                <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-3">
+                  <p className="text-sm font-medium truncate">{previewImage.name}</p>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
