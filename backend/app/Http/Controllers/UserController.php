@@ -18,9 +18,27 @@ class UserController extends Controller
     public function index(): JsonResponse
     {
         return $this->executeInTransactionWithResponse(function () {
-            $data = $this->users->getAllUsers(100);
+            $users = $this->users->getAllUsers(100);
+            
+            // Convert avatar to full URL for each user
+            $formattedUsers = array_map(function ($user) {
+                // Convert avatar to full URL
+                $avatar = $user->avatar ?? null;
+                if ($avatar) {
+                    // Remove /storage/ prefix if it exists
+                    if (strpos($avatar, '/storage/') === 0) {
+                        $avatar = substr($avatar, 9); // Remove '/storage/' (9 characters)
+                    }
+                    $avatar = 'http://localhost:8000/storage/' . $avatar;
+                }
+                
+                // Convert to array and update avatar
+                $userArray = $user->toArray();
+                $userArray['avatar'] = $avatar;
+                return $userArray;
+            }, $users);
 
-            return $this->successResponse($data, 'Users retrieved successfully');
+            return $this->successResponse($formattedUsers, 'Users retrieved successfully');
         }, 'Users retrieved', 'Failed to retrieve users');
     }
 
@@ -37,10 +55,20 @@ class UserController extends Controller
 
             // Format the response as requested
             $formattedUsers = array_map(function ($user) {
+                // Convert avatar to full URL
+                $avatar = $user['avatar'] ?? null;
+                if ($avatar) {
+                    // Remove /storage/ prefix if it exists
+                    if (strpos($avatar, '/storage/') === 0) {
+                        $avatar = substr($avatar, 9); // Remove '/storage/' (9 characters)
+                    }
+                    $avatar = 'http://localhost:8000/storage/' . $avatar;
+                }
+
                 return [
                     'id' => $user['id'],
                     'name' => $user['name'],
-                    'avatar' => $user['avatar'] ?? null,
+                    'avatar' => $avatar,
                     'status' => $user['is_online'] ? 'online' : 'offline',
                 ];
             }, $users);

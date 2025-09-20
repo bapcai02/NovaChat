@@ -65,8 +65,18 @@ class AuthService
 
         $token = $user->createToken('auth_token')->accessToken;
 
+        // Convert avatar to full URL
+        $userData = $user->only(['id', 'name', 'email', 'username', 'avatar', 'is_online', 'last_seen_at']);
+        if ($userData['avatar']) {
+            $avatarPath = $userData['avatar'];
+            if (strpos($avatarPath, '/storage/') === 0) {
+                $avatarPath = substr($avatarPath, 9); // Remove '/storage/' (9 characters)
+            }
+            $userData['avatar'] = 'http://localhost:8000/storage/' . $avatarPath;
+        }
+
         return [true, 200, [
-            'user' => $user->only(['id', 'name', 'email', 'username', 'avatar', 'is_online', 'last_seen_at']),
+            'user' => $userData,
             'token' => $token,
             'token_type' => 'Bearer',
             'message' => 'Login successful',
@@ -108,6 +118,18 @@ class AuthService
 
     public function me(): array
     {
-        return [true, 200, ['user' => Auth::user(), 'message' => 'User retrieved successfully']];
+        $user = Auth::user();
+        
+        // Convert avatar to full URL
+        if ($user && $user->avatar) {
+            // Remove /storage/ prefix if it exists
+            $avatarPath = $user->avatar;
+            if (strpos($avatarPath, '/storage/') === 0) {
+                $avatarPath = substr($avatarPath, 9); // Remove '/storage/' (9 characters)
+            }
+            $user->avatar = 'http://localhost:8000/storage/' . $avatarPath;
+        }
+        
+        return [true, 200, ['user' => $user, 'message' => 'User retrieved successfully']];
     }
 }

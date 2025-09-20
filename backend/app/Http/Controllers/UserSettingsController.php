@@ -28,30 +28,73 @@ class UserSettingsController extends Controller
     public function getProfile(Request $request)
     {
         $user = $request->user();
+        
+        // Convert avatar to full URL
+        if ($user && $user->avatar) {
+            // Remove /storage/ prefix if it exists
+            $avatarPath = $user->avatar;
+            if (strpos($avatarPath, '/storage/') === 0) {
+                $avatarPath = substr($avatarPath, 9); // Remove '/storage/' (9 characters)
+            }
+            $user->avatar = 'http://localhost:8000/storage/' . $avatarPath;
+        }
 
         return response()->json(['data' => $user]);
     }
 
     public function updateProfile(UpdateProfileRequest $request)
     {
+        // Get validated data
         $data = $request->validated();
-        $userId = (int) ($data['id'] ?? 0);
-        if ($userId <= 0) {
-            return response()->json(['message' => 'Invalid user id'], 422);
-        }
+        $user = $request->user();
+        $userId = $user->id;
 
         try {
+            // Filter out empty values and only keep fields that have actual values
+            $updateData = array_filter($data, function($value) {
+                return $value !== null && $value !== '';
+            });
+
             // Handle avatar upload if a file is provided
             if ($request->hasFile('avatar')) {
                 $path = $request->file('avatar')->store('avatars', 'public');
-                $data['avatar'] = Storage::url($path);
+                $updateData['avatar'] = Storage::url($path);
+            } elseif (isset($data['avatar']) && $data['avatar']) {
+                // If no new file but avatar field exists in request, keep existing avatar
+                $updateData['avatar'] = $data['avatar'];
             }
 
-            $updated = $this->users->update($userId, $data) ?: $this->users->findById($userId);
+            // Only update if there's data to update
+            if (empty($updateData)) {
+                Log::info('No data to update, returning current user');
+                return response()->json(['data' => $user]);
+            }
+
+            $updated = $this->users->update($userId, $updateData);
+            
+            if (!$updated) {
+                Log::error('User update failed', ['userId' => $userId]);
+                return response()->json(['message' => 'Failed to update profile'], 500);
+            }
+
+            // Get fresh user data
+            $updated = $this->users->findById($userId);
+            
+            // Convert avatar to full URL
+            if ($updated && $updated->avatar) {
+                // Remove /storage/ prefix if it exists
+                $avatarPath = $updated->avatar;
+                if (strpos($avatarPath, '/storage/') === 0) {
+                    $avatarPath = substr($avatarPath, 9); // Remove '/storage/' (9 characters)
+                }
+                $updated->avatar = 'http://localhost:8000/storage/' . $avatarPath;
+            }
+            
+            Log::info('Profile updated successfully', ['user' => $updated]);
 
             return response()->json(['data' => $updated]);
         } catch (\Throwable $e) {
-            Log::error('updateProfile failed', ['error' => $e->getMessage()]);
+            Log::error('updateProfile failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
 
             return response()->json(['message' => 'Failed to update profile'], 500);
         }

@@ -16,7 +16,7 @@ export const userSettingsService = {
     const res: any = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/user/profile`,
       {
-        method: 'PUT',
+        method: 'POST',
         headers: {
           Accept: 'application/json',
           ...(typeof window !== 'undefined' &&

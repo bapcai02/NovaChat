@@ -29,6 +29,26 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
                     ->where('user_id', $userId)
                     ->exists();
 
+                // Convert other member avatar to full URL
+                $otherMemberData = null;
+                if ($otherMember) {
+                    $avatar = $otherMember->avatar;
+                    if ($avatar) {
+                        // Remove /storage/ prefix if it exists
+                        if (strpos($avatar, '/storage/') === 0) {
+                            $avatar = substr($avatar, 9); // Remove '/storage/' (9 characters)
+                        }
+                        $avatar = 'http://localhost:8000/storage/' . $avatar;
+                    }
+                    
+                    $otherMemberData = [
+                        'id' => $otherMember->id,
+                        'name' => $otherMember->name,
+                        'username' => $otherMember->username,
+                        'avatar' => $avatar,
+                    ];
+                }
+
                 return [
                     'id' => $conversation->id,
                     'type' => $conversation->type,
@@ -40,12 +60,7 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
                     'unread_count' => $unreadCount,
                     'is_pinned' => $conversation->is_pinned ?? false,
                     'is_muted' => $isMuted,
-                    'other_member' => $otherMember ? [
-                        'id' => $otherMember->id,
-                        'name' => $otherMember->name,
-                        'username' => $otherMember->username,
-                        'avatar' => $otherMember->avatar,
-                    ] : null,
+                    'other_member' => $otherMemberData,
                     'last_message' => $this->getLastMessage($conversation->id),
                     'created_at' => $conversation->created_at,
                     'updated_at' => $conversation->updated_at,
@@ -68,6 +83,16 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
         $messages = $query->limit($limit)->get();
 
         return $messages->map(function ($message) use ($userId) {
+            // Convert sender avatar to full URL
+            $senderAvatar = $message->user->avatar;
+            if ($senderAvatar) {
+                // Remove /storage/ prefix if it exists
+                if (strpos($senderAvatar, '/storage/') === 0) {
+                    $senderAvatar = substr($senderAvatar, 9); // Remove '/storage/' (9 characters)
+                }
+                $senderAvatar = 'http://localhost:8000/storage/' . $senderAvatar;
+            }
+
             return [
                 'id' => $message->id,
                 'conversation_id' => $message->conversation_id,
@@ -76,7 +101,7 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
                     'id' => $message->user->id,
                     'name' => $message->user->name,
                     'username' => $message->user->username,
-                    'avatar' => $message->user->avatar,
+                    'avatar' => $senderAvatar,
                 ],
                 'content' => $message->content,
                 'type' => $message->type,
@@ -296,6 +321,26 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
         $otherMember = $conversation->members()->where('users.id', '!=', $userId1)->first();
         $unreadCount = $this->getUnreadCount($conversation->id, $userId1);
 
+        // Convert other member avatar to full URL
+        $otherMemberData = null;
+        if ($otherMember) {
+            $avatar = $otherMember->avatar;
+            if ($avatar) {
+                // Remove /storage/ prefix if it exists
+                if (strpos($avatar, '/storage/') === 0) {
+                    $avatar = substr($avatar, 9); // Remove '/storage/' (9 characters)
+                }
+                $avatar = 'http://localhost:8000/storage/' . $avatar;
+            }
+            
+            $otherMemberData = [
+                'id' => $otherMember->id,
+                'name' => $otherMember->name,
+                'username' => $otherMember->username,
+                'avatar' => $avatar,
+            ];
+        }
+
         return [
             'id' => $conversation->id,
             'type' => $conversation->type,
@@ -306,12 +351,7 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
             'messages_count' => $conversation->messages()->count(),
             'unread_count' => $unreadCount,
             'is_pinned' => $conversation->is_pinned ?? false,
-            'other_member' => $otherMember ? [
-                'id' => $otherMember->id,
-                'name' => $otherMember->name,
-                'username' => $otherMember->username,
-                'avatar' => $otherMember->avatar,
-            ] : null,
+            'other_member' => $otherMemberData,
             'last_message' => $this->getLastMessage($conversation->id),
             'created_at' => $conversation->created_at,
             'updated_at' => $conversation->updated_at,
@@ -327,11 +367,21 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
         }
 
         return $conversation->members->map(function ($member) {
+            // Convert avatar to full URL
+            $avatar = $member->avatar;
+            if ($avatar) {
+                // Remove /storage/ prefix if it exists
+                if (strpos($avatar, '/storage/') === 0) {
+                    $avatar = substr($avatar, 9); // Remove '/storage/' (9 characters)
+                }
+                $avatar = 'http://localhost:8000/storage/' . $avatar;
+            }
+
             return [
                 'id' => $member->id,
                 'name' => $member->name,
                 'username' => $member->username,
-                'avatar' => $member->avatar,
+                'avatar' => $avatar,
                 'is_online' => $member->is_online ?? false,
             ];
         })->toArray();
@@ -394,6 +444,16 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
         $items = $query->skip(($page - 1) * $limit)->take($limit)->with('user')->get();
 
         $data = $items->map(function ($m) {
+            // Convert sender avatar to full URL
+            $senderAvatar = $m->user->avatar;
+            if ($senderAvatar) {
+                // Remove /storage/ prefix if it exists
+                if (strpos($senderAvatar, '/storage/') === 0) {
+                    $senderAvatar = substr($senderAvatar, 9); // Remove '/storage/' (9 characters)
+                }
+                $senderAvatar = 'http://localhost:8000/storage/' . $senderAvatar;
+            }
+
             return [
                 'id' => $m->id,
                 'conversation_id' => $m->conversation_id,
@@ -402,7 +462,7 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
                     'id' => $m->user->id,
                     'name' => $m->user->name,
                     'username' => $m->user->username,
-                    'avatar' => $m->user->avatar,
+                    'avatar' => $senderAvatar,
                 ],
                 'created_at' => $m->created_at,
             ];
@@ -430,6 +490,16 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
             return null;
         }
 
+        // Convert sender avatar to full URL
+        $senderAvatar = $message->user->avatar;
+        if ($senderAvatar) {
+            // Remove /storage/ prefix if it exists
+            if (strpos($senderAvatar, '/storage/') === 0) {
+                $senderAvatar = substr($senderAvatar, 9); // Remove '/storage/' (9 characters)
+            }
+            $senderAvatar = 'http://localhost:8000/storage/' . $senderAvatar;
+        }
+
         return [
             'id' => $message->id,
             'content' => $message->content,
@@ -438,6 +508,7 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
                 'id' => $message->user->id,
                 'name' => $message->user->name,
                 'username' => $message->user->username,
+                'avatar' => $senderAvatar,
             ],
             'created_at' => $message->created_at,
         ];

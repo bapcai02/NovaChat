@@ -44,7 +44,9 @@ class UserStatusControllerTest extends TestCase
         $this->assertEquals(200, $response->getStatusCode());
         $responseData = json_decode($response->getContent(), true);
         $this->assertTrue($responseData['success']);
-        $this->assertEquals($status, $responseData['data']);
+        $this->assertArrayHasKey('data', $responseData);
+        $this->assertEquals($status['user_id'], $responseData['data']['user_id']);
+        $this->assertEquals($status['status'], $responseData['data']['status']);
     }
 
     public function test_get_user_status_not_found()

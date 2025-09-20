@@ -174,6 +174,7 @@ Route::middleware('auth:api')->group(function () {
     Route::middleware('auth:api')->group(function () {
         Route::get('/user/profile', [\App\Http\Controllers\UserSettingsController::class, 'getProfile']);
         Route::put('/user/profile', [\App\Http\Controllers\UserSettingsController::class, 'updateProfile']);
+        Route::post('/user/profile', [\App\Http\Controllers\UserSettingsController::class, 'updateProfile']);
         Route::post('/user/change-password', [\App\Http\Controllers\UserSettingsController::class, 'changePassword']);
         Route::put('/user/preferences', [\App\Http\Controllers\UserSettingsController::class, 'updatePreferences']);
         Route::get('/user/sessions', [\App\Http\Controllers\UserSettingsController::class, 'sessions']);

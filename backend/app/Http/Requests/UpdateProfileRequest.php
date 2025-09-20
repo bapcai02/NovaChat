@@ -20,12 +20,26 @@ class UpdateProfileRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'id' => 'required|integer|exists:users,id',
-            'name' => 'sometimes|string|max:255',
-            'email' => 'sometimes|email|max:255',
-            'phone' => 'sometimes|string|max:50',
+            'name' => 'nullable|string|max:255',
+            'email' => 'nullable|email|max:255',
+            'phone' => 'nullable|string|max:50',
             // Accept either existing URL string or uploaded file (handled in controller)
-            'avatar' => 'sometimes',
+            'avatar' => 'nullable',
         ];
+    }
+
+    /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation()
+    {
+        // Convert empty strings to null for proper validation
+        $data = $this->all();
+        foreach ($data as $key => $value) {
+            if ($value === '') {
+                $data[$key] = null;
+            }
+        }
+        $this->merge($data);
     }
 }

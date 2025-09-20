@@ -60,15 +60,22 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
     try {
       setLoading(true);
       const form = new FormData();
-      if (userId != null) form.append('id', String(userId));
-      if (name) form.append('name', name);
-      if (email) form.append('email', email);
-      if (phone) form.append('phone', phone);
+      // Always send all fields, even if empty
+      form.append('name', name || '');
+      form.append('email', email || '');
+      form.append('phone', phone || '');
       if (avatarFile) {
         form.append('avatar', avatarFile);
       } else if (avatar) {
         form.append('avatar', avatar);
       }
+      console.log('Submitting profile data:', {
+        name,
+        email,
+        phone,
+        avatarFile: avatarFile?.name,
+        avatar
+      });
       await userSettingsService.updateProfile(form as any);
       notify(t('profile_updated'));
     } finally {

@@ -69,4 +69,22 @@ class User extends Authenticatable
     {
         return $this->hasMany(MessageReaction::class);
     }
+
+    /**
+     * Get the full URL for the avatar.
+     */
+    public function getAvatarUrlAttribute()
+    {
+        if (!$this->avatar) {
+            return null;
+        }
+
+        // If it's already a full URL, return as is
+        if (filter_var($this->avatar, FILTER_VALIDATE_URL)) {
+            return $this->avatar;
+        }
+
+        // If it's a relative path, make it a full URL
+        return url('storage/' . $this->avatar);
+    }
 }
