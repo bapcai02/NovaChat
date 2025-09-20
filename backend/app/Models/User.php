@@ -13,7 +13,11 @@ class User extends Authenticatable
 
     protected $fillable = [
         'name', 'username', 'email', 'password', 'avatar', 'status', 'status_message',
-        'is_online', 'last_seen_at',
+        'is_online', 'last_seen_at', 'role', 'bio', 'phone', 'timezone', 'language',
+        'permissions', 'settings', 'metadata', 'last_login_at', 'last_login_ip',
+        'email_notifications', 'push_notifications', 'is_verified', 'is_premium',
+        'premium_expires_at', 'social_links', 'website', 'location', 'birth_date',
+        'gender', 'company', 'job_title', 'is_deleted', 'deleted_at',
     ];
 
     protected $hidden = [
@@ -25,6 +29,19 @@ class User extends Authenticatable
         'password' => 'hashed',
         'is_online' => 'boolean',
         'last_seen_at' => 'datetime',
+        'last_login_at' => 'datetime',
+        'premium_expires_at' => 'datetime',
+        'birth_date' => 'date',
+        'deleted_at' => 'datetime',
+        'permissions' => 'array',
+        'settings' => 'array',
+        'metadata' => 'array',
+        'social_links' => 'array',
+        'email_notifications' => 'boolean',
+        'push_notifications' => 'boolean',
+        'is_verified' => 'boolean',
+        'is_premium' => 'boolean',
+        'is_deleted' => 'boolean',
     ];
 
     // Relationships
