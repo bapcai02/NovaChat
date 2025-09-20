@@ -15,6 +15,7 @@ class Conversation extends Model
 
     protected $casts = [
         'metadata' => 'array',
+        'is_pinned' => 'boolean',
     ];
 
     public function team()

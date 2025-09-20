@@ -36,22 +36,12 @@ class ConversationFactory extends Factory
     }
 
     /**
-     * Indicate that the conversation is private.
+     * Indicate that the conversation is pinned.
      */
-    public function private(): static
+    public function pinned(): static
     {
         return $this->state(fn (array $attributes) => [
-            'is_private' => true,
-        ]);
-    }
-
-    /**
-     * Indicate that the conversation is public.
-     */
-    public function public(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'is_private' => false,
+            'is_pinned' => true,
         ]);
     }
 }
