@@ -890,15 +890,41 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
       />
 
         {/* Files Tab */}
-        {rightSidebarMode === "files" && currentConversation && (
-          <div className="fixed right-0 top-0 h-full w-80 bg-white border-l border-gray-200 shadow-lg z-50">
-            <FilesTab
-              conversationId={currentConversation.id}
-              onClose={() => setIsRightSidebarOpen(false)}
-              messages={messages}
-            />
-          </div>
-        )}
+        <AnimatePresence>
+          {rightSidebarMode === "files" && currentConversation && (
+            <>
+              {/* Overlay */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
+                onClick={() => {
+                  setRightSidebarMode(null);
+                  setIsRightSidebarOpen(false);
+                }}
+              />
+              {/* Files Panel */}
+              <motion.div
+                initial={{ x: 400, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: 400, opacity: 0 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+                className="fixed right-0 top-0 h-full w-80 sm:w-96 bg-white border-l border-gray-200 shadow-2xl z-50"
+              >
+                <FilesTab
+                  conversationId={currentConversation.id}
+                  onClose={() => {
+                    setRightSidebarMode(null);
+                    setIsRightSidebarOpen(false);
+                  }}
+                  messages={messages}
+                />
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
 
       <AnimatePresence>
         {showThread && threadMessage && (

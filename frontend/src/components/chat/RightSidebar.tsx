@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 
 interface RightSidebarProps {
   open: boolean;
-  mode: "members" | "settings" | "call" | "video" | null;
+  mode: "members" | "settings" | "call" | "video" | "files" | null;
   onClose: () => void;
   members?: Array<{
     id: number;
