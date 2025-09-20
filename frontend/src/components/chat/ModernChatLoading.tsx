@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import React from "react";
-import { motion } from "framer-motion";
+import React from 'react';
+import { motion } from 'framer-motion';
 
 interface ModernChatLoadingProps {
   message?: string;
 }
 
 export default function ModernChatLoading({
-  message = "Loading messages...",
+  message = 'Loading messages...',
 }: ModernChatLoadingProps) {
   return (
     <div className="flex-1 flex items-center justify-center bg-background">
@@ -17,7 +17,7 @@ export default function ModernChatLoading({
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.5, type: "spring", stiffness: 200 }}
+          transition={{ duration: 0.5, type: 'spring', stiffness: 200 }}
           className="relative"
         >
           {/* Main chat bubble */}
@@ -34,7 +34,7 @@ export default function ModernChatLoading({
               transition={{
                 duration: 2,
                 repeat: Infinity,
-                ease: "easeInOut",
+                ease: 'easeInOut',
               }}
             >
               <path
@@ -57,7 +57,7 @@ export default function ModernChatLoading({
               duration: 1.5,
               repeat: Infinity,
               delay: 0.5,
-              ease: "easeInOut",
+              ease: 'easeInOut',
             }}
           >
             <div className="w-2 h-2 bg-white rounded-full" />
@@ -73,7 +73,7 @@ export default function ModernChatLoading({
               duration: 1.8,
               repeat: Infinity,
               delay: 1,
-              ease: "easeInOut",
+              ease: 'easeInOut',
             }}
           />
         </motion.div>
@@ -86,7 +86,7 @@ export default function ModernChatLoading({
             transition={{
               duration: 1,
               repeat: Infinity,
-              ease: "linear",
+              ease: 'linear',
             }}
           />
 
@@ -97,7 +97,7 @@ export default function ModernChatLoading({
             transition={{
               duration: 0.8,
               repeat: Infinity,
-              ease: "linear",
+              ease: 'linear',
             }}
           />
         </div>
@@ -115,7 +115,7 @@ export default function ModernChatLoading({
 
         {/* Animated Dots */}
         <div className="flex justify-center space-x-2">
-          {[0, 1, 2].map((index) => (
+          {[0, 1, 2].map(index => (
             <motion.div
               key={index}
               className="w-2 h-2 bg-primary rounded-full"
@@ -127,7 +127,7 @@ export default function ModernChatLoading({
                 duration: 1.5,
                 repeat: Infinity,
                 delay: index * 0.2,
-                ease: "easeInOut",
+                ease: 'easeInOut',
               }}
             />
           ))}
@@ -142,7 +142,7 @@ export default function ModernChatLoading({
         >
           <span className="text-sm text-muted-foreground">Connecting</span>
           <div className="flex space-x-1">
-            {[0, 1, 2].map((index) => (
+            {[0, 1, 2].map(index => (
               <motion.div
                 key={index}
                 className="w-1 h-1 bg-muted-foreground rounded-full"
@@ -154,7 +154,7 @@ export default function ModernChatLoading({
                   duration: 1,
                   repeat: Infinity,
                   delay: index * 0.2,
-                  ease: "easeInOut",
+                  ease: 'easeInOut',
                 }}
               />
             ))}
@@ -180,7 +180,7 @@ export default function ModernChatLoading({
                 duration: 2 + Math.random() * 2,
                 repeat: Infinity,
                 delay: Math.random() * 2,
-                ease: "easeOut",
+                ease: 'easeOut',
               }}
             />
           ))}

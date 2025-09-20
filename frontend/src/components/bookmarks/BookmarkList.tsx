@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
-import { bookmarkService, Bookmark } from "@/services/bookmarkService";
-import { formatDistanceToNow } from "date-fns";
-import { vi } from "date-fns/locale";
+import React, { useState, useEffect } from 'react';
+import { bookmarkService, Bookmark } from '@/services/bookmarkService';
+import { formatDistanceToNow } from 'date-fns';
+import { vi } from 'date-fns/locale';
 import {
   BookmarkIcon,
   TrashIcon,
@@ -11,7 +11,7 @@ import {
   UserIcon,
   CalendarIcon,
   MessageSquareIcon,
-} from "lucide-react";
+} from 'lucide-react';
 
 interface BookmarkListProps {
   onRemoveBookmark?: (messageId: number) => void;
@@ -36,14 +36,14 @@ export default function BookmarkList({ onRemoveBookmark }: BookmarkListProps) {
       if (reset) {
         setBookmarks(newBookmarks);
       } else {
-        setBookmarks((prev) => [...prev, ...newBookmarks]);
+        setBookmarks(prev => [...prev, ...newBookmarks]);
       }
 
       setHasMore(pageNum < pagination.last_page);
       setPage(pageNum);
     } catch (err) {
-      setError("Không thể tải danh sách bookmark");
-      console.error("Error loading bookmarks:", err);
+      setError('Không thể tải danh sách bookmark');
+      console.error('Error loading bookmarks:', err);
     } finally {
       setLoading(false);
     }
@@ -52,12 +52,12 @@ export default function BookmarkList({ onRemoveBookmark }: BookmarkListProps) {
   const handleRemoveBookmark = async (messageId: number) => {
     try {
       await bookmarkService.removeBookmark(messageId);
-      setBookmarks((prev) =>
-        prev.filter((bookmark) => bookmark.message_id !== messageId),
+      setBookmarks(prev =>
+        prev.filter(bookmark => bookmark.message_id !== messageId)
       );
       onRemoveBookmark?.(messageId);
     } catch (err) {
-      console.error("Error removing bookmark:", err);
+      console.error('Error removing bookmark:', err);
     }
   };
 
@@ -111,7 +111,7 @@ export default function BookmarkList({ onRemoveBookmark }: BookmarkListProps) {
 
   return (
     <div className="space-y-4">
-      {bookmarks.map((bookmark) => (
+      {bookmarks.map(bookmark => (
         <div
           key={bookmark.id}
           className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow"
@@ -188,7 +188,7 @@ export default function BookmarkList({ onRemoveBookmark }: BookmarkListProps) {
                 <div className="flex items-center space-x-1">
                   <CalendarIcon className="h-3 w-3" />
                   <span>
-                    Bookmark:{" "}
+                    Bookmark:{' '}
                     {formatDistanceToNow(new Date(bookmark.created_at), {
                       addSuffix: true,
                       locale: vi,
@@ -198,13 +198,13 @@ export default function BookmarkList({ onRemoveBookmark }: BookmarkListProps) {
                 <div className="flex items-center space-x-1">
                   <MessageSquareIcon className="h-3 w-3" />
                   <span>
-                    Tin nhắn:{" "}
+                    Tin nhắn:{' '}
                     {formatDistanceToNow(
                       new Date(bookmark.message.created_at),
                       {
                         addSuffix: true,
                         locale: vi,
-                      },
+                      }
                     )}
                   </span>
                 </div>
@@ -233,7 +233,7 @@ export default function BookmarkList({ onRemoveBookmark }: BookmarkListProps) {
             disabled={loading}
             className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? "Đang tải..." : "Tải thêm"}
+            {loading ? 'Đang tải...' : 'Tải thêm'}
           </button>
         </div>
       )}

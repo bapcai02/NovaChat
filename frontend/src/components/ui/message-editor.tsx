@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import React, { useState, useRef, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
+import React, { useState, useRef, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/lib/utils';
 
 interface MessageEditorProps {
   messageId: string;
@@ -39,17 +39,17 @@ export const MessageEditor: React.FC<MessageEditorProps> = ({
     try {
       await onSave(messageId, content.trim());
     } catch (error) {
-      console.error("Failed to save message:", error);
+      console.error('Failed to save message:', error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSave();
-    } else if (e.key === "Escape") {
+    } else if (e.key === 'Escape') {
       onCancel();
     }
   };
@@ -57,14 +57,14 @@ export const MessageEditor: React.FC<MessageEditorProps> = ({
   return (
     <div
       className={cn(
-        "space-y-2 bg-white p-3 rounded-lg border border-gray-200",
-        className,
+        'space-y-2 bg-white p-3 rounded-lg border border-gray-200',
+        className
       )}
     >
       <Textarea
         ref={textareaRef}
         value={content}
-        onChange={(e) => setContent(e.target.value)}
+        onChange={e => setContent(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder="Edit your message..."
         className="min-h-[60px] resize-none bg-white text-gray-900 border-gray-300 focus:border-blue-500"
@@ -89,7 +89,7 @@ export const MessageEditor: React.FC<MessageEditorProps> = ({
             disabled={isSubmitting || content.trim() === initialContent.trim()}
             className="bg-blue-600 hover:bg-blue-700 text-white"
           >
-            {isSubmitting ? "Saving..." : "Save"}
+            {isSubmitting ? 'Saving...' : 'Save'}
           </Button>
         </div>
       </div>

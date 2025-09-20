@@ -4,6 +4,4 @@ module.exports = {
     locales: ['en', 'vi'],
   },
   reloadOnPrerender: process.env.NODE_ENV === 'development',
-}
-
-
+};

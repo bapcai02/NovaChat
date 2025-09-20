@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/contexts/AuthContext";
-import ModernLoadingScreen from "./ModernLoadingScreen";
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
+import ModernLoadingScreen from './ModernLoadingScreen';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -17,7 +17,7 @@ export function AuthGuard({ children, requireAuth = true }: AuthGuardProps) {
 
   useEffect(() => {
     const delay = (ms: number) =>
-      new Promise((resolve) => setTimeout(resolve, ms));
+      new Promise(resolve => setTimeout(resolve, ms));
     const delayMs = (() => {
       const v = Number(process.env.NEXT_PUBLIC_LOADING_DELAY_MS);
       if (Number.isFinite(v) && v > 0) return v;
@@ -31,18 +31,18 @@ export function AuthGuard({ children, requireAuth = true }: AuthGuardProps) {
         await delay(delayMs);
 
         if (requireAuth && !isAuthenticated) {
-          router.push("/login");
+          router.push('/login');
           return;
         }
 
         if (!requireAuth && isAuthenticated) {
-          router.push("/chat");
+          router.push('/chat');
           return;
         }
       } catch (error) {
-        console.error("Auth check failed:", error);
+        console.error('Auth check failed:', error);
         if (requireAuth) {
-          router.push("/login");
+          router.push('/login');
         }
       } finally {
         setIsChecking(false);

@@ -1,9 +1,12 @@
-"use client";
+'use client';
 
-import { useEffect, useRef } from "react";
-import { getWebSocketClient } from "@/lib/websocket";
+import { useEffect, useRef } from 'react';
+import { getWebSocketClient } from '@/lib/websocket';
 
-export function useIdlePresence(currentUserId?: number, idleMs: number = 60_000) {
+export function useIdlePresence(
+  currentUserId?: number,
+  idleMs: number = 60_000
+) {
   const timerRef = useRef<number | null>(null);
   const isAwayRef = useRef(false);
 
@@ -13,8 +16,8 @@ export function useIdlePresence(currentUserId?: number, idleMs: number = 60_000)
     const setOnline = () => {
       try {
         const ws = getWebSocketClient();
-        if (ws.getConnectionState() === "connected") {
-          ws.send({ type: "ping", user_id: currentUserId });
+        if (ws.getConnectionState() === 'connected') {
+          ws.send({ type: 'ping', user_id: currentUserId });
         }
       } catch {}
     };
@@ -24,8 +27,8 @@ export function useIdlePresence(currentUserId?: number, idleMs: number = 60_000)
       isAwayRef.current = true;
       try {
         const ws = getWebSocketClient();
-        if (ws.getConnectionState() === "connected") {
-          ws.send({ type: "user_offline", user_id: currentUserId });
+        if (ws.getConnectionState() === 'connected') {
+          ws.send({ type: 'user_offline', user_id: currentUserId });
         }
       } catch {}
     };
@@ -40,14 +43,16 @@ export function useIdlePresence(currentUserId?: number, idleMs: number = 60_000)
     };
 
     const events: (keyof WindowEventMap)[] = [
-      "mousemove",
-      "mousedown",
-      "keydown",
-      "scroll",
-      "touchstart",
-      "visibilitychange",
+      'mousemove',
+      'mousedown',
+      'keydown',
+      'scroll',
+      'touchstart',
+      'visibilitychange',
     ];
-    events.forEach((e) => window.addEventListener(e, resetTimer, { passive: true } as any));
+    events.forEach(e =>
+      window.addEventListener(e, resetTimer, { passive: true } as any)
+    );
 
     // initial state
     setOnline();
@@ -58,9 +63,7 @@ export function useIdlePresence(currentUserId?: number, idleMs: number = 60_000)
     return () => {
       if (timerRef.current) window.clearTimeout(timerRef.current);
       window.clearInterval(pingInterval);
-      events.forEach((e) => window.removeEventListener(e, resetTimer as any));
+      events.forEach(e => window.removeEventListener(e, resetTimer as any));
     };
   }, [currentUserId, idleMs]);
 }
-
-

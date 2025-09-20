@@ -5,7 +5,7 @@ export interface Message {
   user_id: number;
   parent_id?: number;
   content: string;
-  type: "text" | "image" | "file" | "system" | "reaction";
+  type: 'text' | 'image' | 'file' | 'system' | 'reaction';
   metadata?: Record<string, any>;
   is_edited: boolean;
   edited_at?: string;
@@ -26,7 +26,7 @@ export interface Message {
 
 export interface CreateMessageData {
   content: string;
-  type?: "text" | "image" | "file" | "system" | "reaction";
+  type?: 'text' | 'image' | 'file' | 'system' | 'reaction';
   parent_id?: number;
   metadata?: Record<string, any>;
 }
@@ -59,13 +59,13 @@ export const messageService = {
   getMessages: async (
     channelId: number,
     page: number = 1,
-    limit: number = 50,
+    limit: number = 50
   ): Promise<PaginatedResponse<Message>> => {
     const response = await api.get<PaginatedResponse<Message>>(
       `/channels/${channelId}/messages`,
       {
         params: { page, limit },
-      },
+      }
     );
     return response.data.data;
   },
@@ -79,11 +79,11 @@ export const messageService = {
   // Send message
   sendMessage: async (
     channelId: number,
-    data: CreateMessageData,
+    data: CreateMessageData
   ): Promise<Message> => {
     const response = await api.post<Message>(
       `/channels/${channelId}/messages`,
-      data,
+      data
     );
     return response.data.data;
   },
@@ -91,7 +91,7 @@ export const messageService = {
   // Update message
   updateMessage: async (
     id: number,
-    data: UpdateMessageData,
+    data: UpdateMessageData
   ): Promise<Message> => {
     const response = await api.put<Message>(`/messages/${id}`, data);
     return response.data.data;
@@ -114,10 +114,10 @@ export const messageService = {
 
   // Get message reactions
   getMessageReactions: async (
-    messageId: number,
+    messageId: number
   ): Promise<MessageReaction[]> => {
     const response = await api.get<MessageReaction[]>(
-      `/messages/${messageId}/reactions`,
+      `/messages/${messageId}/reactions`
     );
     return response.data.data;
   },
@@ -125,11 +125,11 @@ export const messageService = {
   // Add reaction to message
   addReaction: async (
     messageId: number,
-    data: AddReactionData,
+    data: AddReactionData
   ): Promise<MessageReaction> => {
     const response = await api.post<MessageReaction>(
       `/messages/${messageId}/reactions`,
-      data,
+      data
     );
     return response.data.data;
   },
@@ -137,7 +137,7 @@ export const messageService = {
   // Remove reaction from message
   removeReaction: async (messageId: number, emoji: string): Promise<void> => {
     await api.delete(
-      `/messages/${messageId}/reactions/${encodeURIComponent(emoji)}`,
+      `/messages/${messageId}/reactions/${encodeURIComponent(emoji)}`
     );
   },
 
@@ -152,16 +152,16 @@ export const messageService = {
     query: string,
     channelId?: number,
     page: number = 1,
-    limit: number = 20,
+    limit: number = 20
   ): Promise<PaginatedResponse<Message>> => {
     const params: any = { q: query, page, limit };
     if (channelId) params.channel_id = channelId;
 
     const response = await api.get<PaginatedResponse<Message>>(
-      "/messages/search",
+      '/messages/search',
       {
         params,
-      },
+      }
     );
     return response.data.data;
   },

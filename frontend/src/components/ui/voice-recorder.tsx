@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import React, { useState, useRef, useEffect } from "react";
-import { Button } from "./button";
+import React, { useState, useRef, useEffect } from 'react';
+import { Button } from './button';
 
 interface VoiceRecorderProps {
   onRecordingComplete: (audioBlob: Blob, duration: number) => void;
@@ -70,14 +70,14 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
 
-      mediaRecorder.ondataavailable = (event) => {
+      mediaRecorder.ondataavailable = event => {
         if (event.data.size > 0) {
           audioChunksRef.current.push(event.data);
         }
       };
 
       mediaRecorder.onstop = () => {
-        const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         setAudioBlob(blob);
         const url = URL.createObjectURL(blob);
         setAudioUrl(url);
@@ -96,7 +96,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
 
       // Start timer
       recordingIntervalRef.current = setInterval(() => {
-        setRecordingTime((prev) => {
+        setRecordingTime(prev => {
           if (prev >= maxDuration) {
             stopRecording();
             return prev;
@@ -108,8 +108,8 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
       // Start waveform visualization
       updateWaveform();
     } catch (error) {
-      console.error("Error starting recording:", error);
-      alert("Could not access microphone. Please check permissions.");
+      console.error('Error starting recording:', error);
+      alert('Could not access microphone. Please check permissions.');
     }
   };
 
@@ -118,7 +118,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
       mediaRecorderRef.current.stop();
       mediaRecorderRef.current.stream
         .getTracks()
-        .forEach((track) => track.stop());
+        .forEach(track => track.stop());
       setIsRecording(false);
 
       if (recordingIntervalRef.current) {
@@ -144,7 +144,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
         dataArrayRef.current.length,
     };
 
-    setWaveformData((prev) => [...prev, newPoint]);
+    setWaveformData(prev => [...prev, newPoint]);
 
     animationFrameRef.current = requestAnimationFrame(updateWaveform);
   };
@@ -154,10 +154,10 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
 
     if (!audioRef.current) {
       audioRef.current = new Audio(audioUrl);
-      audioRef.current.addEventListener("timeupdate", () => {
+      audioRef.current.addEventListener('timeupdate', () => {
         setCurrentPlayTime(audioRef.current?.currentTime || 0);
       });
-      audioRef.current.addEventListener("ended", () => {
+      audioRef.current.addEventListener('ended', () => {
         setIsPlaying(false);
         setCurrentPlayTime(0);
       });
@@ -194,7 +194,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   const getWaveformColor = (amplitude: number) => {
@@ -246,7 +246,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
               ? recordingTime
               : isPlaying
                 ? currentPlayTime
-                : totalDuration,
+                : totalDuration
           )}
         </div>
 
@@ -278,7 +278,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
           </svg>
         ) : (
           <div className="flex items-center justify-center h-full text-[hsl(var(--chat-text-muted))] text-xs">
-            {isRecording ? "Recording..." : "No audio recorded"}
+            {isRecording ? 'Recording...' : 'No audio recorded'}
           </div>
         )}
 
@@ -334,7 +334,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
           <>
             <Button
               onClick={playRecording}
-              variant={isPlaying ? "outline" : "default"}
+              variant={isPlaying ? 'outline' : 'default'}
               className="px-6"
             >
               {isPlaying ? (

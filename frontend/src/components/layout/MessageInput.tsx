@@ -1,26 +1,26 @@
-"use client";
+'use client';
 
-import React, { useState, useRef, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { EmojiPicker } from "@/components/ui/emoji-picker";
-import { VoiceRecorder } from "@/components/ui/voice-recorder";
-import { MessageRenderer } from "@/components/ui/message-renderer";
-import { cn } from "@/lib/utils";
-import { useAppSelector } from "@/hooks/useAppSelector";
-import { useAppDispatch } from "@/hooks/useAppDispatch";
-import { getWebSocketClient } from "@/lib/websocket";
-import { setUser } from "@/store/slices/authSlice";
+import React, { useState, useRef, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { EmojiPicker } from '@/components/ui/emoji-picker';
+import { VoiceRecorder } from '@/components/ui/voice-recorder';
+import { MessageRenderer } from '@/components/ui/message-renderer';
+import { cn } from '@/lib/utils';
+import { useAppSelector } from '@/hooks/useAppSelector';
+import { useAppDispatch } from '@/hooks/useAppDispatch';
+import { getWebSocketClient } from '@/lib/websocket';
+import { setUser } from '@/store/slices/authSlice';
 
 // Message formatting utilities
 const formatText = (
   text: string,
-  format: "bold" | "italic" | "code" | "strike",
+  format: 'bold' | 'italic' | 'code' | 'strike'
 ) => {
   const formats = {
-    bold: { prefix: "**", suffix: "**" },
-    italic: { prefix: "*", suffix: "*" },
-    code: { prefix: "`", suffix: "`" },
-    strike: { prefix: "~~", suffix: "~~" },
+    bold: { prefix: '**', suffix: '**' },
+    italic: { prefix: '*', suffix: '*' },
+    code: { prefix: '`', suffix: '`' },
+    strike: { prefix: '~~', suffix: '~~' },
   };
 
   const { prefix, suffix } = formats[format];
@@ -29,41 +29,41 @@ const formatText = (
 
 interface MessageInputProps {
   roomId?: string;
-  type?: "channel" | "direct" | "conversation";
+  type?: 'channel' | 'direct' | 'conversation';
   onMessageSent?: () => void;
 }
 
 export const MessageInput: React.FC<MessageInputProps> = ({
-  roomId = "1",
-  type = "channel",
+  roomId = '1',
+  type = 'channel',
   onMessageSent,
 }) => {
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
   const [isLocalTyping, setIsLocalTyping] = useState(false);
   const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(
-    null,
+    null
   );
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const { user } = useAppSelector((state) => state.auth);
+  const { user } = useAppSelector(state => state.auth);
   const dispatch = useAppDispatch();
 
   // Auto load user from localStorage on mount
   useEffect(() => {
-    if (!user && typeof window !== "undefined") {
-      const token = localStorage.getItem("auth_token");
-      const userStr = localStorage.getItem("user");
+    if (!user && typeof window !== 'undefined') {
+      const token = localStorage.getItem('auth_token');
+      const userStr = localStorage.getItem('user');
       if (token && userStr) {
         try {
           const userData = JSON.parse(userStr);
           dispatch(setUser(userData));
         } catch (error) {
-          console.error("Failed to parse user from localStorage:", error);
+          console.error('Failed to parse user from localStorage:', error);
         }
       }
     }
@@ -77,15 +77,15 @@ export const MessageInput: React.FC<MessageInputProps> = ({
         const submitButton = document.querySelector('button[type="submit"]');
         if (submitButton) {
           const originalText = submitButton.innerHTML;
-          submitButton.innerHTML = "✓ Sent";
-          submitButton.classList.add("bg-green-600");
+          submitButton.innerHTML = '✓ Sent';
+          submitButton.classList.add('bg-green-600');
           setTimeout(() => {
             submitButton.innerHTML = originalText;
-            submitButton.classList.remove("bg-green-600");
+            submitButton.classList.remove('bg-green-600');
           }, 2000);
         }
 
-        setMessage("");
+        setMessage('');
         setIsTyping(false);
         onMessageSent?.();
 
@@ -94,13 +94,13 @@ export const MessageInput: React.FC<MessageInputProps> = ({
           onMessageSent?.();
         }, 100);
       } catch (error: any) {
-        console.error("Failed to send message:", error);
+        console.error('Failed to send message:', error);
         // TODO: Show error notification
       } finally {
         setIsSending(false);
       }
     } else {
-      console.log("Cannot send - conditions not met:", {
+      console.log('Cannot send - conditions not met:', {
         hasMessage: !!message.trim(),
         isSending,
         hasUser: !!user,
@@ -109,7 +109,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit(e);
     }
@@ -123,14 +123,14 @@ export const MessageInput: React.FC<MessageInputProps> = ({
       setIsLocalTyping(true);
       try {
         const ws = getWebSocketClient();
-        const convId = parseInt(roomId || "0") || undefined;
+        const convId = parseInt(roomId || '0') || undefined;
         ws.send({
-          type: "typing_start",
+          type: 'typing_start',
           user_id: user.id,
           conversation_id: convId,
         } as any);
       } catch (error) {
-        console.error("Failed to send typing event:", error);
+        console.error('Failed to send typing event:', error);
       }
     }
 
@@ -144,14 +144,14 @@ export const MessageInput: React.FC<MessageInputProps> = ({
       setIsLocalTyping(false);
       try {
         const ws = getWebSocketClient();
-        const convId = parseInt(roomId || "0") || undefined;
+        const convId = parseInt(roomId || '0') || undefined;
         ws.send({
-          type: "typing_stop",
+          type: 'typing_stop',
           user_id: user.id,
           conversation_id: convId,
         } as any);
       } catch (error) {
-        console.error("Failed to send stop typing event:", error);
+        console.error('Failed to send stop typing event:', error);
       }
     }, 3000); // Stop typing after 3 seconds of inactivity
 
@@ -169,14 +169,14 @@ export const MessageInput: React.FC<MessageInputProps> = ({
 
     try {
       const ws = getWebSocketClient();
-      const convId = parseInt(roomId || "0") || undefined;
+      const convId = parseInt(roomId || '0') || undefined;
       ws.send({
-        type: "typing_stop",
+        type: 'typing_stop',
         user_id: user.id,
         conversation_id: convId,
       } as any);
     } catch (error) {
-      console.error("Failed to send stop typing event:", error);
+      console.error('Failed to send stop typing event:', error);
     }
   };
 
@@ -192,15 +192,15 @@ export const MessageInput: React.FC<MessageInputProps> = ({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     // Formatting shortcuts (only when not in input)
     if (e.target === textareaRef.current) {
-      if ((e.ctrlKey || e.metaKey) && e.key === "b") {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
         e.preventDefault();
-        applyFormatting("bold");
-      } else if ((e.ctrlKey || e.metaKey) && e.key === "i") {
+        applyFormatting('bold');
+      } else if ((e.ctrlKey || e.metaKey) && e.key === 'i') {
         e.preventDefault();
-        applyFormatting("italic");
-      } else if ((e.ctrlKey || e.metaKey) && e.key === "`") {
+        applyFormatting('italic');
+      } else if ((e.ctrlKey || e.metaKey) && e.key === '`') {
         e.preventDefault();
-        applyFormatting("code");
+        applyFormatting('code');
       }
     }
   };
@@ -212,12 +212,12 @@ export const MessageInput: React.FC<MessageInputProps> = ({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
-      console.log("Files selected:", files);
+      console.log('Files selected:', files);
       // Handle file upload logic here
     }
   };
 
-  const applyFormatting = (format: "bold" | "italic" | "code" | "strike") => {
+  const applyFormatting = (format: 'bold' | 'italic' | 'code' | 'strike') => {
     const textarea = textareaRef.current;
     if (!textarea) return;
 
@@ -236,19 +236,19 @@ export const MessageInput: React.FC<MessageInputProps> = ({
         textarea.focus();
         textarea.setSelectionRange(
           start + formattedText.length,
-          start + formattedText.length,
+          start + formattedText.length
         );
       }, 0);
     } else {
       // If no text selected, insert format markers
       const formatMarkers =
-        format === "bold"
-          ? "**bold text**"
-          : format === "italic"
-            ? "*italic text*"
-            : format === "code"
-              ? "`code`"
-              : "~~strikethrough~~";
+        format === 'bold'
+          ? '**bold text**'
+          : format === 'italic'
+            ? '*italic text*'
+            : format === 'code'
+              ? '`code`'
+              : '~~strikethrough~~';
 
       const newMessage =
         message.substring(0, start) + formatMarkers + message.substring(end);
@@ -258,17 +258,17 @@ export const MessageInput: React.FC<MessageInputProps> = ({
       setTimeout(() => {
         textarea.focus();
         const cursorPos =
-          start + (format === "code" ? 1 : format === "bold" ? 2 : 1);
+          start + (format === 'code' ? 1 : format === 'bold' ? 2 : 1);
         textarea.setSelectionRange(
           cursorPos,
           cursorPos +
-            (format === "bold"
+            (format === 'bold'
               ? 9
-              : format === "italic"
+              : format === 'italic'
                 ? 12
-                : format === "code"
+                : format === 'code'
                   ? 4
-                  : 13),
+                  : 13)
         );
       }, 0);
     }
@@ -385,7 +385,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
               type="button"
               variant="ghost"
               size="icon"
-              onClick={() => applyFormatting("bold")}
+              onClick={() => applyFormatting('bold')}
               className="h-8 w-8 text-[hsl(var(--chat-text-muted))] hover:text-[hsl(var(--chat-text))] hover:bg-[hsl(var(--chat-message-hover))]"
               title="Bold (Ctrl+B)"
             >
@@ -414,7 +414,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
               type="button"
               variant="ghost"
               size="icon"
-              onClick={() => applyFormatting("italic")}
+              onClick={() => applyFormatting('italic')}
               className="h-8 w-8 text-[hsl(var(--chat-text-muted))] hover:text-[hsl(var(--chat-text))] hover:bg-[hsl(var(--chat-message-hover))]"
               title="Italic (Ctrl+I)"
             >
@@ -437,7 +437,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
               type="button"
               variant="ghost"
               size="icon"
-              onClick={() => applyFormatting("code")}
+              onClick={() => applyFormatting('code')}
               className="h-8 w-8 text-[hsl(var(--chat-text-muted))] hover:text-[hsl(var(--chat-text))] hover:bg-[hsl(var(--chat-message-hover))]"
               title="Code (Ctrl+`)"
             >
@@ -462,7 +462,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
             <textarea
               ref={textareaRef}
               value={message}
-              onChange={(e) => {
+              onChange={e => {
                 setMessage(e.target.value);
                 setIsTyping(e.target.value.length > 0);
                 handleTyping(); // Send typing event
@@ -474,9 +474,9 @@ export const MessageInput: React.FC<MessageInputProps> = ({
               className="w-full min-h-[20px] max-h-32 resize-none bg-transparent border-none outline-none text-[hsl(var(--chat-text))] placeholder-[hsl(var(--chat-text-muted))] text-xs leading-relaxed"
               rows={1}
               style={{
-                height: "auto",
-                minHeight: "20px",
-                maxHeight: "128px",
+                height: 'auto',
+                minHeight: '20px',
+                maxHeight: '128px',
               }}
             />
             {/* Formatting Preview */}
@@ -510,10 +510,10 @@ export const MessageInput: React.FC<MessageInputProps> = ({
               type="submit"
               disabled={!message.trim() || isSending}
               className={cn(
-                "h-8 px-3 text-xs transition-all duration-200",
+                'h-8 px-3 text-xs transition-all duration-200',
                 message.trim() && !isSending
-                  ? "chat-button"
-                  : "bg-[hsl(var(--chat-message-hover))] text-[hsl(var(--chat-text-muted))] cursor-not-allowed",
+                  ? 'chat-button'
+                  : 'bg-[hsl(var(--chat-message-hover))] text-[hsl(var(--chat-text-muted))] cursor-not-allowed'
               )}
             >
               <svg

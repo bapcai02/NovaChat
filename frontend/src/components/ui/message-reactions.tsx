@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import React from "react";
-import { cn } from "@/lib/utils";
+import React from 'react';
+import { cn } from '@/lib/utils';
 
 interface Reaction {
   emoji: string;
@@ -26,7 +26,7 @@ export const MessageReactions: React.FC<MessageReactionsProps> = ({
   className,
 }) => {
   const handleReactionClick = (emoji: string) => {
-    const existingReaction = reactions.find((r) => r.emoji === emoji);
+    const existingReaction = reactions.find(r => r.emoji === emoji);
 
     if (existingReaction?.isReacted) {
       onReactionRemove?.(messageId, emoji);
@@ -36,18 +36,18 @@ export const MessageReactions: React.FC<MessageReactionsProps> = ({
   };
 
   return (
-    <div className={cn("flex items-center space-x-1", className)}>
+    <div className={cn('flex items-center space-x-1', className)}>
       {/* Existing reactions */}
       {reactions.map((reaction, index) => (
         <button
           key={`${reaction.emoji}-${index}`}
           onClick={() => handleReactionClick(reaction.emoji)}
           className={cn(
-            "flex items-center space-x-1 px-2 py-0.5 rounded-full text-[11px] transition-colors",
-            "bg-[hsl(var(--chat-message-bg))] border border-[hsl(var(--chat-border))]",
-            "hover:bg-[hsl(var(--chat-message-hover))]",
+            'flex items-center space-x-1 px-2 py-0.5 rounded-full text-[11px] transition-colors',
+            'bg-[hsl(var(--chat-message-bg))] border border-[hsl(var(--chat-border))]',
+            'hover:bg-[hsl(var(--chat-message-hover))]',
             reaction.isReacted &&
-              "bg-[hsl(var(--chat-accent-light))] border-[hsl(var(--chat-accent))]",
+              'bg-[hsl(var(--chat-accent-light))] border-[hsl(var(--chat-accent))]'
           )}
         >
           <span>{reaction.emoji}</span>

@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import React from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { AlertTriangle, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import React from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { AlertTriangle, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -13,7 +13,7 @@ interface ConfirmModalProps {
   message: string;
   confirmText?: string;
   cancelText?: string;
-  type?: "danger" | "warning" | "info";
+  type?: 'danger' | 'warning' | 'info';
   isLoading?: boolean;
 }
 
@@ -23,36 +23,36 @@ export default function ConfirmModal({
   onConfirm,
   title,
   message,
-  confirmText = "Xác nhận",
-  cancelText = "Hủy",
-  type = "danger",
+  confirmText = 'Xác nhận',
+  cancelText = 'Hủy',
+  type = 'danger',
   isLoading = false,
 }: ConfirmModalProps) {
   const getTypeStyles = () => {
     switch (type) {
-      case "danger":
+      case 'danger':
         return {
-          icon: "text-red-500",
-          confirmButton: "bg-red-600 hover:bg-red-700 text-white",
-          iconBg: "bg-red-50",
+          icon: 'text-red-500',
+          confirmButton: 'bg-red-600 hover:bg-red-700 text-white',
+          iconBg: 'bg-red-50',
         };
-      case "warning":
+      case 'warning':
         return {
-          icon: "text-yellow-500",
-          confirmButton: "bg-yellow-600 hover:bg-yellow-700 text-white",
-          iconBg: "bg-yellow-50",
+          icon: 'text-yellow-500',
+          confirmButton: 'bg-yellow-600 hover:bg-yellow-700 text-white',
+          iconBg: 'bg-yellow-50',
         };
-      case "info":
+      case 'info':
         return {
-          icon: "text-blue-500",
-          confirmButton: "bg-blue-600 hover:bg-blue-700 text-white",
-          iconBg: "bg-blue-50",
+          icon: 'text-blue-500',
+          confirmButton: 'bg-blue-600 hover:bg-blue-700 text-white',
+          iconBg: 'bg-blue-50',
         };
       default:
         return {
-          icon: "text-red-500",
-          confirmButton: "bg-red-600 hover:bg-red-700 text-white",
-          iconBg: "bg-red-50",
+          icon: 'text-red-500',
+          confirmButton: 'bg-red-600 hover:bg-red-700 text-white',
+          iconBg: 'bg-red-50',
         };
     }
   };
@@ -118,7 +118,7 @@ export default function ConfirmModal({
                 disabled={isLoading}
                 className={`px-4 py-2 ${styles.confirmButton}`}
               >
-                {isLoading ? "Đang xử lý..." : confirmText}
+                {isLoading ? 'Đang xử lý...' : confirmText}
               </Button>
             </div>
           </div>

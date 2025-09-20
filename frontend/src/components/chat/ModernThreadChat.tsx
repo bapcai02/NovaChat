@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import React, { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft,
   MoreHorizontal,
@@ -16,21 +16,21 @@ import {
   Image,
   X,
   MessageCircle,
-} from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+} from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import EmojiPicker from "emoji-picker-react";
-import { apiService } from "@/services/api";
-import { getWebSocketClient } from "@/lib/websocket";
-import { useChat } from "@/hooks/useChat";
+} from '@/components/ui/dropdown-menu';
+import EmojiPicker from 'emoji-picker-react';
+import { apiService } from '@/services/api';
+import { getWebSocketClient } from '@/lib/websocket';
+import { useChat } from '@/hooks/useChat';
 
 interface ThreadMessage {
   id: string;
@@ -65,7 +65,7 @@ export default function ModernThreadChat({
 }: ThreadChatProps) {
   const { currentUser } = useChat();
   const [messages, setMessages] = useState<ThreadMessage[]>([]);
-  const [newMessage, setNewMessage] = useState("");
+  const [newMessage, setNewMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [showEmojis, setShowEmojis] = useState(false);
   const [attachments, setAttachments] = useState<any[]>([]);
@@ -77,7 +77,7 @@ export default function ModernThreadChat({
   const imageInputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   // Load thread messages from API (only on first open for this parent id)
@@ -94,14 +94,14 @@ export default function ModernThreadChat({
             id:
               msg.user_id?.toString() ||
               msg.sender?.id?.toString() ||
-              "unknown",
-            name: msg.sender?.name || msg.user?.name || "Unknown User",
+              'unknown',
+            name: msg.sender?.name || msg.user?.name || 'Unknown User',
             avatar: msg.sender?.avatar || msg.user?.avatar,
             isOnline: msg.sender?.is_online || msg.user?.is_online || false,
           },
           timestamp: new Date(msg.created_at).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
+            hour: '2-digit',
+            minute: '2-digit',
           }),
           isOwn: false,
           isEdited: msg.is_edited || false,
@@ -110,7 +110,7 @@ export default function ModernThreadChat({
         }));
         setMessages(threadMessages);
       } catch (error) {
-        console.error("Error loading thread messages:", error);
+        console.error('Error loading thread messages:', error);
         setMessages([]);
       } finally {
         setIsLoading(false);
@@ -140,34 +140,34 @@ export default function ModernThreadChat({
       const handler = (raw: any) => {
         const message = raw as any;
         // Accept either dedicated thread event or chat_message carrying parent_id
-        const isThreadEvt = message?.type === "thread_reply";
+        const isThreadEvt = message?.type === 'thread_reply';
         const isReplyChat =
-          message?.type === "chat_message" && !!message?.parent_id;
+          message?.type === 'chat_message' && !!message?.parent_id;
         if (!isThreadEvt && !isReplyChat) return;
-        const parentId = parseInt((message.parent_id || "0").toString() || "0");
+        const parentId = parseInt((message.parent_id || '0').toString() || '0');
         if (!parentId || parentId.toString() !== parentMessage.id.toString())
           return;
 
         const ts = message.timestamp || new Date().toISOString();
         const newMsg = {
           id: Date.now().toString(),
-          content: message.content || "",
+          content: message.content || '',
           sender: {
-            id: (message.sender_id || "").toString(),
-            name: "",
+            id: (message.sender_id || '').toString(),
+            name: '',
             avatar: undefined,
             isOnline: false,
           },
           timestamp: new Date(ts).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
+            hour: '2-digit',
+            minute: '2-digit',
           }),
           isOwn: false,
         } as any;
 
-        setMessages((prev) => {
+        setMessages(prev => {
           // prevent duplicate by content+time close
-          const exists = prev.some((m) => m.content === newMsg.content);
+          const exists = prev.some(m => m.content === newMsg.content);
           return exists ? prev : [...prev, newMsg];
         });
       };
@@ -190,11 +190,11 @@ export default function ModernThreadChat({
     };
 
     if (showEmojis) {
-      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showEmojis]);
 
@@ -211,21 +211,21 @@ export default function ModernThreadChat({
           id: Date.now().toString(),
           content: newMessage.trim(),
           sender: {
-            id: "current-user",
-            name: "You",
-            avatar: "https://ui-avatars.com/api/?name=You&background=random",
+            id: 'current-user',
+            name: 'You',
+            avatar: 'https://ui-avatars.com/api/?name=You&background=random',
             isOnline: true,
           },
           timestamp: new Date().toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
+            hour: '2-digit',
+            minute: '2-digit',
           }),
           isOwn: true,
         };
-        setMessages((prev) => [...prev, optimistic]);
+        setMessages(prev => [...prev, optimistic]);
         const currentUserId = currentUser?.id || null;
         const messagePayload = {
-          type: "chat_message",
+          type: 'chat_message',
           conversation_id: parentMessage.conversation_id,
           parent_id: parentMessage.id,
           sender_id: currentUserId || 0,
@@ -233,23 +233,23 @@ export default function ModernThreadChat({
           client_id: `${currentUserId || 0}-${Date.now()}`,
         };
         ws.send(messagePayload as any);
-        setNewMessage("");
+        setNewMessage('');
         setAttachments([]);
         setIsTyping(false);
       } catch (error) {
-        console.error("Error sending thread message:", error);
+        console.error('Error sending thread message:', error);
         // Fallback to API if WS fails
         try {
           const response = await apiService.sendThreadMessage(
             parentMessage.id,
-            newMessage.trim(),
+            newMessage.trim()
           );
           const data = (response as any)?.data ?? {};
           const patchedId = (data.id ?? Date.now()).toString();
-          setMessages((prev) =>
-            prev.map((m) =>
-              m.id === optimistic.id ? { ...m, id: patchedId } : m,
-            ),
+          setMessages(prev =>
+            prev.map(m =>
+              m.id === optimistic.id ? { ...m, id: patchedId } : m
+            )
           );
         } catch {}
       }
@@ -258,22 +258,22 @@ export default function ModernThreadChat({
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    const newAttachments = files.map((file) => ({
+    const newAttachments = files.map(file => ({
       id: Math.random().toString(36).substr(2, 9),
       name: file.name,
       size: file.size,
       type: file.type,
       file: file,
     }));
-    setAttachments((prev) => [...prev, ...newAttachments]);
+    setAttachments(prev => [...prev, ...newAttachments]);
   };
 
   const removeAttachment = (id: string) => {
-    setAttachments((prev) => prev.filter((att) => att.id !== id));
+    setAttachments(prev => prev.filter(att => att.id !== id));
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
     }
@@ -281,22 +281,20 @@ export default function ModernThreadChat({
 
   const addReaction = (messageId: string, emoji: string) => {
     setMessages(
-      messages.map((msg) => {
+      messages.map(msg => {
         if (msg.id === messageId) {
-          const existingReaction = msg.reactions?.find(
-            (r) => r.emoji === emoji,
-          );
+          const existingReaction = msg.reactions?.find(r => r.emoji === emoji);
           if (existingReaction) {
             return {
               ...msg,
-              reactions: msg.reactions?.map((r) =>
+              reactions: msg.reactions?.map(r =>
                 r.emoji === emoji
                   ? {
                       ...r,
                       count: r.count + 1,
-                      users: [...r.users, "current-user"],
+                      users: [...r.users, 'current-user'],
                     }
-                  : r,
+                  : r
               ),
             };
           } else {
@@ -304,13 +302,13 @@ export default function ModernThreadChat({
               ...msg,
               reactions: [
                 ...(msg.reactions || []),
-                { emoji, count: 1, users: ["current-user"] },
+                { emoji, count: 1, users: ['current-user'] },
               ],
             };
           }
         }
         return msg;
-      }),
+      })
     );
   };
 
@@ -318,7 +316,7 @@ export default function ModernThreadChat({
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.15, ease: "easeOut" }}
+      transition={{ duration: 0.15, ease: 'easeOut' }}
       className="flex gap-2 group"
     >
       {/* Avatar */}
@@ -326,9 +324,9 @@ export default function ModernThreadChat({
         <AvatarImage src={message.sender.avatar} />
         <AvatarFallback className="text-xs font-semibold bg-gradient-to-br from-blue-500 to-purple-600 text-white">
           {message.sender.name
-            .split(" ")
-            .map((n) => n[0])
-            .join("")}
+            .split(' ')
+            .map(n => n[0])
+            .join('')}
         </AvatarFallback>
       </Avatar>
 
@@ -354,10 +352,10 @@ export default function ModernThreadChat({
                 variant="ghost"
                 size="sm"
                 className="h-7 w-7 p-0 hover:bg-gray-200 text-gray-600 hover:text-gray-800"
-                onClick={(e) => {
+                onClick={e => {
                   e.preventDefault();
                   e.stopPropagation();
-                  addReaction(message.id, "👍");
+                  addReaction(message.id, '👍');
                 }}
               >
                 <Smile className="h-4 w-4" />
@@ -366,10 +364,10 @@ export default function ModernThreadChat({
                 variant="ghost"
                 size="sm"
                 className="h-7 w-7 p-0 hover:bg-gray-200 text-gray-600 hover:text-gray-800"
-                onClick={(e) => {
+                onClick={e => {
                   e.preventDefault();
                   e.stopPropagation();
-                  addReaction(message.id, "❤️");
+                  addReaction(message.id, '❤️');
                 }}
               >
                 <Heart className="h-4 w-4" />
@@ -443,7 +441,7 @@ export default function ModernThreadChat({
       initial={{ x: 400, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: 400, opacity: 0 }}
-      transition={{ duration: 0.2, ease: "easeOut" }}
+      transition={{ duration: 0.2, ease: 'easeOut' }}
       className="flex flex-col h-full bg-white border-l border-gray-200"
     >
       {/* Thread Header */}
@@ -460,7 +458,7 @@ export default function ModernThreadChat({
           <div className="flex-1">
             <h3 className="text-lg font-semibold text-gray-800">Thread</h3>
             <p className="text-sm text-gray-500">
-              {messages.length} {messages.length === 1 ? "reply" : "replies"}
+              {messages.length} {messages.length === 1 ? 'reply' : 'replies'}
             </p>
           </div>
           <Button
@@ -485,8 +483,8 @@ export default function ModernThreadChat({
             <MessageCircle className="h-3 w-3" />
             <span>
               {isLoading
-                ? "Loading..."
-                : `${messages.length} ${messages.length === 1 ? "reply" : "replies"}`}
+                ? 'Loading...'
+                : `${messages.length} ${messages.length === 1 ? 'reply' : 'replies'}`}
             </span>
           </div>
         </div>
@@ -502,7 +500,7 @@ export default function ModernThreadChat({
               </div>
             </div>
           ) : messages.length > 0 ? (
-            messages.map((message) => (
+            messages.map(message => (
               <ThreadMessageBubble key={message.id} message={message} />
             ))
           ) : (
@@ -519,7 +517,7 @@ export default function ModernThreadChat({
         {/* Attachment Preview */}
         {attachments.length > 0 && (
           <div className="mb-3 space-y-2">
-            {attachments.map((attachment) => (
+            {attachments.map(attachment => (
               <div
                 key={attachment.id}
                 className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg"
@@ -577,7 +575,7 @@ export default function ModernThreadChat({
           <div className="flex-1 relative">
             <Textarea
               value={newMessage}
-              onChange={(e) => {
+              onChange={e => {
                 setNewMessage(e.target.value);
                 if (e.target.value.trim() && !isTyping) {
                   setIsTyping(true);
@@ -589,8 +587,8 @@ export default function ModernThreadChat({
               placeholder="Reply in thread..."
               className="min-h-[40px] max-h-28 resize-none bg-gray-50 border-gray-200 focus:ring-1 focus:ring-blue-400 focus:border-blue-400 focus:outline-none text-sm text-gray-800 placeholder-gray-500 transition-all duration-200 rounded-lg"
               style={{
-                border: "1px solid #e5e7eb",
-                boxShadow: "none",
+                border: '1px solid #e5e7eb',
+                boxShadow: 'none',
               }}
               rows={1}
             />
@@ -626,15 +624,15 @@ export default function ModernThreadChat({
               transition={{ duration: 0.2 }}
               className="absolute bottom-full left-0 mb-2 z-50"
               style={{
-                position: "absolute",
-                bottom: "100%",
-                left: "0",
-                marginBottom: "8px",
+                position: 'absolute',
+                bottom: '100%',
+                left: '0',
+                marginBottom: '8px',
               }}
             >
               <EmojiPicker
-                onEmojiClick={(emojiData) => {
-                  setNewMessage((prev) => prev + emojiData.emoji);
+                onEmojiClick={emojiData => {
+                  setNewMessage(prev => prev + emojiData.emoji);
                   setShowEmojis(false);
                 }}
                 width={320}

@@ -1,22 +1,22 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { X, Hash } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, Hash } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { useTranslation } from "react-i18next";
-import { apiService } from "@/services/api";
+} from '@/components/ui/select';
+import { useTranslation } from 'react-i18next';
+import { apiService } from '@/services/api';
 
 interface CreateChannelModalProps {
   isOpen: boolean;
@@ -31,13 +31,13 @@ export default function CreateChannelModal({
   onChannelCreated,
   teams = [],
 }: CreateChannelModalProps) {
-  const { t } = useTranslation("common");
+  const { t } = useTranslation('common');
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    name: "",
-    description: "",
+    name: '',
+    description: '',
     is_private: false,
-    team_id: "",
+    team_id: '',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -56,22 +56,22 @@ export default function CreateChannelModal({
         onChannelCreated?.(response.data.data);
         onClose();
         setFormData({
-          name: "",
-          description: "",
+          name: '',
+          description: '',
           is_private: false,
-          team_id: "",
+          team_id: '',
         });
       }
     } catch (error) {
-      console.error("Failed to create channel:", error);
-      alert("Có lỗi xảy ra khi tạo kênh");
+      console.error('Failed to create channel:', error);
+      alert('Có lỗi xảy ra khi tạo kênh');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleInputChange = (field: string, value: string | boolean) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   if (!isOpen) return null;
@@ -103,7 +103,7 @@ export default function CreateChannelModal({
               </div>
               <div>
                 <h2 className="text-lg font-semibold text-gray-900">
-                  {t("create_channel")}
+                  {t('create_channel')}
                 </h2>
                 <p className="text-sm text-gray-500">Tạo kênh mới trong nhóm</p>
               </div>
@@ -122,14 +122,14 @@ export default function CreateChannelModal({
               <Label htmlFor="team">Nhóm *</Label>
               <Select
                 value={formData.team_id}
-                onValueChange={(value) => handleInputChange("team_id", value)}
+                onValueChange={value => handleInputChange('team_id', value)}
                 disabled={isLoading}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Chọn nhóm" />
                 </SelectTrigger>
                 <SelectContent>
-                  {teams.map((team) => (
+                  {teams.map(team => (
                     <SelectItem key={team.id} value={team.id.toString()}>
                       {team.name}
                     </SelectItem>
@@ -139,11 +139,11 @@ export default function CreateChannelModal({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="name">{t("name")} *</Label>
+              <Label htmlFor="name">{t('name')} *</Label>
               <Input
                 id="name"
                 value={formData.name}
-                onChange={(e) => handleInputChange("name", e.target.value)}
+                onChange={e => handleInputChange('name', e.target.value)}
                 placeholder="Tên kênh"
                 required
                 disabled={isLoading}
@@ -155,9 +155,7 @@ export default function CreateChannelModal({
               <Textarea
                 id="description"
                 value={formData.description}
-                onChange={(e) =>
-                  handleInputChange("description", e.target.value)
-                }
+                onChange={e => handleInputChange('description', e.target.value)}
                 placeholder="Mô tả về kênh (tùy chọn)"
                 rows={3}
                 disabled={isLoading}
@@ -174,8 +172,8 @@ export default function CreateChannelModal({
               <Switch
                 id="private"
                 checked={formData.is_private}
-                onCheckedChange={(checked) =>
-                  handleInputChange("is_private", checked)
+                onCheckedChange={checked =>
+                  handleInputChange('is_private', checked)
                 }
                 disabled={isLoading}
               />
@@ -199,7 +197,7 @@ export default function CreateChannelModal({
                 }
                 className="flex-1 bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700"
               >
-                {isLoading ? "Đang tạo..." : "Tạo kênh"}
+                {isLoading ? 'Đang tạo...' : 'Tạo kênh'}
               </Button>
             </div>
           </form>

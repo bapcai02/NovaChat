@@ -8,7 +8,7 @@ Modern chat application frontend built with Next.js, TypeScript, Tailwind CSS. S
 - **Real-time Chat**: Message threading, reactions, and real-time updates
 - **Authentication**: Secure login/register with JWT tokens
 - **Theme Support**: Dark/light mode with custom themes
-- **Advanced Features**: 
+- **Advanced Features**:
   - Voice messages with waveform visualization
   - Message formatting (bold, italic, code, links)
   - Emoji picker and reactions
@@ -64,30 +64,35 @@ src/
 ## Redux Store Structure
 
 ### Auth Slice
+
 - User authentication state
 - Login/logout functionality
 - Token management
 - User profile data
 
 ### Channel Slice
+
 - Channel list and current channel
 - Channel creation and management
 - Member management
 - Channel permissions
 
 ### Message Slice
+
 - Message list and current message
 - Message sending and editing
 - Reactions and replies
 - Message search
 
 ### User Slice
+
 - User list and current user
 - User profiles and status
 - Online users
 - User search
 
 ### UI Slice
+
 - Theme management
 - Modal states
 - Sidebar states
@@ -99,12 +104,14 @@ src/
 The frontend uses a structured API service layer:
 
 ### Base API Configuration (`api.ts`)
+
 - Axios instance with interceptors
 - Automatic token management
 - Error handling
 - Request/response transformation
 
 ### Domain Services
+
 - **AuthService**: Login, register, logout, token verification
 - **ChannelService**: Channel CRUD operations, member management
 - **MessageService**: Message operations, reactions, search
@@ -113,28 +120,33 @@ The frontend uses a structured API service layer:
 ## Getting Started
 
 ### Prerequisites
-- Node.js 18+ 
+
+- Node.js 18+
 - npm or yarn
 - Backend API running (see backend README)
 
 ### Installation
 
 1. Install dependencies:
+
 ```bash
 npm install
 ```
 
 2. Set up environment variables:
+
 ```bash
 cp .env.example .env.local
 ```
 
 3. Configure API URL in `.env.local`:
+
 ```
 NEXT_PUBLIC_API_URL=http://localhost:8000/api
 ```
 
 4. Start the development server:
+
 ```bash
 npm run dev
 ```
@@ -166,31 +178,34 @@ NEXT_PUBLIC_API_URL=http://localhost:8000/api
 ## State Management Patterns
 
 ### Async Operations
+
 ```typescript
 // Using Redux Toolkit async thunks
-const dispatch = useAppDispatch()
-const { isLoading, error } = useAppSelector(state => state.auth)
+const dispatch = useAppDispatch();
+const { isLoading, error } = useAppSelector(state => state.auth);
 
-const handleLogin = async (credentials) => {
+const handleLogin = async credentials => {
   try {
-    await dispatch(login(credentials)).unwrap()
+    await dispatch(login(credentials)).unwrap();
     // Success handling
   } catch (error) {
     // Error handling
   }
-}
+};
 ```
 
 ### Real-time Updates
+
 ```typescript
 // Subscribe to state changes
-const messages = useAppSelector(state => state.messages.messages)
-const channels = useAppSelector(state => state.channels.channels)
+const messages = useAppSelector(state => state.messages.messages);
+const channels = useAppSelector(state => state.channels.channels);
 ```
 
 ## Component Patterns
 
 ### Protected Routes
+
 ```typescript
 // Using AuthGuard component
 <AuthGuard requireAuth={true}>
@@ -199,6 +214,7 @@ const channels = useAppSelector(state => state.channels.channels)
 ```
 
 ### Loading States
+
 ```typescript
 const { isLoading } = useAppSelector(state => state.auth)
 
@@ -240,11 +256,13 @@ npm run test:e2e
 ## Deployment
 
 ### Vercel (Recommended)
+
 1. Connect GitHub repository
 2. Configure environment variables
 3. Deploy automatically on push
 
 ### Other Platforms
+
 1. Build the application: `npm run build`
 2. Start production server: `npm run start`
 3. Configure reverse proxy for API calls

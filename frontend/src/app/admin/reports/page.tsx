@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { adminService } from "@/services/adminService";
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { adminService } from '@/services/adminService';
 import {
   AreaChart,
   Area,
@@ -17,7 +17,7 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-} from "recharts";
+} from 'recharts';
 import {
   BarChart3,
   Users,
@@ -27,9 +27,9 @@ import {
   RefreshCw,
   Activity,
   Heart,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 interface ReportData {
   period: string;
@@ -58,9 +58,9 @@ export default function ReportsPage() {
   const router = useRouter();
   const [reportData, setReportData] = useState<ReportData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [dateRange, setDateRange] = useState("7d");
-  const [customStartDate, setCustomStartDate] = useState("");
-  const [customEndDate, setCustomEndDate] = useState("");
+  const [dateRange, setDateRange] = useState('7d');
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
 
   const loadReports = async () => {
     try {
@@ -72,10 +72,10 @@ export default function ReportsPage() {
       });
       setReportData(response.data);
     } catch (err) {
-      console.error("Error loading reports:", err);
+      console.error('Error loading reports:', err);
       // Fallback to mock data on error
       const mockData: ReportData = {
-        period: "Last 7 days",
+        period: 'Last 7 days',
         totalUsers: 1250,
         newUsers: 45,
         activeUsers: 890,
@@ -84,20 +84,20 @@ export default function ReportsPage() {
         userEngagement: 78.5,
         averageSessionTime: 24.5,
         topUsers: [
-          { id: 1, name: "John Doe", messageCount: 245, bookmarkCount: 12 },
-          { id: 2, name: "Jane Smith", messageCount: 189, bookmarkCount: 8 },
-          { id: 3, name: "Bob Wilson", messageCount: 156, bookmarkCount: 15 },
-          { id: 4, name: "Alice Johnson", messageCount: 134, bookmarkCount: 6 },
-          { id: 5, name: "Charlie Brown", messageCount: 98, bookmarkCount: 9 },
+          { id: 1, name: 'John Doe', messageCount: 245, bookmarkCount: 12 },
+          { id: 2, name: 'Jane Smith', messageCount: 189, bookmarkCount: 8 },
+          { id: 3, name: 'Bob Wilson', messageCount: 156, bookmarkCount: 15 },
+          { id: 4, name: 'Alice Johnson', messageCount: 134, bookmarkCount: 6 },
+          { id: 5, name: 'Charlie Brown', messageCount: 98, bookmarkCount: 9 },
         ],
         dailyStats: [
-          { date: "2024-01-15", users: 120, messages: 2100, bookmarks: 320 },
-          { date: "2024-01-16", users: 135, messages: 2300, bookmarks: 340 },
-          { date: "2024-01-17", users: 142, messages: 2450, bookmarks: 380 },
-          { date: "2024-01-18", users: 138, messages: 2200, bookmarks: 350 },
-          { date: "2024-01-19", users: 155, messages: 2600, bookmarks: 420 },
-          { date: "2024-01-20", users: 148, messages: 2400, bookmarks: 390 },
-          { date: "2024-01-21", users: 152, messages: 2370, bookmarks: 340 },
+          { date: '2024-01-15', users: 120, messages: 2100, bookmarks: 320 },
+          { date: '2024-01-16', users: 135, messages: 2300, bookmarks: 340 },
+          { date: '2024-01-17', users: 142, messages: 2450, bookmarks: 380 },
+          { date: '2024-01-18', users: 138, messages: 2200, bookmarks: 350 },
+          { date: '2024-01-19', users: 155, messages: 2600, bookmarks: 420 },
+          { date: '2024-01-20', users: 148, messages: 2400, bookmarks: 390 },
+          { date: '2024-01-21', users: 152, messages: 2370, bookmarks: 340 },
         ],
       };
       setReportData(mockData);
@@ -110,7 +110,7 @@ export default function ReportsPage() {
     loadReports();
   }, [dateRange, customStartDate, customEndDate]);
 
-  const handleExportReport = (format: "pdf" | "excel") => {
+  const handleExportReport = (format: 'pdf' | 'excel') => {
     console.log(`Exporting report as ${format}`);
     // TODO: Implement export functionality
   };
@@ -130,7 +130,7 @@ export default function ReportsPage() {
   return (
     <div
       className="min-h-screen bg-gray-50 overflow-y-auto"
-      style={{ height: "100vh" }}
+      style={{ height: '100vh' }}
     >
       {/* Header */}
       <div className="bg-white border-b border-gray-200">
@@ -143,7 +143,7 @@ export default function ReportsPage() {
               </h1>
             </div>
             <div className="flex items-center space-x-4">
-              <Button variant="outline" onClick={() => router.push("/admin")}>
+              <Button variant="outline" onClick={() => router.push('/admin')}>
                 Back to Admin
               </Button>
             </div>
@@ -161,7 +161,7 @@ export default function ReportsPage() {
                   <Calendar className="h-4 w-4 text-gray-500" />
                   <select
                     value={dateRange}
-                    onChange={(e) => setDateRange(e.target.value)}
+                    onChange={e => setDateRange(e.target.value)}
                     className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                   >
                     <option value="7d">Last 7 days</option>
@@ -171,19 +171,19 @@ export default function ReportsPage() {
                     <option value="custom">Custom range</option>
                   </select>
                 </div>
-                {dateRange === "custom" && (
+                {dateRange === 'custom' && (
                   <div className="flex items-center space-x-2">
                     <Input
                       type="date"
                       value={customStartDate}
-                      onChange={(e) => setCustomStartDate(e.target.value)}
+                      onChange={e => setCustomStartDate(e.target.value)}
                       className="text-sm"
                     />
                     <span>to</span>
                     <Input
                       type="date"
                       value={customEndDate}
-                      onChange={(e) => setCustomEndDate(e.target.value)}
+                      onChange={e => setCustomEndDate(e.target.value)}
                       className="text-sm"
                     />
                   </div>
@@ -196,17 +196,17 @@ export default function ReportsPage() {
                   disabled={loading}
                 >
                   <RefreshCw
-                    className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`}
+                    className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`}
                   />
                   Refresh
                 </Button>
-                <Button onClick={() => handleExportReport("pdf")}>
+                <Button onClick={() => handleExportReport('pdf')}>
                   <Download className="h-4 w-4 mr-2" />
                   Export PDF
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => handleExportReport("excel")}
+                  onClick={() => handleExportReport('excel')}
                 >
                   <Download className="h-4 w-4 mr-2" />
                   Export Excel
@@ -265,7 +265,7 @@ export default function ReportsPage() {
                 </p>
                 <p className="text-xs text-gray-500">
                   {(reportData?.totalMessages || 0) /
-                    (reportData?.activeUsers || 1)}{" "}
+                    (reportData?.activeUsers || 1)}{' '}
                   per active user
                 </p>
               </div>
@@ -299,10 +299,10 @@ export default function ReportsPage() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis
                     dataKey="date"
-                    tickFormatter={(value) =>
-                      new Date(value).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
+                    tickFormatter={value =>
+                      new Date(value).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
                       })
                     }
                     stroke="#666"
@@ -310,17 +310,17 @@ export default function ReportsPage() {
                   <YAxis stroke="#666" />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: "white",
-                      border: "1px solid #e5e7eb",
-                      borderRadius: "8px",
-                      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                      backgroundColor: 'white',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                     }}
-                    labelFormatter={(value) =>
-                      new Date(value).toLocaleDateString("en-US", {
-                        weekday: "long",
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
+                    labelFormatter={value =>
+                      new Date(value).toLocaleDateString('en-US', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
                       })
                     }
                   />
@@ -374,10 +374,10 @@ export default function ReportsPage() {
                   />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: "white",
-                      border: "1px solid #e5e7eb",
-                      borderRadius: "8px",
-                      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                      backgroundColor: 'white',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                     }}
                   />
                   <Legend />
@@ -410,22 +410,22 @@ export default function ReportsPage() {
                   <Pie
                     data={[
                       {
-                        name: "Active Users",
+                        name: 'Active Users',
                         value: reportData?.activeUsers || 0,
-                        color: "#10b981",
+                        color: '#10b981',
                       },
                       {
-                        name: "New Users",
+                        name: 'New Users',
                         value: reportData?.newUsers || 0,
-                        color: "#3b82f6",
+                        color: '#3b82f6',
                       },
                       {
-                        name: "Inactive Users",
+                        name: 'Inactive Users',
                         value:
                           (reportData?.totalUsers || 0) -
                           (reportData?.activeUsers || 0) -
                           (reportData?.newUsers || 0),
-                        color: "#f59e0b",
+                        color: '#f59e0b',
                       },
                     ]}
                     cx="50%"
@@ -440,22 +440,22 @@ export default function ReportsPage() {
                   >
                     {[
                       {
-                        name: "Active Users",
+                        name: 'Active Users',
                         value: reportData?.activeUsers || 0,
-                        color: "#10b981",
+                        color: '#10b981',
                       },
                       {
-                        name: "New Users",
+                        name: 'New Users',
                         value: reportData?.newUsers || 0,
-                        color: "#3b82f6",
+                        color: '#3b82f6',
                       },
                       {
-                        name: "Inactive Users",
+                        name: 'Inactive Users',
                         value:
                           (reportData?.totalUsers || 0) -
                           (reportData?.activeUsers || 0) -
                           (reportData?.newUsers || 0),
-                        color: "#f59e0b",
+                        color: '#f59e0b',
                       },
                     ].map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
@@ -463,10 +463,10 @@ export default function ReportsPage() {
                   </Pie>
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: "white",
-                      border: "1px solid #e5e7eb",
-                      borderRadius: "8px",
-                      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                      backgroundColor: 'white',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                     }}
                   />
                   <Legend />
@@ -483,19 +483,19 @@ export default function ReportsPage() {
                 <BarChart
                   data={[
                     {
-                      name: "Messages",
+                      name: 'Messages',
                       value: reportData?.totalMessages || 0,
-                      color: "#3b82f6",
+                      color: '#3b82f6',
                     },
                     {
-                      name: "Bookmarks",
+                      name: 'Bookmarks',
                       value: reportData?.totalBookmarks || 0,
-                      color: "#10b981",
+                      color: '#10b981',
                     },
                     {
-                      name: "Engagement %",
+                      name: 'Engagement %',
                       value: reportData?.userEngagement || 0,
-                      color: "#f59e0b",
+                      color: '#f59e0b',
                     },
                   ]}
                 >
@@ -504,10 +504,10 @@ export default function ReportsPage() {
                   <YAxis stroke="#666" />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: "white",
-                      border: "1px solid #e5e7eb",
-                      borderRadius: "8px",
-                      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                      backgroundColor: 'white',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                     }}
                   />
                   <Bar dataKey="value" fill="#3b82f6" radius={[4, 4, 0, 0]} />
@@ -539,7 +539,7 @@ export default function ReportsPage() {
                 <span className="font-semibold">
                   {Math.round(
                     (reportData?.totalMessages || 0) /
-                      (reportData?.activeUsers || 1),
+                      (reportData?.activeUsers || 1)
                   )}
                 </span>
               </div>

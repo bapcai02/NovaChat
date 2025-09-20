@@ -21,7 +21,7 @@ export interface Channel {
   name: string;
   display_name: string;
   description?: string;
-  type: "public" | "private" | "direct" | "announcement" | "support";
+  type: 'public' | 'private' | 'direct' | 'announcement' | 'support';
   topic?: string;
   purpose?: string;
   avatar?: string;
@@ -50,7 +50,7 @@ export interface Message {
   user_id: number;
   parent_id?: number;
   content: string;
-  type: "text" | "image" | "file" | "system" | "reaction";
+  type: 'text' | 'image' | 'file' | 'system' | 'reaction';
   metadata?: Record<string, any>;
   is_edited: boolean;
   edited_at?: string;
@@ -117,7 +117,7 @@ export interface ApiError {
 // UI types
 export interface Notification {
   id: string;
-  type: "success" | "error" | "warning" | "info";
+  type: 'success' | 'error' | 'warning' | 'info';
   title: string;
   message: string;
   timestamp: number;
@@ -152,7 +152,7 @@ export interface VoiceMessage {
 
 // Search types
 export interface SearchResult {
-  type: "message" | "channel" | "user";
+  type: 'message' | 'channel' | 'user';
   id: number;
   title: string;
   content: string;

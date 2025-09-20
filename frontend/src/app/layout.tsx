@@ -1,17 +1,17 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
-import { ReduxProvider } from "@/store/provider";
-import { ThemeProvider } from "@/components/ui/theme-provider";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { I18nProvider } from "@/components/providers/I18nProvider";
-import Script from "next/script";
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+import './globals.css';
+import { ReduxProvider } from '@/store/provider';
+import { ThemeProvider } from '@/components/ui/theme-provider';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { I18nProvider } from '@/components/providers/I18nProvider';
+import Script from 'next/script';
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: "NovaChat - Enterprise Chat Platform",
-  description: "Modern chat platform built with Next.js and Laravel",
+  title: 'NovaChat - Enterprise Chat Platform',
+  description: 'Modern chat platform built with Next.js and Laravel',
 };
 
 function RootLayout({
@@ -26,10 +26,10 @@ function RootLayout({
           {`
             (function(){
               try {
-                var turnUrls = ${JSON.stringify(process.env.NEXT_PUBLIC_TURN_URLS || "")};
-                var turnUser = ${JSON.stringify(process.env.NEXT_PUBLIC_TURN_USERNAME || "")};
-                var turnCred = ${JSON.stringify(process.env.NEXT_PUBLIC_TURN_CREDENTIAL || "")};
-                var forceRelay = ${JSON.stringify(process.env.NEXT_PUBLIC_TURN_FORCE || "")};
+                var turnUrls = ${JSON.stringify(process.env.NEXT_PUBLIC_TURN_URLS || '')};
+                var turnUser = ${JSON.stringify(process.env.NEXT_PUBLIC_TURN_USERNAME || '')};
+                var turnCred = ${JSON.stringify(process.env.NEXT_PUBLIC_TURN_CREDENTIAL || '')};
+                var forceRelay = ${JSON.stringify(process.env.NEXT_PUBLIC_TURN_FORCE || '')};
                 if (turnUrls && turnUser && turnCred) {
                   window.NC_TURN = {
                     urls: turnUrls.includes(',') ? turnUrls.split(',').map(function(s){return s.trim();}) : [turnUrls]

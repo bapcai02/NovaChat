@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import React, { useEffect, useState } from "react";
-import { apiService } from "@/services/api";
+import React, { useEffect, useState } from 'react';
+import { apiService } from '@/services/api';
 
 export default function MentionsPage() {
   const [items, setItems] = useState<any[]>([]);
@@ -29,7 +29,7 @@ export default function MentionsPage() {
         <div className="text-gray-500">No mentions</div>
       ) : (
         <div className="space-y-3">
-          {items.map((m) => (
+          {items.map(m => (
             <div key={m.id} className="p-3 border rounded-md bg-white">
               <div className="text-xs text-gray-500">
                 In conversation #{m.conversation_id}
@@ -38,7 +38,9 @@ export default function MentionsPage() {
               <button
                 className="mt-2 text-xs text-blue-600 hover:underline"
                 onClick={() => {
-                  const ev = new CustomEvent("__nc_jump_to_message", { detail: m });
+                  const ev = new CustomEvent('__nc_jump_to_message', {
+                    detail: m,
+                  });
                   window.dispatchEvent(ev);
                 }}
               >
@@ -51,5 +53,3 @@ export default function MentionsPage() {
     </div>
   );
 }
-
-

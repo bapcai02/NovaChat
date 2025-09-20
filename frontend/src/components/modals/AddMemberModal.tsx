@@ -1,20 +1,20 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { X, Search, UserPlus, Users } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { useTranslation } from "react-i18next";
-import { apiService } from "@/services/api";
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, Search, UserPlus, Users } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { useTranslation } from 'react-i18next';
+import { apiService } from '@/services/api';
 
 interface AddMemberModalProps {
   isOpen: boolean;
   onClose: () => void;
   onMemberAdded?: (member: any) => void;
-  type: "team" | "channel";
+  type: 'team' | 'channel';
   teamId?: string;
   channelId?: string;
   existingMembers?: any[];
@@ -30,7 +30,7 @@ export default function AddMemberModal({
   existingMembers = [],
 }: AddMemberModalProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [users, setUsers] = useState<any[]>([]);
   const [selectedUsers, setSelectedUsers] = useState<any[]>([]);
 
@@ -47,15 +47,15 @@ export default function AddMemberModal({
       const response = await apiService.getUsers();
       setUsers(response.data || []);
     } catch (error) {
-      console.error("Failed to load users:", error);
+      console.error('Failed to load users:', error);
       // Fallback to empty array if API fails
       setUsers([]);
     }
   };
 
-  const filteredUsers = users.filter((user) => {
+  const filteredUsers = users.filter(user => {
     const isNotExisting = !existingMembers.some(
-      (member) => member.id === user.id,
+      member => member.id === user.id
     );
     const matchesSearch =
       user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -64,10 +64,10 @@ export default function AddMemberModal({
   });
 
   const handleUserSelect = (user: any) => {
-    if (selectedUsers.some((u) => u.id === user.id)) {
-      setSelectedUsers((prev) => prev.filter((u) => u.id !== user.id));
+    if (selectedUsers.some(u => u.id === user.id)) {
+      setSelectedUsers(prev => prev.filter(u => u.id !== user.id));
     } else {
-      setSelectedUsers((prev) => [...prev, user]);
+      setSelectedUsers(prev => [...prev, user]);
     }
   };
 
@@ -77,13 +77,13 @@ export default function AddMemberModal({
     setIsLoading(true);
     try {
       for (const user of selectedUsers) {
-        if (type === "team" && teamId) {
+        if (type === 'team' && teamId) {
           await apiService.addMemberToTeam(teamId, user.id.toString());
-        } else if (type === "channel" && teamId && channelId) {
+        } else if (type === 'channel' && teamId && channelId) {
           await apiService.addMemberToChannel(
             teamId,
             channelId,
-            user.id.toString(),
+            user.id.toString()
           );
         }
       }
@@ -91,10 +91,10 @@ export default function AddMemberModal({
       onMemberAdded?.(selectedUsers);
       onClose();
       setSelectedUsers([]);
-      setSearchQuery("");
+      setSearchQuery('');
     } catch (error) {
-      console.error("Failed to add members:", error);
-      alert("Có lỗi xảy ra khi thêm thành viên");
+      console.error('Failed to add members:', error);
+      alert('Có lỗi xảy ra khi thêm thành viên');
     } finally {
       setIsLoading(false);
     }
@@ -132,9 +132,9 @@ export default function AddMemberModal({
                   Thêm thành viên
                 </h2>
                 <p className="text-sm text-gray-500">
-                  {type === "team"
-                    ? "Thêm thành viên vào nhóm"
-                    : "Thêm thành viên vào kênh"}
+                  {type === 'team'
+                    ? 'Thêm thành viên vào nhóm'
+                    : 'Thêm thành viên vào kênh'}
                 </p>
               </div>
             </div>
@@ -154,7 +154,7 @@ export default function AddMemberModal({
               <Input
                 placeholder="Tìm kiếm người dùng..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={e => setSearchQuery(e.target.value)}
                 className="pl-10"
               />
             </div>
@@ -169,7 +169,7 @@ export default function AddMemberModal({
                   </span>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {selectedUsers.map((user) => (
+                  {selectedUsers.map(user => (
                     <div key={user.id} className="relative flex items-center">
                       <Avatar className="h-8 w-8">
                         <AvatarImage src={user.avatar} />
@@ -199,14 +199,14 @@ export default function AddMemberModal({
               </div>
               <ScrollArea className="h-48">
                 <div className="space-y-1">
-                  {filteredUsers.map((user) => (
+                  {filteredUsers.map(user => (
                     <button
                       key={user.id}
                       onClick={() => handleUserSelect(user)}
                       className={`relative w-full flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 transition-colors ${
-                        selectedUsers.some((u) => u.id === user.id)
-                          ? "bg-blue-50 border border-blue-200"
-                          : ""
+                        selectedUsers.some(u => u.id === user.id)
+                          ? 'bg-blue-50 border border-blue-200'
+                          : ''
                       }`}
                     >
                       <Avatar className="h-8 w-8">
@@ -223,7 +223,7 @@ export default function AddMemberModal({
                           @{user.username}
                         </p>
                       </div>
-                      {selectedUsers.some((u) => u.id === user.id) && (
+                      {selectedUsers.some(u => u.id === user.id) && (
                         <div className="h-4 w-4 rounded-full bg-blue-500 flex items-center justify-center">
                           <X className="h-3 w-3 text-white" />
                         </div>
@@ -256,7 +256,7 @@ export default function AddMemberModal({
                 className="flex-1 bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700"
               >
                 {isLoading
-                  ? "Đang thêm..."
+                  ? 'Đang thêm...'
                   : `Thêm ${selectedUsers.length} thành viên`}
               </Button>
             </div>

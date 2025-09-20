@@ -1,12 +1,12 @@
-import React from "react";
+import React from 'react';
 
 const channels = [
-  { id: 1, name: "general", type: "public", unread: 0 },
-  { id: 2, name: "random", type: "public", unread: 3 },
-  { id: 3, name: "announcements", type: "announcement", unread: 0 },
-  { id: 4, name: "development", type: "public", unread: 0 },
-  { id: 5, name: "marketing", type: "public", unread: 1 },
-  { id: 6, name: "support", type: "support", unread: 0 },
+  { id: 1, name: 'general', type: 'public', unread: 0 },
+  { id: 2, name: 'random', type: 'public', unread: 3 },
+  { id: 3, name: 'announcements', type: 'announcement', unread: 0 },
+  { id: 4, name: 'development', type: 'public', unread: 0 },
+  { id: 5, name: 'marketing', type: 'public', unread: 1 },
+  { id: 6, name: 'support', type: 'support', unread: 0 },
 ];
 
 export function ChannelList() {
@@ -36,21 +36,21 @@ export function ChannelList() {
         </div>
 
         <div className="space-y-1">
-          {channels.map((channel) => (
+          {channels.map(channel => (
             <div
               key={channel.id}
               className={`flex items-center px-2 py-1 rounded cursor-pointer group ${
-                channel.name === "general"
-                  ? "bg-gray-700 text-gray-800"
-                  : "text-gray-300 hover:bg-gray-700 hover:text-gray-800"
+                channel.name === 'general'
+                  ? 'bg-gray-700 text-gray-800'
+                  : 'text-gray-300 hover:bg-gray-700 hover:text-gray-800'
               }`}
             >
               <span className="text-gray-400 mr-2 text-sm">
-                {channel.type === "announcement"
-                  ? "📢"
-                  : channel.type === "support"
-                    ? "🆘"
-                    : "#"}
+                {channel.type === 'announcement'
+                  ? '📢'
+                  : channel.type === 'support'
+                    ? '🆘'
+                    : '#'}
               </span>
               <span className="flex-1 text-sm truncate">{channel.name}</span>
               {channel.unread > 0 && (

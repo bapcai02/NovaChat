@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import React, { useState, useRef, useEffect } from "react";
-import { Button } from "./button";
-import { cn } from "@/lib/utils";
+import React, { useState, useRef, useEffect } from 'react';
+import { Button } from './button';
+import { cn } from '@/lib/utils';
 
 interface VoicePlayerProps {
   audioUrl: string;
@@ -62,7 +62,7 @@ export const VoicePlayer: React.FC<VoicePlayerProps> = ({
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   const handlePlayPause = async () => {
@@ -73,37 +73,37 @@ export const VoicePlayer: React.FC<VoicePlayerProps> = ({
       try {
         audioRef.current = new Audio(audioUrl);
 
-        audioRef.current.addEventListener("loadeddata", () => {
+        audioRef.current.addEventListener('loadeddata', () => {
           setIsLoading(false);
         });
 
-        audioRef.current.addEventListener("error", () => {
-          setError("Failed to load audio");
+        audioRef.current.addEventListener('error', () => {
+          setError('Failed to load audio');
           setIsLoading(false);
         });
 
-        audioRef.current.addEventListener("timeupdate", () => {
+        audioRef.current.addEventListener('timeupdate', () => {
           setCurrentTime(audioRef.current?.currentTime || 0);
         });
 
-        audioRef.current.addEventListener("ended", () => {
+        audioRef.current.addEventListener('ended', () => {
           setIsPlaying(false);
           setCurrentTime(0);
         });
 
-        audioRef.current.addEventListener("play", () => {
+        audioRef.current.addEventListener('play', () => {
           setIsPlaying(true);
         });
 
-        audioRef.current.addEventListener("pause", () => {
+        audioRef.current.addEventListener('pause', () => {
           setIsPlaying(false);
         });
 
         await audioRef.current.play();
       } catch (err) {
-        setError("Failed to play audio");
+        setError('Failed to play audio');
         setIsLoading(false);
-        console.error("Audio playback error:", err);
+        console.error('Audio playback error:', err);
       }
     } else {
       if (isPlaying) {
@@ -134,8 +134,8 @@ export const VoicePlayer: React.FC<VoicePlayerProps> = ({
     return (
       <div
         className={cn(
-          "flex items-center space-x-2 p-2 bg-red-50 dark:bg-red-900/20 rounded-lg",
-          className,
+          'flex items-center space-x-2 p-2 bg-red-50 dark:bg-red-900/20 rounded-lg',
+          className
         )}
       >
         <svg
@@ -159,8 +159,8 @@ export const VoicePlayer: React.FC<VoicePlayerProps> = ({
   return (
     <div
       className={cn(
-        "flex items-center space-x-3 p-3 bg-[hsl(var(--chat-message-bg))] rounded-lg",
-        className,
+        'flex items-center space-x-3 p-3 bg-[hsl(var(--chat-message-bg))] rounded-lg',
+        className
       )}
     >
       {/* Play/Pause Button */}
@@ -193,7 +193,7 @@ export const VoicePlayer: React.FC<VoicePlayerProps> = ({
               key={index}
               className="bg-[hsl(var(--chat-text-muted))] rounded-sm transition-all duration-200"
               style={{
-                width: "2px",
+                width: '2px',
                 height: `${height * 20}px`,
                 opacity:
                   index / waveform.length < getProgressPercentage() / 100

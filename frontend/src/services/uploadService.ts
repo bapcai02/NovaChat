@@ -1,4 +1,4 @@
-import { apiService } from "@/services/api";
+import { apiService } from '@/services/api';
 
 export interface SignedUrlResponse {
   url: string;
@@ -8,9 +8,9 @@ export interface SignedUrlResponse {
 export const uploadService = {
   async getSignedUrl(
     filename: string,
-    contentType: string,
+    contentType: string
   ): Promise<SignedUrlResponse> {
-    const res: any = await apiService.post("/uploads/sign", {
+    const res: any = await apiService.post('/uploads/sign', {
       filename,
       content_type: contentType,
     });
@@ -21,13 +21,13 @@ export const uploadService = {
   async uploadToSignedUrl(
     url: string,
     file: File,
-    onProgress?: (percent: number) => void,
+    onProgress?: (percent: number) => void
   ): Promise<void> {
     // Use XHR to track progress reliably across browsers
     await new Promise<void>((resolve, reject) => {
       const xhr = new XMLHttpRequest();
-      xhr.open("PUT", url);
-      xhr.upload.onprogress = (e) => {
+      xhr.open('PUT', url);
+      xhr.upload.onprogress = e => {
         if (!e.lengthComputable) return;
         const percent = Math.round((e.loaded / e.total) * 100);
         onProgress?.(percent);
@@ -36,10 +36,10 @@ export const uploadService = {
         if (xhr.status >= 200 && xhr.status < 300) resolve();
         else reject(new Error(`Upload failed with status ${xhr.status}`));
       };
-      xhr.onerror = () => reject(new Error("Network error during upload"));
+      xhr.onerror = () => reject(new Error('Network error during upload'));
       xhr.setRequestHeader(
-        "Content-Type",
-        file.type || "application/octet-stream",
+        'Content-Type',
+        file.type || 'application/octet-stream'
       );
       xhr.send(file);
     });

@@ -1,14 +1,36 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { adminService, User, AdminStats } from "@/services/adminService";
-import { Users, UserPlus, Search, MoreHorizontal, Edit, Trash2, Shield, Mail, Calendar, Eye, EyeOff, BarChart3, Ban, UserCheck, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { adminService, User, AdminStats } from '@/services/adminService';
+import {
+  Users,
+  UserPlus,
+  Search,
+  MoreHorizontal,
+  Edit,
+  Trash2,
+  Shield,
+  Mail,
+  Calendar,
+  Eye,
+  EyeOff,
+  BarChart3,
+  Ban,
+  UserCheck,
+  X,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 export default function AdminPage() {
   const router = useRouter();
@@ -16,9 +38,9 @@ export default function AdminPage() {
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasTimedOut, setHasTimedOut] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [roleFilter, setRoleFilter] = useState<string>("all");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState('');
+  const [roleFilter, setRoleFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [error, setError] = useState<string | null>(null);
@@ -28,20 +50,20 @@ export default function AdminPage() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [showBanModal, setShowBanModal] = useState(false);
   const [banningUser, setBanningUser] = useState<User | null>(null);
-  const [banReason, setBanReason] = useState("");
+  const [banReason, setBanReason] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletingUser, setDeletingUser] = useState<User | null>(null);
 
   // Form states
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    username: "",
-    password: "",
-    role: "user" as "admin" | "moderator" | "user" | "guest",
-    status: "active" as "active" | "inactive" | "suspended" | "banned",
-    phone: "",
-    bio: "",
+    name: '',
+    email: '',
+    username: '',
+    password: '',
+    role: 'user' as 'admin' | 'moderator' | 'user' | 'guest',
+    status: 'active' as 'active' | 'inactive' | 'suspended' | 'banned',
+    phone: '',
+    bio: '',
     is_verified: false,
     is_premium: false,
   });
@@ -62,8 +84,8 @@ export default function AdminPage() {
       setUsers(response.data);
       setTotalPages(response.pagination.last_page);
     } catch (err: any) {
-      setError(err.message || "Failed to load users");
-      console.error("Error loading users:", err);
+      setError(err.message || 'Failed to load users');
+      console.error('Error loading users:', err);
     } finally {
       setLoading(false);
     }
@@ -74,7 +96,7 @@ export default function AdminPage() {
       const response = await adminService.getStats();
       setStats(response);
     } catch (err) {
-      console.error("Error loading stats:", err);
+      console.error('Error loading stats:', err);
     }
   };
 
@@ -84,7 +106,7 @@ export default function AdminPage() {
     const timer = setTimeout(() => {
       setHasTimedOut(true);
       setLoading(false);
-      setError((prev) => prev || "Request timed out. Please try again.");
+      setError(prev => prev || 'Request timed out. Please try again.');
     }, 15000);
     return () => clearTimeout(timer);
   }, [loading]);
@@ -101,14 +123,14 @@ export default function AdminPage() {
   const handleCreateUser = () => {
     setEditingUser(null);
     setFormData({
-      name: "",
-      email: "",
-      username: "",
-      password: "",
-      role: "user",
-      status: "active",
-      phone: "",
-      bio: "",
+      name: '',
+      email: '',
+      username: '',
+      password: '',
+      role: 'user',
+      status: 'active',
+      phone: '',
+      bio: '',
       is_verified: false,
       is_premium: false,
     });
@@ -120,12 +142,12 @@ export default function AdminPage() {
     setFormData({
       name: user.name,
       email: user.email,
-      username: user.username || "",
-      password: "",
+      username: user.username || '',
+      password: '',
       role: user.role,
       status: user.status,
-      phone: user.phone || "",
-      bio: user.bio || "",
+      phone: user.phone || '',
+      bio: user.bio || '',
       is_verified: user.is_verified,
       is_premium: user.is_premium,
     });
@@ -148,8 +170,8 @@ export default function AdminPage() {
       setShowUserModal(false);
       loadUsers();
     } catch (err) {
-      console.error("Error saving user:", err);
-      setError("Failed to save user");
+      console.error('Error saving user:', err);
+      setError('Failed to save user');
     }
   };
 
@@ -167,14 +189,14 @@ export default function AdminPage() {
       setDeletingUser(null);
       loadUsers();
     } catch (err) {
-      console.error("Error deleting user:", err);
-      setError("Failed to delete user");
+      console.error('Error deleting user:', err);
+      setError('Failed to delete user');
     }
   };
 
   const handleBanUser = (user: User) => {
     setBanningUser(user);
-    setBanReason("");
+    setBanReason('');
     setShowBanModal(true);
   };
 
@@ -183,8 +205,8 @@ export default function AdminPage() {
       await adminService.unbanUser(user.id);
       loadUsers();
     } catch (err) {
-      console.error("Error unbanning user:", err);
-      setError("Failed to unban user");
+      console.error('Error unbanning user:', err);
+      setError('Failed to unban user');
     }
   };
 
@@ -195,11 +217,11 @@ export default function AdminPage() {
       await adminService.banUser(banningUser.id, banReason);
       setShowBanModal(false);
       setBanningUser(null);
-      setBanReason("");
+      setBanReason('');
       loadUsers();
     } catch (err) {
-      console.error("Error banning user:", err);
-      setError("Failed to ban user");
+      console.error('Error banning user:', err);
+      setError('Failed to ban user');
     }
   };
 
@@ -210,31 +232,31 @@ export default function AdminPage() {
 
   const getRoleColor = (role: string) => {
     switch (role) {
-      case "admin":
-        return "bg-purple-100 text-purple-800";
-      case "moderator":
-        return "bg-blue-100 text-blue-800";
-      case "user":
-        return "bg-green-100 text-green-800";
-      case "guest":
-        return "bg-gray-100 text-gray-700";
+      case 'admin':
+        return 'bg-purple-100 text-purple-800';
+      case 'moderator':
+        return 'bg-blue-100 text-blue-800';
+      case 'user':
+        return 'bg-green-100 text-green-800';
+      case 'guest':
+        return 'bg-gray-100 text-gray-700';
       default:
-        return "bg-gray-100 text-gray-700";
+        return 'bg-gray-100 text-gray-700';
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "active":
-        return "bg-green-100 text-green-800";
-      case "inactive":
-        return "bg-yellow-100 text-yellow-800";
-      case "suspended":
-        return "bg-orange-100 text-orange-800";
-      case "banned":
-        return "bg-red-100 text-red-800";
+      case 'active':
+        return 'bg-green-100 text-green-800';
+      case 'inactive':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'suspended':
+        return 'bg-orange-100 text-orange-800';
+      case 'banned':
+        return 'bg-red-100 text-red-800';
       default:
-        return "bg-gray-100 text-gray-700";
+        return 'bg-gray-100 text-gray-700';
     }
   };
 
@@ -253,9 +275,18 @@ export default function AdminPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
         <div className="bg-white shadow rounded-lg p-6 max-w-md w-full text-center">
-          <h2 className="text-lg font-semibold text-gray-800 mb-2">Không thể tải dữ liệu</h2>
-          <p className="text-sm text-gray-600 mb-4">{error || "Đã quá thời gian chờ, vui lòng thử lại."}</p>
-          <Button onClick={handleRetry} className="bg-blue-600 hover:bg-blue-700">Thử lại</Button>
+          <h2 className="text-lg font-semibold text-gray-800 mb-2">
+            Không thể tải dữ liệu
+          </h2>
+          <p className="text-sm text-gray-600 mb-4">
+            {error || 'Đã quá thời gian chờ, vui lòng thử lại.'}
+          </p>
+          <Button
+            onClick={handleRetry}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            Thử lại
+          </Button>
         </div>
       </div>
     );
@@ -274,12 +305,12 @@ export default function AdminPage() {
             <div className="flex items-center space-x-4">
               <Button
                 variant="outline"
-                onClick={() => router.push("/admin/reports")}
+                onClick={() => router.push('/admin/reports')}
               >
                 <BarChart3 className="h-4 w-4 mr-2" />
                 Reports
               </Button>
-              <Button onClick={() => router.push("/chat")}>Back to Chat</Button>
+              <Button onClick={() => router.push('/chat')}>Back to Chat</Button>
             </div>
           </div>
         </div>
@@ -346,7 +377,7 @@ export default function AdminPage() {
                   <Input
                     placeholder="Search users..."
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={e => setSearchQuery(e.target.value)}
                     className="pl-10"
                   />
                 </div>
@@ -354,7 +385,7 @@ export default function AdminPage() {
               <div className="flex gap-4">
                 <select
                   value={roleFilter}
-                  onChange={(e) => setRoleFilter(e.target.value)}
+                  onChange={e => setRoleFilter(e.target.value)}
                   className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                 >
                   <option value="all">All Roles</option>
@@ -366,7 +397,7 @@ export default function AdminPage() {
                 </select>
                 <select
                   value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
+                  onChange={e => setStatusFilter(e.target.value)}
                   className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                 >
                   <option value="all">All Status</option>
@@ -414,7 +445,7 @@ export default function AdminPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredUsers.map((user) => (
+                {filteredUsers.map(user => (
                   <tr key={user.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
@@ -422,9 +453,9 @@ export default function AdminPage() {
                           <AvatarImage src={user.avatar} />
                           <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
                             {user.name
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")}
+                              .split(' ')
+                              .map(n => n[0])
+                              .join('')}
                           </AvatarFallback>
                         </Avatar>
                         <div className="ml-4">
@@ -465,7 +496,7 @@ export default function AdminPage() {
                       <span
                         className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getRoleColor(user.role)} hover:opacity-80`}
                       >
-                        {user.role.replace("_", " ").toUpperCase()}
+                        {user.role.replace('_', ' ').toUpperCase()}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -487,7 +518,7 @@ export default function AdminPage() {
                           {new Date(user.last_seen_at).toLocaleDateString()}
                         </div>
                       ) : (
-                        "Never"
+                        'Never'
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -507,7 +538,7 @@ export default function AdminPage() {
                             <Edit className="h-4 w-4 mr-2" />
                             Edit User
                           </DropdownMenuItem>
-                          {user.status === "banned" ? (
+                          {user.status === 'banned' ? (
                             <DropdownMenuItem
                               onClick={() => handleUnbanUser(user)}
                             >
@@ -575,7 +606,7 @@ export default function AdminPage() {
           <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4 shadow-xl">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-semibold text-gray-700">
-                {editingUser ? "Edit User" : "Create User"}
+                {editingUser ? 'Edit User' : 'Create User'}
               </h2>
               <Button variant="ghost" onClick={() => setShowUserModal(false)}>
                 <X className="h-4 w-4" />
@@ -589,7 +620,7 @@ export default function AdminPage() {
                 </label>
                 <Input
                   value={formData.name}
-                  onChange={(e) =>
+                  onChange={e =>
                     setFormData({ ...formData, name: e.target.value })
                   }
                   placeholder="Enter name"
@@ -603,7 +634,7 @@ export default function AdminPage() {
                 <Input
                   type="email"
                   value={formData.email}
-                  onChange={(e) =>
+                  onChange={e =>
                     setFormData({ ...formData, email: e.target.value })
                   }
                   placeholder="Enter email"
@@ -616,7 +647,7 @@ export default function AdminPage() {
                 </label>
                 <Input
                   value={formData.username}
-                  onChange={(e) =>
+                  onChange={e =>
                     setFormData({ ...formData, username: e.target.value })
                   }
                   placeholder="Enter username"
@@ -630,13 +661,13 @@ export default function AdminPage() {
                 <Input
                   type="password"
                   value={formData.password}
-                  onChange={(e) =>
+                  onChange={e =>
                     setFormData({ ...formData, password: e.target.value })
                   }
                   placeholder={
                     editingUser
-                      ? "Leave blank to keep current"
-                      : "Enter password"
+                      ? 'Leave blank to keep current'
+                      : 'Enter password'
                   }
                 />
               </div>
@@ -648,7 +679,7 @@ export default function AdminPage() {
                   </label>
                   <select
                     value={formData.role}
-                    onChange={(e) =>
+                    onChange={e =>
                       setFormData({ ...formData, role: e.target.value as any })
                     }
                     className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
@@ -666,7 +697,7 @@ export default function AdminPage() {
                   </label>
                   <select
                     value={formData.status}
-                    onChange={(e) =>
+                    onChange={e =>
                       setFormData({
                         ...formData,
                         status: e.target.value as any,
@@ -688,7 +719,7 @@ export default function AdminPage() {
                 </label>
                 <Input
                   value={formData.phone}
-                  onChange={(e) =>
+                  onChange={e =>
                     setFormData({ ...formData, phone: e.target.value })
                   }
                   placeholder="Enter phone"
@@ -701,7 +732,7 @@ export default function AdminPage() {
                 </label>
                 <textarea
                   value={formData.bio}
-                  onChange={(e) =>
+                  onChange={e =>
                     setFormData({ ...formData, bio: e.target.value })
                   }
                   placeholder="Enter bio"
@@ -715,7 +746,7 @@ export default function AdminPage() {
                   <input
                     type="checkbox"
                     checked={formData.is_verified}
-                    onChange={(e) =>
+                    onChange={e =>
                       setFormData({
                         ...formData,
                         is_verified: e.target.checked,
@@ -730,7 +761,7 @@ export default function AdminPage() {
                   <input
                     type="checkbox"
                     checked={formData.is_premium}
-                    onChange={(e) =>
+                    onChange={e =>
                       setFormData({ ...formData, is_premium: e.target.checked })
                     }
                     className="mr-2"
@@ -748,7 +779,7 @@ export default function AdminPage() {
                 onClick={handleSaveUser}
                 className="bg-blue-600 hover:bg-blue-700"
               >
-                {editingUser ? "Update User" : "Create User"}
+                {editingUser ? 'Update User' : 'Create User'}
               </Button>
             </div>
           </div>
@@ -780,7 +811,7 @@ export default function AdminPage() {
                 </label>
                 <textarea
                   value={banReason}
-                  onChange={(e) => setBanReason(e.target.value)}
+                  onChange={e => setBanReason(e.target.value)}
                   placeholder="Enter ban reason"
                   className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                   rows={3}
@@ -821,7 +852,7 @@ export default function AdminPage() {
 
             <div className="mb-4">
               <p className="text-sm text-gray-600 mb-2">
-                Are you sure you want to delete{" "}
+                Are you sure you want to delete{' '}
                 <strong>{deletingUser.name}</strong>?
               </p>
               <p className="text-xs text-red-600">

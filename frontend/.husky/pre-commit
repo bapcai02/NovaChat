@@ -1,0 +1,18 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Chạy Prettier để format code
+echo "🔧 Running Prettier..."
+npm run format
+
+# Chạy ESLint để kiểm tra lỗi
+echo "🔍 Running ESLint..."
+npm run lint
+
+# Nếu ESLint có lỗi, dừng commit
+if [ $? -ne 0 ]; then
+  echo "❌ ESLint found errors. Please fix them before committing."
+  exit 1
+fi
+
+echo "✅ Pre-commit checks passed!"

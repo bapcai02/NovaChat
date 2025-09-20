@@ -1,16 +1,16 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
-import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
+import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { login } = useAuth();
@@ -18,20 +18,20 @@ export default function LoginPage() {
   const fillCredentials = (email: string, password: string) => {
     setEmail(email);
     setPassword(password);
-    setError("");
+    setError('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError("");
+    setError('');
 
     try {
       await login(email, password);
       // Redirect to chat page
-      router.push("/chat");
+      router.push('/chat');
     } catch (err: any) {
-      setError(err.message || "Login failed");
+      setError(err.message || 'Login failed');
     } finally {
       setIsLoading(false);
     }
@@ -85,7 +85,7 @@ export default function LoginPage() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
+        transition={{ duration: 0.6, ease: 'easeOut' }}
         className="w-full max-w-md relative z-10"
       >
         {/* Logo Section */}
@@ -146,7 +146,7 @@ export default function LoginPage() {
                       type="email"
                       placeholder="Enter your email"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={e => setEmail(e.target.value)}
                       className="w-full pl-10 pr-3 py-3 bg-white border border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 rounded-lg h-12"
                       required
                     />
@@ -170,10 +170,10 @@ export default function LoginPage() {
                     <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <input
                       id="password"
-                      type={showPassword ? "text" : "password"}
+                      type={showPassword ? 'text' : 'password'}
                       placeholder="Enter your password"
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={e => setPassword(e.target.value)}
                       className="w-full pl-10 pr-10 py-3 bg-white border border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 rounded-lg h-12"
                       required
                     />
@@ -264,7 +264,7 @@ export default function LoginPage() {
                 <div
                   className="p-4 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors cursor-pointer"
                   onClick={() =>
-                    fillCredentials("admin@example.com", "password")
+                    fillCredentials('admin@example.com', 'password')
                   }
                 >
                   <div className="flex items-center mb-3">
@@ -327,11 +327,11 @@ export default function LoginPage() {
                 className="text-center"
               >
                 <p className="text-xs text-gray-500">
-                  By signing in, you agree to our{" "}
+                  By signing in, you agree to our{' '}
                   <a href="#" className="text-amber-600 hover:text-amber-500">
                     Terms of Service
-                  </a>{" "}
-                  and{" "}
+                  </a>{' '}
+                  and{' '}
                   <a href="#" className="text-amber-600 hover:text-amber-500">
                     Privacy Policy
                   </a>

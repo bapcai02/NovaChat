@@ -1,19 +1,19 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import { motion } from "framer-motion";
-import { Mail, ArrowLeft, CheckCircle, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Mail, ArrowLeft, CheckCircle, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+} from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
 interface ForgotPasswordFormProps {
   onSubmit: (email: string) => void;
@@ -30,8 +30,8 @@ export default function ModernForgotPasswordForm({
   error,
   success = false,
 }: ForgotPasswordFormProps) {
-  const [email, setEmail] = useState("");
-  const [emailError, setEmailError] = useState("");
+  const [email, setEmail] = useState('');
+  const [emailError, setEmailError] = useState('');
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -39,16 +39,16 @@ export default function ModernForgotPasswordForm({
 
     // Clear error when user starts typing
     if (emailError) {
-      setEmailError("");
+      setEmailError('');
     }
   };
 
   const validateEmail = () => {
     if (!email) {
-      setEmailError("Email is required");
+      setEmailError('Email is required');
       return false;
     } else if (!/\S+@\S+\.\S+/.test(email)) {
-      setEmailError("Please enter a valid email");
+      setEmailError('Please enter a valid email');
       return false;
     }
     return true;
@@ -75,7 +75,7 @@ export default function ModernForgotPasswordForm({
             <motion.div
               initial={{ scale: 0.8 }}
               animate={{ scale: 1 }}
-              transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+              transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
               className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl mb-4"
             >
               <CheckCircle className="h-8 w-8 text-gray-800" />
@@ -101,7 +101,7 @@ export default function ModernForgotPasswordForm({
                     Email sent successfully!
                   </h3>
                   <p className="text-slate-300">
-                    We've sent a password reset link to{" "}
+                    We've sent a password reset link to{' '}
                     <span className="font-medium text-blue-400">{email}</span>
                   </p>
                 </div>
@@ -133,7 +133,7 @@ export default function ModernForgotPasswordForm({
                         Resending...
                       </>
                     ) : (
-                      "Resend email"
+                      'Resend email'
                     )}
                   </Button>
                 </div>
@@ -158,7 +158,7 @@ export default function ModernForgotPasswordForm({
           <motion.div
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
-            transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+            transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
             className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl mb-4"
           >
             <span className="text-2xl font-bold text-gray-800">N</span>
@@ -202,9 +202,9 @@ export default function ModernForgotPasswordForm({
                     value={email}
                     onChange={handleInputChange}
                     className={cn(
-                      "pl-10 bg-white/5 border-white/20 text-gray-800 placeholder:text-slate-400 focus:border-blue-400 focus:ring-blue-400/20",
+                      'pl-10 bg-white/5 border-white/20 text-gray-800 placeholder:text-slate-400 focus:border-blue-400 focus:ring-blue-400/20',
                       emailError &&
-                        "border-red-400 focus:border-red-400 focus:ring-red-400/20",
+                        'border-red-400 focus:border-red-400 focus:ring-red-400/20'
                     )}
                     disabled={isLoading}
                   />
@@ -243,7 +243,7 @@ export default function ModernForgotPasswordForm({
                     Sending...
                   </>
                 ) : (
-                  "Send reset link"
+                  'Send reset link'
                 )}
               </Button>
             </form>
@@ -264,7 +264,7 @@ export default function ModernForgotPasswordForm({
             {/* Help Text */}
             <div className="text-center">
               <p className="text-xs text-slate-500">
-                Remember your password?{" "}
+                Remember your password?{' '}
                 <Button
                   variant="link"
                   className="text-blue-400 hover:text-blue-300 p-0 text-xs"

@@ -1,27 +1,27 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import ModernSidebar from "./ModernSidebarNew";
-import ModernChatHeader from "./ModernChatHeader";
-import ModernChatMessages from "./ModernChatMessagesNew";
-import ModernChatInput from "./ModernChatInput";
-import ModernThreadChat from "./ModernThreadChat";
-import RightSidebar from "./RightSidebar";
-import FilesTab from "./FilesTab";
-import AddMemberModal from "../modals/AddMemberModal";
-import ConfirmModal from "../modals/ConfirmModal";
-import { useChat } from "@/hooks/useChat";
-import { getWebSocketClient } from "@/lib/websocket";
-import { unreadService } from "@/services/unreadService";
-import { apiService } from "@/services/api";
-import { useAudioCall } from "@/hooks/useAudioCall";
-import { useVideoCall } from "@/hooks/useVideoCall";
-import CallOverlay from "@/components/call/CallOverlay";
-import VideoCallOverlay from "@/components/call/VideoCallOverlay";
-import { useIdlePresence } from "@/hooks/useIdlePresence";
-import { TypingIndicator } from "@/components/ui/typing-indicator";
-import { SearchModal } from "@/components/ui/search-modal";
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import ModernSidebar from './ModernSidebarNew';
+import ModernChatHeader from './ModernChatHeader';
+import ModernChatMessages from './ModernChatMessagesNew';
+import ModernChatInput from './ModernChatInput';
+import ModernThreadChat from './ModernThreadChat';
+import RightSidebar from './RightSidebar';
+import FilesTab from './FilesTab';
+import AddMemberModal from '../modals/AddMemberModal';
+import ConfirmModal from '../modals/ConfirmModal';
+import { useChat } from '@/hooks/useChat';
+import { getWebSocketClient } from '@/lib/websocket';
+import { unreadService } from '@/services/unreadService';
+import { apiService } from '@/services/api';
+import { useAudioCall } from '@/hooks/useAudioCall';
+import { useVideoCall } from '@/hooks/useVideoCall';
+import CallOverlay from '@/components/call/CallOverlay';
+import VideoCallOverlay from '@/components/call/VideoCallOverlay';
+import { useIdlePresence } from '@/hooks/useIdlePresence';
+import { TypingIndicator } from '@/components/ui/typing-indicator';
+import { SearchModal } from '@/components/ui/search-modal';
 
 interface ChatLayoutProps {
   className?: string;
@@ -66,20 +66,20 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
   const [showThread, setShowThread] = useState(false);
   const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
   const [rightSidebarMode, setRightSidebarMode] = useState<
-    "members" | "settings" | "call" | "video" | "files" | null
+    'members' | 'settings' | 'call' | 'video' | 'files' | null
   >(null);
   const [isMuted, setIsMuted] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
   const [conversationMembers, setConversationMembers] = useState<any[]>([]);
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
-  const [addMemberType, setAddMemberType] = useState<"team" | "channel">(
-    "team",
+  const [addMemberType, setAddMemberType] = useState<'team' | 'channel'>(
+    'team'
   );
-  const [addMemberTargetId, setAddMemberTargetId] = useState<string>("");
+  const [addMemberTargetId, setAddMemberTargetId] = useState<string>('');
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null);
-  const [confirmTitle, setConfirmTitle] = useState("");
-  const [confirmMessage, setConfirmMessage] = useState("");
+  const [confirmTitle, setConfirmTitle] = useState('');
+  const [confirmMessage, setConfirmMessage] = useState('');
   const [isConfirmLoading, setIsConfirmLoading] = useState(false);
   const [threadMessage, setThreadMessage] = useState<{
     id: string;
@@ -91,9 +91,9 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
 
   // Call UI state
   const [isCallOpen, setIsCallOpen] = useState(false);
-  const [callStatus, setCallStatus] = useState("Calling…");
+  const [callStatus, setCallStatus] = useState('Calling…');
   const [isVideoOpen, setIsVideoOpen] = useState(false);
-  const [videoStatus, setVideoStatus] = useState("Calling…");
+  const [videoStatus, setVideoStatus] = useState('Calling…');
   const [isVideoMinimized, setIsVideoMinimized] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
@@ -102,42 +102,42 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
 
   // Helper function to get conversation display name
   const getConversationDisplayName = (conversation: any) => {
-    if (!conversation) return "Select a conversation";
+    if (!conversation) return 'Select a conversation';
 
-    if (conversation.type === "direct") {
+    if (conversation.type === 'direct') {
       const otherUser =
         conversation.other_member ||
         conversation.members?.find(
-          (member: any) => member.id !== currentUser?.id,
+          (member: any) => member.id !== currentUser?.id
         );
-      return otherUser?.name || conversation.title || "Direct Message";
+      return otherUser?.name || conversation.title || 'Direct Message';
     }
 
-    if (conversation.type === "channel") {
-      return conversation.title || conversation.channel?.name || "Channel";
+    if (conversation.type === 'channel') {
+      return conversation.title || conversation.channel?.name || 'Channel';
     }
 
-    if (conversation.type === "group") {
-      return conversation.title || "Team";
+    if (conversation.type === 'group') {
+      return conversation.title || 'Team';
     }
 
-    return conversation.name || conversation.title || "Unknown";
+    return conversation.name || conversation.title || 'Unknown';
   };
 
   // Helper function to get conversation avatar
   const getConversationAvatar = (conversation: any) => {
     if (!conversation) return null;
 
-    if (conversation.type === "direct") {
+    if (conversation.type === 'direct') {
       const otherUser =
         conversation.other_member ||
         conversation.members?.find(
-          (member: any) => member.id !== currentUser?.id,
+          (member: any) => member.id !== currentUser?.id
         );
       return otherUser?.avatar;
     }
 
-    if (conversation.type === "channel") {
+    if (conversation.type === 'channel') {
       return conversation.channel?.team?.owner?.avatar;
     }
 
@@ -146,12 +146,12 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
 
   // Compute direct chat online status like sidebar
   const getHeaderIsOnline = () => {
-    if (!currentConversation || currentConversation.type !== "direct")
+    if (!currentConversation || currentConversation.type !== 'direct')
       return undefined;
     const otherUser =
       currentConversation.other_member ||
       currentConversation.members?.find(
-        (member: any) => member.id !== currentUser?.id,
+        (member: any) => member.id !== currentUser?.id
       );
     if (!otherUser?.id) return false;
     return onlineUserIds.has(otherUser.id);
@@ -168,13 +168,13 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
   const loadConversationMembers = async (conversationId: number) => {
     try {
       const response = await apiService.getConversationMembers(
-        conversationId.toString(),
+        conversationId.toString()
       );
       const members =
         (response as any)?.data?.data || (response as any)?.data || [];
       setConversationMembers(members);
     } catch (error) {
-      console.error("Failed to load members:", error);
+      console.error('Failed to load members:', error);
       setConversationMembers([]);
     }
   };
@@ -200,15 +200,16 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
       const msgId = Number(item.id);
       if (!convId || !msgId) return;
       if (currentConversation?.id !== convId) {
-        const conv = conversations.find((c) => c.id === convId);
+        const conv = conversations.find(c => c.id === convId);
         if (conv) handleSelectConversation(conv);
         setTimeout(() => jumpToMessage(convId, msgId), 400);
       } else {
         jumpToMessage(convId, msgId);
       }
     };
-    window.addEventListener("__nc_jump_to_message", handler as any);
-    return () => window.removeEventListener("__nc_jump_to_message", handler as any);
+    window.addEventListener('__nc_jump_to_message', handler as any);
+    return () =>
+      window.removeEventListener('__nc_jump_to_message', handler as any);
   }, [currentConversation, conversations]);
 
   // Keyboard shortcuts: Ctrl+K to search, "/" to search
@@ -238,7 +239,15 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
 
   const handleSendMessage = async (
     content: string,
-    attachments?: Array<{ id: string; name: string; size: number; type: string; preview?: string; remoteKey?: string; data?: string }>,
+    attachments?: Array<{
+      id: string;
+      name: string;
+      size: number;
+      type: string;
+      preview?: string;
+      remoteKey?: string;
+      data?: string;
+    }>
   ) => {
     if (!currentConversation) return;
 
@@ -246,11 +255,11 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
       await sendMessage(
         currentConversation.id,
         content,
-        attachments && attachments.length > 0 ? "image" : "text",
-        attachments as any,
+        attachments && attachments.length > 0 ? 'image' : 'text',
+        attachments as any
       );
     } catch (error) {
-      console.error("Failed to send message:", error);
+      console.error('Failed to send message:', error);
     }
   };
 
@@ -259,12 +268,12 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
     try {
       const wsClient = getWebSocketClient();
       if (
-        wsClient.getConnectionState() === "connected" &&
+        wsClient.getConnectionState() === 'connected' &&
         messages.length > 0
       ) {
         const lastMsg = messages[messages.length - 1];
         wsClient.send({
-          type: "message_read",
+          type: 'message_read',
           conversation_id: currentConversation.id,
           message_id: lastMsg.id as any,
           user_id: currentUser.id,
@@ -278,15 +287,15 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
 
     try {
       const wsClient = getWebSocketClient();
-      if (wsClient.getConnectionState() === "connected") {
+      if (wsClient.getConnectionState() === 'connected') {
         wsClient.send({
-          type: isTyping ? "typing_start" : "typing_stop",
+          type: isTyping ? 'typing_start' : 'typing_stop',
           conversation_id: currentConversation.id,
           user_id: currentUser.id,
         });
       }
     } catch (error) {
-      console.error("Failed to send typing indicator:", error);
+      console.error('Failed to send typing indicator:', error);
     }
   };
 
@@ -294,7 +303,7 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
     if (!currentConversation) return [] as string[];
     const set = typingByConversation[currentConversation.id];
     if (!set) return [];
-    const ids = Array.from(set).filter((id) => id !== (currentUser?.id || 0));
+    const ids = Array.from(set).filter(id => id !== (currentUser?.id || 0));
     const names = (currentConversation.members || [])
       .filter((m: any) => ids.includes(m.id))
       .map((m: any) => m.name || m.username || `user${m.id}`);
@@ -304,21 +313,21 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
   const jumpToMessage = (
     conversationId: number,
     messageId: number,
-    q?: string,
+    q?: string
   ) => {
     const doScroll = () => {
       const el = document.querySelector(`[data-message-id="${messageId}"]`);
       if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "center" });
-        el.classList.add("ring-2", "ring-yellow-300");
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.add('ring-2', 'ring-yellow-300');
         setTimeout(
-          () => el.classList.remove("ring-2", "ring-yellow-300"),
-          1500,
+          () => el.classList.remove('ring-2', 'ring-yellow-300'),
+          1500
         );
       }
     };
     if (currentConversation?.id !== conversationId) {
-      const conv = conversations.find((c) => c.id === conversationId);
+      const conv = conversations.find(c => c.id === conversationId);
       if (conv) {
         handleSelectConversation(conv);
         // delay to ensure messages loaded
@@ -326,7 +335,7 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
         const tryScroll = () => {
           attempts++;
           const found = document.querySelector(
-            `[data-message-id="${messageId}"]`,
+            `[data-message-id="${messageId}"]`
           );
           if (found) {
             doScroll();
@@ -344,7 +353,7 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
       const tryScroll = () => {
         attempts++;
         const found = document.querySelector(
-          `[data-message-id="${messageId}"]`,
+          `[data-message-id="${messageId}"]`
         );
         if (found) {
           doScroll();
@@ -366,50 +375,50 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
       const ws = getWebSocketClient();
       ws.onMessage((message: any) => {
         if (
-          message.type === "rtc_offer" &&
+          message.type === 'rtc_offer' &&
           message.conversation_id === currentConversation.id &&
           message.from !== currentUser.id
         ) {
           audio.handleRemoteOffer(message.sdp);
-          setCallStatus("Incoming call…");
+          setCallStatus('Incoming call…');
           setIsCallOpen(true);
         }
         if (
-          message.type === "rtc_answer" &&
+          message.type === 'rtc_answer' &&
           message.conversation_id === currentConversation.id &&
           message.from !== currentUser.id
         ) {
           audio.handleRemoteAnswer(message.sdp);
-          setCallStatus("In call");
+          setCallStatus('In call');
           setIsCallOpen(true);
         }
         if (
-          message.type === "rtc_candidate" &&
+          message.type === 'rtc_candidate' &&
           message.conversation_id === currentConversation.id &&
           message.from !== currentUser.id
         ) {
           audio.addIceCandidate(message.candidate);
         }
         if (
-          message.type === "rtc_end" &&
+          message.type === 'rtc_end' &&
           message.conversation_id === currentConversation.id
         ) {
           audio.hangup();
           setIsCallOpen(false);
-          setCallStatus("Ended");
+          setCallStatus('Ended');
         }
       });
       // Start call
       audio.call();
       setIsCallOpen(true);
-      setCallStatus("Calling…");
+      setCallStatus('Calling…');
       setRightSidebarMode(null);
       setIsRightSidebarOpen(false);
 
       // Attach hangup to window for now (can be improved)
       (window as any).__ncHangup = () => audio.hangup();
     } catch (e) {
-      console.error("Failed to start audio call", e);
+      console.error('Failed to start audio call', e);
     }
   };
 
@@ -419,61 +428,63 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
       const ws = getWebSocketClient();
       ws.onMessage((message: any) => {
         if (
-          message.type === "rtc_offer" &&
-          message.media === "video" &&
+          message.type === 'rtc_offer' &&
+          message.media === 'video' &&
           message.conversation_id === currentConversation.id &&
           message.from !== currentUser.id
         ) {
           video.handleRemoteOffer(message.sdp);
-          setVideoStatus("Incoming video call…");
+          setVideoStatus('Incoming video call…');
           setIsVideoOpen(true);
         }
         if (
-          message.type === "rtc_answer" &&
-          message.media === "video" &&
+          message.type === 'rtc_answer' &&
+          message.media === 'video' &&
           message.conversation_id === currentConversation.id &&
           message.from !== currentUser.id
         ) {
           video.handleRemoteAnswer(message.sdp);
-          setVideoStatus("In call");
+          setVideoStatus('In call');
           setIsVideoOpen(true);
         }
         if (
-          message.type === "rtc_candidate" &&
+          message.type === 'rtc_candidate' &&
           message.conversation_id === currentConversation.id &&
           message.from !== currentUser.id
         ) {
           video.addIceCandidate(message.candidate);
         }
         if (
-          message.type === "rtc_end" &&
+          message.type === 'rtc_end' &&
           message.conversation_id === currentConversation.id
         ) {
           video.hangup();
           setIsVideoOpen(false);
-          setVideoStatus("Ended");
+          setVideoStatus('Ended');
         }
       });
       await video.call();
       setIsVideoOpen(true);
-      setVideoStatus("Calling…");
+      setVideoStatus('Calling…');
       setRightSidebarMode(null);
       setIsRightSidebarOpen(false);
       (window as any).__ncHangupVideo = () => video.hangup();
     } catch (e) {
-      console.error("Failed to start video call", e);
-      alert("Không thể bắt đầu cuộc gọi video. Vui lòng kiểm tra camera và microphone.");
+      console.error('Failed to start video call', e);
+      alert(
+        'Không thể bắt đầu cuộc gọi video. Vui lòng kiểm tra camera và microphone.'
+      );
     }
   };
 
   const handleViewMembers = () => {
-    setRightSidebarMode("members");
+    setRightSidebarMode('members');
     setIsRightSidebarOpen(true);
   };
 
   const handleToggleMute = () => {
     if (!currentConversation) return;
-    setIsMuted((prev) => !prev);
+    setIsMuted(prev => !prev);
     try {
       if (!isMuted) {
         apiService.muteConversation(currentConversation.id.toString());
@@ -481,7 +492,7 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
         apiService.unmuteConversation(currentConversation.id.toString());
       }
     } catch (e) {
-      console.error("Failed to toggle mute", e);
+      console.error('Failed to toggle mute', e);
     }
   };
 
@@ -489,56 +500,56 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
     if (!currentConversation) return;
 
     try {
-      console.log("Toggling pin, current state:", isPinned);
+      console.log('Toggling pin, current state:', isPinned);
       let response;
       if (isPinned) {
-        console.log("Unpinning conversation:", currentConversation.id);
+        console.log('Unpinning conversation:', currentConversation.id);
         response = await apiService.unpinConversation(
-          currentConversation.id.toString(),
+          currentConversation.id.toString()
         );
         setIsPinned(false);
       } else {
-        console.log("Pinning conversation:", currentConversation.id);
+        console.log('Pinning conversation:', currentConversation.id);
         response = await apiService.pinConversation(
-          currentConversation.id.toString(),
+          currentConversation.id.toString()
         );
         setIsPinned(true);
       }
 
-      console.log("Pin response:", response);
+      console.log('Pin response:', response);
 
       // Update conversation data if API returns updated conversation
       if (response?.data?.data) {
         const updatedConversation = response.data.data;
-        console.log("Updated conversation:", updatedConversation);
-        setCurrentConversation((prev) => ({
+        console.log('Updated conversation:', updatedConversation);
+        setCurrentConversation(prev => ({
           ...prev,
           is_pinned: updatedConversation.is_pinned,
         }));
       }
 
       // Reload conversations list to show pin status in sidebar
-      console.log("Reloading conversations list...");
+      console.log('Reloading conversations list...');
       await loadConversations();
 
-      console.log("Pin state after toggle:", !isPinned);
+      console.log('Pin state after toggle:', !isPinned);
     } catch (error) {
-      console.error("Failed to toggle pin:", error);
-      alert("Có lỗi xảy ra khi thay đổi trạng thái pin");
+      console.error('Failed to toggle pin:', error);
+      alert('Có lỗi xảy ra khi thay đổi trạng thái pin');
     }
   };
 
   const handleLeaveGroup = async () => {
     if (!currentConversation) return;
 
-    if (confirm("Bạn có chắc chắn muốn rời khỏi nhóm này?")) {
+    if (confirm('Bạn có chắc chắn muốn rời khỏi nhóm này?')) {
       try {
         // After successful leave, close the conversation
         setCurrentConversation(null);
         setIsRightSidebarOpen(false);
       } catch (error) {
-        console.error("Error leaving group:", error);
-        alert("Có lỗi xảy ra khi rời nhóm");
+        console.error('Error leaving group:', error);
+        alert('Có lỗi xảy ra khi rời nhóm');
       }
     }
   };
@@ -546,36 +557,36 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
   const handleDeleteConversation = async () => {
     if (!currentConversation) return;
 
-    if (confirm("Bạn có chắc chắn muốn xóa cuộc trò chuyện này?")) {
+    if (confirm('Bạn có chắc chắn muốn xóa cuộc trò chuyện này?')) {
       try {
         // After successful delete, close the conversation
         setCurrentConversation(null);
         setIsRightSidebarOpen(false);
       } catch (error) {
-        console.error("Error deleting conversation:", error);
-        alert("Có lỗi xảy ra khi xóa cuộc trò chuyện");
+        console.error('Error deleting conversation:', error);
+        alert('Có lỗi xảy ra khi xóa cuộc trò chuyện');
       }
     }
   };
 
   const handleSettings = () => {
-    setRightSidebarMode("settings");
+    setRightSidebarMode('settings');
     setIsRightSidebarOpen(true);
   };
 
   const handleAddMember = () => {
-    if (currentConversation?.type === "team") {
-      setAddMemberType("team");
+    if (currentConversation?.type === 'team') {
+      setAddMemberType('team');
       setAddMemberTargetId(
         currentConversation.team_id?.toString() ||
-          currentConversation.id.toString(),
+          currentConversation.id.toString()
       );
       setShowAddMemberModal(true);
-    } else if (currentConversation?.type === "channel") {
-      setAddMemberType("channel");
+    } else if (currentConversation?.type === 'channel') {
+      setAddMemberType('channel');
       setAddMemberTargetId(
         currentConversation.channel_id?.toString() ||
-          currentConversation.id.toString(),
+          currentConversation.id.toString()
       );
       setShowAddMemberModal(true);
     }
@@ -584,29 +595,29 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
   const handleRemoveMember = (memberId: number) => {
     if (!currentConversation) return;
 
-    const member = conversationMembers.find((m) => m.id === memberId);
-    const memberName = member?.name || member?.username || "thành viên này";
+    const member = conversationMembers.find(m => m.id === memberId);
+    const memberName = member?.name || member?.username || 'thành viên này';
 
-    setConfirmTitle("Xóa thành viên khỏi nhóm");
+    setConfirmTitle('Xóa thành viên khỏi nhóm');
     setConfirmMessage(
-      `Bạn có chắc chắn muốn xóa ${memberName} khỏi nhóm? Hành động này không thể hoàn tác.`,
+      `Bạn có chắc chắn muốn xóa ${memberName} khỏi nhóm? Hành động này không thể hoàn tác.`
     );
     setConfirmAction(() => async () => {
       setIsConfirmLoading(true);
       try {
-        if (currentConversation.type === "team") {
+        if (currentConversation.type === 'team') {
           await apiService.removeMemberFromTeam(
             currentConversation.team_id?.toString() ||
               currentConversation.id.toString(),
-            memberId.toString(),
+            memberId.toString()
           );
-        } else if (currentConversation.type === "channel") {
+        } else if (currentConversation.type === 'channel') {
           await apiService.removeMemberFromChannel(
             currentConversation.team_id?.toString() ||
               currentConversation.id.toString(),
             currentConversation.channel_id?.toString() ||
               currentConversation.id.toString(),
-            memberId.toString(),
+            memberId.toString()
           );
         }
 
@@ -617,8 +628,8 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
 
         setShowConfirmModal(false);
       } catch (error) {
-        console.error("Failed to remove member:", error);
-        alert("Có lỗi xảy ra khi xóa thành viên");
+        console.error('Failed to remove member:', error);
+        alert('Có lỗi xảy ra khi xóa thành viên');
       } finally {
         setIsConfirmLoading(false);
       }
@@ -631,7 +642,7 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
 
     // For team conversations, check if current user is the team owner
     if (
-      currentConversation.type === "team" &&
+      currentConversation.type === 'team' &&
       currentConversation.team?.owner_id
     ) {
       return currentConversation.team.owner_id === currentUser.id;
@@ -639,7 +650,7 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
 
     // For channel conversations, check if current user is the team owner
     if (
-      currentConversation.type === "channel" &&
+      currentConversation.type === 'channel' &&
       currentConversation.team?.owner_id
     ) {
       return currentConversation.team.owner_id === currentUser.id;
@@ -666,13 +677,13 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
 
   return (
     <div
-      className={`flex h-screen bg-gray-50 text-gray-900 ${className || ""}`}
+      className={`flex h-screen bg-gray-50 text-gray-900 ${className || ''}`}
     >
       {/* Sidebar */}
       <motion.div
         initial={{ x: -300, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
-        transition={{ duration: 0.3, ease: "easeOut" }}
+        transition={{ duration: 0.3, ease: 'easeOut' }}
         className="w-80 flex-shrink-0"
       >
         <ModernSidebar
@@ -680,8 +691,8 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
           conversations={conversations}
           currentConversation={currentConversation}
           onSelectConversation={handleSelectConversation}
-          onAddConversation={(conversation) => {
-            setConversations((prev) => [conversation, ...prev]);
+          onAddConversation={conversation => {
+            setConversations(prev => [conversation, ...prev]);
           }}
           currentUser={currentUser}
           onlineUserIds={onlineUserIds}
@@ -693,10 +704,10 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
         open={isCallOpen}
         onClose={() => setIsCallOpen(false)}
         calleeName={
-          currentConversation?.type === "direct"
+          currentConversation?.type === 'direct'
             ? currentConversation?.other_member?.name ||
               currentConversation?.members?.find(
-                (m: any) => m.id !== currentUser?.id,
+                (m: any) => m.id !== currentUser?.id
               )?.name
             : getConversationDisplayName(currentConversation)
         }
@@ -712,10 +723,10 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
         open={isVideoOpen}
         onClose={() => setIsVideoOpen(false)}
         calleeName={
-          currentConversation?.type === "direct"
+          currentConversation?.type === 'direct'
             ? currentConversation?.other_member?.name ||
               currentConversation?.members?.find(
-                (m: any) => m.id !== currentUser?.id,
+                (m: any) => m.id !== currentUser?.id
               )?.name
             : getConversationDisplayName(currentConversation)
         }
@@ -727,7 +738,7 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
           setIsVideoOpen(false);
         }}
         minimized={isVideoMinimized}
-        onToggleMinimize={() => setIsVideoMinimized((v) => !v)}
+        onToggleMinimize={() => setIsVideoMinimized(v => !v)}
       />
 
       {/* Main chat area */}
@@ -753,7 +764,7 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
               onVideoCall={handleVideoCall}
               onViewMembers={handleViewMembers}
               onViewFiles={() => {
-                setRightSidebarMode("files");
+                setRightSidebarMode('files');
                 setIsRightSidebarOpen(true);
               }}
               onToggleMute={handleToggleMute}
@@ -763,7 +774,7 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
               onMarkAllRead={async () => {
                 if (!currentConversation) return;
                 await unreadService.markConversationAsRead(
-                  currentConversation.id,
+                  currentConversation.id
                 );
                 loadUnreadCounts();
               }}
@@ -798,7 +809,7 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
               onEditMessage={async (id, content) => {
                 await editMessage(id, content);
               }}
-              onDeleteMessage={async (id) => {
+              onDeleteMessage={async id => {
                 await deleteMessage(id);
               }}
               onReachBottom={handleReachBottom}
@@ -861,14 +872,17 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
                   name: m.name,
                   username: m.username,
                   avatar: m.avatar,
-                }),
+                })
               )}
             />
           ) : (
             <div className="h-16 border-t border-gray-100 bg-white" />
           )}
         </motion.div>
-        <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+        <SearchModal
+          isOpen={isSearchOpen}
+          onClose={() => setIsSearchOpen(false)}
+        />
       </div>
 
       <RightSidebar
@@ -889,42 +903,42 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
         isOwner={isCurrentUserOwner()}
       />
 
-        {/* Files Tab */}
-        <AnimatePresence>
-          {rightSidebarMode === "files" && currentConversation && (
-            <>
-              {/* Overlay */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
-                onClick={() => {
+      {/* Files Tab */}
+      <AnimatePresence>
+        {rightSidebarMode === 'files' && currentConversation && (
+          <>
+            {/* Overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
+              onClick={() => {
+                setRightSidebarMode(null);
+                setIsRightSidebarOpen(false);
+              }}
+            />
+            {/* Files Panel */}
+            <motion.div
+              initial={{ x: 400, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: 400, opacity: 0 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+              className="fixed right-0 top-0 h-full w-80 sm:w-96 bg-white border-l border-gray-200 shadow-2xl z-50"
+            >
+              <FilesTab
+                conversationId={currentConversation.id}
+                onClose={() => {
                   setRightSidebarMode(null);
                   setIsRightSidebarOpen(false);
                 }}
+                messages={messages}
               />
-              {/* Files Panel */}
-              <motion.div
-                initial={{ x: 400, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: 400, opacity: 0 }}
-                transition={{ duration: 0.2, ease: "easeOut" }}
-                className="fixed right-0 top-0 h-full w-80 sm:w-96 bg-white border-l border-gray-200 shadow-2xl z-50"
-              >
-                <FilesTab
-                  conversationId={currentConversation.id}
-                  onClose={() => {
-                    setRightSidebarMode(null);
-                    setIsRightSidebarOpen(false);
-                  }}
-                  messages={messages}
-                />
-              </motion.div>
-            </>
-          )}
-        </AnimatePresence>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {showThread && threadMessage && (
@@ -932,7 +946,7 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
             initial={{ x: 400, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: 400, opacity: 0 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
             className="w-96 flex-shrink-0"
           >
             <ModernThreadChat
@@ -955,8 +969,8 @@ export default function ModernChatLayout({ className }: ChatLayoutProps) {
           }
         }}
         type={addMemberType}
-        teamId={addMemberType === "team" ? addMemberTargetId : undefined}
-        channelId={addMemberType === "channel" ? addMemberTargetId : undefined}
+        teamId={addMemberType === 'team' ? addMemberTargetId : undefined}
+        channelId={addMemberType === 'channel' ? addMemberTargetId : undefined}
         existingMembers={conversationMembers}
       />
 

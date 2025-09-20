@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import React, { useEffect, useState } from "react";
-import { Avatar } from "@/components/ui/avatar";
-import { cn } from "@/lib/utils";
-import { userStatusService, OnlineUser } from "@/services/userStatusService";
+import React, { useEffect, useState } from 'react';
+import { Avatar } from '@/components/ui/avatar';
+import { cn } from '@/lib/utils';
+import { userStatusService, OnlineUser } from '@/services/userStatusService';
 // WebSocket functionality moved to useChat hook
 
 interface OnlineUsersProps {
@@ -12,7 +12,7 @@ interface OnlineUsersProps {
 }
 
 export const OnlineUsers: React.FC<OnlineUsersProps> = ({
-  roomId = "1",
+  roomId = '1',
   className,
 }) => {
   const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
@@ -24,7 +24,7 @@ export const OnlineUsers: React.FC<OnlineUsersProps> = ({
       const users = await userStatusService.getOnlineUsers(roomId);
       setOnlineUsers(users);
     } catch (error) {
-      console.error("Failed to fetch online users:", error);
+      console.error('Failed to fetch online users:', error);
     } finally {
       setIsLoading(false);
     }
@@ -40,37 +40,37 @@ export const OnlineUsers: React.FC<OnlineUsersProps> = ({
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "online":
-        return "bg-green-500";
-      case "away":
-        return "bg-yellow-500";
-      case "busy":
-        return "bg-red-500";
-      case "offline":
-        return "bg-gray-500";
+      case 'online':
+        return 'bg-green-500';
+      case 'away':
+        return 'bg-yellow-500';
+      case 'busy':
+        return 'bg-red-500';
+      case 'offline':
+        return 'bg-gray-500';
       default:
-        return "bg-gray-500";
+        return 'bg-gray-500';
     }
   };
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case "online":
-        return "Online";
-      case "away":
-        return "Away";
-      case "busy":
-        return "Busy";
-      case "offline":
-        return "Offline";
+      case 'online':
+        return 'Online';
+      case 'away':
+        return 'Away';
+      case 'busy':
+        return 'Busy';
+      case 'offline':
+        return 'Offline';
       default:
-        return "Unknown";
+        return 'Unknown';
     }
   };
 
   if (isLoading) {
     return (
-      <div className={cn("p-3", className)}>
+      <div className={cn('p-3', className)}>
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-gray-400 text-xs font-semibold uppercase tracking-wider">
             Online — Loading...
@@ -92,7 +92,7 @@ export const OnlineUsers: React.FC<OnlineUsersProps> = ({
   }
 
   return (
-    <div className={cn("p-3", className)}>
+    <div className={cn('p-3', className)}>
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-gray-400 text-xs font-semibold uppercase tracking-wider">
           Online — {onlineUsers.length}
@@ -105,7 +105,7 @@ export const OnlineUsers: React.FC<OnlineUsersProps> = ({
             No users online
           </div>
         ) : (
-          onlineUsers.map((user) => (
+          onlineUsers.map(user => (
             <div
               key={user.id}
               className="flex items-center px-2 py-1 rounded cursor-pointer text-gray-300 hover:bg-gray-700 hover:text-white group transition-colors"
@@ -114,8 +114,8 @@ export const OnlineUsers: React.FC<OnlineUsersProps> = ({
                 <Avatar fallback={user.name} size="sm" className="w-6 h-6" />
                 <div
                   className={cn(
-                    "absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-gray-800",
-                    getStatusColor(user.status),
+                    'absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-gray-800',
+                    getStatusColor(user.status)
                   )}
                 ></div>
               </div>

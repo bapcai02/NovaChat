@@ -1,4 +1,4 @@
-import { User } from "./authService";
+import { User } from './authService';
 
 // User types
 export interface UpdateUserData {
@@ -21,7 +21,7 @@ export interface UserSearchParams {
 export interface UserStatus {
   id: number;
   user_id: number;
-  status: "online" | "offline" | "away" | "busy";
+  status: 'online' | 'offline' | 'away' | 'busy';
   status_message?: string;
   last_seen_at: string;
   created_at: string;
@@ -32,9 +32,9 @@ export interface UserStatus {
 export const userService = {
   // Get all users (with pagination and search)
   getUsers: async (
-    params: UserSearchParams = {},
+    params: UserSearchParams = {}
   ): Promise<PaginatedResponse<User>> => {
-    const response = await api.get<PaginatedResponse<User>>("/users", {
+    const response = await api.get<PaginatedResponse<User>>('/users', {
       params,
     });
     return response.data.data;
@@ -48,16 +48,16 @@ export const userService = {
 
   // Update current user
   updateProfile: async (data: UpdateUserData): Promise<User> => {
-    const response = await api.put<User>("/users/profile", data);
+    const response = await api.put<User>('/users/profile', data);
     return response.data.data;
   },
 
   // Update user status
   updateStatus: async (
     status: string,
-    statusMessage?: string,
+    statusMessage?: string
   ): Promise<UserStatus> => {
-    const response = await api.put<UserStatus>("/users/status", {
+    const response = await api.put<UserStatus>('/users/status', {
       status,
       status_message: statusMessage,
     });
@@ -74,9 +74,9 @@ export const userService = {
   searchUsers: async (
     query: string,
     page: number = 1,
-    limit: number = 20,
+    limit: number = 20
   ): Promise<PaginatedResponse<User>> => {
-    const response = await api.get<PaginatedResponse<User>>("/users/search", {
+    const response = await api.get<PaginatedResponse<User>>('/users/search', {
       params: { q: query, page, limit },
     });
     return response.data.data;
@@ -84,23 +84,23 @@ export const userService = {
 
   // Get online users
   getOnlineUsers: async (): Promise<User[]> => {
-    const response = await api.get<User[]>("/users/online");
+    const response = await api.get<User[]>('/users/online');
     return response.data.data;
   },
 
   // Get user preferences
   getUserPreferences: async (): Promise<Record<string, any>> => {
-    const response = await api.get<Record<string, any>>("/users/preferences");
+    const response = await api.get<Record<string, any>>('/users/preferences');
     return response.data.data;
   },
 
   // Update user preferences
   updateUserPreferences: async (
-    preferences: Record<string, any>,
+    preferences: Record<string, any>
   ): Promise<Record<string, any>> => {
     const response = await api.put<Record<string, any>>(
-      "/users/preferences",
-      preferences,
+      '/users/preferences',
+      preferences
     );
     return response.data.data;
   },

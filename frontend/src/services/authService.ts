@@ -1,4 +1,4 @@
-import { apiService } from "./api";
+import { apiService } from './api';
 
 // Auth types
 export interface LoginCredentials {
@@ -45,7 +45,7 @@ export const authService = {
   login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
     const response = await apiService.login(
       credentials.email,
-      credentials.password,
+      credentials.password
     );
     return response.data;
   },
@@ -62,10 +62,10 @@ export const authService = {
       await apiService.logout();
     } catch (error) {
       // Even if logout fails, clear local storage
-      console.error("Logout error:", error);
+      console.error('Logout error:', error);
     } finally {
-      localStorage.removeItem("auth_token");
-      localStorage.removeItem("user");
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('user');
     }
   },
 
@@ -78,7 +78,7 @@ export const authService = {
   // Refresh token
   refreshToken: async (): Promise<RefreshTokenResponse> => {
     // Note: refresh token endpoint not implemented in apiService yet
-    throw new Error("Refresh token not implemented");
+    throw new Error('Refresh token not implemented');
   },
 
   // Verify token
@@ -87,7 +87,7 @@ export const authService = {
       await apiService.getCurrentUser();
       return true;
     } catch (error) {
-      console.error("Failed to verify token:", error);
+      console.error('Failed to verify token:', error);
       return false;
     }
   },

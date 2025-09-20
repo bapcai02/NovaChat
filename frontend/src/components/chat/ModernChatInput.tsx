@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import React, { useState, useRef, useEffect } from "react";
-import { useTranslation } from "react-i18next";
-import { motion, AnimatePresence } from "framer-motion";
-import { Smile, Paperclip, Image, File, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import EmojiPicker from "emoji-picker-react";
-import { uploadService } from "@/services/uploadService";
-import { apiService } from "@/services/api";
+import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Smile, Paperclip, Image, File, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import EmojiPicker from 'emoji-picker-react';
+import { uploadService } from '@/services/uploadService';
+import { apiService } from '@/services/api';
 
 interface Attachment {
   id: string;
@@ -40,14 +40,14 @@ interface ChatInputProps {
 export default function ModernChatInput({
   onSendMessage,
   onTyping,
-  placeholder = "Type a message...",
+  placeholder = 'Type a message...',
   disabled = false,
   maxLength = 2000,
   typingUsers = [],
   mentionUsers = [],
   conversationId,
 }: ChatInputProps) {
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState('');
   const [showEmojis, setShowEmojis] = useState(false);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [isTyping, setIsTyping] = useState(false);
@@ -55,9 +55,9 @@ export default function ModernChatInput({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
-  const { t } = useTranslation("common");
+  const { t } = useTranslation('common');
   const [showMentions, setShowMentions] = useState(false);
-  const [mentionQuery, setMentionQuery] = useState("");
+  const [mentionQuery, setMentionQuery] = useState('');
   const [activeIdx, setActiveIdx] = useState(-1);
 
   // Load draft on mount / conversation change
@@ -81,12 +81,14 @@ export default function ModernChatInput({
         try {
           const dataUrl = await new Promise<string>((resolve, reject) => {
             const reader = new FileReader();
-            reader.onload = () => resolve(String(reader.result || ""));
-            reader.onerror = () => reject(new Error("read_error"));
+            reader.onload = () => resolve(String(reader.result || ''));
+            reader.onerror = () => reject(new Error('read_error'));
             reader.readAsDataURL(att.file as File);
           });
-          enriched.push({ ...att, preview: att.preview,
-            // @ts-ignore add dynamic field for transport
+          enriched.push({
+            ...att,
+            preview: att.preview,
+            // @ts-expect-error add dynamic field for transport
             data: dataUrl,
           } as any);
         } catch (error) {
@@ -100,7 +102,7 @@ export default function ModernChatInput({
 
     // WS-first sending with attachments metadata (including base64 for images when small)
     onSendMessage(message.trim(), enriched);
-    setMessage("");
+    setMessage('');
     setAttachments([]);
     setIsTyping(false);
     try {
@@ -109,31 +111,31 @@ export default function ModernChatInput({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
     // Mentions keyboard nav
     if (
       showMentions &&
-      (e.key === "ArrowDown" ||
-        e.key === "ArrowUp" ||
-        e.key === "Enter" ||
-        e.key === "Escape")
+      (e.key === 'ArrowDown' ||
+        e.key === 'ArrowUp' ||
+        e.key === 'Enter' ||
+        e.key === 'Escape')
     ) {
       const list = filteredMentions;
-      if (e.key === "ArrowDown") {
+      if (e.key === 'ArrowDown') {
         e.preventDefault();
-        setActiveIdx((prev) => Math.min(prev + 1, list.length - 1));
+        setActiveIdx(prev => Math.min(prev + 1, list.length - 1));
       }
-      if (e.key === "ArrowUp") {
+      if (e.key === 'ArrowUp') {
         e.preventDefault();
-        setActiveIdx((prev) => Math.max(prev - 1, 0));
+        setActiveIdx(prev => Math.max(prev - 1, 0));
       }
-      if (e.key === "Escape") {
+      if (e.key === 'Escape') {
         setShowMentions(false);
       }
-      if (e.key === "Enter" && activeIdx >= 0) {
+      if (e.key === 'Enter' && activeIdx >= 0) {
         e.preventDefault();
         applyMention(list[activeIdx]);
       }
@@ -146,7 +148,8 @@ export default function ModernChatInput({
       setMessage(value);
       // Save draft
       try {
-        if (conversationId) localStorage.setItem(`nc_draft_${conversationId}`, value);
+        if (conversationId)
+          localStorage.setItem(`nc_draft_${conversationId}`, value);
       } catch {}
 
       // Typing indicator
@@ -161,12 +164,12 @@ export default function ModernChatInput({
       // Mentions detection (last token like @abc)
       const m = /(^|\s)@(\w{0,30})$/.exec(value);
       if (m) {
-        setMentionQuery(m[2] || "");
+        setMentionQuery(m[2] || '');
         setShowMentions(true);
         setActiveIdx(-1);
       } else {
         setShowMentions(false);
-        setMentionQuery("");
+        setMentionQuery('');
       }
     }
   };
@@ -183,7 +186,7 @@ export default function ModernChatInput({
   }, [isTyping, onTyping, message]);
 
   const handleEmojiSelect = (emojiData: any) => {
-    setMessage((prev) => prev + emojiData.emoji);
+    setMessage(prev => prev + emojiData.emoji);
     setShowEmojis(false);
     textareaRef.current?.focus();
   };
@@ -202,8 +205,8 @@ export default function ModernChatInput({
       } as unknown as React.ChangeEvent<HTMLInputElement>;
       await handleFileSelect(evt);
     };
-    el.addEventListener("paste", onPaste as any);
-    return () => el.removeEventListener("paste", onPaste as any);
+    el.addEventListener('paste', onPaste as any);
+    return () => el.removeEventListener('paste', onPaste as any);
   }, []);
 
   // Click outside to close emoji picker
@@ -218,19 +221,19 @@ export default function ModernChatInput({
     };
 
     if (showEmojis) {
-      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showEmojis]);
 
   const filteredMentions = mentionUsers
-    .filter((u) => {
+    .filter(u => {
       const q = mentionQuery.toLowerCase();
-      const name = (u.name || "").toLowerCase();
-      const user = (u.username || "").toLowerCase();
+      const name = (u.name || '').toLowerCase();
+      const user = (u.username || '').toLowerCase();
       return !q || name.includes(q) || user.includes(q);
     })
     .slice(0, 8);
@@ -241,31 +244,31 @@ export default function ModernChatInput({
     username?: string;
   }) => {
     setMessage(
-      (prev) =>
+      prev =>
         prev.replace(
           /(^|\s)@(\w{0,30})$/,
-          `$1@${u.username || (u.name || `user${u.id}`).replace(/\s+/g, "").toLowerCase()}`,
-        ) + " ",
+          `$1@${u.username || (u.name || `user${u.id}`).replace(/\s+/g, '').toLowerCase()}`
+        ) + ' '
     );
     setShowMentions(false);
-    setMentionQuery("");
+    setMentionQuery('');
     textareaRef.current?.focus();
   };
 
   const validateFile = (file: File) => {
     const maxSize = 20 * 1024 * 1024; // 20MB limit
     const allowed = [
-      "image/",
-      "video/",
-      "application/pdf",
-      "text/plain",
-      "application/msword",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      "application/zip",
-      "application/x-rar-compressed",
+      'image/',
+      'video/',
+      'application/pdf',
+      'text/plain',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/zip',
+      'application/x-rar-compressed',
     ];
     const okType = allowed.some(
-      (prefix) => file.type.startsWith(prefix) || file.type === prefix,
+      prefix => file.type.startsWith(prefix) || file.type === prefix
     );
     const okSize = file.size <= maxSize;
     return okType && okSize;
@@ -273,29 +276,29 @@ export default function ModernChatInput({
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    const validFiles = files.filter((file) => {
+    const validFiles = files.filter(file => {
       const ok = validateFile(file);
       if (!ok) {
-        alert("Tệp không hợp lệ hoặc vượt quá 20MB.");
+        alert('Tệp không hợp lệ hoặc vượt quá 20MB.');
       }
       return ok;
     });
-    
+
     const newAttachments: Attachment[] = [];
-    
+
     for (const file of validFiles) {
       const attachment: Attachment = {
         id: Math.random().toString(36).substr(2, 9),
         name: file.name,
         size: file.size,
         type: file.type,
-        preview: file.type.startsWith("image/")
+        preview: file.type.startsWith('image/')
           ? URL.createObjectURL(file)
           : undefined,
         progress: 0,
         file,
       };
-      
+
       // Convert file to base64 for sending
       try {
         const base64 = await new Promise<string>((resolve, reject) => {
@@ -308,51 +311,51 @@ export default function ModernChatInput({
       } catch (error) {
         console.error('Failed to convert file to base64:', error);
       }
-      
+
       newAttachments.push(attachment);
     }
-    
-    setAttachments((prev) => [...prev, ...newAttachments]);
+
+    setAttachments(prev => [...prev, ...newAttachments]);
   };
 
   const removeAttachment = (id: string) => {
-    setAttachments((prev) => prev.filter((att) => att.id !== id));
+    setAttachments(prev => prev.filter(att => att.id !== id));
   };
 
   const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return "0 Bytes";
+    if (bytes === 0) return '0 Bytes';
     const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   const getFileIcon = (type: string) => {
-    if (type.startsWith("image/")) return <Image className="h-4 w-4" />;
+    if (type.startsWith('image/')) return <Image className="h-4 w-4" />;
     return <File className="h-4 w-4" />;
   };
 
   const escapeHtml = (str: string) =>
     str
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#39;");
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
 
   const renderWithMentions = (text: string) => {
     const safe = escapeHtml(text);
     // highlight @mentions
     return safe.replace(
       /(^|\s)(@\w{1,30})/g,
-      (_m, p1, p2) => `${p1}<span class='text-red-600'>${p2}</span>`,
+      (_m, p1, p2) => `${p1}<span class='text-red-600'>${p2}</span>`
     );
   };
 
   // Auto-resize textarea
   useEffect(() => {
     if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = 'auto';
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
   }, [message]);
@@ -364,12 +367,12 @@ export default function ModernChatInput({
         {attachments.length > 0 && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
+            animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             className="p-4 border-b border-gray-100"
           >
             <div className="flex flex-wrap gap-2">
-              {attachments.map((attachment) => (
+              {attachments.map(attachment => (
                 <motion.div
                   key={attachment.id}
                   initial={{ opacity: 0, scale: 0.8 }}
@@ -379,13 +382,13 @@ export default function ModernChatInput({
                 >
                   {attachment.preview ? (
                     <div className="relative">
-                      {attachment.type.startsWith("image/") ? (
+                      {attachment.type.startsWith('image/') ? (
                         <img
                           src={attachment.preview}
                           alt={attachment.name}
                           className="h-20 w-20 object-cover rounded-lg border border-gray-200"
                         />
-                      ) : attachment.type.startsWith("video/") ? (
+                      ) : attachment.type.startsWith('video/') ? (
                         <video
                           src={attachment.preview}
                           className="h-20 w-20 rounded-lg border border-gray-200 object-cover"
@@ -435,8 +438,8 @@ export default function ModernChatInput({
           {/* Attachment buttons */}
           <div
             className="flex items-center gap-1"
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={(e) => {
+            onDragOver={e => e.preventDefault()}
+            onDrop={e => {
               e.preventDefault();
               const files = Array.from(e.dataTransfer.files || []);
               const evt = {
@@ -483,7 +486,7 @@ export default function ModernChatInput({
               className="absolute inset-0 px-3 py-2 whitespace-pre-wrap break-words text-sm text-gray-800 pointer-events-none z-0"
               aria-hidden
               dangerouslySetInnerHTML={{
-                __html: renderWithMentions(message || ""),
+                __html: renderWithMentions(message || ''),
               }}
             />
             <Textarea
@@ -491,13 +494,13 @@ export default function ModernChatInput({
               value={message}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
-              placeholder={placeholder || t("type_message")}
+              placeholder={placeholder || t('type_message')}
               disabled={disabled}
               className="relative z-10 min-h-[40px] max-h-28 resize-none pr-12 bg-transparent border border-gray-200 hover:border-gray-300 focus:ring-1 focus:ring-blue-400 focus:border-blue-400 focus:outline-none text-sm text-transparent placeholder-gray-400 transition-all duration-200 rounded-lg px-3 py-2"
               style={{
-                border: "1px solid #e5e7eb",
-                boxShadow: "none",
-                caretColor: "#111827",
+                border: '1px solid #e5e7eb',
+                boxShadow: 'none',
+                caretColor: '#111827',
               }}
               rows={1}
             />
@@ -506,8 +509,8 @@ export default function ModernChatInput({
                 {filteredMentions.map((u, idx) => (
                   <button
                     key={u.id}
-                    className={`flex items-center gap-2 w-full text-left px-3 py-2 text-sm ${activeIdx === idx ? "bg-gray-100" : ""}`}
-                    onMouseDown={(e) => {
+                    className={`flex items-center gap-2 w-full text-left px-3 py-2 text-sm ${activeIdx === idx ? 'bg-gray-100' : ''}`}
+                    onMouseDown={e => {
                       e.preventDefault();
                       applyMention(u);
                     }}
@@ -569,10 +572,10 @@ export default function ModernChatInput({
               transition={{ duration: 0.2 }}
               className="absolute bottom-full left-0 mb-2 z-50"
               style={{
-                position: "absolute",
-                bottom: "100%",
-                left: "0",
-                marginBottom: "8px",
+                position: 'absolute',
+                bottom: '100%',
+                left: '0',
+                marginBottom: '8px',
               }}
             >
               <EmojiPicker
@@ -584,8 +587,8 @@ export default function ModernChatInput({
                 previewConfig={{
                   showPreview: false,
                 }}
-                searchPlaceHolder={t("search_messages")}
-                theme={"light" as any}
+                searchPlaceHolder={t('search_messages')}
+                theme={'light' as any}
               />
             </motion.div>
           )}
@@ -600,8 +603,8 @@ export default function ModernChatInput({
             className="mt-2 text-xs text-gray-500"
           >
             {typingUsers.length > 0
-              ? `${typingUsers.slice(0, 2).join(", ")}${typingUsers.length > 2 ? "…" : ""} đang nhập…`
-              : t("you_are_typing")}
+              ? `${typingUsers.slice(0, 2).join(', ')}${typingUsers.length > 2 ? '…' : ''} đang nhập…`
+              : t('you_are_typing')}
           </motion.div>
         )}
       </div>

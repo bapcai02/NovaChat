@@ -1,16 +1,16 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect, useRef } from "react";
-import { Button } from "./button";
-import { Input } from "./input";
-import { Avatar } from "./avatar";
-import { Badge } from "./badge";
-import { cn } from "@/lib/utils";
-import { apiService } from "@/services/api";
+import React, { useState, useEffect, useRef } from 'react';
+import { Button } from './button';
+import { Input } from './input';
+import { Avatar } from './avatar';
+import { Badge } from './badge';
+import { cn } from '@/lib/utils';
+import { apiService } from '@/services/api';
 
 interface SearchResult {
   id: string;
-  type: "message" | "channel" | "user" | "file";
+  type: 'message' | 'channel' | 'user' | 'file';
   title: string;
   content?: string;
   author?: string;
@@ -28,17 +28,17 @@ interface SearchModalProps {
   onResultSelect?: (result: SearchResult) => void;
 }
 
-type SearchFilter = "all" | "messages" | "channels" | "users" | "files";
-type TimeFilter = "all" | "today" | "week" | "month" | "year";
+type SearchFilter = 'all' | 'messages' | 'channels' | 'users' | 'files';
+type TimeFilter = 'all' | 'today' | 'week' | 'month' | 'year';
 
 export const SearchModal: React.FC<SearchModalProps> = ({
   isOpen,
   onClose,
   onResultSelect,
 }) => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [activeFilter, setActiveFilter] = useState<SearchFilter>("all");
-  const [timeFilter, setTimeFilter] = useState<TimeFilter>("all");
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeFilter, setActiveFilter] = useState<SearchFilter>('all');
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>('all');
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -48,19 +48,19 @@ export const SearchModal: React.FC<SearchModalProps> = ({
   // Filter options
   const filterOptions: { value: SearchFilter; label: string; icon: string }[] =
     [
-      { value: "all", label: "All", icon: "🔍" },
-      { value: "messages", label: "Messages", icon: "💬" },
-      { value: "channels", label: "Channels", icon: "#" },
-      { value: "users", label: "Users", icon: "👤" },
-      { value: "files", label: "Files", icon: "📎" },
+      { value: 'all', label: 'All', icon: '🔍' },
+      { value: 'messages', label: 'Messages', icon: '💬' },
+      { value: 'channels', label: 'Channels', icon: '#' },
+      { value: 'users', label: 'Users', icon: '👤' },
+      { value: 'files', label: 'Files', icon: '📎' },
     ];
 
   const timeOptions: { value: TimeFilter; label: string }[] = [
-    { value: "all", label: "All time" },
-    { value: "today", label: "Today" },
-    { value: "week", label: "This week" },
-    { value: "month", label: "This month" },
-    { value: "year", label: "This year" },
+    { value: 'all', label: 'All time' },
+    { value: 'today', label: 'Today' },
+    { value: 'week', label: 'This week' },
+    { value: 'month', label: 'This month' },
+    { value: 'year', label: 'This year' },
   ];
 
   useEffect(() => {
@@ -89,21 +89,21 @@ export const SearchModal: React.FC<SearchModalProps> = ({
     try {
       const q = searchQuery.trim();
       let searchResults: any[] = [];
-      if (activeFilter === "users") {
+      if (activeFilter === 'users') {
         const res = await apiService.searchUsers(q);
         const data = (res as any)?.data || (res as any);
         searchResults = (data || []).map((u: any) => ({
           id: String(u.id),
-          type: "user",
+          type: 'user',
           title: u.name || u.username,
           avatar: u.avatar,
         }));
-      } else if (activeFilter === "channels") {
+      } else if (activeFilter === 'channels') {
         const res = await apiService.searchConversations(q);
         const data = (res as any)?.data || (res as any);
         searchResults = (data || []).map((c: any) => ({
           id: String(c.id),
-          type: "channel",
+          type: 'channel',
           title: c.title || c.name,
         }));
       } else {
@@ -112,7 +112,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
         const data = (res as any)?.data || (res as any);
         searchResults = (data || []).map((m: any) => ({
           id: String(m.id),
-          type: "message",
+          type: 'message',
           title: m.sender?.name || `Message #${m.id}`,
           content: m.content,
           timestamp: m.created_at,
@@ -121,7 +121,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
       }
       setResults(searchResults);
     } catch (error) {
-      console.error("Search failed:", error);
+      console.error('Search failed:', error);
       setResults([]);
     } finally {
       setIsLoading(false);
@@ -131,33 +131,33 @@ export const SearchModal: React.FC<SearchModalProps> = ({
   const handleSearch = (query: string) => {
     setSearchQuery(query);
     if (query.trim() && !searchHistory.includes(query)) {
-      setSearchHistory((prev) => [query, ...prev.slice(0, 4)]); // Keep last 5 searches
+      setSearchHistory(prev => [query, ...prev.slice(0, 4)]); // Keep last 5 searches
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "ArrowDown") {
+    if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setSelectedIndex((prev) => Math.min(prev + 1, results.length - 1));
-    } else if (e.key === "ArrowUp") {
+      setSelectedIndex(prev => Math.min(prev + 1, results.length - 1));
+    } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      setSelectedIndex((prev) => Math.max(prev - 1, -1));
-    } else if (e.key === "Enter") {
+      setSelectedIndex(prev => Math.max(prev - 1, -1));
+    } else if (e.key === 'Enter') {
       e.preventDefault();
       if (selectedIndex >= 0 && results[selectedIndex]) {
         handleResultSelect(results[selectedIndex]);
       } else if (searchQuery.trim()) {
         handleSearch(searchQuery);
       }
-    } else if (e.key === "Escape") {
+    } else if (e.key === 'Escape') {
       onClose();
     }
   };
 
   const handleResultSelect = (result: SearchResult) => {
-    if (result.type === "message") {
+    if (result.type === 'message') {
       const detail = { id: result.id, conversation_id: result.channel } as any;
-      const ev = new CustomEvent("__nc_jump_to_message", { detail });
+      const ev = new CustomEvent('__nc_jump_to_message', { detail });
       window.dispatchEvent(ev);
     }
     onResultSelect?.(result);
@@ -166,31 +166,31 @@ export const SearchModal: React.FC<SearchModalProps> = ({
 
   const getResultIcon = (type: string) => {
     switch (type) {
-      case "message":
-        return "💬";
-      case "channel":
-        return "#";
-      case "user":
-        return "👤";
-      case "file":
-        return "📎";
+      case 'message':
+        return '💬';
+      case 'channel':
+        return '#';
+      case 'user':
+        return '👤';
+      case 'file':
+        return '📎';
       default:
-        return "🔍";
+        return '🔍';
     }
   };
 
   const getResultColor = (type: string) => {
     switch (type) {
-      case "message":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
-      case "channel":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
-      case "user":
-        return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200";
-      case "file":
-        return "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200";
+      case 'message':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+      case 'channel':
+        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+      case 'user':
+        return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
+      case 'file':
+        return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
       default:
-        return "bg-[hsl(var(--chat-message-hover))] text-[hsl(var(--chat-text))]";
+        return 'bg-[hsl(var(--chat-message-hover))] text-[hsl(var(--chat-text))]';
     }
   };
 
@@ -245,7 +245,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
             <Input
               ref={inputRef}
               value={searchQuery}
-              onChange={(e) => handleSearch(e.target.value)}
+              onChange={e => handleSearch(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Search messages, channels, users, and files..."
               className="pl-10 pr-4"
@@ -274,15 +274,15 @@ export const SearchModal: React.FC<SearchModalProps> = ({
               Type:
             </span>
             <div className="flex space-x-1">
-              {filterOptions.map((option) => (
+              {filterOptions.map(option => (
                 <button
                   key={option.value}
                   onClick={() => setActiveFilter(option.value)}
                   className={cn(
-                    "px-3 py-1 text-xs rounded-md transition-colors",
+                    'px-3 py-1 text-xs rounded-md transition-colors',
                     activeFilter === option.value
-                      ? "bg-[hsl(var(--chat-accent))] text-white"
-                      : "bg-[hsl(var(--chat-message-bg))] text-[hsl(var(--chat-text))] hover:bg-[hsl(var(--chat-message-hover))]",
+                      ? 'bg-[hsl(var(--chat-accent))] text-white'
+                      : 'bg-[hsl(var(--chat-message-bg))] text-[hsl(var(--chat-text))] hover:bg-[hsl(var(--chat-message-hover))]'
                   )}
                 >
                   <span className="mr-1">{option.icon}</span>
@@ -298,15 +298,15 @@ export const SearchModal: React.FC<SearchModalProps> = ({
               Time:
             </span>
             <div className="flex space-x-1">
-              {timeOptions.map((option) => (
+              {timeOptions.map(option => (
                 <button
                   key={option.value}
                   onClick={() => setTimeFilter(option.value)}
                   className={cn(
-                    "px-3 py-1 text-xs rounded-md transition-colors",
+                    'px-3 py-1 text-xs rounded-md transition-colors',
                     timeFilter === option.value
-                      ? "bg-[hsl(var(--chat-accent))] text-white"
-                      : "bg-[hsl(var(--chat-message-bg))] text-[hsl(var(--chat-text))] hover:bg-[hsl(var(--chat-message-hover))]",
+                      ? 'bg-[hsl(var(--chat-accent))] text-white'
+                      : 'bg-[hsl(var(--chat-message-bg))] text-[hsl(var(--chat-text))] hover:bg-[hsl(var(--chat-message-hover))]'
                   )}
                 >
                   {option.label}
@@ -333,17 +333,17 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                     key={result.id}
                     onClick={() => handleResultSelect(result)}
                     className={cn(
-                      "p-3 rounded-lg cursor-pointer transition-colors",
+                      'p-3 rounded-lg cursor-pointer transition-colors',
                       selectedIndex === index
-                        ? "bg-[hsl(var(--chat-accent-light))] border border-[hsl(var(--chat-accent))]"
-                        : "bg-[hsl(var(--chat-message-bg))] hover:bg-[hsl(var(--chat-message-hover))]",
+                        ? 'bg-[hsl(var(--chat-accent-light))] border border-[hsl(var(--chat-accent))]'
+                        : 'bg-[hsl(var(--chat-message-bg))] hover:bg-[hsl(var(--chat-message-hover))]'
                     )}
                   >
                     <div className="flex items-start space-x-3">
                       <div
                         className={cn(
-                          "w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium",
-                          getResultColor(result.type),
+                          'w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium',
+                          getResultColor(result.type)
                         )}
                       >
                         {result.avatar ? (

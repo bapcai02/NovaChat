@@ -1,4 +1,4 @@
-import { apiService } from "./api";
+import { apiService } from './api';
 
 export interface User {
   id: number;
@@ -6,8 +6,8 @@ export interface User {
   email: string;
   username?: string;
   avatar?: string;
-  role: "admin" | "moderator" | "user" | "guest";
-  status: "active" | "inactive" | "suspended" | "banned";
+  role: 'admin' | 'moderator' | 'user' | 'guest';
+  status: 'active' | 'inactive' | 'suspended' | 'banned';
   is_online: boolean;
   last_seen_at?: string;
   created_at: string;
@@ -42,8 +42,8 @@ export interface CreateUserRequest {
   email: string;
   password: string;
   username?: string;
-  role: "admin" | "moderator" | "user" | "guest";
-  status?: "active" | "inactive" | "suspended" | "banned";
+  role: 'admin' | 'moderator' | 'user' | 'guest';
+  status?: 'active' | 'inactive' | 'suspended' | 'banned';
   phone?: string;
   bio?: string;
 }
@@ -52,8 +52,8 @@ export interface UpdateUserRequest {
   name?: string;
   email?: string;
   username?: string;
-  role?: "super_admin" | "admin" | "moderator" | "user" | "guest";
-  status?: "active" | "inactive" | "suspended" | "banned";
+  role?: 'super_admin' | 'admin' | 'moderator' | 'user' | 'guest';
+  status?: 'active' | 'inactive' | 'suspended' | 'banned';
   is_verified?: boolean;
   is_premium?: boolean;
   phone?: string;
@@ -68,24 +68,24 @@ class AdminService {
       search?: string;
       role?: string;
       status?: string;
-    } = {},
+    } = {}
   ): Promise<UsersResponse> {
     const queryParams = new URLSearchParams();
 
-    if (params.page) queryParams.append("page", params.page.toString());
-    if (params.limit) queryParams.append("limit", params.limit.toString());
-    if (params.search) queryParams.append("search", params.search);
-    if (params.role && params.role !== "all")
-      queryParams.append("role", params.role);
-    if (params.status && params.status !== "all")
-      queryParams.append("status", params.status);
+    if (params.page) queryParams.append('page', params.page.toString());
+    if (params.limit) queryParams.append('limit', params.limit.toString());
+    if (params.search) queryParams.append('search', params.search);
+    if (params.role && params.role !== 'all')
+      queryParams.append('role', params.role);
+    if (params.status && params.status !== 'all')
+      queryParams.append('status', params.status);
 
-    const url = `/admin/users${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
+    const url = `/admin/users${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
     return apiService.get(url);
   }
 
   async getStats(): Promise<AdminStats> {
-    return apiService.get("/admin/stats");
+    return apiService.get('/admin/stats');
   }
 
   async getUser(id: number): Promise<User> {
@@ -93,7 +93,7 @@ class AdminService {
   }
 
   async createUser(data: CreateUserRequest): Promise<User> {
-    return apiService.post("/admin/users", data);
+    return apiService.post('/admin/users', data);
   }
 
   async updateUser(id: number, data: UpdateUserRequest): Promise<User> {
@@ -105,11 +105,11 @@ class AdminService {
   }
 
   async banUser(id: number, reason?: string): Promise<User> {
-    return apiService.post(`/admin/users/${id}/ban`, { action: "ban", reason });
+    return apiService.post(`/admin/users/${id}/ban`, { action: 'ban', reason });
   }
 
   async unbanUser(id: number): Promise<User> {
-    return apiService.post(`/admin/users/${id}/ban`, { action: "unban" });
+    return apiService.post(`/admin/users/${id}/ban`, { action: 'unban' });
   }
 
   async getReports(
@@ -117,15 +117,15 @@ class AdminService {
       period?: string;
       start_date?: string;
       end_date?: string;
-    } = {},
+    } = {}
   ): Promise<any> {
     const queryParams = new URLSearchParams();
 
-    if (params.period) queryParams.append("period", params.period);
-    if (params.start_date) queryParams.append("start_date", params.start_date);
-    if (params.end_date) queryParams.append("end_date", params.end_date);
+    if (params.period) queryParams.append('period', params.period);
+    if (params.start_date) queryParams.append('start_date', params.start_date);
+    if (params.end_date) queryParams.append('end_date', params.end_date);
 
-    const url = `/admin/reports${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
+    const url = `/admin/reports${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
     return apiService.get(url);
   }
 }

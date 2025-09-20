@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import { Button } from "./button";
-import { Avatar } from "./avatar";
-import { cn } from "@/lib/utils";
+import React, { useState } from 'react';
+import { Button } from './button';
+import { Avatar } from './avatar';
+import { cn } from '@/lib/utils';
 
 interface MessageStats {
   id: string;
@@ -58,16 +58,16 @@ export const MessageAnalytics: React.FC<MessageAnalyticsProps> = ({
   onClose,
 }) => {
   const [activeTab, setActiveTab] = useState<
-    "overview" | "readers" | "reactions" | "replies"
-  >("overview");
+    'overview' | 'readers' | 'reactions' | 'replies'
+  >('overview');
 
   if (!isOpen) return null;
 
   const tabs = [
-    { id: "overview", label: "Overview", icon: "📊" },
-    { id: "readers", label: "Readers", icon: "👥" },
-    { id: "reactions", label: "Reactions", icon: "😊" },
-    { id: "replies", label: "Replies", icon: "💬" },
+    { id: 'overview', label: 'Overview', icon: '📊' },
+    { id: 'readers', label: 'Readers', icon: '👥' },
+    { id: 'reactions', label: 'Reactions', icon: '😊' },
+    { id: 'replies', label: 'Replies', icon: '💬' },
   ];
 
   const formatTime = (timestamp: string) => {
@@ -84,7 +84,7 @@ export const MessageAnalytics: React.FC<MessageAnalyticsProps> = ({
   const getTotalReactions = () => {
     return message.reactions.reduce(
       (total, reaction) => total + reaction.count,
-      0,
+      0
     );
   };
 
@@ -141,15 +141,15 @@ export const MessageAnalytics: React.FC<MessageAnalyticsProps> = ({
 
         {/* Tabs */}
         <div className="flex border-b border-[hsl(var(--chat-border))]">
-          {tabs.map((tab) => (
+          {tabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
               className={cn(
-                "flex-1 px-4 py-3 text-sm font-medium transition-colors",
+                'flex-1 px-4 py-3 text-sm font-medium transition-colors',
                 activeTab === tab.id
-                  ? "text-[hsl(var(--chat-accent))] border-b-2 border-[hsl(var(--chat-accent))]"
-                  : "text-[hsl(var(--chat-text-muted))] hover:text-[hsl(var(--chat-text))]",
+                  ? 'text-[hsl(var(--chat-accent))] border-b-2 border-[hsl(var(--chat-accent))]'
+                  : 'text-[hsl(var(--chat-text-muted))] hover:text-[hsl(var(--chat-text))]'
               )}
             >
               <span className="mr-2">{tab.icon}</span>
@@ -160,7 +160,7 @@ export const MessageAnalytics: React.FC<MessageAnalyticsProps> = ({
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto max-h-[50vh]">
-          {activeTab === "overview" && (
+          {activeTab === 'overview' && (
             <div className="p-4 space-y-4">
               {/* Key Metrics */}
               <div className="grid grid-cols-2 gap-4">
@@ -243,7 +243,7 @@ export const MessageAnalytics: React.FC<MessageAnalyticsProps> = ({
             </div>
           )}
 
-          {activeTab === "readers" && (
+          {activeTab === 'readers' && (
             <div className="p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-medium">
@@ -253,7 +253,7 @@ export const MessageAnalytics: React.FC<MessageAnalyticsProps> = ({
                   {getReadPercentage()}% read rate
                 </span>
               </div>
-              {message.readBy.map((reader) => (
+              {message.readBy.map(reader => (
                 <div
                   key={reader.id}
                   className="flex items-center justify-between p-3 bg-[hsl(var(--chat-message-bg))] rounded-lg"
@@ -275,7 +275,7 @@ export const MessageAnalytics: React.FC<MessageAnalyticsProps> = ({
             </div>
           )}
 
-          {activeTab === "reactions" && (
+          {activeTab === 'reactions' && (
             <div className="p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-medium">
@@ -296,7 +296,7 @@ export const MessageAnalytics: React.FC<MessageAnalyticsProps> = ({
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {reaction.users.map((user) => (
+                    {reaction.users.map(user => (
                       <div
                         key={user.id}
                         className="flex items-center space-x-2 px-2 py-1 bg-[hsl(var(--chat-bg))] rounded-full"
@@ -311,14 +311,14 @@ export const MessageAnalytics: React.FC<MessageAnalyticsProps> = ({
             </div>
           )}
 
-          {activeTab === "replies" && (
+          {activeTab === 'replies' && (
             <div className="p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-medium">
                   Replies ({message.replies.length})
                 </h3>
               </div>
-              {message.replies.map((reply) => (
+              {message.replies.map(reply => (
                 <div
                   key={reply.id}
                   className="p-3 bg-[hsl(var(--chat-message-bg))] rounded-lg"

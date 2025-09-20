@@ -1,11 +1,11 @@
-import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import {
   userService,
   UpdateUserData,
   UserSearchParams,
   UserStatus,
-} from "../../services/userService";
-import { User } from "../../services/authService";
+} from '../../services/userService';
+import { User } from '../../services/authService';
 
 // User state interface
 interface UserState {
@@ -31,7 +31,7 @@ const initialState: UserState = {
 
 // Async thunks
 export const fetchUsers = createAsyncThunk(
-  "users/fetchUsers",
+  'users/fetchUsers',
   async (params: UserSearchParams = {}, { rejectWithValue }) => {
     try {
       const response = await userService.getUsers(params);
@@ -42,66 +42,66 @@ export const fetchUsers = createAsyncThunk(
       };
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to fetch users",
+        error.response?.data?.message || 'Failed to fetch users'
       );
     }
-  },
+  }
 );
 
 export const fetchUser = createAsyncThunk(
-  "users/fetchUser",
+  'users/fetchUser',
   async (id: number, { rejectWithValue }) => {
     try {
       const user = await userService.getUser(id);
       return user;
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to fetch user",
+        error.response?.data?.message || 'Failed to fetch user'
       );
     }
-  },
+  }
 );
 
 export const updateProfile = createAsyncThunk(
-  "users/updateProfile",
+  'users/updateProfile',
   async (data: UpdateUserData, { rejectWithValue }) => {
     try {
       const user = await userService.updateProfile(data);
       return user;
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to update profile",
+        error.response?.data?.message || 'Failed to update profile'
       );
     }
-  },
+  }
 );
 
 export const updateStatus = createAsyncThunk(
-  "users/updateStatus",
+  'users/updateStatus',
   async (
     { status, statusMessage }: { status: string; statusMessage?: string },
-    { rejectWithValue },
+    { rejectWithValue }
   ) => {
     try {
       const userStatus = await userService.updateStatus(status, statusMessage);
       return userStatus;
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to update status",
+        error.response?.data?.message || 'Failed to update status'
       );
     }
-  },
+  }
 );
 
 export const searchUsers = createAsyncThunk(
-  "users/searchUsers",
+  'users/searchUsers',
   async (
     {
       query,
       page = 1,
       limit = 20,
     }: { query: string; page?: number; limit?: number },
-    { rejectWithValue },
+    { rejectWithValue }
   ) => {
     try {
       const response = await userService.searchUsers(query, page, limit);
@@ -112,35 +112,35 @@ export const searchUsers = createAsyncThunk(
       };
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to search users",
+        error.response?.data?.message || 'Failed to search users'
       );
     }
-  },
+  }
 );
 
 export const fetchOnlineUsers = createAsyncThunk(
-  "users/fetchOnlineUsers",
+  'users/fetchOnlineUsers',
   async (_, { rejectWithValue }) => {
     try {
       const users = await userService.getOnlineUsers();
       return users;
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to fetch online users",
+        error.response?.data?.message || 'Failed to fetch online users'
       );
     }
-  },
+  }
 );
 
 // User slice
 const userSlice = createSlice({
-  name: "users",
+  name: 'users',
   initialState,
   reducers: {
-    clearError: (state) => {
+    clearError: state => {
       state.error = null;
     },
-    clearUsers: (state) => {
+    clearUsers: state => {
       state.users = [];
       state.currentPage = 1;
       state.hasMore = true;
@@ -153,7 +153,7 @@ const userSlice = createSlice({
     },
     updateUserInList: (state, action: PayloadAction<User>) => {
       const index = state.users.findIndex(
-        (user) => user.id === action.payload.id,
+        user => user.id === action.payload.id
       );
       if (index !== -1) {
         state.users[index] = action.payload;
@@ -163,16 +163,16 @@ const userSlice = createSlice({
       }
     },
     removeUser: (state, action: PayloadAction<number>) => {
-      state.users = state.users.filter((user) => user.id !== action.payload);
+      state.users = state.users.filter(user => user.id !== action.payload);
       if (state.currentUser?.id === action.payload) {
         state.currentUser = null;
       }
     },
   },
-  extraReducers: (builder) => {
+  extraReducers: builder => {
     // Fetch users
     builder
-      .addCase(fetchUsers.pending, (state) => {
+      .addCase(fetchUsers.pending, state => {
         state.isLoading = true;
         state.error = null;
       })
@@ -184,7 +184,7 @@ const userSlice = createSlice({
             users: User[];
             hasMore: boolean;
             currentPage: number;
-          }>,
+          }>
         ) => {
           state.isLoading = false;
           const fetchedUsers = action.payload?.users ?? [];
@@ -196,7 +196,7 @@ const userSlice = createSlice({
           state.hasMore = action.payload.hasMore;
           state.currentPage = action.payload.currentPage;
           state.error = null;
-        },
+        }
       )
       .addCase(fetchUsers.rejected, (state, action) => {
         state.isLoading = false;
@@ -205,7 +205,7 @@ const userSlice = createSlice({
 
     // Fetch user
     builder
-      .addCase(fetchUser.pending, (state) => {
+      .addCase(fetchUser.pending, state => {
         state.isLoading = true;
         state.error = null;
       })
@@ -221,7 +221,7 @@ const userSlice = createSlice({
 
     // Update profile
     builder
-      .addCase(updateProfile.pending, (state) => {
+      .addCase(updateProfile.pending, state => {
         state.isLoading = true;
         state.error = null;
       })
@@ -230,7 +230,7 @@ const userSlice = createSlice({
         (state, action: PayloadAction<User>) => {
           state.isLoading = false;
           const index = state.users.findIndex(
-            (user) => user.id === action.payload.id,
+            user => user.id === action.payload.id
           );
           if (index !== -1) {
             state.users[index] = action.payload;
@@ -239,7 +239,7 @@ const userSlice = createSlice({
             state.currentUser = action.payload;
           }
           state.error = null;
-        },
+        }
       )
       .addCase(updateProfile.rejected, (state, action) => {
         state.isLoading = false;
@@ -248,7 +248,7 @@ const userSlice = createSlice({
 
     // Update status
     builder
-      .addCase(updateStatus.pending, (state) => {
+      .addCase(updateStatus.pending, state => {
         state.isLoading = true;
         state.error = null;
       })
@@ -257,12 +257,12 @@ const userSlice = createSlice({
         (state, action: PayloadAction<UserStatus>) => {
           state.isLoading = false;
           // Update user status in the list
-          const user = state.users.find((u) => u.id === action.payload.user_id);
+          const user = state.users.find(u => u.id === action.payload.user_id);
           if (user) {
             // Update user status (you might need to add status field to User type)
           }
           state.error = null;
-        },
+        }
       )
       .addCase(updateStatus.rejected, (state, action) => {
         state.isLoading = false;
@@ -271,7 +271,7 @@ const userSlice = createSlice({
 
     // Search users
     builder
-      .addCase(searchUsers.pending, (state) => {
+      .addCase(searchUsers.pending, state => {
         state.isLoading = true;
         state.error = null;
       })
@@ -283,7 +283,7 @@ const userSlice = createSlice({
             users: User[];
             hasMore: boolean;
             currentPage: number;
-          }>,
+          }>
         ) => {
           state.isLoading = false;
           const fetchedUsers = action.payload?.users ?? [];
@@ -295,7 +295,7 @@ const userSlice = createSlice({
           state.hasMore = action.payload.hasMore;
           state.currentPage = action.payload.currentPage;
           state.error = null;
-        },
+        }
       )
       .addCase(searchUsers.rejected, (state, action) => {
         state.isLoading = false;
@@ -304,7 +304,7 @@ const userSlice = createSlice({
 
     // Fetch online users
     builder
-      .addCase(fetchOnlineUsers.pending, (state) => {
+      .addCase(fetchOnlineUsers.pending, state => {
         state.isLoading = true;
         state.error = null;
       })
@@ -314,7 +314,7 @@ const userSlice = createSlice({
           state.isLoading = false;
           state.onlineUsers = action.payload;
           state.error = null;
-        },
+        }
       )
       .addCase(fetchOnlineUsers.rejected, (state, action) => {
         state.isLoading = false;

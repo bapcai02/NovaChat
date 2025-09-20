@@ -1,9 +1,9 @@
-import { configureStore } from "@reduxjs/toolkit";
-import authReducer from "./slices/authSlice";
-import channelReducer from "./slices/channelSlice";
-import messageReducer from "./slices/messageSlice";
-import userReducer from "./slices/userSlice";
-import uiReducer from "./slices/uiSlice";
+import { configureStore } from '@reduxjs/toolkit';
+import authReducer from './slices/authSlice';
+import channelReducer from './slices/channelSlice';
+import messageReducer from './slices/messageSlice';
+import userReducer from './slices/userSlice';
+import uiReducer from './slices/uiSlice';
 
 export const store = configureStore({
   reducer: {
@@ -13,15 +13,15 @@ export const store = configureStore({
     users: userReducer,
     ui: uiReducer,
   },
-  middleware: (getDefaultMiddleware) =>
+  middleware: getDefaultMiddleware =>
     getDefaultMiddleware({
       serializableCheck: {
         // Ignore these action types
-        ignoredActions: ["persist/PERSIST"],
+        ignoredActions: ['persist/PERSIST'],
         // Ignore these field paths in all actions
-        ignoredActionPaths: ["meta.arg", "payload.timestamp"],
+        ignoredActionPaths: ['meta.arg', 'payload.timestamp'],
         // Ignore these paths in the state
-        ignoredPaths: ["items.dates"],
+        ignoredPaths: ['items.dates'],
       },
     }),
 });

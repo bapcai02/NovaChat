@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import React from "react";
-import { X, PhoneOff } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import React from 'react';
+import { X, PhoneOff } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface CallOverlayProps {
   open: boolean;
@@ -32,13 +32,13 @@ export default function CallOverlay({
         </button>
         <div className="flex flex-col items-center gap-4">
           <div className="h-20 w-20 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-white flex items-center justify-center text-3xl font-bold">
-            {(calleeName || "User").slice(0, 2).toUpperCase()}
+            {(calleeName || 'User').slice(0, 2).toUpperCase()}
           </div>
           <div className="text-lg font-semibold text-gray-800">
-            {calleeName || "Calling…"}
+            {calleeName || 'Calling…'}
           </div>
           <div className="text-sm text-gray-500">
-            {statusText || "Audio call in progress"}
+            {statusText || 'Audio call in progress'}
           </div>
           <div className="mt-4">
             <Button

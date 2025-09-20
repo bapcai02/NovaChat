@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import React, { useEffect, useRef, useState } from "react";
-import { Avatar } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { VoicePlayer } from "@/components/ui/voice-player";
-import { ReadReceipts } from "@/components/ui/read-receipts";
-import { MessageAnalytics } from "@/components/ui/message-analytics";
-import { MessageReactions } from "@/components/ui/message-reactions";
-import { MessageEditor } from "@/components/ui/message-editor";
-import { TypingIndicator } from "@/components/ui/typing-indicator";
+import React, { useEffect, useRef, useState } from 'react';
+import { Avatar } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { VoicePlayer } from '@/components/ui/voice-player';
+import { ReadReceipts } from '@/components/ui/read-receipts';
+import { MessageAnalytics } from '@/components/ui/message-analytics';
+import { MessageReactions } from '@/components/ui/message-reactions';
+import { MessageEditor } from '@/components/ui/message-editor';
+import { TypingIndicator } from '@/components/ui/typing-indicator';
 
 interface Message {
   id: string;
@@ -24,7 +24,7 @@ interface Message {
     users: string[];
   }>;
   attachments?: Array<{
-    type: "image" | "file";
+    type: 'image' | 'file';
     url: string;
     name: string;
     size?: string;
@@ -42,7 +42,7 @@ interface Message {
 }
 interface MessageListProps {
   onThreadSelect: (messageId: string, messageContent: string) => void;
-  selectedChat?: { type: "channel" | "conversation"; id: number } | null;
+  selectedChat?: { type: 'channel' | 'conversation'; id: number } | null;
   refreshTrigger?: number;
   scrollContainerRef?: React.RefObject<HTMLDivElement>;
 }
@@ -56,7 +56,7 @@ export const MessageList: React.FC<MessageListProps> = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const channelRef = useRef<any>(null);
   const [showReactionPicker, setShowReactionPicker] = useState<string | null>(
-    null,
+    null
   );
   const [showAnalytics, setShowAnalytics] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -72,7 +72,7 @@ export const MessageList: React.FC<MessageListProps> = ({
   >([]);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const isNearBottom = (): boolean => {
@@ -101,9 +101,9 @@ export const MessageList: React.FC<MessageListProps> = ({
 
         const roomId = selectedChat.id.toString();
         const type =
-          selectedChat.type === "conversation"
-            ? "direct"
-            : selectedChat.type || "channel";
+          selectedChat.type === 'conversation'
+            ? 'direct'
+            : selectedChat.type || 'channel';
         const res = await api.get<any[]>(`/messages/${roomId}`, {
           params: { type, limit: 50 },
         });
@@ -115,13 +115,13 @@ export const MessageList: React.FC<MessageListProps> = ({
         // Map backend shape to frontend shape
         const mapped = data.map((m: any, idx: number) => ({
           id: String(m.id ?? idx),
-          content: m.type === "voice" ? "" : String(m.content ?? m.text ?? ""),
-          type: m.type === "voice" ? "voice" : undefined,
-          audioUrl: m.type === "voice" ? "data:audio/webm;base64," : undefined,
+          content: m.type === 'voice' ? '' : String(m.content ?? m.text ?? ''),
+          type: m.type === 'voice' ? 'voice' : undefined,
+          audioUrl: m.type === 'voice' ? 'data:audio/webm;base64,' : undefined,
           duration: m.duration,
           author: {
-            name: m.sender?.name || "User",
-            username: (m.sender?.username || "user").toLowerCase(),
+            name: m.sender?.name || 'User',
+            username: (m.sender?.username || 'user').toLowerCase(),
           },
           timestamp: new Date(m.created_at).toLocaleTimeString(),
           reactions: (m.reactions || []).map((r: any) => ({
@@ -130,9 +130,9 @@ export const MessageList: React.FC<MessageListProps> = ({
             users: [],
           })),
           attachments: (m.attachments || []).map((a: any) => ({
-            type: a.type || "file",
-            url: a.url || "#",
-            name: a.name || "file",
+            type: a.type || 'file',
+            url: a.url || '#',
+            name: a.name || 'file',
             size: a.size,
           })),
         })) as any;
@@ -145,7 +145,7 @@ export const MessageList: React.FC<MessageListProps> = ({
           .map((m: any) => String(m.id));
         setBookmarkedMessages(new Set(bookmarkedIds));
       } catch (e) {
-        console.error("Failed to fetch messages:", e);
+        console.error('Failed to fetch messages:', e);
         setMessages([] as any);
       }
     };
@@ -164,9 +164,9 @@ export const MessageList: React.FC<MessageListProps> = ({
         try {
           const roomId = selectedChat.id.toString();
           const type =
-            selectedChat.type === "conversation"
-              ? "direct"
-              : selectedChat.type || "channel";
+            selectedChat.type === 'conversation'
+              ? 'direct'
+              : selectedChat.type || 'channel';
           const res = await api.get<any[]>(`/messages/${roomId}`, {
             params: { type, limit: 50, beforeId },
           });
@@ -177,10 +177,10 @@ export const MessageList: React.FC<MessageListProps> = ({
           const mapped = data.map((m: any, idx: number) => ({
             id: String(m.id ?? `tmp-${Date.now()}-${idx}`),
             content:
-              m.type === "voice" ? "" : String(m.content ?? m.text ?? ""),
+              m.type === 'voice' ? '' : String(m.content ?? m.text ?? ''),
             author: {
-              name: m.sender?.name || "User",
-              username: (m.sender?.username || "user").toLowerCase(),
+              name: m.sender?.name || 'User',
+              username: (m.sender?.username || 'user').toLowerCase(),
             },
             timestamp: new Date(m.created_at).toLocaleTimeString(),
             reactions: (m.reactions || []).map((r: any) => ({
@@ -189,18 +189,18 @@ export const MessageList: React.FC<MessageListProps> = ({
               users: [],
             })),
             attachments: (m.attachments || []).map((a: any) => ({
-              type: a.type || "file",
-              url: a.url || "#",
-              name: a.name || "file",
+              type: a.type || 'file',
+              url: a.url || '#',
+              name: a.name || 'file',
               size: a.size,
             })),
           })) as any;
 
           const prevHeight = el.scrollHeight;
-          setMessages((prev) => {
+          setMessages(prev => {
             const existing = new Set(prev.map((p: any) => String(p.id)));
             const dedup = (mapped as any[]).filter(
-              (m) => !existing.has(String(m.id)),
+              m => !existing.has(String(m.id))
             );
             return [...dedup, ...prev];
           });
@@ -209,22 +209,22 @@ export const MessageList: React.FC<MessageListProps> = ({
           const newBookmarkedIds = data
             .filter((m: any) => m.is_bookmarked)
             .map((m: any) => String(m.id));
-          setBookmarkedMessages((prev) => {
+          setBookmarkedMessages(prev => {
             const newSet = new Set(prev);
-            newBookmarkedIds.forEach((id) => newSet.add(id));
+            newBookmarkedIds.forEach(id => newSet.add(id));
             return newSet;
           });
 
           setHasMore(!!meta.hasMore);
           setBeforeId(
-            meta.nextBeforeId ?? (mapped.length ? mapped[0].id : beforeId),
+            meta.nextBeforeId ?? (mapped.length ? mapped[0].id : beforeId)
           );
           setTimeout(() => {
             const newHeight = el.scrollHeight;
             el.scrollTop = newHeight - prevHeight;
           }, 0);
         } catch (e) {
-          console.error("Failed to fetch messages:", e);
+          console.error('Failed to fetch messages:', e);
           setHasMore(false);
         } finally {
           setIsTopLoading(false);
@@ -232,8 +232,8 @@ export const MessageList: React.FC<MessageListProps> = ({
         }
       }
     };
-    el.addEventListener("scroll", onScroll);
-    return () => el.removeEventListener("scroll", onScroll);
+    el.addEventListener('scroll', onScroll);
+    return () => el.removeEventListener('scroll', onScroll);
   }, [scrollContainerRef?.current, hasMore, beforeId, selectedChat]);
 
   const [isTopLoading, setIsTopLoading] = useState(false);
@@ -248,16 +248,16 @@ export const MessageList: React.FC<MessageListProps> = ({
 
   const handleReactionSelect = async (messageId: string, emoji: string) => {
     // Optimistic local update
-    setMessages((prev) =>
-      prev.map((msg) => {
+    setMessages(prev =>
+      prev.map(msg => {
         if (msg.id === messageId) {
           const existingReactions = msg.reactions || [];
-          const existing = existingReactions.find((r) => r.emoji === emoji);
+          const existing = existingReactions.find(r => r.emoji === emoji);
           if (existing) {
             return {
               ...msg,
-              reactions: existingReactions.map((r) =>
-                r.emoji === emoji ? { ...r, count: r.count + 1 } : r,
+              reactions: existingReactions.map(r =>
+                r.emoji === emoji ? { ...r, count: r.count + 1 } : r
               ),
             };
           }
@@ -267,19 +267,19 @@ export const MessageList: React.FC<MessageListProps> = ({
           };
         }
         return msg;
-      }),
+      })
     );
 
     // Save to database via API (for persistence)
     try {
       await api.post(`/messages/${messageId}/reactions`, { emoji });
     } catch (error) {
-      console.error("Failed to save reaction to database:", error);
+      console.error('Failed to save reaction to database:', error);
     }
 
     // Whisper to others via WS for real-time sync
     try {
-      channelRef.current?.whisper("reaction:add", { messageId, emoji });
+      channelRef.current?.whisper('reaction:add', { messageId, emoji });
     } catch {}
 
     setShowReactionPicker(null);
@@ -287,15 +287,15 @@ export const MessageList: React.FC<MessageListProps> = ({
 
   const handleReactionAdd = async (messageId: string, emoji: string) => {
     // Optimistic local update
-    setMessages((prev) =>
-      prev.map((msg) => {
+    setMessages(prev =>
+      prev.map(msg => {
         if (msg.id === messageId) {
-          const existing = msg.reactions?.find((r) => r.emoji === emoji);
+          const existing = msg.reactions?.find(r => r.emoji === emoji);
           if (existing) {
             return {
               ...msg,
-              reactions: msg.reactions?.map((r) =>
-                r.emoji === emoji ? { ...r, count: r.count + 1 } : r,
+              reactions: msg.reactions?.map(r =>
+                r.emoji === emoji ? { ...r, count: r.count + 1 } : r
               ),
             };
           }
@@ -308,63 +308,63 @@ export const MessageList: React.FC<MessageListProps> = ({
           };
         }
         return msg;
-      }),
+      })
     );
 
     // Save to database via API (for persistence)
     try {
       await api.post(`/messages/${messageId}/reactions`, { emoji });
     } catch (error) {
-      console.error("Failed to save reaction to database:", error);
+      console.error('Failed to save reaction to database:', error);
     }
 
     try {
-      channelRef.current?.whisper("reaction:add", { messageId, emoji });
+      channelRef.current?.whisper('reaction:add', { messageId, emoji });
     } catch {}
   };
 
   const handleReactionRemove = async (messageId: string, emoji: string) => {
     // Optimistic local update
-    setMessages((prev) =>
-      prev.map((msg) => {
+    setMessages(prev =>
+      prev.map(msg => {
         if (msg.id === messageId) {
           const reactions = msg.reactions || [];
-          const target = reactions.find((r) => r.emoji === emoji);
+          const target = reactions.find(r => r.emoji === emoji);
           if (!target) return msg;
           if (target.count > 1) {
             return {
               ...msg,
-              reactions: reactions.map((r) =>
-                r.emoji === emoji ? { ...r, count: r.count - 1 } : r,
+              reactions: reactions.map(r =>
+                r.emoji === emoji ? { ...r, count: r.count - 1 } : r
               ),
             };
           }
           return {
             ...msg,
-            reactions: reactions.filter((r) => r.emoji !== emoji),
+            reactions: reactions.filter(r => r.emoji !== emoji),
           };
         }
         return msg;
-      }),
+      })
     );
 
     // Save to database via API (for persistence)
     try {
       await api.delete(
-        `/messages/${messageId}/reactions/${encodeURIComponent(emoji)}`,
+        `/messages/${messageId}/reactions/${encodeURIComponent(emoji)}`
       );
     } catch (error) {
-      console.error("Failed to remove reaction from database:", error);
+      console.error('Failed to remove reaction from database:', error);
     }
 
     try {
-      channelRef.current?.whisper("reaction:remove", { messageId, emoji });
+      channelRef.current?.whisper('reaction:remove', { messageId, emoji });
     } catch {}
   };
 
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [bookmarkedMessages, setBookmarkedMessages] = useState<Set<string>>(
-    new Set(),
+    new Set()
   );
 
   const handleEditMessage = async (messageId: string, newContent: string) => {
@@ -376,8 +376,8 @@ export const MessageList: React.FC<MessageListProps> = ({
 
       if (response.data.success) {
         // Update local state
-        setMessages((prev) =>
-          prev.map((msg) => {
+        setMessages(prev =>
+          prev.map(msg => {
             if (msg.id === messageId) {
               return {
                 ...msg,
@@ -387,15 +387,15 @@ export const MessageList: React.FC<MessageListProps> = ({
               };
             }
             return msg;
-          }),
+          })
         );
         setEditingMessageId(null);
       } else {
-        console.error("Failed to edit message:", response.data.message);
+        console.error('Failed to edit message:', response.data.message);
         // TODO: Show error toast
       }
     } catch (error) {
-      console.error("Failed to edit message:", error);
+      console.error('Failed to edit message:', error);
       // TODO: Show error toast
     }
   };
@@ -408,10 +408,10 @@ export const MessageList: React.FC<MessageListProps> = ({
     try {
       const response = await api.post(`/messages/${messageId}/bookmark`);
       if (response.data.success) {
-        setBookmarkedMessages((prev) => new Set([...prev, messageId]));
+        setBookmarkedMessages(prev => new Set([...prev, messageId]));
       }
     } catch (error) {
-      console.error("Failed to bookmark message:", error);
+      console.error('Failed to bookmark message:', error);
     }
   };
 
@@ -419,14 +419,14 @@ export const MessageList: React.FC<MessageListProps> = ({
     try {
       const response = await api.delete(`/messages/${messageId}/bookmark`);
       if (response.data.success) {
-        setBookmarkedMessages((prev) => {
+        setBookmarkedMessages(prev => {
           const newSet = new Set(prev);
           newSet.delete(messageId);
           return newSet;
         });
       }
     } catch (error) {
-      console.error("Failed to remove bookmark:", error);
+      console.error('Failed to remove bookmark:', error);
     }
   };
 
@@ -458,7 +458,7 @@ export const MessageList: React.FC<MessageListProps> = ({
           Loading older messages...
         </div>
       )}
-      {messages.map((message) => (
+      {messages.map(message => (
         <div key={message.id} className="message-enter">
           <div className="flex space-x-3 group hover:bg-neutral-50 rounded-lg p-1.5 -m-1.5 transition-colors duration-200">
             <Avatar
@@ -496,7 +496,7 @@ export const MessageList: React.FC<MessageListProps> = ({
                   onCancel={handleCancelEdit}
                   className="mb-1"
                 />
-              ) : message.type === "voice" ? (
+              ) : message.type === 'voice' ? (
                 <div className="mb-1">
                   <VoicePlayer
                     audioUrl={message.audioUrl}
@@ -522,7 +522,7 @@ export const MessageList: React.FC<MessageListProps> = ({
                       className="flex items-center space-x-3 p-3 bg-neutral-50 border border-neutral-200 rounded-lg hover:bg-neutral-100 transition-colors cursor-pointer"
                     >
                       <div className="w-10 h-10 bg-neutral-200 rounded-lg flex items-center justify-center">
-                        {attachment.type === "image" ? (
+                        {attachment.type === 'image' ? (
                           <svg
                             className="w-5 h-5 text-[#1d74f5]"
                             fill="none"
@@ -618,13 +618,13 @@ export const MessageList: React.FC<MessageListProps> = ({
                           />
                         </svg>
                         <span className="text-xs font-medium text-[hsl(var(--chat-accent))]">
-                          {message.thread.count}{" "}
-                          {message.thread.count === 1 ? "reply" : "replies"}
+                          {message.thread.count}{' '}
+                          {message.thread.count === 1 ? 'reply' : 'replies'}
                         </span>
                       </div>
                       {message.thread.lastReply && (
                         <div className="text-xs text-[hsl(var(--chat-text-muted))] mt-1">
-                          Last reply by {message.thread.lastReply.author} •{" "}
+                          Last reply by {message.thread.lastReply.author} •{' '}
                           {message.thread.lastReply.timestamp}
                         </div>
                       )}
@@ -652,7 +652,7 @@ export const MessageList: React.FC<MessageListProps> = ({
                   <button
                     onClick={() =>
                       setShowReactionPicker(
-                        showReactionPicker === message.id ? null : message.id,
+                        showReactionPicker === message.id ? null : message.id
                       )
                     }
                     className="p-1 hover:bg-[hsl(var(--chat-message-hover))] rounded text-[hsl(var(--chat-text-muted))] hover:text-[hsl(var(--chat-text))] transition-colors"
@@ -703,97 +703,97 @@ export const MessageList: React.FC<MessageListProps> = ({
 
                         <div className="grid grid-cols-8 gap-2 max-h-64 overflow-y-auto">
                           {[
-                            "😀",
-                            "😃",
-                            "😄",
-                            "😁",
-                            "😆",
-                            "😅",
-                            "🤣",
-                            "😂",
-                            "🙂",
-                            "🙃",
-                            "😉",
-                            "😊",
-                            "😇",
-                            "🥰",
-                            "😍",
-                            "🤩",
-                            "😘",
-                            "😗",
-                            "😚",
-                            "😙",
-                            "😋",
-                            "😛",
-                            "😜",
-                            "🤪",
-                            "😝",
-                            "🤑",
-                            "🤗",
-                            "🤭",
-                            "🤫",
-                            "🤔",
-                            "🤐",
-                            "🤨",
-                            "😐",
-                            "😑",
-                            "😶",
-                            "😏",
-                            "😒",
-                            "🙄",
-                            "😬",
-                            "🤥",
-                            "😔",
-                            "😪",
-                            "🤤",
-                            "😴",
-                            "😷",
-                            "🤒",
-                            "🤕",
-                            "🤢",
-                            "🤮",
-                            "🤧",
-                            "🥵",
-                            "🥶",
-                            "🥴",
-                            "😵",
-                            "🤯",
-                            "🤠",
-                            "🥳",
-                            "😎",
-                            "🤓",
-                            "🧐",
-                            "👍",
-                            "👎",
-                            "👌",
-                            "✌️",
-                            "🤞",
-                            "🤟",
-                            "🤘",
-                            "🤙",
-                            "👈",
-                            "👉",
-                            "👆",
-                            "👇",
-                            "☝️",
-                            "✋",
-                            "🤚",
-                            "🖐",
-                            "🖖",
-                            "👋",
-                            "🤝",
-                            "👏",
-                            "🙌",
-                            "👐",
-                            "🤲",
-                            "🤜",
-                            "🤛",
-                            "✊",
-                            "👊",
+                            '😀',
+                            '😃',
+                            '😄',
+                            '😁',
+                            '😆',
+                            '😅',
+                            '🤣',
+                            '😂',
+                            '🙂',
+                            '🙃',
+                            '😉',
+                            '😊',
+                            '😇',
+                            '🥰',
+                            '😍',
+                            '🤩',
+                            '😘',
+                            '😗',
+                            '😚',
+                            '😙',
+                            '😋',
+                            '😛',
+                            '😜',
+                            '🤪',
+                            '😝',
+                            '🤑',
+                            '🤗',
+                            '🤭',
+                            '🤫',
+                            '🤔',
+                            '🤐',
+                            '🤨',
+                            '😐',
+                            '😑',
+                            '😶',
+                            '😏',
+                            '😒',
+                            '🙄',
+                            '😬',
+                            '🤥',
+                            '😔',
+                            '😪',
+                            '🤤',
+                            '😴',
+                            '😷',
+                            '🤒',
+                            '🤕',
+                            '🤢',
+                            '🤮',
+                            '🤧',
+                            '🥵',
+                            '🥶',
+                            '🥴',
+                            '😵',
+                            '🤯',
+                            '🤠',
+                            '🥳',
+                            '😎',
+                            '🤓',
+                            '🧐',
+                            '👍',
+                            '👎',
+                            '👌',
+                            '✌️',
+                            '🤞',
+                            '🤟',
+                            '🤘',
+                            '🤙',
+                            '👈',
+                            '👉',
+                            '👆',
+                            '👇',
+                            '☝️',
+                            '✋',
+                            '🤚',
+                            '🖐',
+                            '🖖',
+                            '👋',
+                            '🤝',
+                            '👏',
+                            '🙌',
+                            '👐',
+                            '🤲',
+                            '🤜',
+                            '🤛',
+                            '✊',
+                            '👊',
                           ]
                             .filter(
                               (emoji, index, arr) =>
-                                arr.indexOf(emoji) === index,
+                                arr.indexOf(emoji) === index
                             )
                             .map((emoji, index) => (
                               <button
@@ -858,21 +858,21 @@ export const MessageList: React.FC<MessageListProps> = ({
                   onClick={() => toggleBookmark(message.id)}
                   className={`p-1 hover:bg-[hsl(var(--chat-message-hover))] rounded transition-colors ${
                     bookmarkedMessages.has(message.id)
-                      ? "text-yellow-500 hover:text-yellow-600"
-                      : "text-[hsl(var(--chat-text-muted))] hover:text-[hsl(var(--chat-text))]"
+                      ? 'text-yellow-500 hover:text-yellow-600'
+                      : 'text-[hsl(var(--chat-text-muted))] hover:text-[hsl(var(--chat-text))]'
                   }`}
                   title={
                     bookmarkedMessages.has(message.id)
-                      ? "Remove bookmark"
-                      : "Bookmark message"
+                      ? 'Remove bookmark'
+                      : 'Bookmark message'
                   }
                 >
                   <svg
                     className="w-4 h-4"
                     fill={
                       bookmarkedMessages.has(message.id)
-                        ? "currentColor"
-                        : "none"
+                        ? 'currentColor'
+                        : 'none'
                     }
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -888,7 +888,7 @@ export const MessageList: React.FC<MessageListProps> = ({
                 <button
                   onClick={() =>
                     setShowAnalytics(
-                      showAnalytics === message.id ? null : message.id,
+                      showAnalytics === message.id ? null : message.id
                     )
                   }
                   className="p-1 hover:bg-[hsl(var(--chat-message-hover))] rounded text-[hsl(var(--chat-text-muted))] hover:text-[hsl(var(--chat-text))] transition-colors"
@@ -933,39 +933,36 @@ export const MessageList: React.FC<MessageListProps> = ({
         <MessageAnalytics
           message={{
             id: showAnalytics,
-            content:
-              messages.find((m) => m.id === showAnalytics)?.content || "",
-            author: messages.find((m) => m.id === showAnalytics)?.author || {
-              name: "",
-              username: "",
+            content: messages.find(m => m.id === showAnalytics)?.content || '',
+            author: messages.find(m => m.id === showAnalytics)?.author || {
+              name: '',
+              username: '',
             },
             timestamp:
-              messages.find((m) => m.id === showAnalytics)?.timestamp || "",
+              messages.find(m => m.id === showAnalytics)?.timestamp || '',
             readBy:
-              (messages as any).find((m) => m.id === showAnalytics)?.readBy ||
-              [],
+              (messages as any).find(m => m.id === showAnalytics)?.readBy || [],
             reactions:
-              messages.find((m) => m.id === showAnalytics)?.reactions || [],
+              messages.find(m => m.id === showAnalytics)?.reactions || [],
             replies:
               (messages as any)
-                .find((m) => m.id === showAnalytics)
+                .find(m => m.id === showAnalytics)
                 ?.thread?.participants.map((p: string, i: number) => ({
                   id: i.toString(),
                   content: `Reply from ${p}`,
                   author: {
                     name: p,
-                    username: p.toLowerCase().replace(" ", ""),
+                    username: p.toLowerCase().replace(' ', ''),
                   },
-                  timestamp: "2 minutes ago",
+                  timestamp: '2 minutes ago',
                 })) || [],
             views:
-              (messages as any).find((m) => m.id === showAnalytics)?.views || 0,
+              (messages as any).find(m => m.id === showAnalytics)?.views || 0,
             shares:
-              (messages as any).find((m) => m.id === showAnalytics)?.shares ||
-              0,
+              (messages as any).find(m => m.id === showAnalytics)?.shares || 0,
             bookmarks:
-              (messages as any).find((m) => m.id === showAnalytics)
-                ?.bookmarks || 0,
+              (messages as any).find(m => m.id === showAnalytics)?.bookmarks ||
+              0,
           }}
           isOpen={!!showAnalytics}
           onClose={() => setShowAnalytics(null)}

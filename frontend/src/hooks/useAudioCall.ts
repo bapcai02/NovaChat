@@ -1,10 +1,10 @@
 export type AudioCallState =
-  | "idle"
-  | "calling"
-  | "ringing"
-  | "in_call"
-  | "ended"
-  | "error";
+  | 'idle'
+  | 'calling'
+  | 'ringing'
+  | 'in_call'
+  | 'ended'
+  | 'error';
 
 interface UseAudioCallOptions {
   conversationId: number;
@@ -17,13 +17,13 @@ interface UseAudioCallOptions {
 export function useAudioCall({
   conversationId,
   currentUserId,
-  stunUrls = ["stun:stun.l.google.com:19302"],
+  stunUrls = ['stun:stun.l.google.com:19302'],
   turnConfig = null,
 }: UseAudioCallOptions) {
   let pc: RTCPeerConnection | null = null;
   let localStream: MediaStream | null = null;
   let remoteAudioEl: HTMLAudioElement | null = null;
-  let state: AudioCallState = "idle";
+  let state: AudioCallState = 'idle';
 
   const getIceServers = (): RTCIceServer[] => {
     const servers: RTCIceServer[] = [];
@@ -40,13 +40,13 @@ export function useAudioCall({
   const initPeer = async () => {
     if (pc) return pc;
     pc = new RTCPeerConnection({ iceServers: getIceServers() });
-    pc.onicecandidate = (e) => {
+    pc.onicecandidate = e => {
       if (e.candidate) {
         // Send candidate via WS
         const ws = (window as any).getWebSocketClient?.() || null;
         if (ws) {
           ws.send({
-            type: "rtc_candidate",
+            type: 'rtc_candidate',
             conversation_id: conversationId,
             from: currentUserId,
             candidate: e.candidate,
@@ -54,7 +54,7 @@ export function useAudioCall({
         }
       }
     };
-    pc.ontrack = (e) => {
+    pc.ontrack = e => {
       try {
         if (!remoteAudioEl) {
           remoteAudioEl = new Audio();
@@ -74,13 +74,13 @@ export function useAudioCall({
       video: false,
     });
     const peer = await initPeer();
-    localStream.getTracks().forEach((t) => peer.addTrack(t, localStream!));
+    localStream.getTracks().forEach(t => peer.addTrack(t, localStream!));
     return localStream;
   };
 
   const call = async () => {
     try {
-      state = "calling";
+      state = 'calling';
       await startLocalAudio();
       const peer = await initPeer();
       const offer = await peer.createOffer({ offerToReceiveAudio: true });
@@ -88,15 +88,15 @@ export function useAudioCall({
       const ws = (window as any).getWebSocketClient?.() || null;
       if (ws) {
         ws.send({
-          type: "rtc_offer",
+          type: 'rtc_offer',
           conversation_id: conversationId,
           from: currentUserId,
           sdp: offer,
         });
       }
     } catch (e) {
-      console.error("Failed to call:", e);
-      state = "error";
+      console.error('Failed to call:', e);
+      state = 'error';
     }
   };
 
@@ -110,16 +110,16 @@ export function useAudioCall({
       const ws = (window as any).getWebSocketClient?.() || null;
       if (ws) {
         ws.send({
-          type: "rtc_answer",
+          type: 'rtc_answer',
           conversation_id: conversationId,
           from: currentUserId,
           sdp: ans,
         });
       }
-      state = "in_call";
+      state = 'in_call';
     } catch (e) {
-      console.error("Failed to answer:", e);
-      state = "error";
+      console.error('Failed to answer:', e);
+      state = 'error';
     }
   };
 
@@ -133,16 +133,16 @@ export function useAudioCall({
       const ws = (window as any).getWebSocketClient?.() || null;
       if (ws) {
         ws.send({
-          type: "rtc_answer",
+          type: 'rtc_answer',
           conversation_id: conversationId,
           from: currentUserId,
           sdp: ans,
         });
       }
-      state = "ringing";
+      state = 'ringing';
     } catch (e) {
-      console.error("Failed to handle remote offer:", e);
-      state = "error";
+      console.error('Failed to handle remote offer:', e);
+      state = 'error';
     }
   };
 
@@ -150,10 +150,10 @@ export function useAudioCall({
     try {
       const peer = await initPeer();
       await peer.setRemoteDescription(new RTCSessionDescription(sdp));
-      state = "in_call";
+      state = 'in_call';
     } catch (e) {
-      console.error("Failed to handle remote answer:", e);
-      state = "error";
+      console.error('Failed to handle remote answer:', e);
+      state = 'error';
     }
   };
 
@@ -169,21 +169,21 @@ export function useAudioCall({
       const ws = (window as any).getWebSocketClient?.() || null;
       if (ws) {
         ws.send({
-          type: "rtc_end",
+          type: 'rtc_end',
           conversation_id: conversationId,
           from: currentUserId,
         });
       }
       if (pc) {
-        pc.getSenders().forEach((s) => s.track && s.track.stop());
+        pc.getSenders().forEach(s => s.track && s.track.stop());
         pc.close();
       }
       if (localStream) {
-        localStream.getTracks().forEach((t) => t.stop());
+        localStream.getTracks().forEach(t => t.stop());
       }
       pc = null;
       localStream = null;
-      state = "ended";
+      state = 'ended';
     } catch {}
   };
 

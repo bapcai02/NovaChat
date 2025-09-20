@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import { Button } from "./button";
-import { Input } from "./input";
-import { Textarea } from "./textarea";
-import { Switch } from "./switch";
+import React, { useState } from 'react';
+import { Button } from './button';
+import { Input } from './input';
+import { Textarea } from './textarea';
+import { Switch } from './switch';
 
 interface CreateChannelModalProps {
   isOpen: boolean;
@@ -18,9 +18,9 @@ export const CreateChannelModal: React.FC<CreateChannelModalProps> = ({
   onChannelCreated,
 }) => {
   const [formData, setFormData] = useState({
-    name: "",
-    display_name: "",
-    description: "",
+    name: '',
+    display_name: '',
+    description: '',
     is_private: false,
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -30,7 +30,7 @@ export const CreateChannelModal: React.FC<CreateChannelModalProps> = ({
     e.preventDefault();
 
     if (!formData.name.trim()) {
-      setError("Channel name is required");
+      setError('Channel name is required');
       return;
     }
 
@@ -38,7 +38,7 @@ export const CreateChannelModal: React.FC<CreateChannelModalProps> = ({
     setError(null);
 
     try {
-      const response = await api.post("/channels", formData);
+      const response = await api.post('/channels', formData);
       const newChannel = response.data?.data;
 
       if (newChannel) {
@@ -46,8 +46,8 @@ export const CreateChannelModal: React.FC<CreateChannelModalProps> = ({
         handleClose();
       }
     } catch (error: any) {
-      console.error("Failed to create channel:", error);
-      setError(error.response?.data?.message || "Failed to create channel");
+      console.error('Failed to create channel:', error);
+      setError(error.response?.data?.message || 'Failed to create channel');
     } finally {
       setIsLoading(false);
     }
@@ -55,9 +55,9 @@ export const CreateChannelModal: React.FC<CreateChannelModalProps> = ({
 
   const handleClose = () => {
     setFormData({
-      name: "",
-      display_name: "",
-      description: "",
+      name: '',
+      display_name: '',
+      description: '',
       is_private: false,
     });
     setError(null);
@@ -66,7 +66,7 @@ export const CreateChannelModal: React.FC<CreateChannelModalProps> = ({
   };
 
   const handleInputChange = (field: string, value: string | boolean) => {
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
       [field]: value,
     }));
@@ -116,7 +116,7 @@ export const CreateChannelModal: React.FC<CreateChannelModalProps> = ({
             </label>
             <Input
               value={formData.name}
-              onChange={(e) => handleInputChange("name", e.target.value)}
+              onChange={e => handleInputChange('name', e.target.value)}
               placeholder="e.g., general, random, announcements"
               className="w-full"
               disabled={isLoading}
@@ -133,9 +133,7 @@ export const CreateChannelModal: React.FC<CreateChannelModalProps> = ({
             </label>
             <Input
               value={formData.display_name}
-              onChange={(e) =>
-                handleInputChange("display_name", e.target.value)
-              }
+              onChange={e => handleInputChange('display_name', e.target.value)}
               placeholder="e.g., General Discussion"
               className="w-full"
               disabled={isLoading}
@@ -152,7 +150,7 @@ export const CreateChannelModal: React.FC<CreateChannelModalProps> = ({
             </label>
             <Textarea
               value={formData.description}
-              onChange={(e) => handleInputChange("description", e.target.value)}
+              onChange={e => handleInputChange('description', e.target.value)}
               placeholder="What is this channel about?"
               className="w-full min-h-[80px] resize-none"
               disabled={isLoading}
@@ -174,8 +172,8 @@ export const CreateChannelModal: React.FC<CreateChannelModalProps> = ({
             </div>
             <Switch
               checked={formData.is_private}
-              onCheckedChange={(checked) =>
-                handleInputChange("is_private", checked)
+              onCheckedChange={checked =>
+                handleInputChange('is_private', checked)
               }
               disabled={isLoading}
             />
@@ -209,7 +207,7 @@ export const CreateChannelModal: React.FC<CreateChannelModalProps> = ({
                   <span>Creating...</span>
                 </div>
               ) : (
-                "Create Channel"
+                'Create Channel'
               )}
             </Button>
           </div>

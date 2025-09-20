@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import React from "react";
-import { Avatar } from "./avatar";
-import { cn } from "@/lib/utils";
+import React from 'react';
+import { Avatar } from './avatar';
+import { cn } from '@/lib/utils';
 
 interface ReadUser {
   id: string;
@@ -35,7 +35,7 @@ export const ReadReceipts: React.FC<ReadReceiptsProps> = ({
   const getReadText = () => {
     if (compact) {
       if (users.length === totalRecipients) {
-        return "Read by all";
+        return 'Read by all';
       } else if (users.length === 1) {
         return `Read by ${users[0].name}`;
       } else {
@@ -43,7 +43,7 @@ export const ReadReceipts: React.FC<ReadReceiptsProps> = ({
       }
     } else {
       if (users.length === totalRecipients) {
-        return "Read by everyone";
+        return 'Read by everyone';
       } else if (users.length === 1) {
         return `Read by ${users[0].name}`;
       } else if (users.length === 2) {
@@ -57,7 +57,7 @@ export const ReadReceipts: React.FC<ReadReceiptsProps> = ({
   };
 
   return (
-    <div className={cn("flex items-center space-x-2", className)}>
+    <div className={cn('flex items-center space-x-2', className)}>
       {/* Read Status Icon */}
       <div className="flex items-center space-x-1">
         {hasUnread ? (
@@ -82,7 +82,7 @@ export const ReadReceipts: React.FC<ReadReceiptsProps> = ({
       {/* User Avatars (if enabled) */}
       {showAvatars && (
         <div className="flex -space-x-1">
-          {users.slice(0, 3).map((user) => (
+          {users.slice(0, 3).map(user => (
             <Avatar
               key={user.id}
               fallback={user.name}
@@ -101,10 +101,10 @@ export const ReadReceipts: React.FC<ReadReceiptsProps> = ({
       {/* Read Text */}
       <span
         className={cn(
-          "text-xs",
+          'text-xs',
           hasUnread
-            ? "text-[hsl(var(--chat-text-muted))]"
-            : "text-[hsl(var(--chat-accent))]",
+            ? 'text-[hsl(var(--chat-text-muted))]'
+            : 'text-[hsl(var(--chat-accent))]'
         )}
       >
         {getReadText()}

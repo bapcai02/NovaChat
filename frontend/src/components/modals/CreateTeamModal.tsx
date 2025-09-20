@@ -1,18 +1,18 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { X, Users, Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { useTranslation } from "react-i18next";
-import { apiService } from "@/services/api";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, Users, Search } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { useTranslation } from 'react-i18next';
+import { apiService } from '@/services/api';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface CreateTeamModalProps {
   isOpen: boolean;
@@ -25,15 +25,15 @@ export default function CreateTeamModal({
   onClose,
   onTeamCreated,
 }: CreateTeamModalProps) {
-  const { t } = useTranslation("common");
+  const { t } = useTranslation('common');
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1); // 1: Basic info, 2: Add members
   const [formData, setFormData] = useState({
-    name: "",
-    description: "",
+    name: '',
+    description: '',
     is_private: false,
   });
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [users, setUsers] = useState<any[]>([]);
   const [selectedUsers, setSelectedUsers] = useState<any[]>([]);
 
@@ -50,43 +50,43 @@ export default function CreateTeamModal({
       setUsers([
         {
           id: 1,
-          name: "John Doe",
-          username: "john",
+          name: 'John Doe',
+          username: 'john',
           avatar:
-            "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face",
-          email: "john@example.com",
+            'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face',
+          email: 'john@example.com',
         },
         {
           id: 2,
-          name: "Jane Smith",
-          username: "jane",
+          name: 'Jane Smith',
+          username: 'jane',
           avatar:
-            "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=32&h=32&fit=crop&crop=face",
-          email: "jane@example.com",
+            'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=32&h=32&fit=crop&crop=face',
+          email: 'jane@example.com',
         },
         {
           id: 3,
-          name: "Bob Wilson",
-          username: "bob",
+          name: 'Bob Wilson',
+          username: 'bob',
           avatar:
-            "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=32&h=32&fit=crop&crop=face",
-          email: "bob@example.com",
+            'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=32&h=32&fit=crop&crop=face',
+          email: 'bob@example.com',
         },
         {
           id: 4,
-          name: "Alice Brown",
-          username: "alice",
+          name: 'Alice Brown',
+          username: 'alice',
           avatar:
-            "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=32&h=32&fit=crop&crop=face",
-          email: "alice@example.com",
+            'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=32&h=32&fit=crop&crop=face',
+          email: 'alice@example.com',
         },
       ]);
     } catch (error) {
-      console.error("Failed to load users:", error);
+      console.error('Failed to load users:', error);
     }
   };
 
-  const filteredUsers = users.filter((user) => {
+  const filteredUsers = users.filter(user => {
     const matchesSearch =
       user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.username.toLowerCase().includes(searchQuery.toLowerCase());
@@ -94,10 +94,10 @@ export default function CreateTeamModal({
   });
 
   const handleUserSelect = (user: any) => {
-    if (selectedUsers.some((u) => u.id === user.id)) {
-      setSelectedUsers((prev) => prev.filter((u) => u.id !== user.id));
+    if (selectedUsers.some(u => u.id === user.id)) {
+      setSelectedUsers(prev => prev.filter(u => u.id !== user.id));
     } else {
-      setSelectedUsers((prev) => [...prev, user]);
+      setSelectedUsers(prev => [...prev, user]);
     }
   };
 
@@ -130,7 +130,7 @@ export default function CreateTeamModal({
         name: formData.name.trim(),
         description: formData.description.trim() || undefined,
         is_private: formData.is_private,
-        members: selectedUsers.map((user) => user.id),
+        members: selectedUsers.map(user => user.id),
       });
 
       if (response?.data?.data) {
@@ -138,20 +138,20 @@ export default function CreateTeamModal({
 
         onTeamCreated?.(team);
         onClose();
-        setFormData({ name: "", description: "", is_private: false });
+        setFormData({ name: '', description: '', is_private: false });
         setSelectedUsers([]);
         setCurrentStep(1);
       }
     } catch (error) {
-      console.error("Failed to create team:", error);
-      alert("Có lỗi xảy ra khi tạo nhóm");
+      console.error('Failed to create team:', error);
+      alert('Có lỗi xảy ra khi tạo nhóm');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleInputChange = (field: string, value: string | boolean) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   if (!isOpen) return null;
@@ -183,7 +183,7 @@ export default function CreateTeamModal({
               </div>
               <div>
                 <h2 className="text-lg font-semibold text-gray-900">
-                  {t("create_team")}
+                  {t('create_team')}
                 </h2>
                 <p className="text-sm text-gray-500">Tạo nhóm làm việc mới</p>
               </div>
@@ -200,10 +200,10 @@ export default function CreateTeamModal({
           <div className="px-6 pt-4">
             <div className="flex items-center space-x-2">
               <div
-                className={`h-2 w-2 rounded-full ${currentStep >= 1 ? "bg-blue-500" : "bg-gray-300"}`}
+                className={`h-2 w-2 rounded-full ${currentStep >= 1 ? 'bg-blue-500' : 'bg-gray-300'}`}
               />
               <div
-                className={`h-2 flex-1 rounded-full ${currentStep >= 2 ? "bg-blue-500" : "bg-gray-300"}`}
+                className={`h-2 flex-1 rounded-full ${currentStep >= 2 ? 'bg-blue-500' : 'bg-gray-300'}`}
               />
             </div>
             <div className="flex justify-between text-xs text-gray-500 mt-1">
@@ -217,11 +217,11 @@ export default function CreateTeamModal({
             {currentStep === 1 ? (
               <>
                 <div className="space-y-2">
-                  <Label htmlFor="name">{t("name")} *</Label>
+                  <Label htmlFor="name">{t('name')} *</Label>
                   <Input
                     id="name"
                     value={formData.name}
-                    onChange={(e) => handleInputChange("name", e.target.value)}
+                    onChange={e => handleInputChange('name', e.target.value)}
                     placeholder="Tên nhóm"
                     required
                     disabled={isLoading}
@@ -233,8 +233,8 @@ export default function CreateTeamModal({
                   <Textarea
                     id="description"
                     value={formData.description}
-                    onChange={(e) =>
-                      handleInputChange("description", e.target.value)
+                    onChange={e =>
+                      handleInputChange('description', e.target.value)
                     }
                     placeholder="Mô tả về nhóm (tùy chọn)"
                     rows={3}
@@ -252,8 +252,8 @@ export default function CreateTeamModal({
                   <Switch
                     id="private"
                     checked={formData.is_private}
-                    onCheckedChange={(checked) =>
-                      handleInputChange("is_private", checked)
+                    onCheckedChange={checked =>
+                      handleInputChange('is_private', checked)
                     }
                     disabled={isLoading}
                   />
@@ -267,7 +267,7 @@ export default function CreateTeamModal({
                   <Input
                     placeholder="Tìm kiếm người dùng..."
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={e => setSearchQuery(e.target.value)}
                     className="pl-10"
                   />
                 </div>
@@ -282,7 +282,7 @@ export default function CreateTeamModal({
                       </span>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      {selectedUsers.map((user) => (
+                      {selectedUsers.map(user => (
                         <Badge
                           key={user.id}
                           variant="secondary"
@@ -339,15 +339,15 @@ export default function CreateTeamModal({
                   </div>
                   <ScrollArea className="h-48">
                     <div className="space-y-1">
-                      {filteredUsers.map((user) => (
+                      {filteredUsers.map(user => (
                         <button
                           key={user.id}
                           type="button"
                           onClick={() => handleUserSelect(user)}
                           className={`w-full flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 transition-colors ${
-                            selectedUsers.some((u) => u.id === user.id)
-                              ? "bg-blue-50 border border-blue-200"
-                              : ""
+                            selectedUsers.some(u => u.id === user.id)
+                              ? 'bg-blue-50 border border-blue-200'
+                              : ''
                           }`}
                         >
                           <Avatar className="h-8 w-8">
@@ -364,7 +364,7 @@ export default function CreateTeamModal({
                               @{user.username}
                             </p>
                           </div>
-                          {selectedUsers.some((u) => u.id === user.id) && (
+                          {selectedUsers.some(u => u.id === user.id) && (
                             <div className="h-4 w-4 rounded-full bg-blue-500 flex items-center justify-center">
                               <X className="h-3 w-3 text-white" />
                             </div>
@@ -391,7 +391,7 @@ export default function CreateTeamModal({
                 disabled={isLoading}
                 className="flex-1"
               >
-                {currentStep === 1 ? "Hủy" : "Quay lại"}
+                {currentStep === 1 ? 'Hủy' : 'Quay lại'}
               </Button>
               {currentStep === 1 ? (
                 <Button
@@ -408,7 +408,7 @@ export default function CreateTeamModal({
                   disabled={isLoading || !canCreateTeam()}
                   className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
                 >
-                  {isLoading ? "Đang tạo..." : "Tạo nhóm"}
+                  {isLoading ? 'Đang tạo...' : 'Tạo nhóm'}
                 </Button>
               )}
             </div>

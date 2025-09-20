@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { User, Loader2 } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { User, Loader2 } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   userSearchService,
   UserSearchResult,
-} from "@/services/userSearchService";
-import { cn } from "@/lib/utils";
+} from '@/services/userSearchService';
+import { cn } from '@/lib/utils';
 
 interface UserSearchDropdownProps {
   isOpen: boolean;
@@ -43,7 +43,7 @@ export function UserSearchDropdown({
         setUsers(results);
         setSelectedIndex(-1);
       } catch (error) {
-        console.error("Failed to search users:", error);
+        console.error('Failed to search users:', error);
         setUsers([]);
       } finally {
         setIsLoading(false);
@@ -65,11 +65,11 @@ export function UserSearchDropdown({
     };
 
     if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isOpen, onClose]);
 
@@ -77,21 +77,21 @@ export function UserSearchDropdown({
     if (!isOpen) return;
 
     switch (e.key) {
-      case "ArrowDown":
+      case 'ArrowDown':
         e.preventDefault();
-        setSelectedIndex((prev) => Math.min(prev + 1, users.length - 1));
+        setSelectedIndex(prev => Math.min(prev + 1, users.length - 1));
         break;
-      case "ArrowUp":
+      case 'ArrowUp':
         e.preventDefault();
-        setSelectedIndex((prev) => Math.max(prev - 1, -1));
+        setSelectedIndex(prev => Math.max(prev - 1, -1));
         break;
-      case "Enter":
+      case 'Enter':
         e.preventDefault();
         if (selectedIndex >= 0 && users[selectedIndex]) {
           onUserSelect(users[selectedIndex]);
         }
         break;
-      case "Escape":
+      case 'Escape':
         e.preventDefault();
         onClose();
         break;
@@ -104,8 +104,8 @@ export function UserSearchDropdown({
     <div
       ref={dropdownRef}
       className={cn(
-        "absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto",
-        className,
+        'absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto',
+        className
       )}
       onKeyDown={handleKeyDown}
     >
@@ -136,8 +136,8 @@ export function UserSearchDropdown({
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.05 }}
                 className={cn(
-                  "w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-50 transition-colors",
-                  selectedIndex === index && "bg-blue-50",
+                  'w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-50 transition-colors',
+                  selectedIndex === index && 'bg-blue-50'
                 )}
                 onClick={() => onUserSelect(user)}
                 onMouseEnter={() => setSelectedIndex(index)}
@@ -151,8 +151,8 @@ export function UserSearchDropdown({
                   </Avatar>
                   <div
                     className={cn(
-                      "absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white",
-                      user.status === "online" ? "bg-green-500" : "bg-gray-400",
+                      'absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white',
+                      user.status === 'online' ? 'bg-green-500' : 'bg-gray-400'
                     )}
                   />
                 </div>
@@ -161,7 +161,7 @@ export function UserSearchDropdown({
                     {user.name}
                   </p>
                   <p className="text-xs text-gray-500">
-                    {user.status === "online" ? "Online" : "Offline"}
+                    {user.status === 'online' ? 'Online' : 'Offline'}
                   </p>
                 </div>
               </motion.button>

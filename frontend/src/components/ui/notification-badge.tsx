@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import React from "react";
-import { Badge } from "./badge";
-import { cn } from "@/lib/utils";
+import React from 'react';
+import { Badge } from './badge';
+import { cn } from '@/lib/utils';
 
 interface NotificationBadgeProps {
   count: number;
@@ -22,8 +22,8 @@ export const NotificationBadge: React.FC<NotificationBadgeProps> = ({
       <button
         onClick={onClick}
         className={cn(
-          "relative p-2 hover:bg-[hsl(215_25%_27%)] rounded-lg transition-colors",
-          className,
+          'relative p-2 hover:bg-[hsl(215_25%_27%)] rounded-lg transition-colors',
+          className
         )}
         title="Notifications"
       >
@@ -42,8 +42,8 @@ export const NotificationBadge: React.FC<NotificationBadgeProps> = ({
     <button
       onClick={onClick}
       className={cn(
-        "relative p-2 hover:bg-[hsl(215_25%_27%)] rounded-lg transition-colors",
-        className,
+        'relative p-2 hover:bg-[hsl(215_25%_27%)] rounded-lg transition-colors',
+        className
       )}
       title={`${count} notifications`}
     >
@@ -58,7 +58,7 @@ export const NotificationBadge: React.FC<NotificationBadgeProps> = ({
         variant="destructive"
         className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs font-medium"
       >
-        {count > 99 ? "99+" : count}
+        {count > 99 ? '99+' : count}
       </Badge>
     </button>
   );

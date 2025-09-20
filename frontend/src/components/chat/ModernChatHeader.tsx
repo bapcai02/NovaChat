@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import { motion } from "framer-motion";
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import {
   Phone,
   Video,
@@ -15,24 +15,24 @@ import {
   MessageCircle,
   Settings,
   File,
-} from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+} from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
-import { LogoutButton } from "@/components/auth/LogoutButton";
-import { useTranslation } from "react-i18next";
-import HeaderSearchOverlay from "./HeaderSearchOverlay";
+} from '@/components/ui/dropdown-menu';
+import { cn } from '@/lib/utils';
+import { LogoutButton } from '@/components/auth/LogoutButton';
+import { useTranslation } from 'react-i18next';
+import HeaderSearchOverlay from './HeaderSearchOverlay';
 
 interface ChatHeaderProps {
   channelName: string;
-  channelType: "channel" | "direct" | "group";
+  channelType: 'channel' | 'direct' | 'group';
   memberCount?: number;
   isOnline?: boolean;
   lastSeen?: string;
@@ -50,7 +50,7 @@ interface ChatHeaderProps {
   onJumpToMessage?: (
     conversationId: number,
     messageId: number,
-    query?: string,
+    query?: string
   ) => void;
   onMarkAllRead?: () => void;
 }
@@ -75,15 +75,15 @@ export default function ModernChatHeader({
   onMarkAllRead,
 }: ChatHeaderProps) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const { t } = useTranslation("common");
+  const { t } = useTranslation('common');
 
   const getChannelIcon = () => {
     switch (channelType) {
-      case "channel":
+      case 'channel':
         return <Hash className="h-5 w-5 text-muted-foreground" />;
-      case "direct":
+      case 'direct':
         return <MessageCircle className="h-5 w-5 text-muted-foreground" />;
-      case "group":
+      case 'group':
         return <Users className="h-5 w-5 text-muted-foreground" />;
       default:
         return <Hash className="h-5 w-5 text-muted-foreground" />;
@@ -91,17 +91,17 @@ export default function ModernChatHeader({
   };
 
   const getStatusText = () => {
-    if (channelType === "direct") {
-      return isOnline ? t("online") : t("offline");
+    if (channelType === 'direct') {
+      return isOnline ? t('online') : t('offline');
     }
-    return memberCount ? `${memberCount} ${t("members")}` : "";
+    return memberCount ? `${memberCount} ${t('members')}` : '';
   };
 
   const getStatusColor = () => {
-    if (channelType === "direct") {
-      return isOnline ? "text-green-500" : "text-muted-foreground";
+    if (channelType === 'direct') {
+      return isOnline ? 'text-green-500' : 'text-muted-foreground';
     }
-    return "text-muted-foreground";
+    return 'text-muted-foreground';
   };
 
   return (
@@ -112,15 +112,15 @@ export default function ModernChatHeader({
     >
       {/* Left side - Channel info */}
       <div className="flex items-center gap-3 flex-1 min-w-0">
-        {channelType === "direct" ? (
+        {channelType === 'direct' ? (
           <div className="relative">
             <Avatar className="h-10 w-10">
               <AvatarImage src={avatar} />
               <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-sm font-semibold">
                 {channelName
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")}
+                  .split(' ')
+                  .map(n => n[0])
+                  .join('')}
               </AvatarFallback>
             </Avatar>
             {isOnline && (
@@ -136,12 +136,12 @@ export default function ModernChatHeader({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <h2 className="text-lg font-semibold text-gray-800 truncate">
-              {channelType === "channel" ? `#${channelName}` : channelName}
+              {channelType === 'channel' ? `#${channelName}` : channelName}
             </h2>
             {isPinned && <Pin className="h-4 w-4 text-gray-400" />}
             {isMuted && <BellOff className="h-4 w-4 text-gray-400" />}
           </div>
-          <p className={cn("text-sm truncate", getStatusColor())}>
+          <p className={cn('text-sm truncate', getStatusColor())}>
             {getStatusText()}
           </p>
         </div>
@@ -158,7 +158,7 @@ export default function ModernChatHeader({
             onSearch && onSearch();
           }}
           className="h-8 w-8 p-0 hover:bg-gray-100 rounded-full"
-          aria-label={t("search_messages")}
+          aria-label={t('search_messages')}
         >
           <Search className="h-4 w-4" />
         </Button>
@@ -169,7 +169,7 @@ export default function ModernChatHeader({
           size="sm"
           onClick={onCall}
           className="h-8 w-8 p-0 hover:bg-gray-100 rounded-full"
-          aria-label={t("voice_call")}
+          aria-label={t('voice_call')}
         >
           <Phone className="h-4 w-4" />
         </Button>
@@ -180,7 +180,7 @@ export default function ModernChatHeader({
           size="sm"
           onClick={onVideoCall}
           className="h-8 w-8 p-0 hover:bg-gray-100 rounded-full"
-          aria-label={t("video_call")}
+          aria-label={t('video_call')}
         >
           <Video className="h-4 w-4" />
         </Button>
@@ -191,7 +191,7 @@ export default function ModernChatHeader({
           size="sm"
           onClick={onViewMembers}
           className="h-8 w-8 p-0 hover:bg-gray-100 rounded-full"
-          aria-label={t("members")}
+          aria-label={t('members')}
         >
           <Users className="h-4 w-4" />
         </Button>
@@ -213,7 +213,7 @@ export default function ModernChatHeader({
           size="sm"
           onClick={onToggleMute}
           className="h-8 w-8 p-0 hover:bg-gray-100 rounded-full"
-          aria-label={isMuted ? t("mute") : t("mute_conversation")}
+          aria-label={isMuted ? t('mute') : t('mute_conversation')}
         >
           {isMuted ? (
             <BellOff className="h-4 w-4" />
@@ -228,7 +228,7 @@ export default function ModernChatHeader({
           size="sm"
           onClick={onTogglePin}
           className="h-8 w-8 p-0 hover:bg-gray-100 rounded-full"
-          aria-label={isPinned ? t("pinned") : t("pin_conversation")}
+          aria-label={isPinned ? t('pinned') : t('pin_conversation')}
         >
           <Pin className="h-4 w-4" />
         </Button>
@@ -261,7 +261,7 @@ export default function ModernChatHeader({
             </DropdownMenuItem>
             <DropdownMenuItem onClick={onSettings}>
               <Settings className="h-4 w-4 mr-2" />
-              {t("settings")}
+              {t('settings')}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
@@ -279,7 +279,7 @@ export default function ModernChatHeader({
                     d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
                   />
                 </svg>
-                {t("logout")}
+                {t('logout')}
               </LogoutButton>
             </DropdownMenuItem>
           </DropdownMenuContent>

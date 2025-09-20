@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import { apiService } from "@/services/api";
+import React, { useState } from 'react';
+import { apiService } from '@/services/api';
 
 export default function TestChatPage() {
-  const [message, setMessage] = useState("");
-  const [response, setResponse] = useState("");
+  const [message, setMessage] = useState('');
+  const [response, setResponse] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -14,21 +14,21 @@ export default function TestChatPage() {
 
     setLoading(true);
     try {
-      const response = await apiService.request("/messages", {
-        method: "POST",
+      const response = await apiService.request('/messages', {
+        method: 'POST',
         body: JSON.stringify({
-          roomId: "1",
-          senderId: "13", // Hardcoded for test
+          roomId: '1',
+          senderId: '13', // Hardcoded for test
           content: message.trim(),
         }),
       });
 
       setResponse(JSON.stringify(response.data, null, 2));
-      setMessage("");
+      setMessage('');
     } catch (error: any) {
-      console.error("Error:", error);
+      console.error('Error:', error);
       setResponse(
-        `Error: ${error.message}\n${JSON.stringify(error.response?.data, null, 2)}`,
+        `Error: ${error.message}\n${JSON.stringify(error.response?.data, null, 2)}`
       );
     } finally {
       setLoading(false);
@@ -43,9 +43,9 @@ export default function TestChatPage() {
         <div className="flex items-center space-x-2">
           <span>Token:</span>
           <code className="bg-gray-100 p-2 rounded text-sm">
-            {typeof window !== "undefined" && localStorage.getItem("auth_token")
-              ? "Present"
-              : "Missing"}
+            {typeof window !== 'undefined' && localStorage.getItem('auth_token')
+              ? 'Present'
+              : 'Missing'}
           </code>
         </div>
       </div>
@@ -55,7 +55,7 @@ export default function TestChatPage() {
           <input
             type="text"
             value={message}
-            onChange={(e) => setMessage(e.target.value)}
+            onChange={e => setMessage(e.target.value)}
             placeholder="Enter message..."
             className="flex-1 p-2 border rounded"
             disabled={loading}
@@ -65,7 +65,7 @@ export default function TestChatPage() {
             disabled={loading || !message.trim()}
             className="px-4 py-2 bg-blue-500 text-gray-800 rounded disabled:bg-gray-300"
           >
-            {loading ? "Sending..." : "Send"}
+            {loading ? 'Sending...' : 'Send'}
           </button>
         </div>
       </form>

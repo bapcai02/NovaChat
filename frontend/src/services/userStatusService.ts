@@ -1,9 +1,9 @@
-import { apiService } from "./api";
+import { apiService } from './api';
 
 export interface UserStatus {
   userId: string;
   roomId: string;
-  status: "online" | "away" | "busy" | "offline";
+  status: 'online' | 'away' | 'busy' | 'offline';
   statusMessage?: string;
   userName: string;
   timestamp: string;
@@ -27,15 +27,15 @@ export const userStatusService = {
   updateStatus: async (
     status: string,
     statusMessage?: string,
-    roomId: string = "1",
+    roomId: string = '1'
   ): Promise<UserStatus> => {
     await apiService.updateUserStatus(status as any, statusMessage);
     return {
-      userId: "current-user",
+      userId: 'current-user',
       roomId,
       status: status as any,
       statusMessage,
-      userName: "Current User",
+      userName: 'Current User',
       timestamp: new Date().toISOString(),
     };
   },
@@ -50,7 +50,7 @@ export const userStatusService = {
       name: user.name,
       username: user.username,
       avatar: user.avatar,
-      status: user.status || "online",
+      status: user.status || 'online',
       statusMessage: user.status_message,
       lastSeenAt: user.last_seen_at || new Date().toISOString(),
     }));

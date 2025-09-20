@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import React from "react";
-import BookmarkList from "@/components/bookmarks/BookmarkList";
+import React from 'react';
+import BookmarkList from '@/components/bookmarks/BookmarkList';
 
 export default function BookmarksPage() {
   return (

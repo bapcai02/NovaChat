@@ -1,4 +1,4 @@
-import { apiService } from "./api";
+import { apiService } from './api';
 
 export interface Bookmark {
   id: number;
@@ -40,14 +40,14 @@ export interface BookmarkRequest {
 class BookmarkService {
   async getBookmarks(
     page: number = 1,
-    limit: number = 20,
+    limit: number = 20
   ): Promise<BookmarkResponse> {
     return apiService.get(`/messages/bookmarks?page=${page}&limit=${limit}`);
   }
 
   async bookmarkMessage(
     messageId: number,
-    data: BookmarkRequest = {},
+    data: BookmarkRequest = {}
   ): Promise<Bookmark> {
     return apiService.post(`/messages/${messageId}/bookmark`, data);
   }

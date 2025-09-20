@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import React from "react";
-import ModernLoginForm from "./ModernLoginForm";
+import React from 'react';
+import ModernLoginForm from './ModernLoginForm';
 
 interface AuthLayoutProps {
   onLogin?: (data: { email: string; password: string }) => void;

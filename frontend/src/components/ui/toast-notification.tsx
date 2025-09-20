@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
-import { Button } from "./button";
-import { Avatar } from "./avatar";
-import { cn } from "@/lib/utils";
+import React, { useState, useEffect } from 'react';
+import { Button } from './button';
+import { Avatar } from './avatar';
+import { cn } from '@/lib/utils';
 
 interface ToastNotificationProps {
   id: string;
-  type: "message" | "mention" | "reaction" | "system" | "file";
+  type: 'message' | 'mention' | 'reaction' | 'system' | 'file';
   title: string;
   message: string;
   sender?: {
@@ -18,7 +18,7 @@ interface ToastNotificationProps {
   channel?: string;
   duration?: number;
   onClose: (id: string) => void;
-  onAction?: (action: "navigate" | "reply" | "dismiss") => void;
+  onAction?: (action: 'navigate' | 'reply' | 'dismiss') => void;
 }
 
 export const ToastNotification: React.FC<ToastNotificationProps> = ({
@@ -53,9 +53,9 @@ export const ToastNotification: React.FC<ToastNotificationProps> = ({
     };
   }, [id, duration, isHovered, onClose]);
 
-  const getNotificationIcon = (type: ToastNotificationProps["type"]) => {
+  const getNotificationIcon = (type: ToastNotificationProps['type']) => {
     switch (type) {
-      case "mention":
+      case 'mention':
         return (
           <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
             <svg
@@ -67,7 +67,7 @@ export const ToastNotification: React.FC<ToastNotificationProps> = ({
             </svg>
           </div>
         );
-      case "reaction":
+      case 'reaction':
         return (
           <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
             <svg
@@ -79,7 +79,7 @@ export const ToastNotification: React.FC<ToastNotificationProps> = ({
             </svg>
           </div>
         );
-      case "message":
+      case 'message':
         return (
           <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
             <svg
@@ -91,7 +91,7 @@ export const ToastNotification: React.FC<ToastNotificationProps> = ({
             </svg>
           </div>
         );
-      case "file":
+      case 'file':
         return (
           <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
             <svg
@@ -103,7 +103,7 @@ export const ToastNotification: React.FC<ToastNotificationProps> = ({
             </svg>
           </div>
         );
-      case "system":
+      case 'system':
         return (
           <div className="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center">
             <svg
@@ -118,7 +118,7 @@ export const ToastNotification: React.FC<ToastNotificationProps> = ({
     }
   };
 
-  const handleAction = (action: "navigate" | "reply" | "dismiss") => {
+  const handleAction = (action: 'navigate' | 'reply' | 'dismiss') => {
     onAction?.(action);
     setIsVisible(false);
     setTimeout(() => onClose(id), 300);
@@ -127,8 +127,8 @@ export const ToastNotification: React.FC<ToastNotificationProps> = ({
   return (
     <div
       className={cn(
-        "fixed top-4 right-4 z-50 w-80 bg-[hsl(217.2_32.6%_17.5%)] border border-[hsl(217.2_32.6%_17.5%)] rounded-lg shadow-2xl p-4 transition-all duration-300",
-        isVisible ? "translate-x-0 opacity-100" : "translate-x-full opacity-0",
+        'fixed top-4 right-4 z-50 w-80 bg-[hsl(217.2_32.6%_17.5%)] border border-[hsl(217.2_32.6%_17.5%)] rounded-lg shadow-2xl p-4 transition-all duration-300',
+        isVisible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -143,7 +143,7 @@ export const ToastNotification: React.FC<ToastNotificationProps> = ({
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => handleAction("dismiss")}
+              onClick={() => handleAction('dismiss')}
               className="h-4 w-4 text-[hsl(215.4_16.3%_56.9%)] hover:text-[hsl(210_40%_98%)]"
             >
               <svg
@@ -182,21 +182,21 @@ export const ToastNotification: React.FC<ToastNotificationProps> = ({
               )}
             </div>
           )}
-          {type !== "system" && (
+          {type !== 'system' && (
             <div className="flex space-x-2 mt-3">
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => handleAction("navigate")}
+                onClick={() => handleAction('navigate')}
                 className="text-xs h-6 px-2"
               >
                 View
               </Button>
-              {type === "message" && (
+              {type === 'message' && (
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleAction("reply")}
+                  onClick={() => handleAction('reply')}
                   className="text-xs h-6 px-2"
                 >
                   Reply

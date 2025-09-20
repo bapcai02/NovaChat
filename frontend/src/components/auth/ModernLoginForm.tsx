@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import { motion } from "framer-motion";
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import {
   Mail,
   Lock,
@@ -11,19 +11,19 @@ import {
   Github,
   Chrome,
   Loader2,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils";
+} from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
 
 interface LoginFormProps {
   onSubmit: (data: { email: string; password: string }) => void;
@@ -41,19 +41,19 @@ export default function ModernLoginForm({
   onForgotPassword,
 }: LoginFormProps) {
   const [formData, setFormData] = useState({
-    email: "",
-    password: "",
+    email: '',
+    password: '',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ ...prev, [name]: value }));
 
     // Clear error when user starts typing
     if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
+      setErrors(prev => ({ ...prev, [name]: '' }));
     }
   };
 
@@ -61,15 +61,15 @@ export default function ModernLoginForm({
     const newErrors: { [key: string]: string } = {};
 
     if (!formData.email) {
-      newErrors.email = "Email is required";
+      newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email";
+      newErrors.email = 'Please enter a valid email';
     }
 
     if (!formData.password) {
-      newErrors.password = "Password is required";
+      newErrors.password = 'Password is required';
     } else if (formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
+      newErrors.password = 'Password must be at least 6 characters';
     }
 
     setErrors(newErrors);
@@ -101,7 +101,7 @@ export default function ModernLoginForm({
           <motion.div
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
-            transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+            transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
             className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl mb-4"
           >
             <span className="text-2xl font-bold text-white">N</span>
@@ -142,9 +142,9 @@ export default function ModernLoginForm({
                     value={formData.email}
                     onChange={handleInputChange}
                     className={cn(
-                      "pl-10 bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500/20",
+                      'pl-10 bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500/20',
                       errors.email &&
-                        "border-red-500 focus:border-red-500 focus:ring-red-500/20",
+                        'border-red-500 focus:border-red-500 focus:ring-red-500/20'
                     )}
                     disabled={isLoading}
                   />
@@ -173,14 +173,14 @@ export default function ModernLoginForm({
                   <Input
                     id="password"
                     name="password"
-                    type={showPassword ? "text" : "password"}
+                    type={showPassword ? 'text' : 'password'}
                     placeholder="Enter your password"
                     value={formData.password}
                     onChange={handleInputChange}
                     className={cn(
-                      "pl-10 pr-10 bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500/20",
+                      'pl-10 pr-10 bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500/20',
                       errors.password &&
-                        "border-red-500 focus:border-red-500 focus:ring-red-500/20",
+                        'border-red-500 focus:border-red-500 focus:ring-red-500/20'
                     )}
                     disabled={isLoading}
                   />
@@ -281,7 +281,7 @@ export default function ModernLoginForm({
                 <Button
                   variant="outline"
                   className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-gray-900"
-                  onClick={() => handleSocialLogin("github")}
+                  onClick={() => handleSocialLogin('github')}
                   disabled={isLoading}
                 >
                   <Github className="mr-2 h-4 w-4" />
@@ -290,7 +290,7 @@ export default function ModernLoginForm({
                 <Button
                   variant="outline"
                   className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-gray-900"
-                  onClick={() => handleSocialLogin("google")}
+                  onClick={() => handleSocialLogin('google')}
                   disabled={isLoading}
                 >
                   <Chrome className="mr-2 h-4 w-4" />
@@ -302,7 +302,7 @@ export default function ModernLoginForm({
             {/* Switch to Register */}
             <div className="text-center">
               <p className="text-sm text-gray-600">
-                Don't have an account?{" "}
+                Don't have an account?{' '}
                 <Button
                   variant="link"
                   className="text-blue-600 hover:text-blue-500 p-0 font-medium"
@@ -339,10 +339,10 @@ export default function ModernLoginForm({
                     </span>
                     <button
                       onClick={() => {
-                        setFormData((prev) => ({
+                        setFormData(prev => ({
                           ...prev,
-                          email: "john@example.com",
-                          password: "password",
+                          email: 'john@example.com',
+                          password: 'password',
                         }));
                       }}
                       className="text-blue-600 hover:text-blue-500 text-xs"
@@ -359,10 +359,10 @@ export default function ModernLoginForm({
                     </span>
                     <button
                       onClick={() => {
-                        setFormData((prev) => ({
+                        setFormData(prev => ({
                           ...prev,
-                          email: "jane@example.com",
-                          password: "password",
+                          email: 'jane@example.com',
+                          password: 'password',
                         }));
                       }}
                       className="text-blue-600 hover:text-blue-500 text-xs"
@@ -379,10 +379,10 @@ export default function ModernLoginForm({
                     </span>
                     <button
                       onClick={() => {
-                        setFormData((prev) => ({
+                        setFormData(prev => ({
                           ...prev,
-                          email: "mike@example.com",
-                          password: "password",
+                          email: 'mike@example.com',
+                          password: 'password',
                         }));
                       }}
                       className="text-blue-600 hover:text-blue-500 text-xs"
@@ -392,7 +392,7 @@ export default function ModernLoginForm({
                   </div>
                 </div>
                 <div className="text-center text-gray-600 mt-2">
-                  Password:{" "}
+                  Password:{' '}
                   <span className="font-mono bg-gray-200 px-1 py-0.5 rounded">
                     password
                   </span>
@@ -405,11 +405,11 @@ export default function ModernLoginForm({
         {/* Footer */}
         <div className="text-center mt-8">
           <p className="text-xs text-gray-500">
-            By signing in, you agree to our{" "}
+            By signing in, you agree to our{' '}
             <a href="#" className="text-blue-600 hover:text-blue-500">
               Terms of Service
-            </a>{" "}
-            and{" "}
+            </a>{' '}
+            and{' '}
             <a href="#" className="text-blue-600 hover:text-blue-500">
               Privacy Policy
             </a>

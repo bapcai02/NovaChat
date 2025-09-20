@@ -4,7 +4,7 @@ export interface Channel {
   name: string;
   display_name: string;
   description?: string;
-  type: "public" | "private" | "direct" | "announcement" | "support";
+  type: 'public' | 'private' | 'direct' | 'announcement' | 'support';
   topic?: string;
   purpose?: string;
   avatar?: string;
@@ -30,7 +30,7 @@ export interface CreateChannelData {
   name: string;
   display_name: string;
   description?: string;
-  type: "public" | "private";
+  type: 'public' | 'private';
   topic?: string;
   purpose?: string;
   permissions?: Record<string, any>;
@@ -49,7 +49,7 @@ export interface ChannelMember {
   id: number;
   channel_id: number;
   user_id: number;
-  role: "admin" | "moderator" | "member";
+  role: 'admin' | 'moderator' | 'member';
   joined_at: string;
   user?: {
     id: number;
@@ -64,7 +64,7 @@ export interface ChannelMember {
 export const channelService = {
   // Get all channels for current user
   getChannels: async (): Promise<Channel[]> => {
-    const response = await api.get<Channel[]>("/channels");
+    const response = await api.get<Channel[]>('/channels');
     return response.data.data;
   },
 
@@ -76,14 +76,14 @@ export const channelService = {
 
   // Create new channel
   createChannel: async (data: CreateChannelData): Promise<Channel> => {
-    const response = await api.post<Channel>("/channels", data);
+    const response = await api.post<Channel>('/channels', data);
     return response.data.data;
   },
 
   // Update channel
   updateChannel: async (
     id: number,
-    data: UpdateChannelData,
+    data: UpdateChannelData
   ): Promise<Channel> => {
     const response = await api.put<Channel>(`/channels/${id}`, data);
     return response.data.data;
@@ -104,7 +104,7 @@ export const channelService = {
   addMember: async (
     channelId: number,
     userId: number,
-    role: string = "member",
+    role: string = 'member'
   ): Promise<void> => {
     await api.post(`/channels/${channelId}/members`, { user_id: userId, role });
   },
@@ -118,7 +118,7 @@ export const channelService = {
   updateMemberRole: async (
     channelId: number,
     userId: number,
-    role: string,
+    role: string
   ): Promise<void> => {
     await api.put(`/channels/${channelId}/members/${userId}`, { role });
   },

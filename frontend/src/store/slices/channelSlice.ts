@@ -1,11 +1,11 @@
-import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import {
   channelService,
   Channel,
   CreateChannelData,
   UpdateChannelData,
   ChannelMember,
-} from "../../services/channelService";
+} from '../../services/channelService';
 
 // Channel state interface
 interface ChannelState {
@@ -27,126 +27,126 @@ const initialState: ChannelState = {
 
 // Async thunks
 export const fetchChannels = createAsyncThunk(
-  "channels/fetchChannels",
+  'channels/fetchChannels',
   async (_, { rejectWithValue }) => {
     try {
       const channels = await channelService.getChannels();
       return channels;
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to fetch channels",
+        error.response?.data?.message || 'Failed to fetch channels'
       );
     }
-  },
+  }
 );
 
 export const fetchChannel = createAsyncThunk(
-  "channels/fetchChannel",
+  'channels/fetchChannel',
   async (id: number, { rejectWithValue }) => {
     try {
       const channel = await channelService.getChannel(id);
       return channel;
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to fetch channel",
+        error.response?.data?.message || 'Failed to fetch channel'
       );
     }
-  },
+  }
 );
 
 export const createChannel = createAsyncThunk(
-  "channels/createChannel",
+  'channels/createChannel',
   async (data: CreateChannelData, { rejectWithValue }) => {
     try {
       const channel = await channelService.createChannel(data);
       return channel;
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to create channel",
+        error.response?.data?.message || 'Failed to create channel'
       );
     }
-  },
+  }
 );
 
 export const updateChannel = createAsyncThunk(
-  "channels/updateChannel",
+  'channels/updateChannel',
   async (
     { id, data }: { id: number; data: UpdateChannelData },
-    { rejectWithValue },
+    { rejectWithValue }
   ) => {
     try {
       const channel = await channelService.updateChannel(id, data);
       return channel;
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to update channel",
+        error.response?.data?.message || 'Failed to update channel'
       );
     }
-  },
+  }
 );
 
 export const deleteChannel = createAsyncThunk(
-  "channels/deleteChannel",
+  'channels/deleteChannel',
   async (id: number, { rejectWithValue }) => {
     try {
       await channelService.deleteChannel(id);
       return id;
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to delete channel",
+        error.response?.data?.message || 'Failed to delete channel'
       );
     }
-  },
+  }
 );
 
 export const fetchChannelMembers = createAsyncThunk(
-  "channels/fetchChannelMembers",
+  'channels/fetchChannelMembers',
   async (channelId: number, { rejectWithValue }) => {
     try {
       const members = await channelService.getChannelMembers(channelId);
       return { channelId, members };
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to fetch channel members",
+        error.response?.data?.message || 'Failed to fetch channel members'
       );
     }
-  },
+  }
 );
 
 export const joinChannel = createAsyncThunk(
-  "channels/joinChannel",
+  'channels/joinChannel',
   async (id: number, { rejectWithValue }) => {
     try {
       await channelService.joinChannel(id);
       return id;
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to join channel",
+        error.response?.data?.message || 'Failed to join channel'
       );
     }
-  },
+  }
 );
 
 export const leaveChannel = createAsyncThunk(
-  "channels/leaveChannel",
+  'channels/leaveChannel',
   async (id: number, { rejectWithValue }) => {
     try {
       await channelService.leaveChannel(id);
       return id;
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to leave channel",
+        error.response?.data?.message || 'Failed to leave channel'
       );
     }
-  },
+  }
 );
 
 // Channel slice
 const channelSlice = createSlice({
-  name: "channels",
+  name: 'channels',
   initialState,
   reducers: {
-    clearError: (state) => {
+    clearError: state => {
       state.error = null;
     },
     setCurrentChannel: (state, action: PayloadAction<Channel | null>) => {
@@ -157,7 +157,7 @@ const channelSlice = createSlice({
     },
     updateChannelInList: (state, action: PayloadAction<Channel>) => {
       const index = state.channels.findIndex(
-        (channel) => channel.id === action.payload.id,
+        channel => channel.id === action.payload.id
       );
       if (index !== -1) {
         state.channels[index] = action.payload;
@@ -168,17 +168,17 @@ const channelSlice = createSlice({
     },
     removeChannel: (state, action: PayloadAction<number>) => {
       state.channels = state.channels.filter(
-        (channel) => channel.id !== action.payload,
+        channel => channel.id !== action.payload
       );
       if (state.currentChannel?.id === action.payload) {
         state.currentChannel = null;
       }
     },
   },
-  extraReducers: (builder) => {
+  extraReducers: builder => {
     // Fetch channels
     builder
-      .addCase(fetchChannels.pending, (state) => {
+      .addCase(fetchChannels.pending, state => {
         state.isLoading = true;
         state.error = null;
       })
@@ -188,7 +188,7 @@ const channelSlice = createSlice({
           state.isLoading = false;
           state.channels = action.payload;
           state.error = null;
-        },
+        }
       )
       .addCase(fetchChannels.rejected, (state, action) => {
         state.isLoading = false;
@@ -197,7 +197,7 @@ const channelSlice = createSlice({
 
     // Fetch channel
     builder
-      .addCase(fetchChannel.pending, (state) => {
+      .addCase(fetchChannel.pending, state => {
         state.isLoading = true;
         state.error = null;
       })
@@ -207,7 +207,7 @@ const channelSlice = createSlice({
           state.isLoading = false;
           state.currentChannel = action.payload;
           state.error = null;
-        },
+        }
       )
       .addCase(fetchChannel.rejected, (state, action) => {
         state.isLoading = false;
@@ -216,7 +216,7 @@ const channelSlice = createSlice({
 
     // Create channel
     builder
-      .addCase(createChannel.pending, (state) => {
+      .addCase(createChannel.pending, state => {
         state.isLoading = true;
         state.error = null;
       })
@@ -226,7 +226,7 @@ const channelSlice = createSlice({
           state.isLoading = false;
           state.channels.push(action.payload);
           state.error = null;
-        },
+        }
       )
       .addCase(createChannel.rejected, (state, action) => {
         state.isLoading = false;
@@ -235,7 +235,7 @@ const channelSlice = createSlice({
 
     // Update channel
     builder
-      .addCase(updateChannel.pending, (state) => {
+      .addCase(updateChannel.pending, state => {
         state.isLoading = true;
         state.error = null;
       })
@@ -244,7 +244,7 @@ const channelSlice = createSlice({
         (state, action: PayloadAction<Channel>) => {
           state.isLoading = false;
           const index = state.channels.findIndex(
-            (channel) => channel.id === action.payload.id,
+            channel => channel.id === action.payload.id
           );
           if (index !== -1) {
             state.channels[index] = action.payload;
@@ -253,7 +253,7 @@ const channelSlice = createSlice({
             state.currentChannel = action.payload;
           }
           state.error = null;
-        },
+        }
       )
       .addCase(updateChannel.rejected, (state, action) => {
         state.isLoading = false;
@@ -262,7 +262,7 @@ const channelSlice = createSlice({
 
     // Delete channel
     builder
-      .addCase(deleteChannel.pending, (state) => {
+      .addCase(deleteChannel.pending, state => {
         state.isLoading = true;
         state.error = null;
       })
@@ -271,13 +271,13 @@ const channelSlice = createSlice({
         (state, action: PayloadAction<number>) => {
           state.isLoading = false;
           state.channels = state.channels.filter(
-            (channel) => channel.id !== action.payload,
+            channel => channel.id !== action.payload
           );
           if (state.currentChannel?.id === action.payload) {
             state.currentChannel = null;
           }
           state.error = null;
-        },
+        }
       )
       .addCase(deleteChannel.rejected, (state, action) => {
         state.isLoading = false;
@@ -286,7 +286,7 @@ const channelSlice = createSlice({
 
     // Fetch channel members
     builder
-      .addCase(fetchChannelMembers.pending, (state) => {
+      .addCase(fetchChannelMembers.pending, state => {
         state.isLoading = true;
         state.error = null;
       })
@@ -297,14 +297,14 @@ const channelSlice = createSlice({
           action: PayloadAction<{
             channelId: number;
             members: ChannelMember[];
-          }>,
+          }>
         ) => {
           state.isLoading = false;
           if (state.currentChannel?.id === action.payload.channelId) {
             state.channelMembers = action.payload.members;
           }
           state.error = null;
-        },
+        }
       )
       .addCase(fetchChannelMembers.rejected, (state, action) => {
         state.isLoading = false;
@@ -313,7 +313,7 @@ const channelSlice = createSlice({
 
     // Join channel
     builder
-      .addCase(joinChannel.pending, (state) => {
+      .addCase(joinChannel.pending, state => {
         state.isLoading = true;
         state.error = null;
       })
@@ -323,7 +323,7 @@ const channelSlice = createSlice({
           state.isLoading = false;
           console.log(action.payload);
           state.error = null;
-        },
+        }
       )
       .addCase(joinChannel.rejected, (state, action) => {
         state.isLoading = false;
@@ -332,7 +332,7 @@ const channelSlice = createSlice({
 
     // Leave channel
     builder
-      .addCase(leaveChannel.pending, (state) => {
+      .addCase(leaveChannel.pending, state => {
         state.isLoading = true;
         state.error = null;
       })
@@ -341,13 +341,13 @@ const channelSlice = createSlice({
         (state, action: PayloadAction<number>) => {
           state.isLoading = false;
           state.channels = state.channels.filter(
-            (channel) => channel.id !== action.payload,
+            channel => channel.id !== action.payload
           );
           if (state.currentChannel?.id === action.payload) {
             state.currentChannel = null;
           }
           state.error = null;
-        },
+        }
       )
       .addCase(leaveChannel.rejected, (state, action) => {
         state.isLoading = false;

@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
+import React, { useState } from 'react';
 
 interface SimpleLoginFormProps {
   onSubmit: (data: { email: string; password: string }) => void;
@@ -14,8 +14,8 @@ export default function SimpleLoginForm({
   error,
 }: SimpleLoginFormProps) {
   const [formData, setFormData] = useState({
-    email: "",
-    password: "",
+    email: '',
+    password: '',
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -44,8 +44,8 @@ export default function SimpleLoginForm({
             <input
               type="email"
               value={formData.email}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, email: e.target.value }))
+              onChange={e =>
+                setFormData(prev => ({ ...prev, email: e.target.value }))
               }
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Enter your email"
@@ -60,8 +60,8 @@ export default function SimpleLoginForm({
             <input
               type="password"
               value={formData.password}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, password: e.target.value }))
+              onChange={e =>
+                setFormData(prev => ({ ...prev, password: e.target.value }))
               }
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Enter your password"
@@ -74,7 +74,7 @@ export default function SimpleLoginForm({
             disabled={isLoading}
             className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
           >
-            {isLoading ? "Signing in..." : "Sign In"}
+            {isLoading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
 

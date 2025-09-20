@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import React from "react";
-import { cn } from "@/lib/utils";
+import React from 'react';
+import { cn } from '@/lib/utils';
 
 interface MessageRendererProps {
   content: string;
@@ -15,10 +15,10 @@ export const MessageRenderer: React.FC<MessageRendererProps> = ({
   // Function to parse and render formatted text (non-recursive)
   const renderFormattedText = (text: string) => {
     // Split by newlines to handle line breaks
-    const lines = text.split("\n");
+    const lines = text.split('\n');
 
     return lines.map((line, lineIndex) => {
-      if (line.trim() === "") {
+      if (line.trim() === '') {
         return <br key={lineIndex} />;
       }
 
@@ -28,26 +28,26 @@ export const MessageRenderer: React.FC<MessageRendererProps> = ({
       return (
         <span key={lineIndex}>
           {parts.map((part, partIndex) => {
-            if (typeof part === "string") {
+            if (typeof part === 'string') {
               return <span key={partIndex}>{part}</span>;
             }
 
             const { type, content: partContent, url } = part;
 
             switch (type) {
-              case "bold":
+              case 'bold':
                 return (
                   <strong key={partIndex} className="font-semibold">
                     {partContent}
                   </strong>
                 );
-              case "italic":
+              case 'italic':
                 return (
                   <em key={partIndex} className="italic">
                     {partContent}
                   </em>
                 );
-              case "code":
+              case 'code':
                 return (
                   <code
                     key={partIndex}
@@ -56,13 +56,13 @@ export const MessageRenderer: React.FC<MessageRendererProps> = ({
                     {partContent}
                   </code>
                 );
-              case "strike":
+              case 'strike':
                 return (
                   <del key={partIndex} className="line-through">
                     {partContent}
                   </del>
                 );
-              case "link":
+              case 'link':
                 return (
                   <a
                     key={partIndex}
@@ -74,7 +74,7 @@ export const MessageRenderer: React.FC<MessageRendererProps> = ({
                     {partContent}
                   </a>
                 );
-              case "emoji":
+              case 'emoji':
                 return (
                   <span key={partIndex} className="inline-block">
                     {partContent}
@@ -100,22 +100,22 @@ export const MessageRenderer: React.FC<MessageRendererProps> = ({
     // Regex patterns for different formatting (in order of priority)
     const patterns = [
       // Links: [text](url) - highest priority
-      { regex: /\[([^\]]+)\]\(([^)]+)\)/g, type: "link" },
+      { regex: /\[([^\]]+)\]\(([^)]+)\)/g, type: 'link' },
       // URLs: http://example.com
-      { regex: /(https?:\/\/[^\s]+)/g, type: "url" },
+      { regex: /(https?:\/\/[^\s]+)/g, type: 'url' },
       // Bold: **text**
-      { regex: /\*\*(.*?)\*\*/g, type: "bold" },
+      { regex: /\*\*(.*?)\*\*/g, type: 'bold' },
       // Italic: *text*
-      { regex: /\*(.*?)\*/g, type: "italic" },
+      { regex: /\*(.*?)\*/g, type: 'italic' },
       // Code: `code`
-      { regex: /`([^`]+)`/g, type: "code" },
+      { regex: /`([^`]+)`/g, type: 'code' },
       // Strikethrough: ~~text~~
-      { regex: /~~(.*?)~~/g, type: "strike" },
+      { regex: /~~(.*?)~~/g, type: 'strike' },
       // Emojis: Unicode emoji characters
       {
         regex:
           /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu,
-        type: "emoji",
+        type: 'emoji',
       },
     ];
 
@@ -133,7 +133,7 @@ export const MessageRenderer: React.FC<MessageRendererProps> = ({
       regex.lastIndex = 0;
       let match;
       while ((match = regex.exec(text)) !== null) {
-        if (type === "link") {
+        if (type === 'link') {
           matches.push({
             type,
             content: match[1],
@@ -141,9 +141,9 @@ export const MessageRenderer: React.FC<MessageRendererProps> = ({
             start: match.index,
             end: match.index + match[0].length,
           });
-        } else if (type === "url") {
+        } else if (type === 'url') {
           matches.push({
-            type: "link",
+            type: 'link',
             content: match[1],
             url: match[1],
             start: match.index,
@@ -164,7 +164,7 @@ export const MessageRenderer: React.FC<MessageRendererProps> = ({
     matches.sort((a, b) => a.start - b.start);
 
     // Build parts array
-    matches.forEach((match) => {
+    matches.forEach(match => {
       // Add text before match
       if (match.start > currentIndex) {
         parts.push(text.slice(currentIndex, match.start));
@@ -191,8 +191,8 @@ export const MessageRenderer: React.FC<MessageRendererProps> = ({
   return (
     <div
       className={cn(
-        "text-xs text-[hsl(var(--chat-text))] leading-relaxed",
-        className,
+        'text-xs text-[hsl(var(--chat-text))] leading-relaxed',
+        className
       )}
     >
       {renderFormattedText(content)}

@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { cn } from "@/lib/utils";
+import * as React from 'react';
+import { cn } from '@/lib/utils';
 
 interface LoadingScreenProps {
   className?: string;
@@ -11,8 +11,8 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ className }) => {
   return (
     <div
       className={cn(
-        "h-screen w-screen flex bg-[hsl(222.2_84%_4.9%)] text-[hsl(210_40%_98%)]",
-        className,
+        'h-screen w-screen flex bg-[hsl(222.2_84%_4.9%)] text-[hsl(210_40%_98%)]',
+        className
       )}
     >
       {/* Left sidebar skeleton */}

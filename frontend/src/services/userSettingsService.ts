@@ -1,8 +1,8 @@
-import { apiService } from "@/services/api";
+import { apiService } from '@/services/api';
 
 export const userSettingsService = {
   async getProfile() {
-    const res: any = await apiService.get("/user/profile");
+    const res: any = await apiService.get('/user/profile');
     return res?.data?.data ?? res?.data ?? res;
   },
   async updateProfile(payload: any) {
@@ -11,22 +11,22 @@ export const userSettingsService = {
     const headers: any = {};
     if (!(payload instanceof FormData)) {
       body = JSON.stringify(payload);
-      headers["Content-Type"] = "application/json";
+      headers['Content-Type'] = 'application/json';
     }
     const res: any = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"}/user/profile`,
+      `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/user/profile`,
       {
-        method: "PUT",
+        method: 'PUT',
         headers: {
-          Accept: "application/json",
-          ...(typeof window !== "undefined" &&
-          localStorage.getItem("auth_token")
-            ? { Authorization: `Bearer ${localStorage.getItem("auth_token")}` }
+          Accept: 'application/json',
+          ...(typeof window !== 'undefined' &&
+          localStorage.getItem('auth_token')
+            ? { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
             : {}),
           ...headers,
         },
         body,
-      },
+      }
     );
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
@@ -40,15 +40,15 @@ export const userSettingsService = {
     new_password: string;
     new_password_confirmation: string;
   }) {
-    const res: any = await apiService.post("/user/change-password", payload);
+    const res: any = await apiService.post('/user/change-password', payload);
     return res?.data;
   },
-  async updatePreferences(payload: { language: "EN" | "VI" }) {
-    const res: any = await apiService.put("/user/preferences", payload);
+  async updatePreferences(payload: { language: 'EN' | 'VI' }) {
+    const res: any = await apiService.put('/user/preferences', payload);
     return res?.data;
   },
   async getSessions() {
-    const res: any = await apiService.get("/user/sessions");
+    const res: any = await apiService.get('/user/sessions');
     return res?.data?.data ?? [];
   },
   async deleteSession(id: number) {

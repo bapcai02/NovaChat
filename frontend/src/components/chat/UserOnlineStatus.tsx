@@ -1,5 +1,5 @@
-import React from "react";
-import { cn } from "@/lib/utils";
+import React from 'react';
+import { cn } from '@/lib/utils';
 
 interface UserOnlineStatusProps {
   userId: number;
@@ -12,13 +12,13 @@ export const UserOnlineStatus: React.FC<UserOnlineStatusProps> = ({
   className,
 }) => {
   return (
-    <div className={cn("relative", className)}>
+    <div className={cn('relative', className)}>
       <div
         className={cn(
-          "w-3 h-3 rounded-full border-2 border-white shadow-sm transition-all duration-200",
-          isOnline ? "bg-green-500" : "bg-gray-400",
+          'w-3 h-3 rounded-full border-2 border-white shadow-sm transition-all duration-200',
+          isOnline ? 'bg-green-500' : 'bg-gray-400'
         )}
-        title={isOnline ? "Online" : "Offline"}
+        title={isOnline ? 'Online' : 'Offline'}
       />
       {isOnline && (
         <div className="absolute inset-0 w-3 h-3 rounded-full bg-green-500 animate-ping opacity-75" />

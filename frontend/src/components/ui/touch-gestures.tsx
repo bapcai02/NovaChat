@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import React, { useRef, useState } from "react";
-import { cn } from "@/lib/utils";
+import React, { useRef, useState } from 'react';
+import { cn } from '@/lib/utils';
 
 interface TouchGesturesProps {
   children: React.ReactNode;
@@ -69,7 +69,7 @@ export const TouchGestures: React.FC<TouchGesturesProps> = ({
   });
   const [lastTapTime, setLastTapTime] = useState(0);
   const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(
-    null,
+    null
   );
 
   const getDistance = (touch1: Touch, touch2: Touch) => {
@@ -91,7 +91,7 @@ export const TouchGestures: React.FC<TouchGesturesProps> = ({
     if (touches.length === 1) {
       // Single touch - potential swipe or tap
       const touch = touches[0];
-      setGestureState((prev) => ({
+      setGestureState(prev => ({
         ...prev,
         startX: touch.clientX,
         startY: touch.clientY,
@@ -110,7 +110,7 @@ export const TouchGestures: React.FC<TouchGesturesProps> = ({
     } else if (touches.length === 2) {
       // Two touches - potential pinch
       const distance = getDistance(touches[0], touches[1]);
-      setGestureState((prev) => ({
+      setGestureState(prev => ({
         ...prev,
         isPinching: true,
         initialDistance: distance,
@@ -134,7 +134,7 @@ export const TouchGestures: React.FC<TouchGesturesProps> = ({
 
       // Determine if we're swiping
       if (deltaX > SWIPE_THRESHOLD || deltaY > SWIPE_THRESHOLD) {
-        setGestureState((prev) => ({
+        setGestureState(prev => ({
           ...prev,
           isSwiping: true,
           currentX: touch.clientX,
@@ -154,7 +154,7 @@ export const TouchGestures: React.FC<TouchGesturesProps> = ({
     } else if (touches.length === 2 && gestureState.isPinching) {
       // Two touch move - pinch gesture
       const distance = getDistance(touches[0], touches[1]);
-      setGestureState((prev) => ({
+      setGestureState(prev => ({
         ...prev,
         currentDistance: distance,
       }));
@@ -254,12 +254,12 @@ export const TouchGestures: React.FC<TouchGesturesProps> = ({
   return (
     <div
       ref={containerRef}
-      className={cn("touch-manipulation", className)}
+      className={cn('touch-manipulation', className)}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
       onTouchCancel={handleTouchCancel}
-      style={{ touchAction: "manipulation" }}
+      style={{ touchAction: 'manipulation' }}
     >
       {children}
     </div>

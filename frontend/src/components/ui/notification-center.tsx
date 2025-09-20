@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect, useRef } from "react";
-import { Button } from "./button";
-import { Avatar } from "./avatar";
-import { Badge } from "./badge";
-import { cn } from "@/lib/utils";
+import React, { useState, useEffect, useRef } from 'react';
+import { Button } from './button';
+import { Avatar } from './avatar';
+import { Badge } from './badge';
+import { cn } from '@/lib/utils';
 
 interface Notification {
   id: string;
-  type: "message" | "mention" | "reaction" | "system" | "file";
+  type: 'message' | 'mention' | 'reaction' | 'system' | 'file';
   title: string;
   message: string;
   sender?: {
@@ -20,7 +20,7 @@ interface Notification {
   timestamp: Date;
   isRead: boolean;
   action?: {
-    type: "navigate" | "reply" | "dismiss";
+    type: 'navigate' | 'reply' | 'dismiss';
     data?: any;
   };
 }
@@ -33,86 +33,86 @@ interface NotificationCenterProps {
 
 const mockNotifications: Notification[] = [
   {
-    id: "1",
-    type: "mention",
-    title: "You were mentioned",
-    message: "@you Check out this new feature!",
+    id: '1',
+    type: 'mention',
+    title: 'You were mentioned',
+    message: '@you Check out this new feature!',
     sender: {
-      name: "John Doe",
-      username: "johndoe",
-      avatar: "/api/placeholder/32/32",
+      name: 'John Doe',
+      username: 'johndoe',
+      avatar: '/api/placeholder/32/32',
     },
-    channel: "general",
+    channel: 'general',
     timestamp: new Date(Date.now() - 5 * 60 * 1000), // 5 minutes ago
     isRead: false,
     action: {
-      type: "navigate",
-      data: { channel: "general", messageId: "123" },
+      type: 'navigate',
+      data: { channel: 'general', messageId: '123' },
     },
   },
   {
-    id: "2",
-    type: "reaction",
-    title: "New reaction",
-    message: "👍 on your message",
+    id: '2',
+    type: 'reaction',
+    title: 'New reaction',
+    message: '👍 on your message',
     sender: {
-      name: "Jane Smith",
-      username: "janesmith",
-      avatar: "/api/placeholder/32/32",
+      name: 'Jane Smith',
+      username: 'janesmith',
+      avatar: '/api/placeholder/32/32',
     },
-    channel: "random",
+    channel: 'random',
     timestamp: new Date(Date.now() - 15 * 60 * 1000), // 15 minutes ago
     isRead: false,
     action: {
-      type: "navigate",
-      data: { channel: "random", messageId: "456" },
+      type: 'navigate',
+      data: { channel: 'random', messageId: '456' },
     },
   },
   {
-    id: "3",
-    type: "message",
-    title: "New message",
-    message: "Hey, can you review this PR?",
+    id: '3',
+    type: 'message',
+    title: 'New message',
+    message: 'Hey, can you review this PR?',
     sender: {
-      name: "Mike Johnson",
-      username: "mikejohnson",
-      avatar: "/api/placeholder/32/32",
+      name: 'Mike Johnson',
+      username: 'mikejohnson',
+      avatar: '/api/placeholder/32/32',
     },
-    channel: "dev-team",
+    channel: 'dev-team',
     timestamp: new Date(Date.now() - 30 * 60 * 1000), // 30 minutes ago
     isRead: true,
     action: {
-      type: "navigate",
-      data: { channel: "dev-team" },
+      type: 'navigate',
+      data: { channel: 'dev-team' },
     },
   },
   {
-    id: "4",
-    type: "file",
-    title: "File shared",
-    message: "document.pdf was shared in #general",
+    id: '4',
+    type: 'file',
+    title: 'File shared',
+    message: 'document.pdf was shared in #general',
     sender: {
-      name: "Sarah Wilson",
-      username: "sarahwilson",
-      avatar: "/api/placeholder/32/32",
+      name: 'Sarah Wilson',
+      username: 'sarahwilson',
+      avatar: '/api/placeholder/32/32',
     },
-    channel: "general",
+    channel: 'general',
     timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
     isRead: true,
     action: {
-      type: "navigate",
-      data: { channel: "general", fileId: "789" },
+      type: 'navigate',
+      data: { channel: 'general', fileId: '789' },
     },
   },
   {
-    id: "5",
-    type: "system",
-    title: "System update",
-    message: "New features are now available!",
+    id: '5',
+    type: 'system',
+    title: 'System update',
+    message: 'New features are now available!',
     timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
     isRead: true,
     action: {
-      type: "dismiss",
+      type: 'dismiss',
     },
   },
 ];
@@ -124,21 +124,21 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
 }) => {
   const [notifications, setNotifications] =
     useState<Notification[]>(mockNotifications);
-  const [activeTab, setActiveTab] = useState<"all" | "unread" | "mentions">(
-    "all",
+  const [activeTab, setActiveTab] = useState<'all' | 'unread' | 'mentions'>(
+    'all'
   );
   const [soundEnabled, setSoundEnabled] = useState(true);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     // Initialize audio for notification sounds
-    audioRef.current = new Audio("/sounds/notification.mp3");
+    audioRef.current = new Audio('/sounds/notification.mp3');
     audioRef.current.volume = 0.3;
   }, []);
 
-  const getNotificationIcon = (type: Notification["type"]) => {
+  const getNotificationIcon = (type: Notification['type']) => {
     switch (type) {
-      case "mention":
+      case 'mention':
         return (
           <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
             <svg
@@ -150,7 +150,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
             </svg>
           </div>
         );
-      case "reaction":
+      case 'reaction':
         return (
           <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
             <svg
@@ -162,7 +162,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
             </svg>
           </div>
         );
-      case "message":
+      case 'message':
         return (
           <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
             <svg
@@ -174,7 +174,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
             </svg>
           </div>
         );
-      case "file":
+      case 'file':
         return (
           <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
             <svg
@@ -186,7 +186,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
             </svg>
           </div>
         );
-      case "system":
+      case 'system':
         return (
           <div className="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center">
             <svg
@@ -208,7 +208,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
 
-    if (minutes < 1) return "Just now";
+    if (minutes < 1) return 'Just now';
     if (minutes < 60) return `${minutes}m ago`;
     if (hours < 24) return `${hours}h ago`;
     return `${days}d ago`;
@@ -216,8 +216,8 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
 
   const handleNotificationClick = (notification: Notification) => {
     // Mark as read
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === notification.id ? { ...n, isRead: true } : n)),
+    setNotifications(prev =>
+      prev.map(n => (n.id === notification.id ? { ...n, isRead: true } : n))
     );
 
     // Play sound if enabled
@@ -232,20 +232,20 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
   };
 
   const markAllAsRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
   };
 
   const clearAll = () => {
     setNotifications([]);
   };
 
-  const filteredNotifications = notifications.filter((n) => {
-    if (activeTab === "unread") return !n.isRead;
-    if (activeTab === "mentions") return n.type === "mention";
+  const filteredNotifications = notifications.filter(n => {
+    if (activeTab === 'unread') return !n.isRead;
+    if (activeTab === 'mentions') return n.type === 'mention';
     return true;
   });
 
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
+  const unreadCount = notifications.filter(n => !n.isRead).length;
 
   if (!isOpen) return null;
 
@@ -269,12 +269,12 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
               size="icon"
               onClick={() => setSoundEnabled(!soundEnabled)}
               className={cn(
-                "h-6 w-6",
+                'h-6 w-6',
                 soundEnabled
-                  ? "text-[hsl(217.2_91.2%_59.8%)]"
-                  : "text-[hsl(215.4_16.3%_56.9%)]",
+                  ? 'text-[hsl(217.2_91.2%_59.8%)]'
+                  : 'text-[hsl(215.4_16.3%_56.9%)]'
               )}
-              title={soundEnabled ? "Sound enabled" : "Sound disabled"}
+              title={soundEnabled ? 'Sound enabled' : 'Sound disabled'}
             >
               {soundEnabled ? (
                 <svg
@@ -320,22 +320,22 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
         {/* Tabs */}
         <div className="flex border-b border-[hsl(217.2_32.6%_17.5%)]">
           {[
-            { key: "all", label: "All", count: notifications.length },
-            { key: "unread", label: "Unread", count: unreadCount },
+            { key: 'all', label: 'All', count: notifications.length },
+            { key: 'unread', label: 'Unread', count: unreadCount },
             {
-              key: "mentions",
-              label: "Mentions",
-              count: notifications.filter((n) => n.type === "mention").length,
+              key: 'mentions',
+              label: 'Mentions',
+              count: notifications.filter(n => n.type === 'mention').length,
             },
-          ].map((tab) => (
+          ].map(tab => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key as any)}
               className={cn(
-                "flex-1 px-4 py-2 text-sm font-medium transition-colors",
+                'flex-1 px-4 py-2 text-sm font-medium transition-colors',
                 activeTab === tab.key
-                  ? "text-[hsl(217.2_91.2%_59.8%)] border-b-2 border-[hsl(217.2_91.2%_59.8%)]"
-                  : "text-[hsl(215.4_16.3%_56.9%)] hover:text-[hsl(210_40%_98%)]",
+                  ? 'text-[hsl(217.2_91.2%_59.8%)] border-b-2 border-[hsl(217.2_91.2%_59.8%)]'
+                  : 'text-[hsl(215.4_16.3%_56.9%)] hover:text-[hsl(210_40%_98%)]'
               )}
             >
               {tab.label}
@@ -385,13 +385,13 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
             </div>
           ) : (
             <div className="divide-y divide-[hsl(217.2_32.6%_17.5%)]">
-              {filteredNotifications.map((notification) => (
+              {filteredNotifications.map(notification => (
                 <div
                   key={notification.id}
                   onClick={() => handleNotificationClick(notification)}
                   className={cn(
-                    "p-4 hover:bg-[hsl(215_25%_27%)] transition-colors cursor-pointer",
-                    !notification.isRead && "bg-[hsl(217.2_91.2%_20%)]",
+                    'p-4 hover:bg-[hsl(215_25%_27%)] transition-colors cursor-pointer',
+                    !notification.isRead && 'bg-[hsl(217.2_91.2%_20%)]'
                   )}
                 >
                   <div className="flex items-start space-x-3">

@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import React, { useEffect, useMemo, useState } from "react";
-import { Button } from "./button";
+import React, { useEffect, useMemo, useState } from 'react';
+import { Button } from './button';
 
 interface CreateTeamModalProps {
   isOpen: boolean;
@@ -19,21 +19,21 @@ export const CreateTeamModal: React.FC<CreateTeamModalProps> = ({
   onClose,
   onTeamCreated,
 }) => {
-  const [name, setName] = useState("");
-  const [displayName, setDisplayName] = useState("");
-  const [description, setDescription] = useState("");
+  const [name, setName] = useState('');
+  const [displayName, setDisplayName] = useState('');
+  const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [users, setUsers] = useState<
     Array<{ id: number; name: string; email?: string }>
   >([]);
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState('');
   const [selectedMemberIds, setSelectedMemberIds] = useState<number[]>([]);
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await api.get("/users");
+        const res = await api.get('/users');
         const list = Array.isArray(res.data?.data) ? res.data.data : [];
         setUsers(list as any);
       } catch (e) {
@@ -48,22 +48,22 @@ export const CreateTeamModal: React.FC<CreateTeamModalProps> = ({
     const q = query.trim().toLowerCase();
     if (!q) return users;
     return users.filter(
-      (u) =>
-        (u.name || "").toLowerCase().includes(q) ||
-        (u.email || "").toLowerCase().includes(q),
+      u =>
+        (u.name || '').toLowerCase().includes(q) ||
+        (u.email || '').toLowerCase().includes(q)
     );
   }, [users, query]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
-      setError("Team name is required");
+      setError('Team name is required');
       return;
     }
     setIsSubmitting(true);
     setError(null);
     try {
-      const res = await api.post("/teams", {
+      const res = await api.post('/teams', {
         name: name.trim(),
         display_name: displayName.trim() || undefined,
         description: description.trim() || undefined,
@@ -72,12 +72,12 @@ export const CreateTeamModal: React.FC<CreateTeamModalProps> = ({
       const data = res.data?.data;
       onTeamCreated?.(data);
       onClose();
-      setName("");
-      setDisplayName("");
-      setDescription("");
+      setName('');
+      setDisplayName('');
+      setDescription('');
       setSelectedMemberIds([]);
     } catch (err: any) {
-      setError(err?.response?.data?.message || "Failed to create team");
+      setError(err?.response?.data?.message || 'Failed to create team');
     } finally {
       setIsSubmitting(false);
     }
@@ -127,7 +127,7 @@ export const CreateTeamModal: React.FC<CreateTeamModalProps> = ({
               <div className="relative">
                 <input
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={e => setName(e.target.value)}
                   className="w-full rounded-lg border border-[hsl(var(--chat-border))] bg-transparent px-3 py-2 text-xs outline-none focus:border-[hsl(var(--chat-accent))] focus:ring-2 focus:ring-[hsl(var(--chat-accent-light))]"
                   placeholder="e.g. Acme"
                 />
@@ -144,7 +144,7 @@ export const CreateTeamModal: React.FC<CreateTeamModalProps> = ({
                 </label>
                 <input
                   value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
+                  onChange={e => setDisplayName(e.target.value)}
                   className="w-full rounded-lg border border-[hsl(var(--chat-border))] bg-transparent px-3 py-2 text-xs outline-none focus:border-[hsl(var(--chat-accent))] focus:ring-2 focus:ring-[hsl(var(--chat-accent-light))]"
                   placeholder="e.g. Acme Team"
                 />
@@ -155,7 +155,7 @@ export const CreateTeamModal: React.FC<CreateTeamModalProps> = ({
                 </label>
                 <input
                   value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  onChange={e => setDescription(e.target.value)}
                   className="w-full rounded-lg border border-[hsl(var(--chat-border))] bg-transparent px-3 py-2 text-xs outline-none focus:border-[hsl(var(--chat-accent))] focus:ring-2 focus:ring-[hsl(var(--chat-accent-light))]"
                   placeholder="Optional"
                 />
@@ -174,8 +174,8 @@ export const CreateTeamModal: React.FC<CreateTeamModalProps> = ({
             </div>
             {selectedMemberIds.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
-                {selectedMemberIds.map((id) => {
-                  const u = users.find((x) => x.id === id);
+                {selectedMemberIds.map(id => {
+                  const u = users.find(x => x.id === id);
                   if (!u) return null;
                   return (
                     <span
@@ -187,8 +187,8 @@ export const CreateTeamModal: React.FC<CreateTeamModalProps> = ({
                         type="button"
                         className="text-[hsl(var(--chat-text-muted))] hover:text-[hsl(var(--chat-text))]"
                         onClick={() =>
-                          setSelectedMemberIds((prev) =>
-                            prev.filter((x) => x !== id),
+                          setSelectedMemberIds(prev =>
+                            prev.filter(x => x !== id)
                           )
                         }
                       >
@@ -201,12 +201,12 @@ export const CreateTeamModal: React.FC<CreateTeamModalProps> = ({
             )}
             <input
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={e => setQuery(e.target.value)}
               className="w-full rounded-lg border border-[hsl(var(--chat-border))] bg-transparent px-3 py-2 text-xs outline-none focus:border-[hsl(var(--chat-accent))] focus:ring-2 focus:ring-[hsl(var(--chat-accent-light))]"
               placeholder="Search users by name or email"
             />
             <div className="max-h-40 overflow-auto rounded-lg border border-[hsl(var(--chat-border))] divide-y divide-[hsl(var(--chat-border))]">
-              {filteredUsers.map((u) => {
+              {filteredUsers.map(u => {
                 const checked = selectedMemberIds.includes(u.id);
                 return (
                   <label
@@ -218,10 +218,10 @@ export const CreateTeamModal: React.FC<CreateTeamModalProps> = ({
                         type="checkbox"
                         checked={checked}
                         onChange={() => {
-                          setSelectedMemberIds((prev) =>
+                          setSelectedMemberIds(prev =>
                             checked
-                              ? prev.filter((id) => id !== u.id)
-                              : [...prev, u.id],
+                              ? prev.filter(id => id !== u.id)
+                              : [...prev, u.id]
                           );
                         }}
                       />
@@ -255,7 +255,7 @@ export const CreateTeamModal: React.FC<CreateTeamModalProps> = ({
               disabled={isSubmitting || !name.trim()}
               className="chat-button"
             >
-              {isSubmitting ? "Creating…" : "Create team"}
+              {isSubmitting ? 'Creating…' : 'Create team'}
             </Button>
           </div>
         </form>

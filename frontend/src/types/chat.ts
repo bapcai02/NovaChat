@@ -10,7 +10,7 @@ export interface User {
   last_seen_at?: string;
   status?: string;
   status_message?: string;
-  role?: "super_admin" | "admin" | "moderator" | "user" | "guest";
+  role?: 'super_admin' | 'admin' | 'moderator' | 'user' | 'guest';
 }
 
 export interface Team {
@@ -57,7 +57,7 @@ export interface Message {
   channel_id?: number;
   parent_id?: number;
   content: string;
-  type: "text" | "image" | "file" | "system";
+  type: 'text' | 'image' | 'file' | 'system';
   metadata?: any;
   created_at: string;
   updated_at: string;
@@ -71,12 +71,12 @@ export interface Message {
   is_bookmarked?: boolean;
   thread_messages_count?: number;
   replies_count?: number;
-  status?: "sent" | "delivered" | "read";
+  status?: 'sent' | 'delivered' | 'read';
 }
 
 export interface Conversation {
   id: number;
-  type: "direct" | "channel" | "group" | "team";
+  type: 'direct' | 'channel' | 'group' | 'team';
   name?: string;
   title?: string;
   team_id?: number;

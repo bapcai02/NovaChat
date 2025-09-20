@@ -5,21 +5,21 @@ const scheduled: Map<number, TimerId> = new Map();
 export function scheduleReminder(
   messageId: number,
   text: string,
-  triggerAt: Date,
+  triggerAt: Date
 ): void {
   try {
     cancelReminder(messageId);
     const delay = Math.max(0, triggerAt.getTime() - Date.now());
     const id = setTimeout(() => {
       try {
-        if (typeof Notification !== "undefined") {
-          if (Notification.permission === "default") {
-            Notification.requestPermission().then((perm) => {
-              if (perm === "granted")
-                new Notification("Reminder", { body: text });
+        if (typeof Notification !== 'undefined') {
+          if (Notification.permission === 'default') {
+            Notification.requestPermission().then(perm => {
+              if (perm === 'granted')
+                new Notification('Reminder', { body: text });
             });
-          } else if (Notification.permission === "granted") {
-            new Notification("Reminder", { body: text });
+          } else if (Notification.permission === 'granted') {
+            new Notification('Reminder', { body: text });
           }
         } else {
           // Fallback

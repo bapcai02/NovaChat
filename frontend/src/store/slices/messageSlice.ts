@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import {
   messageService,
   Message,
@@ -6,7 +6,7 @@ import {
   UpdateMessageData,
   MessageReaction,
   AddReactionData,
-} from "../../services/messageService";
+} from '../../services/messageService';
 
 // Message state interface
 interface MessageState {
@@ -30,14 +30,14 @@ const initialState: MessageState = {
 
 // Async thunks
 export const fetchMessages = createAsyncThunk(
-  "messages/fetchMessages",
+  'messages/fetchMessages',
   async (
     {
       channelId,
       page = 1,
       limit = 50,
     }: { channelId: number; page?: number; limit?: number },
-    { rejectWithValue },
+    { rejectWithValue }
   ) => {
     try {
       const response = await messageService.getMessages(channelId, page, limit);
@@ -48,96 +48,96 @@ export const fetchMessages = createAsyncThunk(
       };
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to fetch messages",
+        error.response?.data?.message || 'Failed to fetch messages'
       );
     }
-  },
+  }
 );
 
 export const sendMessage = createAsyncThunk(
-  "messages/sendMessage",
+  'messages/sendMessage',
   async (
     { channelId, data }: { channelId: number; data: CreateMessageData },
-    { rejectWithValue },
+    { rejectWithValue }
   ) => {
     try {
       const message = await messageService.sendMessage(channelId, data);
       return message;
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to send message",
+        error.response?.data?.message || 'Failed to send message'
       );
     }
-  },
+  }
 );
 
 export const updateMessage = createAsyncThunk(
-  "messages/updateMessage",
+  'messages/updateMessage',
   async (
     { id, data }: { id: number; data: UpdateMessageData },
-    { rejectWithValue },
+    { rejectWithValue }
   ) => {
     try {
       const message = await messageService.updateMessage(id, data);
       return message;
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to update message",
+        error.response?.data?.message || 'Failed to update message'
       );
     }
-  },
+  }
 );
 
 export const deleteMessage = createAsyncThunk(
-  "messages/deleteMessage",
+  'messages/deleteMessage',
   async (id: number, { rejectWithValue }) => {
     try {
       await messageService.deleteMessage(id);
       return id;
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to delete message",
+        error.response?.data?.message || 'Failed to delete message'
       );
     }
-  },
+  }
 );
 
 export const addReaction = createAsyncThunk(
-  "messages/addReaction",
+  'messages/addReaction',
   async (
     { messageId, data }: { messageId: number; data: AddReactionData },
-    { rejectWithValue },
+    { rejectWithValue }
   ) => {
     try {
       const reaction = await messageService.addReaction(messageId, data);
       return { messageId, reaction };
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to add reaction",
+        error.response?.data?.message || 'Failed to add reaction'
       );
     }
-  },
+  }
 );
 
 export const removeReaction = createAsyncThunk(
-  "messages/removeReaction",
+  'messages/removeReaction',
   async (
     { messageId, emoji }: { messageId: number; emoji: string },
-    { rejectWithValue },
+    { rejectWithValue }
   ) => {
     try {
       await messageService.removeReaction(messageId, emoji);
       return { messageId, emoji };
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to remove reaction",
+        error.response?.data?.message || 'Failed to remove reaction'
       );
     }
-  },
+  }
 );
 
 export const searchMessages = createAsyncThunk(
-  "messages/searchMessages",
+  'messages/searchMessages',
   async (
     {
       query,
@@ -145,14 +145,14 @@ export const searchMessages = createAsyncThunk(
       page = 1,
       limit = 20,
     }: { query: string; channelId?: number; page?: number; limit?: number },
-    { rejectWithValue },
+    { rejectWithValue }
   ) => {
     try {
       const response = await messageService.searchMessages(
         query,
         channelId,
         page,
-        limit,
+        limit
       );
       return {
         messages: response.data,
@@ -161,21 +161,21 @@ export const searchMessages = createAsyncThunk(
       };
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to search messages",
+        error.response?.data?.message || 'Failed to search messages'
       );
     }
-  },
+  }
 );
 
 // Message slice
 const messageSlice = createSlice({
-  name: "messages",
+  name: 'messages',
   initialState,
   reducers: {
-    clearError: (state) => {
+    clearError: state => {
       state.error = null;
     },
-    clearMessages: (state) => {
+    clearMessages: state => {
       state.messages = [];
       state.currentPage = 1;
       state.hasMore = true;
@@ -188,7 +188,7 @@ const messageSlice = createSlice({
     },
     updateMessageInList: (state, action: PayloadAction<Message>) => {
       const index = state.messages.findIndex(
-        (message) => message.id === action.payload.id,
+        message => message.id === action.payload.id
       );
       if (index !== -1) {
         state.messages[index] = action.payload;
@@ -196,15 +196,15 @@ const messageSlice = createSlice({
     },
     removeMessage: (state, action: PayloadAction<number>) => {
       state.messages = state.messages.filter(
-        (message) => message.id !== action.payload,
+        message => message.id !== action.payload
       );
     },
     addReactionToMessage: (
       state,
-      action: PayloadAction<{ messageId: number; reaction: MessageReaction }>,
+      action: PayloadAction<{ messageId: number; reaction: MessageReaction }>
     ) => {
       const message = state.messages.find(
-        (m) => m.id === action.payload.messageId,
+        m => m.id === action.payload.messageId
       );
       if (message) {
         if (!message.reactions) {
@@ -215,22 +215,22 @@ const messageSlice = createSlice({
     },
     removeReactionFromMessage: (
       state,
-      action: PayloadAction<{ messageId: number; emoji: string }>,
+      action: PayloadAction<{ messageId: number; emoji: string }>
     ) => {
       const message = state.messages.find(
-        (m) => m.id === action.payload.messageId,
+        m => m.id === action.payload.messageId
       );
       if (message && message.reactions) {
         message.reactions = message.reactions.filter(
-          (r) => r.emoji !== action.payload.emoji,
+          r => r.emoji !== action.payload.emoji
         );
       }
     },
   },
-  extraReducers: (builder) => {
+  extraReducers: builder => {
     // Fetch messages
     builder
-      .addCase(fetchMessages.pending, (state) => {
+      .addCase(fetchMessages.pending, state => {
         state.isLoading = true;
         state.error = null;
       })
@@ -242,7 +242,7 @@ const messageSlice = createSlice({
             messages: Message[];
             hasMore: boolean;
             currentPage: number;
-          }>,
+          }>
         ) => {
           state.isLoading = false;
           if (action.payload.currentPage === 1) {
@@ -253,7 +253,7 @@ const messageSlice = createSlice({
           state.hasMore = action.payload.hasMore;
           state.currentPage = action.payload.currentPage;
           state.error = null;
-        },
+        }
       )
       .addCase(fetchMessages.rejected, (state, action) => {
         state.isLoading = false;
@@ -262,7 +262,7 @@ const messageSlice = createSlice({
 
     // Send message
     builder
-      .addCase(sendMessage.pending, (state) => {
+      .addCase(sendMessage.pending, state => {
         state.isLoading = true;
         state.error = null;
       })
@@ -272,7 +272,7 @@ const messageSlice = createSlice({
           state.isLoading = false;
           state.messages.unshift(action.payload);
           state.error = null;
-        },
+        }
       )
       .addCase(sendMessage.rejected, (state, action) => {
         state.isLoading = false;
@@ -281,7 +281,7 @@ const messageSlice = createSlice({
 
     // Update message
     builder
-      .addCase(updateMessage.pending, (state) => {
+      .addCase(updateMessage.pending, state => {
         state.isLoading = true;
         state.error = null;
       })
@@ -290,13 +290,13 @@ const messageSlice = createSlice({
         (state, action: PayloadAction<Message>) => {
           state.isLoading = false;
           const index = state.messages.findIndex(
-            (message) => message.id === action.payload.id,
+            message => message.id === action.payload.id
           );
           if (index !== -1) {
             state.messages[index] = action.payload;
           }
           state.error = null;
-        },
+        }
       )
       .addCase(updateMessage.rejected, (state, action) => {
         state.isLoading = false;
@@ -305,7 +305,7 @@ const messageSlice = createSlice({
 
     // Delete message
     builder
-      .addCase(deleteMessage.pending, (state) => {
+      .addCase(deleteMessage.pending, state => {
         state.isLoading = true;
         state.error = null;
       })
@@ -314,10 +314,10 @@ const messageSlice = createSlice({
         (state, action: PayloadAction<number>) => {
           state.isLoading = false;
           state.messages = state.messages.filter(
-            (message) => message.id !== action.payload,
+            message => message.id !== action.payload
           );
           state.error = null;
-        },
+        }
       )
       .addCase(deleteMessage.rejected, (state, action) => {
         state.isLoading = false;
@@ -326,7 +326,7 @@ const messageSlice = createSlice({
 
     // Add reaction
     builder
-      .addCase(addReaction.pending, (state) => {
+      .addCase(addReaction.pending, state => {
         state.isLoading = true;
         state.error = null;
       })
@@ -337,11 +337,11 @@ const messageSlice = createSlice({
           action: PayloadAction<{
             messageId: number;
             reaction: MessageReaction;
-          }>,
+          }>
         ) => {
           state.isLoading = false;
           const message = state.messages.find(
-            (m) => m.id === action.payload.messageId,
+            m => m.id === action.payload.messageId
           );
           if (message) {
             if (!message.reactions) {
@@ -350,7 +350,7 @@ const messageSlice = createSlice({
             message.reactions.push(action.payload.reaction);
           }
           state.error = null;
-        },
+        }
       )
       .addCase(addReaction.rejected, (state, action) => {
         state.isLoading = false;
@@ -359,7 +359,7 @@ const messageSlice = createSlice({
 
     // Remove reaction
     builder
-      .addCase(removeReaction.pending, (state) => {
+      .addCase(removeReaction.pending, state => {
         state.isLoading = true;
         state.error = null;
       })
@@ -367,19 +367,19 @@ const messageSlice = createSlice({
         removeReaction.fulfilled,
         (
           state,
-          action: PayloadAction<{ messageId: number; emoji: string }>,
+          action: PayloadAction<{ messageId: number; emoji: string }>
         ) => {
           state.isLoading = false;
           const message = state.messages.find(
-            (m) => m.id === action.payload.messageId,
+            m => m.id === action.payload.messageId
           );
           if (message && message.reactions) {
             message.reactions = message.reactions.filter(
-              (r) => r.emoji !== action.payload.emoji,
+              r => r.emoji !== action.payload.emoji
             );
           }
           state.error = null;
-        },
+        }
       )
       .addCase(removeReaction.rejected, (state, action) => {
         state.isLoading = false;
@@ -388,7 +388,7 @@ const messageSlice = createSlice({
 
     // Search messages
     builder
-      .addCase(searchMessages.pending, (state) => {
+      .addCase(searchMessages.pending, state => {
         state.isLoading = true;
         state.error = null;
       })
@@ -400,7 +400,7 @@ const messageSlice = createSlice({
             messages: Message[];
             hasMore: boolean;
             currentPage: number;
-          }>,
+          }>
         ) => {
           state.isLoading = false;
           if (action.payload.currentPage === 1) {
@@ -411,7 +411,7 @@ const messageSlice = createSlice({
           state.hasMore = action.payload.hasMore;
           state.currentPage = action.payload.currentPage;
           state.error = null;
-        },
+        }
       )
       .addCase(searchMessages.rejected, (state, action) => {
         state.isLoading = false;

@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import { motion } from "framer-motion";
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import {
   Mail,
   Lock,
@@ -13,19 +13,19 @@ import {
   Chrome,
   Loader2,
   Check,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils";
+} from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
 
 interface RegisterFormProps {
   onSubmit: (data: {
@@ -47,11 +47,11 @@ export default function ModernRegisterForm({
   onSwitchToLogin,
 }: RegisterFormProps) {
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    username: "",
-    password: "",
-    confirmPassword: "",
+    name: '',
+    email: '',
+    username: '',
+    password: '',
+    confirmPassword: '',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -59,11 +59,11 @@ export default function ModernRegisterForm({
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ ...prev, [name]: value }));
 
     // Clear error when user starts typing
     if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
+      setErrors(prev => ({ ...prev, [name]: '' }));
     }
   };
 
@@ -71,39 +71,39 @@ export default function ModernRegisterForm({
     const newErrors: { [key: string]: string } = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = "Full name is required";
+      newErrors.name = 'Full name is required';
     } else if (formData.name.trim().length < 2) {
-      newErrors.name = "Name must be at least 2 characters";
+      newErrors.name = 'Name must be at least 2 characters';
     }
 
     if (!formData.email) {
-      newErrors.email = "Email is required";
+      newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email";
+      newErrors.email = 'Please enter a valid email';
     }
 
     if (!formData.username) {
-      newErrors.username = "Username is required";
+      newErrors.username = 'Username is required';
     } else if (formData.username.length < 3) {
-      newErrors.username = "Username must be at least 3 characters";
+      newErrors.username = 'Username must be at least 3 characters';
     } else if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
       newErrors.username =
-        "Username can only contain letters, numbers, and underscores";
+        'Username can only contain letters, numbers, and underscores';
     }
 
     if (!formData.password) {
-      newErrors.password = "Password is required";
+      newErrors.password = 'Password is required';
     } else if (formData.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters";
+      newErrors.password = 'Password must be at least 8 characters';
     } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
       newErrors.password =
-        "Password must contain at least one uppercase letter, one lowercase letter, and one number";
+        'Password must contain at least one uppercase letter, one lowercase letter, and one number';
     }
 
     if (!formData.confirmPassword) {
-      newErrors.confirmPassword = "Please confirm your password";
+      newErrors.confirmPassword = 'Please confirm your password';
     } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
+      newErrors.confirmPassword = 'Passwords do not match';
     }
 
     setErrors(newErrors);
@@ -147,7 +147,7 @@ export default function ModernRegisterForm({
           <motion.div
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
-            transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+            transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
             className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl mb-4"
           >
             <span className="text-2xl font-bold text-white">N</span>
@@ -186,9 +186,9 @@ export default function ModernRegisterForm({
                     value={formData.name}
                     onChange={handleInputChange}
                     className={cn(
-                      "pl-10 bg-white/5 border-white/20 text-white placeholder:text-slate-400 focus:border-blue-400 focus:ring-blue-400/20",
+                      'pl-10 bg-white/5 border-white/20 text-white placeholder:text-slate-400 focus:border-blue-400 focus:ring-blue-400/20',
                       errors.name &&
-                        "border-red-400 focus:border-red-400 focus:ring-red-400/20",
+                        'border-red-400 focus:border-red-400 focus:ring-red-400/20'
                     )}
                     disabled={isLoading}
                   />
@@ -222,9 +222,9 @@ export default function ModernRegisterForm({
                     value={formData.email}
                     onChange={handleInputChange}
                     className={cn(
-                      "pl-10 bg-white/5 border-white/20 text-white placeholder:text-slate-400 focus:border-blue-400 focus:ring-blue-400/20",
+                      'pl-10 bg-white/5 border-white/20 text-white placeholder:text-slate-400 focus:border-blue-400 focus:ring-blue-400/20',
                       errors.email &&
-                        "border-red-400 focus:border-red-400 focus:ring-red-400/20",
+                        'border-red-400 focus:border-red-400 focus:ring-red-400/20'
                     )}
                     disabled={isLoading}
                   />
@@ -258,9 +258,9 @@ export default function ModernRegisterForm({
                     value={formData.username}
                     onChange={handleInputChange}
                     className={cn(
-                      "pl-10 bg-white/5 border-white/20 text-white placeholder:text-slate-400 focus:border-blue-400 focus:ring-blue-400/20",
+                      'pl-10 bg-white/5 border-white/20 text-white placeholder:text-slate-400 focus:border-blue-400 focus:ring-blue-400/20',
                       errors.username &&
-                        "border-red-400 focus:border-red-400 focus:ring-red-400/20",
+                        'border-red-400 focus:border-red-400 focus:ring-red-400/20'
                     )}
                     disabled={isLoading}
                   />
@@ -289,14 +289,14 @@ export default function ModernRegisterForm({
                   <Input
                     id="password"
                     name="password"
-                    type={showPassword ? "text" : "password"}
+                    type={showPassword ? 'text' : 'password'}
                     placeholder="Create a password"
                     value={formData.password}
                     onChange={handleInputChange}
                     className={cn(
-                      "pl-10 pr-10 bg-white/5 border-white/20 text-white placeholder:text-slate-400 focus:border-blue-400 focus:ring-blue-400/20",
+                      'pl-10 pr-10 bg-white/5 border-white/20 text-white placeholder:text-slate-400 focus:border-blue-400 focus:ring-blue-400/20',
                       errors.password &&
-                        "border-red-400 focus:border-red-400 focus:ring-red-400/20",
+                        'border-red-400 focus:border-red-400 focus:ring-red-400/20'
                     )}
                     disabled={isLoading}
                   />
@@ -320,18 +320,18 @@ export default function ModernRegisterForm({
                 {formData.password && (
                   <div className="space-y-2">
                     <div className="flex space-x-1">
-                      {[1, 2, 3, 4, 5].map((level) => (
+                      {[1, 2, 3, 4, 5].map(level => (
                         <div
                           key={level}
                           className={cn(
-                            "h-1 flex-1 rounded-full transition-colors",
+                            'h-1 flex-1 rounded-full transition-colors',
                             level <= passwordStrength
                               ? passwordStrength <= 2
-                                ? "bg-red-500"
+                                ? 'bg-red-500'
                                 : passwordStrength <= 3
-                                  ? "bg-yellow-500"
-                                  : "bg-green-500"
-                              : "bg-slate-600",
+                                  ? 'bg-yellow-500'
+                                  : 'bg-green-500'
+                              : 'bg-slate-600'
                           )}
                         />
                       ))}
@@ -339,68 +339,68 @@ export default function ModernRegisterForm({
                     <div className="flex items-center space-x-2 text-xs">
                       <Check
                         className={cn(
-                          "h-3 w-3",
+                          'h-3 w-3',
                           formData.password.length >= 8
-                            ? "text-green-400"
-                            : "text-slate-400",
+                            ? 'text-green-400'
+                            : 'text-slate-400'
                         )}
                       />
                       <span
                         className={cn(
                           formData.password.length >= 8
-                            ? "text-green-400"
-                            : "text-slate-400",
+                            ? 'text-green-400'
+                            : 'text-slate-400'
                         )}
                       >
                         At least 8 characters
                       </span>
                       <Check
                         className={cn(
-                          "h-3 w-3",
+                          'h-3 w-3',
                           /[a-z]/.test(formData.password)
-                            ? "text-green-400"
-                            : "text-slate-400",
+                            ? 'text-green-400'
+                            : 'text-slate-400'
                         )}
                       />
                       <span
                         className={cn(
                           /[a-z]/.test(formData.password)
-                            ? "text-green-400"
-                            : "text-slate-400",
+                            ? 'text-green-400'
+                            : 'text-slate-400'
                         )}
                       >
                         Lowercase
                       </span>
                       <Check
                         className={cn(
-                          "h-3 w-3",
+                          'h-3 w-3',
                           /[A-Z]/.test(formData.password)
-                            ? "text-green-400"
-                            : "text-slate-400",
+                            ? 'text-green-400'
+                            : 'text-slate-400'
                         )}
                       />
                       <span
                         className={cn(
                           /[A-Z]/.test(formData.password)
-                            ? "text-green-400"
-                            : "text-slate-400",
+                            ? 'text-green-400'
+                            : 'text-slate-400'
                         )}
                       >
                         Uppercase
                       </span>
                       <Check
                         className={cn(
-                          "h-3 w-3",
+                          'h-3 w-3',
                           /\d/.test(formData.password)
-                            ? "text-green-400"
-                            : "text-slate-400",
+                            ? 'text-green-400'
+                            : 'text-slate-400'
                         )}
                       />
                       <span
                         className={cn(
                           /\d/.test(formData.password)
-                            ? "text-green-400"
-                            : "text-slate-400",
+                            ? 'text-green-400'
+                            : 'text-slate-400'
                         )}
                       >
                         Number
@@ -433,14 +433,14 @@ export default function ModernRegisterForm({
                   <Input
                     id="confirmPassword"
                     name="confirmPassword"
-                    type={showConfirmPassword ? "text" : "password"}
+                    type={showConfirmPassword ? 'text' : 'password'}
                     placeholder="Confirm your password"
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
                     className={cn(
-                      "pl-10 pr-10 bg-white/5 border-white/20 text-white placeholder:text-slate-400 focus:border-blue-400 focus:ring-blue-400/20",
+                      'pl-10 pr-10 bg-white/5 border-white/20 text-white placeholder:text-slate-400 focus:border-blue-400 focus:ring-blue-400/20',
                       errors.confirmPassword &&
-                        "border-red-400 focus:border-red-400 focus:ring-red-400/20",
+                        'border-red-400 focus:border-red-400 focus:ring-red-400/20'
                     )}
                     disabled={isLoading}
                   />
@@ -493,11 +493,11 @@ export default function ModernRegisterForm({
                   htmlFor="terms"
                   className="text-sm text-slate-300 leading-relaxed"
                 >
-                  I agree to the{" "}
+                  I agree to the{' '}
                   <a href="#" className="text-blue-400 hover:text-blue-300">
                     Terms of Service
-                  </a>{" "}
-                  and{" "}
+                  </a>{' '}
+                  and{' '}
                   <a href="#" className="text-blue-400 hover:text-blue-300">
                     Privacy Policy
                   </a>
@@ -541,7 +541,7 @@ export default function ModernRegisterForm({
                 <Button
                   variant="outline"
                   className="bg-white/5 border-white/20 text-slate-300 hover:bg-white/10 hover:text-white"
-                  onClick={() => handleSocialRegister("github")}
+                  onClick={() => handleSocialRegister('github')}
                   disabled={isLoading}
                 >
                   <Github className="mr-2 h-4 w-4" />
@@ -550,7 +550,7 @@ export default function ModernRegisterForm({
                 <Button
                   variant="outline"
                   className="bg-white/5 border-white/20 text-slate-300 hover:bg-white/10 hover:text-white"
-                  onClick={() => handleSocialRegister("google")}
+                  onClick={() => handleSocialRegister('google')}
                   disabled={isLoading}
                 >
                   <Chrome className="mr-2 h-4 w-4" />
@@ -562,7 +562,7 @@ export default function ModernRegisterForm({
             {/* Switch to Login */}
             <div className="text-center">
               <p className="text-sm text-slate-400">
-                Already have an account?{" "}
+                Already have an account?{' '}
                 <Button
                   variant="link"
                   className="text-blue-400 hover:text-blue-300 p-0 font-medium"

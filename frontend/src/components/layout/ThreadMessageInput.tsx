@@ -1,20 +1,20 @@
-"use client";
+'use client';
 
-import React, { useState, useRef } from "react";
-import { EmojiPicker } from "@/components/ui/emoji-picker";
-import { MessageRenderer } from "@/components/ui/message-renderer";
-import { cn } from "@/lib/utils";
+import React, { useState, useRef } from 'react';
+import { EmojiPicker } from '@/components/ui/emoji-picker';
+import { MessageRenderer } from '@/components/ui/message-renderer';
+import { cn } from '@/lib/utils';
 
 // Message formatting utilities
 const formatText = (
   text: string,
-  format: "bold" | "italic" | "code" | "strike",
+  format: 'bold' | 'italic' | 'code' | 'strike'
 ) => {
   const formats = {
-    bold: { prefix: "**", suffix: "**" },
-    italic: { prefix: "*", suffix: "*" },
-    code: { prefix: "`", suffix: "`" },
-    strike: { prefix: "~~", suffix: "~~" },
+    bold: { prefix: '**', suffix: '**' },
+    italic: { prefix: '*', suffix: '*' },
+    code: { prefix: '`', suffix: '`' },
+    strike: { prefix: '~~', suffix: '~~' },
   };
 
   const { prefix, suffix } = formats[format];
@@ -28,7 +28,7 @@ interface ThreadMessageInputProps {
 export const ThreadMessageInput: React.FC<ThreadMessageInputProps> = ({
   onSendMessage,
 }) => {
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -37,12 +37,12 @@ export const ThreadMessageInput: React.FC<ThreadMessageInputProps> = ({
     e.preventDefault();
     if (message.trim()) {
       onSendMessage(message.trim());
-      setMessage("");
+      setMessage('');
     }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit(e);
     }
@@ -51,15 +51,15 @@ export const ThreadMessageInput: React.FC<ThreadMessageInputProps> = ({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     // Formatting shortcuts (only when in textarea)
     if (e.target === textareaRef.current) {
-      if ((e.ctrlKey || e.metaKey) && e.key === "b") {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
         e.preventDefault();
-        applyFormatting("bold");
-      } else if ((e.ctrlKey || e.metaKey) && e.key === "i") {
+        applyFormatting('bold');
+      } else if ((e.ctrlKey || e.metaKey) && e.key === 'i') {
         e.preventDefault();
-        applyFormatting("italic");
-      } else if ((e.ctrlKey || e.metaKey) && e.key === "`") {
+        applyFormatting('italic');
+      } else if ((e.ctrlKey || e.metaKey) && e.key === '`') {
         e.preventDefault();
-        applyFormatting("code");
+        applyFormatting('code');
       }
     }
   };
@@ -71,12 +71,12 @@ export const ThreadMessageInput: React.FC<ThreadMessageInputProps> = ({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
-      console.log("Files selected:", files);
+      console.log('Files selected:', files);
       // Handle file upload logic here
     }
   };
 
-  const applyFormatting = (format: "bold" | "italic" | "code" | "strike") => {
+  const applyFormatting = (format: 'bold' | 'italic' | 'code' | 'strike') => {
     const textarea = textareaRef.current;
     if (!textarea) return;
 
@@ -95,19 +95,19 @@ export const ThreadMessageInput: React.FC<ThreadMessageInputProps> = ({
         textarea.focus();
         textarea.setSelectionRange(
           start + formattedText.length,
-          start + formattedText.length,
+          start + formattedText.length
         );
       }, 0);
     } else {
       // If no text selected, insert format markers
       const formatMarkers =
-        format === "bold"
-          ? "**bold text**"
-          : format === "italic"
-            ? "*italic text*"
-            : format === "code"
-              ? "`code`"
-              : "~~strikethrough~~";
+        format === 'bold'
+          ? '**bold text**'
+          : format === 'italic'
+            ? '*italic text*'
+            : format === 'code'
+              ? '`code`'
+              : '~~strikethrough~~';
 
       const newMessage =
         message.substring(0, start) + formatMarkers + message.substring(end);
@@ -117,17 +117,17 @@ export const ThreadMessageInput: React.FC<ThreadMessageInputProps> = ({
       setTimeout(() => {
         textarea.focus();
         const cursorPos =
-          start + (format === "code" ? 1 : format === "bold" ? 2 : 1);
+          start + (format === 'code' ? 1 : format === 'bold' ? 2 : 1);
         textarea.setSelectionRange(
           cursorPos,
           cursorPos +
-            (format === "bold"
+            (format === 'bold'
               ? 9
-              : format === "italic"
+              : format === 'italic'
                 ? 12
-                : format === "code"
+                : format === 'code'
                   ? 4
-                  : 13),
+                  : 13)
         );
       }, 0);
     }
@@ -236,7 +236,7 @@ export const ThreadMessageInput: React.FC<ThreadMessageInputProps> = ({
 
             <button
               type="button"
-              onClick={() => applyFormatting("bold")}
+              onClick={() => applyFormatting('bold')}
               className="h-6 w-6 text-[hsl(var(--chat-text-muted))] hover:text-[hsl(var(--chat-text))] hover:bg-[hsl(var(--chat-message-hover))] rounded flex items-center justify-center"
               title="Bold (Ctrl+B)"
             >
@@ -263,7 +263,7 @@ export const ThreadMessageInput: React.FC<ThreadMessageInputProps> = ({
 
             <button
               type="button"
-              onClick={() => applyFormatting("italic")}
+              onClick={() => applyFormatting('italic')}
               className="h-6 w-6 text-[hsl(var(--chat-text-muted))] hover:text-[hsl(var(--chat-text))] hover:bg-[hsl(var(--chat-message-hover))] rounded flex items-center justify-center"
               title="Italic (Ctrl+I)"
             >
@@ -284,7 +284,7 @@ export const ThreadMessageInput: React.FC<ThreadMessageInputProps> = ({
 
             <button
               type="button"
-              onClick={() => applyFormatting("code")}
+              onClick={() => applyFormatting('code')}
               className="h-6 w-6 text-[hsl(var(--chat-text-muted))] hover:text-[hsl(var(--chat-text))] hover:bg-[hsl(var(--chat-message-hover))] rounded flex items-center justify-center"
               title="Code (Ctrl+`)"
             >
@@ -309,16 +309,16 @@ export const ThreadMessageInput: React.FC<ThreadMessageInputProps> = ({
             <textarea
               ref={textareaRef}
               value={message}
-              onChange={(e) => setMessage(e.target.value)}
+              onChange={e => setMessage(e.target.value)}
               onKeyPress={handleKeyPress}
               onKeyDown={handleKeyDown}
               placeholder="Reply to thread..."
               className="w-full min-h-[20px] max-h-24 resize-none bg-transparent border-none outline-none text-[hsl(var(--chat-text))] placeholder-[hsl(var(--chat-text-muted))] text-xs leading-relaxed"
               rows={1}
               style={{
-                height: "auto",
-                minHeight: "20px",
-                maxHeight: "96px",
+                height: 'auto',
+                minHeight: '20px',
+                maxHeight: '96px',
               }}
             />
             {/* Formatting Preview */}
@@ -358,10 +358,10 @@ export const ThreadMessageInput: React.FC<ThreadMessageInputProps> = ({
               type="submit"
               disabled={!message.trim()}
               className={cn(
-                "h-6 px-2 text-xs transition-all duration-200 rounded",
+                'h-6 px-2 text-xs transition-all duration-200 rounded',
                 message.trim()
-                  ? "chat-button"
-                  : "bg-[hsl(var(--chat-message-hover))] text-[hsl(var(--chat-text-muted))] cursor-not-allowed",
+                  ? 'chat-button'
+                  : 'bg-[hsl(var(--chat-message-hover))] text-[hsl(var(--chat-text-muted))] cursor-not-allowed'
               )}
             >
               <svg

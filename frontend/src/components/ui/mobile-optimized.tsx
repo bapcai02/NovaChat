@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import { cn } from "@/lib/utils";
+import React, { useState } from 'react';
+import { cn } from '@/lib/utils';
 
 interface MobileOptimizedProps {
   children: React.ReactNode;
@@ -29,7 +29,7 @@ export const MobileOptimized: React.FC<MobileOptimizedProps> = ({
   className,
 }) => {
   return (
-    <div className={cn("min-h-screen touch-manipulation", className)}>
+    <div className={cn('min-h-screen touch-manipulation', className)}>
       {children}
     </div>
   );
@@ -83,13 +83,13 @@ export const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
       {/* Sheet */}
       <div
         className={cn(
-          "absolute bottom-0 left-0 right-0 bg-[hsl(217.2_32.6%_17.5%)] rounded-t-xl shadow-2xl transition-transform duration-300",
-          className,
+          'absolute bottom-0 left-0 right-0 bg-[hsl(217.2_32.6%_17.5%)] rounded-t-xl shadow-2xl transition-transform duration-300',
+          className
         )}
         style={{
           transform: isDragging
             ? `translateY(${Math.max(0, currentY - startY)}px)`
-            : "translateY(0)",
+            : 'translateY(0)',
         }}
       >
         {/* Handle */}
@@ -127,8 +127,8 @@ export const MobileFloatingAction: React.FC<MobileFloatingActionProps> = ({
     <button
       onClick={onClick}
       className={cn(
-        "fixed bottom-6 right-6 w-14 h-14 bg-[hsl(217.2_91.2%_59.8%)] hover:bg-[hsl(217.2_91.2%_50%)] text-white rounded-full shadow-lg flex items-center justify-center transition-all duration-200 active:scale-95 touch-manipulation",
-        className,
+        'fixed bottom-6 right-6 w-14 h-14 bg-[hsl(217.2_91.2%_59.8%)] hover:bg-[hsl(217.2_91.2%_50%)] text-white rounded-full shadow-lg flex items-center justify-center transition-all duration-200 active:scale-95 touch-manipulation',
+        className
       )}
       title={label}
     >
@@ -144,8 +144,8 @@ export const MobileInput: React.FC<
   return (
     <input
       className={cn(
-        "w-full px-4 py-3 text-base bg-[hsl(217.2_32.6%_17.5%)] border border-[hsl(217.2_32.6%_17.5%)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[hsl(217.2_91.2%_59.8%)] focus:border-transparent touch-manipulation",
-        className,
+        'w-full px-4 py-3 text-base bg-[hsl(217.2_32.6%_17.5%)] border border-[hsl(217.2_32.6%_17.5%)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[hsl(217.2_91.2%_59.8%)] focus:border-transparent touch-manipulation',
+        className
       )}
       {...props}
     />
@@ -155,25 +155,25 @@ export const MobileInput: React.FC<
 // Mobile-optimized button with larger touch target
 export const MobileButton: React.FC<
   React.ButtonHTMLAttributes<HTMLButtonElement> & {
-    variant?: "primary" | "secondary" | "ghost";
-    size?: "sm" | "md" | "lg";
+    variant?: 'primary' | 'secondary' | 'ghost';
+    size?: 'sm' | 'md' | 'lg';
   }
-> = ({ className, variant = "primary", size = "md", children, ...props }) => {
+> = ({ className, variant = 'primary', size = 'md', children, ...props }) => {
   const baseClasses =
-    "touch-manipulation transition-all duration-200 active:scale-95";
+    'touch-manipulation transition-all duration-200 active:scale-95';
 
   const variantClasses = {
     primary:
-      "bg-[hsl(217.2_91.2%_59.8%)] hover:bg-[hsl(217.2_91.2%_50%)] text-white",
+      'bg-[hsl(217.2_91.2%_59.8%)] hover:bg-[hsl(217.2_91.2%_50%)] text-white',
     secondary:
-      "bg-[hsl(217.2_32.6%_17.5%)] hover:bg-[hsl(215_25%_27%)] text-[hsl(210_40%_98%)]",
-    ghost: "bg-transparent hover:bg-[hsl(215_25%_27%)] text-[hsl(210_40%_98%)]",
+      'bg-[hsl(217.2_32.6%_17.5%)] hover:bg-[hsl(215_25%_27%)] text-[hsl(210_40%_98%)]',
+    ghost: 'bg-transparent hover:bg-[hsl(215_25%_27%)] text-[hsl(210_40%_98%)]',
   };
 
   const sizeClasses = {
-    sm: "px-3 py-2 text-sm",
-    md: "px-4 py-3 text-base",
-    lg: "px-6 py-4 text-lg",
+    sm: 'px-3 py-2 text-sm',
+    md: 'px-4 py-3 text-base',
+    lg: 'px-6 py-4 text-lg',
   };
 
   return (
@@ -182,8 +182,8 @@ export const MobileButton: React.FC<
         baseClasses,
         variantClasses[variant],
         sizeClasses[size],
-        "rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-[hsl(217.2_91.2%_59.8%)] focus:ring-offset-2 focus:ring-offset-[hsl(222.2_84%_4.9%)]",
-        className,
+        'rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-[hsl(217.2_91.2%_59.8%)] focus:ring-offset-2 focus:ring-offset-[hsl(222.2_84%_4.9%)]',
+        className
       )}
       {...props}
     >
@@ -261,11 +261,11 @@ export const MobileSwipeableItem: React.FC<{
       {/* Main content */}
       <div
         className={cn(
-          "relative bg-[hsl(217.2_32.6%_17.5%)] transition-transform duration-200",
-          className,
+          'relative bg-[hsl(217.2_32.6%_17.5%)] transition-transform duration-200',
+          className
         )}
         style={{
-          transform: isSwiping ? `translateX(${currentX}px)` : "translateX(0)",
+          transform: isSwiping ? `translateX(${currentX}px)` : 'translateX(0)',
         }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}

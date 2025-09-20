@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import React from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { User, Search } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
-import { SearchResult } from "@/services/searchService";
+import React from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { User, Search } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+import { SearchResult } from '@/services/searchService';
 
 interface SearchOverlayProps {
   isVisible: boolean;
@@ -51,12 +51,12 @@ export function SearchOverlay({
           transition={{
             duration: 0.3,
             ease: [0.4, 0.0, 0.2, 1],
-            type: "spring",
+            type: 'spring',
             stiffness: 300,
             damping: 30,
           }}
           className="absolute top-20 left-4 right-4 max-w-md mx-auto"
-          onClick={(e) => e.stopPropagation()}
+          onClick={e => e.stopPropagation()}
         >
           <div className="bg-white/95 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl overflow-hidden">
             {/* Header */}
@@ -81,7 +81,7 @@ export function SearchOverlay({
                     transition={{
                       duration: 1,
                       repeat: Infinity,
-                      ease: "linear",
+                      ease: 'linear',
                     }}
                     className="w-6 h-6 border-2 border-amber-200 border-t-amber-500 rounded-full mx-auto mb-3"
                   />
@@ -97,7 +97,7 @@ export function SearchOverlay({
                       transition={{
                         delay: index * 0.05,
                         duration: 0.3,
-                        ease: "easeOut",
+                        ease: 'easeOut',
                       }}
                       className="group relative"
                     >
@@ -113,16 +113,16 @@ export function SearchOverlay({
                             <AvatarImage src={result.avatar} />
                             <AvatarFallback className="bg-gradient-to-br from-amber-100 to-orange-100 text-amber-700 font-medium">
                               {result.name
-                                .split(" ")
-                                .map((n) => n[0])
-                                .join("")}
+                                .split(' ')
+                                .map(n => n[0])
+                                .join('')}
                             </AvatarFallback>
                           </Avatar>
                           {/* Online status dot */}
                           <div
                             className={cn(
-                              "absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white shadow-sm",
-                              result.isOnline ? "bg-green-500" : "bg-gray-400",
+                              'absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white shadow-sm',
+                              result.isOnline ? 'bg-green-500' : 'bg-gray-400'
                             )}
                           />
                         </div>
@@ -141,7 +141,7 @@ export function SearchOverlay({
                             </Badge>
                           </div>
                           <p className="text-sm text-gray-500 truncate group-hover:text-gray-600 transition-colors">
-                            {result.description || "User"}
+                            {result.description || 'User'}
                           </p>
                         </div>
 

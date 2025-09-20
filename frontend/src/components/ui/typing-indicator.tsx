@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import React from "react";
-import { Avatar } from "@/components/ui/avatar";
-import { cn } from "@/lib/utils";
+import React from 'react';
+import { Avatar } from '@/components/ui/avatar';
+import { cn } from '@/lib/utils';
 
 interface TypingUser {
   id: string;
@@ -33,10 +33,10 @@ export const TypingIndicator: React.FC<TypingIndicatorProps> = ({
   };
 
   return (
-    <div className={cn("flex items-center space-x-3 p-3", className)}>
+    <div className={cn('flex items-center space-x-3 p-3', className)}>
       {/* User avatars */}
       <div className="flex -space-x-2">
-        {users.slice(0, 3).map((user) => (
+        {users.slice(0, 3).map(user => (
           <Avatar
             key={user.id}
             fallback={user.name}
@@ -60,11 +60,11 @@ export const TypingIndicator: React.FC<TypingIndicatorProps> = ({
           <div className="typing-dot w-2 h-2 bg-[hsl(var(--chat-text-muted))] rounded-full animate-bounce"></div>
           <div
             className="typing-dot w-2 h-2 bg-[hsl(var(--chat-text-muted))] rounded-full animate-bounce"
-            style={{ animationDelay: "0.1s" }}
+            style={{ animationDelay: '0.1s' }}
           ></div>
           <div
             className="typing-dot w-2 h-2 bg-[hsl(var(--chat-text-muted))] rounded-full animate-bounce"
-            style={{ animationDelay: "0.2s" }}
+            style={{ animationDelay: '0.2s' }}
           ></div>
         </div>
       </div>

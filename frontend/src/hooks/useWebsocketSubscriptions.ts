@@ -1,9 +1,9 @@
-import { getWebSocketClient, WebSocketMessage } from "@/lib/websocket";
+import { getWebSocketClient, WebSocketMessage } from '@/lib/websocket';
 
 export function ensureSubscribeAll(
   userId: number,
   conversationIds: number[],
-  onMessage: (m: WebSocketMessage) => void,
+  onMessage: (m: WebSocketMessage) => void
 ) {
   const wsClient = getWebSocketClient();
   const checkConnection = () => {

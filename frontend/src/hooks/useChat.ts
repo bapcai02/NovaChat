@@ -1,16 +1,16 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import { apiService } from "@/services/api";
-import { getWebSocketClient, WebSocketMessage } from "@/lib/websocket";
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { apiService } from '@/services/api';
+import { getWebSocketClient, WebSocketMessage } from '@/lib/websocket';
 import {
   loadUnreadCountsAndMerge,
   markConversationAsReadAndRefresh,
-} from "./useUnread";
-import { normalizeOnlineUsers } from "./usePresence";
-import type { User, Team, Channel, Conversation, Message } from "@/types/chat";
+} from './useUnread';
+import { normalizeOnlineUsers } from './usePresence';
+import type { User, Team, Channel, Conversation, Message } from '@/types/chat';
 import {
   requestNotificationPermission as requestNotifPermHelper,
   showDesktopNotification as showNotifHelper,
-} from "./useDesktopNotifications";
+} from './useDesktopNotifications';
 
 export function useChat() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -29,8 +29,8 @@ export function useChat() {
   const [isConversationsLoaded, setIsConversationsLoaded] = useState(false);
   const [isMessagesLoaded, setIsMessagesLoaded] = useState(false);
   const [wsStatus, setWsStatus] = useState<
-    "disconnected" | "connecting" | "connected" | "closing" | "error"
-  >("disconnected");
+    'disconnected' | 'connecting' | 'connected' | 'closing' | 'error'
+  >('disconnected');
   const [error, setError] = useState<string | null>(null);
   const [userOnlineSet, setUserOnlineSet] = useState(false);
   const [typingByConversation, setTypingByConversation] = useState<
@@ -64,8 +64,8 @@ export function useChat() {
       const userData = res?.data?.data ?? res?.data ?? res;
       setCurrentUser(userData);
     } catch (err) {
-      setError("Failed to load user data");
-      console.error("Error loading user:", err);
+      setError('Failed to load user data');
+      console.error('Error loading user:', err);
     } finally {
       setIsLoading(false);
     }
@@ -79,8 +79,8 @@ export function useChat() {
       const teamsData = res?.data?.data ?? res?.data ?? res;
       setTeams(Array.isArray(teamsData) ? teamsData : []);
     } catch (err) {
-      setError("Failed to load teams");
-      console.error("Error loading teams:", err);
+      setError('Failed to load teams');
+      console.error('Error loading teams:', err);
       setTeams([]);
     } finally {
       setIsLoading(false);
@@ -95,8 +95,8 @@ export function useChat() {
       const channelsData = res?.data?.data ?? res?.data ?? res;
       setChannels(Array.isArray(channelsData) ? channelsData : []);
     } catch (err) {
-      setError("Failed to load channels");
-      console.error("Error loading channels:", err);
+      setError('Failed to load channels');
+      console.error('Error loading channels:', err);
       setChannels([]);
     } finally {
       setIsLoading(false);
@@ -115,8 +115,8 @@ export function useChat() {
       // Tin cậy unread_count do API /conversations trả về, không merge thêm để tránh sai lệch
       setConversations(baseConversations as any);
     } catch (err) {
-      setError("Failed to load conversations");
-      console.error("Error loading conversations:", err);
+      setError('Failed to load conversations');
+      console.error('Error loading conversations:', err);
       setConversations([]);
     } finally {
       setIsLoading(false);
@@ -131,7 +131,7 @@ export function useChat() {
         setIsLoading(true);
         const res: any = await apiService.getMessages(
           conversationId.toString(),
-          page,
+          page
         );
         const responseData = res?.data?.data ?? res?.data ?? res;
         const messagesArray = Array.isArray(responseData?.messages)
@@ -149,7 +149,7 @@ export function useChat() {
           name: user.name,
           username: user.username,
           avatar: user.avatar,
-          email: "",
+          email: '',
           is_online: false,
         }));
 
@@ -167,7 +167,7 @@ export function useChat() {
             const last = messagesArray[messagesArray.length - 1];
             if (last && currentUser?.id) {
               wsClient.send({
-                type: "message_read",
+                type: 'message_read',
                 conversation_id: conversationId,
                 message_id: (last as any).id,
                 user_id: currentUser.id,
@@ -175,17 +175,17 @@ export function useChat() {
             }
           } catch {}
         } else {
-          setMessages((prev) => [...messagesArray, ...prev]);
+          setMessages(prev => [...messagesArray, ...prev]);
         }
       } catch (err) {
-        setError("Failed to load messages");
-        console.error("Error loading messages:", err);
+        setError('Failed to load messages');
+        console.error('Error loading messages:', err);
         setMessages([]);
       } finally {
         setIsLoading(false);
       }
     },
-    [],
+    []
   );
 
   // Setup WebSocket subscription for real-time messages
@@ -202,7 +202,7 @@ export function useChat() {
         // Listen for messages
         wsClient.onMessage(async (message: WebSocketMessage) => {
           // Handle initial connection with online users
-          if (message.type === "connected" && (message as any).online_users) {
+          if (message.type === 'connected' && (message as any).online_users) {
             const onlineUsers = (message as any).online_users;
             if (Array.isArray(onlineUsers)) {
               const normalized = normalizeOnlineUsers(onlineUsers);
@@ -213,7 +213,7 @@ export function useChat() {
 
           // Handle subscribed_all_conversations with online users list to sync sidebar presence ASAP
           if (
-            message.type === "subscribed_all_conversations" &&
+            message.type === 'subscribed_all_conversations' &&
             (message as any).online_users
           ) {
             const onlineUsers = (message as any).online_users;
@@ -226,16 +226,16 @@ export function useChat() {
 
           // Presence events: log and update sidebar state instantly
           if (
-            message.type === "user_online" ||
-            message.type === "user_offline"
+            message.type === 'user_online' ||
+            message.type === 'user_offline'
           ) {
             const presenceUserId = parseInt(
-              (message as any).user_id?.toString() || "0",
+              (message as any).user_id?.toString() || '0'
             );
             if (presenceUserId) {
-              setOnlineUserIds((prev) => {
+              setOnlineUserIds(prev => {
                 const next = new Set(prev);
-                if (message.type === "user_online") next.add(presenceUserId);
+                if (message.type === 'user_online') next.add(presenceUserId);
                 else next.delete(presenceUserId);
                 return next;
               });
@@ -244,81 +244,90 @@ export function useChat() {
           }
 
           // Delivery/Read receipts
-          if (message.type === "message_ack") {
+          if (message.type === 'message_ack') {
             const ackMsgId = parseInt(
-              (message as any).message_id?.toString() || "0",
+              (message as any).message_id?.toString() || '0'
             );
             const clientId = (message as any).client_id as string | undefined;
-            const convId = parseInt(message.conversation_id?.toString() || "0");
+            const convId = parseInt(message.conversation_id?.toString() || '0');
             setMessages((prev: any[]) =>
-              prev.map((m) => {
+              prev.map(m => {
                 const sameConv = (m.conversation_id || 0) === convId;
                 const sameClient = clientId && m.client_id === clientId;
                 const sameContent =
                   !clientId &&
                   m.content === (message as any).content &&
-                  m.user_id === parseInt(message.sender_id?.toString() || "0");
+                  m.user_id === parseInt(message.sender_id?.toString() || '0');
                 if (sameConv && (sameClient || sameContent)) {
-                  return { ...m, id: ackMsgId || m.id, status: "delivered" };
+                  return { ...m, id: ackMsgId || m.id, status: 'delivered' };
                 }
                 return m;
-              }),
+              })
             );
             return;
           }
-          if (message.type === "message_read") {
+          if (message.type === 'message_read') {
             const readMsgId = parseInt(
-              (message as any).message_id?.toString() || "0",
+              (message as any).message_id?.toString() || '0'
             );
-            const convId = parseInt(message.conversation_id?.toString() || "0");
+            const convId = parseInt(message.conversation_id?.toString() || '0');
             const readerId = parseInt(
-              (message as any).user_id?.toString() || "0",
+              (message as any).user_id?.toString() || '0'
             );
             if (convId && readerId && readMsgId) {
-              setReadPointers((prev) => ({
+              setReadPointers(prev => ({
                 ...prev,
                 [convId]: {
                   ...(prev[convId] || {}),
                   [readerId]: Math.max(
                     readMsgId,
-                    prev[convId]?.[readerId] || 0,
+                    prev[convId]?.[readerId] || 0
                   ),
                 },
               }));
             }
             setMessages((prev: any[]) =>
-              prev.map((m) => {
+              prev.map(m => {
                 if (
                   (m.conversation_id || 0) === convId &&
                   m.id &&
                   readMsgId &&
                   m.id <= readMsgId
                 ) {
-                  return { ...m, status: "read" };
+                  return { ...m, status: 'read' };
                 }
                 return m;
-              }),
+              })
             );
             // If current user is the reader, reset unread count for that conversation in sidebar
-            if (readerId && currentUser?.id && readerId === currentUser.id && convId) {
-              setConversations((prev) =>
-                prev.map((conv) => (Number((conv as any).id) === convId ? { ...conv, unread_count: 0 } : conv)),
+            if (
+              readerId &&
+              currentUser?.id &&
+              readerId === currentUser.id &&
+              convId
+            ) {
+              setConversations(prev =>
+                prev.map(conv =>
+                  Number((conv as any).id) === convId
+                    ? { ...conv, unread_count: 0 }
+                    : conv
+                )
               );
             }
             return;
           }
           // Typing indicators
           if (
-            message.type === "typing_start" ||
-            message.type === "typing_stop"
+            message.type === 'typing_start' ||
+            message.type === 'typing_stop'
           ) {
-            const convId = parseInt(message.conversation_id?.toString() || "0");
-            const userId = parseInt(message.user_id?.toString() || "0");
+            const convId = parseInt(message.conversation_id?.toString() || '0');
+            const userId = parseInt(message.user_id?.toString() || '0');
             if (!convId || !userId) return;
-            setTypingByConversation((prev) => {
+            setTypingByConversation(prev => {
               const copy: Record<number, Set<number>> = { ...prev };
               const set = new Set(copy[convId] || []);
-              if (message.type === "typing_start") set.add(userId);
+              if (message.type === 'typing_start') set.add(userId);
               else set.delete(userId);
               copy[convId] = set;
               return copy;
@@ -327,40 +336,40 @@ export function useChat() {
           }
 
           // Thread reply lightweight event (for badges/notifications)
-          if (message.type === "thread_reply") {
+          if (message.type === 'thread_reply') {
             const parentId = parseInt(
-              (message as any).parent_id?.toString() || "0",
+              (message as any).parent_id?.toString() || '0'
             );
             if (parentId) {
-              const text = (message as any).content || "";
-              showDesktopNotification("New thread reply", text);
+              const text = (message as any).content || '';
+              showDesktopNotification('New thread reply', text);
             }
             return;
           }
 
           if (
-            message.type === "chat_message" ||
-            message.type === "message_received"
+            message.type === 'chat_message' ||
+            message.type === 'message_received'
           ) {
             const messageConversationId = parseInt(
-              message.conversation_id?.toString() || "0",
+              message.conversation_id?.toString() || '0'
             );
             const activeConvId = currentConversationIdRef.current;
             const parentId = parseInt(
-              ((message as any).parent_id ?? "0").toString() || "0",
+              ((message as any).parent_id ?? '0').toString() || '0'
             );
             const isThreadReply = !!parentId;
             // If this is a thread reply, do not append into main messages list
             if (isThreadReply) {
               // Still update sidebar preview for that conversation
-              setConversations((prev) =>
-                prev.map((conv) => {
+              setConversations(prev =>
+                prev.map(conv => {
                   if (conv.id === messageConversationId) {
                     return {
                       ...conv,
                       last_message: {
                         ...(conv as any).last_message,
-                        content: (message as any).content || "",
+                        content: (message as any).content || '',
                         updated_at:
                           (message as any).timestamp ||
                           new Date().toISOString(),
@@ -368,7 +377,7 @@ export function useChat() {
                     } as any;
                   }
                   return conv;
-                }),
+                })
               );
               return;
             }
@@ -376,16 +385,16 @@ export function useChat() {
               !messageConversationId ||
               activeConvId !== messageConversationId
             ) {
-              const text = (message as any).content || "";
-              showDesktopNotification("New message", text);
-              setConversations((prev) =>
-                prev.map((conv) => {
+              const text = (message as any).content || '';
+              showDesktopNotification('New message', text);
+              setConversations(prev =>
+                prev.map(conv => {
                   if (conv.id === messageConversationId) {
                     return {
                       ...conv,
                       last_message: {
                         ...(conv as any).last_message,
-                        content: (message as any).content || "",
+                        content: (message as any).content || '',
                         updated_at:
                           (message as any).timestamp ||
                           new Date().toISOString(),
@@ -393,27 +402,27 @@ export function useChat() {
                     } as any;
                   }
                   return conv;
-                }),
+                })
               );
               return;
             }
-            const senderId = parseInt(message.sender_id?.toString() || "0");
+            const senderId = parseInt(message.sender_id?.toString() || '0');
             let sender = null;
             if (currentConversation?.members) {
               sender = currentConversation.members.find(
-                (member) => member.id === senderId,
+                member => member.id === senderId
               );
             }
             if (!sender) {
               sender = conversationUsersRef.current.find(
-                (user) => user.id === senderId,
+                user => user.id === senderId
               );
             }
 
             // If still not found, try to find in current messages
             if (!sender) {
               const messageWithSender = messages.find(
-                (msg) => msg.sender?.id === senderId,
+                msg => msg.sender?.id === senderId
               );
               if (messageWithSender?.sender) {
                 sender = {
@@ -421,7 +430,7 @@ export function useChat() {
                   name: messageWithSender.sender.name,
                   username: messageWithSender.sender.username,
                   avatar: messageWithSender.sender.avatar,
-                  email: "",
+                  email: '',
                   is_online: false,
                 };
               }
@@ -431,7 +440,7 @@ export function useChat() {
             if (!sender) {
               sender = {
                 id: senderId,
-                name: "Unknown User",
+                name: 'Unknown User',
                 username: `user${senderId}`,
                 avatar: null,
               };
@@ -440,11 +449,11 @@ export function useChat() {
             const newMessage = {
               id: Date.now(), // Temporary ID until we get real ID from DB
               conversation_id: parseInt(
-                message.conversation_id?.toString() || "0",
+                message.conversation_id?.toString() || '0'
               ),
               user_id: senderId,
-              content: message.content || "",
-              type: "text",
+              content: message.content || '',
+              type: 'text',
               created_at: message.timestamp || new Date().toISOString(),
               updated_at: message.timestamp || new Date().toISOString(),
               sender: {
@@ -456,12 +465,12 @@ export function useChat() {
               reactions: [],
               is_bookmarked: false,
               replies_count: 0,
-              status: "delivered",
+              status: 'delivered',
             };
 
             // If it's from current user, replace optimistic update
             if (
-              parseInt(message.sender_id?.toString() || "0") === currentUser?.id
+              parseInt(message.sender_id?.toString() || '0') === currentUser?.id
             ) {
               setMessages((prev: any) => {
                 // Find and remove optimistic message by id/content/sender via Set
@@ -469,8 +478,8 @@ export function useChat() {
                   const isOptimistic = optimisticIdsRef.current.has(msg.id);
                   const sameSender =
                     msg.user_id ===
-                    parseInt(message.sender_id?.toString() || "0");
-                  const sameContent = msg.content === (message.content || "");
+                    parseInt(message.sender_id?.toString() || '0');
+                  const sameContent = msg.content === (message.content || '');
                   const shouldRemove =
                     isOptimistic && sameSender && sameContent;
                   if (shouldRemove) optimisticIdsRef.current.delete(msg.id);
@@ -491,7 +500,7 @@ export function useChat() {
                   const closeTime =
                     Math.abs(
                       new Date(msg.created_at).getTime() -
-                        new Date(newMessage.created_at).getTime(),
+                        new Date(newMessage.created_at).getTime()
                     ) < 1000;
                   return sameConv && sameUser && sameContent && closeTime;
                 });
@@ -503,14 +512,14 @@ export function useChat() {
                 return [...prev, newMessage];
               });
               // Update sidebar preview & last_message for the conversation (active conv receives too)
-              setConversations((prev) =>
-                prev.map((conv) => {
+              setConversations(prev =>
+                prev.map(conv => {
                   if (conv.id === messageConversationId) {
                     return {
                       ...conv,
                       last_message: {
                         ...(conv as any).last_message,
-                        content: (message as any).content || "",
+                        content: (message as any).content || '',
                         updated_at:
                           (message as any).timestamp ||
                           new Date().toISOString(),
@@ -518,7 +527,7 @@ export function useChat() {
                     } as any;
                   }
                   return conv;
-                }),
+                })
               );
             }
           }
@@ -528,10 +537,10 @@ export function useChat() {
           // WebSocket client will handle cleanup
         };
       } catch (error) {
-        console.error("Failed to setup WebSocket subscription:", error);
+        console.error('Failed to setup WebSocket subscription:', error);
       }
     },
-    [currentUser],
+    [currentUser]
   );
 
   // Send message via WebSocket
@@ -539,29 +548,35 @@ export function useChat() {
     async (
       conversationId: number,
       content: string,
-      type: string = "text",
-      attachments?: Array<{ name?: string; type?: string; size?: number; file?: File; remoteKey?: string }>,
+      type: string = 'text',
+      attachments?: Array<{
+        name?: string;
+        type?: string;
+        size?: number;
+        file?: File;
+        remoteKey?: string;
+      }>
     ) => {
       try {
         // Check if this is a temporary conversation (created from user search)
         const isTemporaryConversation =
-          currentConversation?.type === "direct" &&
+          currentConversation?.type === 'direct' &&
           currentConversation?.other_member &&
           !currentConversation?.members?.some(
-            (m) => m.id !== currentConversation?.other_member?.id,
+            m => m.id !== currentConversation?.other_member?.id
           );
 
         if (isTemporaryConversation) {
           // Create the conversation first
           try {
-            const response = await fetch("/api/conversations", {
-              method: "POST",
+            const response = await fetch('/api/conversations', {
+              method: 'POST',
               headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
               },
               body: JSON.stringify({
-                type: "direct",
+                type: 'direct',
                 participant_id: currentConversation.other_member?.id,
               }),
             });
@@ -576,7 +591,7 @@ export function useChat() {
               conversationId = newConversation.id;
             }
           } catch (error) {
-            console.error("Error creating conversation:", error);
+            console.error('Error creating conversation:', error);
           }
         }
 
@@ -586,7 +601,8 @@ export function useChat() {
         const tempId = Date.now();
         const clientId = `${currentUser?.id || 0}-${Date.now()}`;
         const hasAttachments = (attachments || []).length > 0;
-        const normalizedContent = (content || "").trim() || (hasAttachments ? "[file]" : "");
+        const normalizedContent =
+          (content || '').trim() || (hasAttachments ? '[file]' : '');
 
         const tempMessage = {
           id: tempId, // Temporary ID
@@ -598,21 +614,21 @@ export function useChat() {
           updated_at: new Date().toISOString(),
           sender: {
             id: currentUser?.id || 0,
-            name: currentUser?.name || "You",
-            username: currentUser?.username || "you",
+            name: currentUser?.name || 'You',
+            username: currentUser?.username || 'you',
             avatar: currentUser?.avatar,
           },
           reactions: [],
           is_bookmarked: false,
           is_optimistic: true, // Flag for optimistic update
-          status: "sent" as any,
+          status: 'sent' as any,
           client_id: clientId,
-          attachments: (attachments || []).map((a) => ({
+          attachments: (attachments || []).map(a => ({
             name: a.name,
             type: a.type,
             size: a.size,
             remoteKey: a.remoteKey,
-            // @ts-ignore include base64 if present for immediate preview
+            // @ts-expect-error include base64 if present for immediate preview
             data: (a as any).data,
           })),
         };
@@ -622,10 +638,10 @@ export function useChat() {
         optimisticIdsRef.current.add(tempId);
 
         // Reset unread count for current conversation since user is actively chatting
-        setConversations((prev) =>
-          prev.map((conv) =>
-            conv.id === conversationId ? { ...conv, unread_count: 0 } : conv,
-          ),
+        setConversations(prev =>
+          prev.map(conv =>
+            conv.id === conversationId ? { ...conv, unread_count: 0 } : conv
+          )
         );
 
         // Send via WebSocket
@@ -640,34 +656,35 @@ export function useChat() {
             normalizedContent,
             currentUser?.name,
             currentUser?.avatar,
-            (attachments || []).map((a) => ({
-              name: a.name || (a.file as any)?.name || "file",
-              type: a.type || (a.file as any)?.type || "application/octet-stream",
+            (attachments || []).map(a => ({
+              name: a.name || (a.file as any)?.name || 'file',
+              type:
+                a.type || (a.file as any)?.type || 'application/octet-stream',
               size: a.size || (a.file as any)?.size || 0,
               remoteKey: (a as any).remoteKey,
               data: (a as any).data, // base64 data URL for small images
-            })),
+            }))
           );
         } catch (error) {
-          console.error("Failed to send message via WebSocket:", error);
+          console.error('Failed to send message via WebSocket:', error);
         }
 
         return tempMessage;
       } catch (err) {
-        setError("Failed to send message");
-        console.error("Error sending message:", err);
+        setError('Failed to send message');
+        console.error('Error sending message:', err);
         throw err;
       }
     },
-    [currentUser, currentConversation, loadConversations],
+    [currentUser, currentConversation, loadConversations]
   );
 
   const editMessage = useCallback(
     async (messageId: number, content: string) => {
       try {
         // Optimistic update
-        setMessages((prev) =>
-          prev.map((m) =>
+        setMessages(prev =>
+          prev.map(m =>
             m.id === messageId
               ? {
                   ...m,
@@ -675,31 +692,31 @@ export function useChat() {
                   is_edited: true,
                   updated_at: new Date().toISOString(),
                 }
-              : m,
-          ),
+              : m
+          )
         );
         await apiService.updateMessage?.(messageId.toString(), {
           content,
         } as any);
       } catch (err) {
-        console.error("Failed to edit message:", err);
+        console.error('Failed to edit message:', err);
       }
     },
-    [],
+    []
   );
 
   const deleteMessage = useCallback(async (messageId: number) => {
     try {
-      setMessages((prev) =>
-        prev.map((m) =>
+      setMessages(prev =>
+        prev.map(m =>
           m.id === messageId
-            ? { ...m, is_deleted: true, content: "[deleted]" }
-            : m,
-        ),
+            ? { ...m, is_deleted: true, content: '[deleted]' }
+            : m
+        )
       );
       await apiService.deleteMessage?.(messageId.toString());
     } catch (err) {
-      console.error("Failed to delete message:", err);
+      console.error('Failed to delete message:', err);
     }
   }, []);
 
@@ -718,7 +735,7 @@ export function useChat() {
         setOnlineUserIds(new Set());
       }
     } catch (err) {
-      console.error("Failed to load online users:", err);
+      console.error('Failed to load online users:', err);
       setOnlineUsers([]);
       setOnlineUserIds(new Set());
     }
@@ -729,22 +746,22 @@ export function useChat() {
     try {
       // Get all user IDs from conversations
       const allUserIds = new Set<number>();
-      conversations.forEach((conv) => {
+      conversations.forEach(conv => {
         // Direct messages often expose other_member instead of full members
         const other = (conv as any).other_member;
         if (
           other &&
-          typeof other.id === "number" &&
+          typeof other.id === 'number' &&
           other.id !== currentUser?.id
         ) {
           allUserIds.add(other.id);
         }
         // If members array exists, include them too
         if ((conv as any).members) {
-          ((conv as any).members as any[]).forEach((member) => {
+          ((conv as any).members as any[]).forEach(member => {
             if (
               member &&
-              typeof member.id === "number" &&
+              typeof member.id === 'number' &&
               member.id !== currentUser?.id
             ) {
               allUserIds.add(member.id);
@@ -768,7 +785,7 @@ export function useChat() {
 
       setOnlineUserIds(onlineUserIds);
     } catch (err) {
-      console.error("Error loading user statuses:", err);
+      console.error('Error loading user statuses:', err);
     }
   }, [conversations, currentUser?.id]);
 
@@ -778,16 +795,16 @@ export function useChat() {
       try {
         const res: any = await apiService.searchMessages(
           query,
-          conversationId?.toString(),
+          conversationId?.toString()
         );
         return res?.data;
       } catch (err) {
-        setError("Failed to search messages");
-        console.error("Error searching messages:", err);
+        setError('Failed to search messages');
+        console.error('Error searching messages:', err);
         return [];
       }
     },
-    [],
+    []
   );
 
   // Add reaction
@@ -796,25 +813,25 @@ export function useChat() {
       try {
         await apiService.addReaction(messageId.toString(), emoji as any);
         // Update local state
-        setMessages((prev) =>
-          prev.map((msg) =>
+        setMessages(prev =>
+          prev.map(msg =>
             msg.id === messageId
               ? {
                   ...msg,
                   reactions: (() => {
                     const existingReaction = (msg.reactions || []).find(
-                      (r) => r.emoji === emoji,
+                      r => r.emoji === emoji
                     );
                     if (existingReaction) {
                       // Update existing reaction
-                      return (msg.reactions || []).map((r) =>
+                      return (msg.reactions || []).map(r =>
                         r.emoji === emoji
                           ? {
                               ...r,
                               count: (r.count || 0) + 1,
                               users: [...(r.users || []), currentUser?.id || 0],
                             }
-                          : r,
+                          : r
                       );
                     } else {
                       // Add new reaction
@@ -829,14 +846,14 @@ export function useChat() {
                     }
                   })(),
                 }
-              : msg,
-          ),
+              : msg
+          )
         );
       } catch (err) {
-        console.error("Error adding reaction:", err);
+        console.error('Error adding reaction:', err);
       }
     },
-    [currentUser],
+    [currentUser]
   );
 
   // Remove reaction
@@ -845,33 +862,33 @@ export function useChat() {
       try {
         await apiService.removeReaction(messageId.toString(), emoji as any);
         // Update local state
-        setMessages((prev) =>
-          prev.map((msg) =>
+        setMessages(prev =>
+          prev.map(msg =>
             msg.id === messageId
               ? {
                   ...msg,
                   reactions: (msg.reactions || [])
-                    .map((r) =>
+                    .map(r =>
                       r.emoji === emoji
                         ? {
                             ...r,
                             count: Math.max(0, (r.count || 1) - 1),
                             users: (r.users || []).filter(
-                              (userId) => userId !== currentUser?.id,
+                              userId => userId !== currentUser?.id
                             ),
                           }
-                        : r,
+                        : r
                     )
-                    .filter((r) => (r.count || 0) > 0),
+                    .filter(r => (r.count || 0) > 0),
                 }
-              : msg,
-          ),
+              : msg
+          )
         );
       } catch (err) {
-        console.error("Error removing reaction:", err);
+        console.error('Error removing reaction:', err);
       }
     },
-    [currentUser],
+    [currentUser]
   );
 
   // Bookmark message
@@ -880,16 +897,16 @@ export function useChat() {
       try {
         await apiService.bookmarkMessage(messageId.toString(), note);
         // Update local state
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === messageId ? { ...msg, is_bookmarked: true } : msg,
-          ),
+        setMessages(prev =>
+          prev.map(msg =>
+            msg.id === messageId ? { ...msg, is_bookmarked: true } : msg
+          )
         );
       } catch (err) {
-        console.error("Error bookmarking message:", err);
+        console.error('Error bookmarking message:', err);
       }
     },
-    [],
+    []
   );
 
   // Remove bookmark
@@ -897,34 +914,34 @@ export function useChat() {
     try {
       await apiService.removeBookmark(messageId.toString());
       // Update local state
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === messageId ? { ...msg, is_bookmarked: false } : msg,
-        ),
+      setMessages(prev =>
+        prev.map(msg =>
+          msg.id === messageId ? { ...msg, is_bookmarked: false } : msg
+        )
       );
     } catch (err) {
-      console.error("Error removing bookmark:", err);
+      console.error('Error removing bookmark:', err);
     }
   }, []);
 
   // Update user status
   const updateUserStatus = useCallback(
     async (
-      status: "online" | "offline" | "away" | "busy",
-      statusMessage?: string,
+      status: 'online' | 'offline' | 'away' | 'busy',
+      statusMessage?: string
     ) => {
       try {
         await apiService.updateUserStatus(status, statusMessage);
         if (currentUser) {
-          setCurrentUser((prev) =>
-            prev ? { ...prev, status, status_message: statusMessage } : null,
+          setCurrentUser(prev =>
+            prev ? { ...prev, status, status_message: statusMessage } : null
           );
         }
       } catch (err) {
-        console.error("Error updating user status:", err);
+        console.error('Error updating user status:', err);
       }
     },
-    [currentUser],
+    [currentUser]
   );
 
   // Load unread counts
@@ -936,10 +953,10 @@ export function useChat() {
   const handleSelectConversation = useCallback(
     async (conversation: Conversation) => {
       const isTemporaryConversation =
-        conversation.type === "direct" &&
+        conversation.type === 'direct' &&
         conversation.other_member &&
         !conversation.members?.some(
-          (m) => m.id !== conversation.other_member?.id,
+          m => m.id !== conversation.other_member?.id
         );
 
       if (isTemporaryConversation) {
@@ -951,12 +968,12 @@ export function useChat() {
       // Load full conversation details with members
       try {
         const res: any = await apiService.getConversation(
-          conversation.id.toString(),
+          conversation.id.toString()
         );
         const fullConversation = res?.data?.data ?? res?.data ?? res;
         setCurrentConversation(fullConversation);
       } catch (error) {
-        console.error("Failed to load conversation details:", error);
+        console.error('Failed to load conversation details:', error);
         setCurrentConversation(conversation);
       }
 
@@ -964,7 +981,7 @@ export function useChat() {
       await markConversationAsReadAndRefresh(
         conversation.id,
         loadConversations,
-        setConversations,
+        setConversations
       );
 
       // Setup WebSocket subscription for real-time messages
@@ -975,14 +992,14 @@ export function useChat() {
       // Load messages for the conversation
       loadMessages(conversation.id);
     },
-    [setupWebSocketSubscription, loadMessages],
+    [setupWebSocketSubscription, loadMessages]
   );
 
   // Subscribe to all conversations when user is loaded
   const subscribeToAllConversations = useCallback(() => {
     if (currentUser?.id && conversations.length > 0) {
       const wsClient = getWebSocketClient();
-      const conversationIds = conversations.map((conv) => conv.id);
+      const conversationIds = conversations.map(conv => conv.id);
 
       // Wait for WebSocket to be connected
       const checkConnection = () => {
@@ -992,53 +1009,53 @@ export function useChat() {
           if (!(window as any).__ncGlobalWsHandlerInstalled) {
             (window as any).__ncGlobalWsHandlerInstalled = true;
             wsClient.onMessage((message: any) => {
-              if (message?.type === "chat_message") {
+              if (message?.type === 'chat_message') {
                 const convId = parseInt(
-                  message.conversation_id?.toString() || "0",
+                  message.conversation_id?.toString() || '0'
                 );
                 if (!convId) return;
                 const ts =
                   (message as any).timestamp || new Date().toISOString();
                 // Always update sidebar preview for that conversation
-                setConversations((prev) =>
-                  prev.map((conv) => {
+                setConversations(prev =>
+                  prev.map(conv => {
                     if (conv.id === convId) {
                       return {
                         ...conv,
                         last_message: {
                           ...(conv as any).last_message,
-                          content: (message as any).content || "",
+                          content: (message as any).content || '',
                           updated_at: ts,
                         },
                       } as any;
                     }
                     return conv;
-                  }),
+                  })
                 );
                 // If not the active conversation, bump unread and notify
                 if (!currentConversation || currentConversation.id !== convId) {
-                  setConversations((prev) =>
-                    prev.map((conv) =>
+                  setConversations(prev =>
+                    prev.map(conv =>
                       conv.id === convId
                         ? {
                             ...conv,
                             unread_count: (conv.unread_count || 0) + 1,
                           }
-                        : conv,
-                    ),
+                        : conv
+                    )
                   );
                   const senderId = parseInt(
-                    message.sender_id?.toString() || "0",
+                    message.sender_id?.toString() || '0'
                   );
                   if (!currentUser || senderId !== currentUser.id) {
-                    const preview = (message?.content || "").toString();
-                    showDesktopNotification("New message", preview);
+                    const preview = (message?.content || '').toString();
+                    showDesktopNotification('New message', preview);
                   }
                 }
               }
               // Sync online users when receive subscribed_all_conversations
               if (
-                message?.type === "subscribed_all_conversations" &&
+                message?.type === 'subscribed_all_conversations' &&
                 Array.isArray((message as any).online_users)
               ) {
                 const onlineUsers = (message as any).online_users;
@@ -1071,17 +1088,17 @@ export function useChat() {
     try {
       const ws = getWebSocketClient();
       setWsStatus(ws.getConnectionState() as any);
-      ws.onConnectionChange((status) => {
-        setWsStatus((status as any) === "error" ? "error" : (status as any));
+      ws.onConnectionChange(status => {
+        setWsStatus((status as any) === 'error' ? 'error' : (status as any));
       });
-      if (!ws.isConnected() && ws.getConnectionState() !== "connecting") {
+      if (!ws.isConnected() && ws.getConnectionState() !== 'connecting') {
         ws.connect();
       }
       // Ask for notification permission early
       requestNotificationPermission();
     } catch (e) {
-      console.error("WS init failed", e);
-      setWsStatus("error");
+      console.error('WS init failed', e);
+      setWsStatus('error');
     }
 
     loadCurrentUser();
@@ -1137,7 +1154,7 @@ export function useChat() {
     !!currentUser &&
     isConversationsLoaded &&
     (!!currentConversation ? isMessagesLoaded : true) &&
-    (wsStatus === "connected" || wsStatus === "connecting");
+    (wsStatus === 'connected' || wsStatus === 'connecting');
 
   return {
     // State

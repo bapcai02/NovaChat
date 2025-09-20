@@ -1,9 +1,9 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 // UI state interface
 interface UIState {
   // Theme
-  theme: "light" | "dark";
+  theme: 'light' | 'dark';
 
   // Modal states
   isCreateChannelModalOpen: boolean;
@@ -33,7 +33,7 @@ interface UIState {
 // Notification interface
 interface Notification {
   id: string;
-  type: "success" | "error" | "warning" | "info";
+  type: 'success' | 'error' | 'warning' | 'info';
   title: string;
   message: string;
   timestamp: number;
@@ -44,9 +44,9 @@ interface Notification {
 const initialState: UIState = {
   // Theme
   theme:
-    typeof window !== "undefined"
-      ? (localStorage.getItem("theme") as "light" | "dark") || "dark"
-      : "dark",
+    typeof window !== 'undefined'
+      ? (localStorage.getItem('theme') as 'light' | 'dark') || 'dark'
+      : 'dark',
 
   // Modal states
   isCreateChannelModalOpen: false,
@@ -66,7 +66,7 @@ const initialState: UIState = {
 
   // Loading states
   isLoading: false,
-  loadingMessage: "",
+  loadingMessage: '',
 
   // Error states
   error: null,
@@ -75,70 +75,70 @@ const initialState: UIState = {
 
 // UI slice
 const uiSlice = createSlice({
-  name: "ui",
+  name: 'ui',
   initialState,
   reducers: {
     // Theme actions
-    setTheme: (state, action: PayloadAction<"light" | "dark">) => {
+    setTheme: (state, action: PayloadAction<'light' | 'dark'>) => {
       state.theme = action.payload;
-      if (typeof window !== "undefined") {
-        localStorage.setItem("theme", action.payload);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('theme', action.payload);
       }
     },
-    toggleTheme: (state) => {
-      state.theme = state.theme === "light" ? "dark" : "light";
-      if (typeof window !== "undefined") {
-        localStorage.setItem("theme", state.theme);
+    toggleTheme: state => {
+      state.theme = state.theme === 'light' ? 'dark' : 'light';
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('theme', state.theme);
       }
     },
 
     // Modal actions
-    openCreateChannelModal: (state) => {
+    openCreateChannelModal: state => {
       state.isCreateChannelModalOpen = true;
     },
-    closeCreateChannelModal: (state) => {
+    closeCreateChannelModal: state => {
       state.isCreateChannelModalOpen = false;
     },
-    openCreateDirectMessageModal: (state) => {
+    openCreateDirectMessageModal: state => {
       state.isCreateDirectMessageModalOpen = true;
     },
-    closeCreateDirectMessageModal: (state) => {
+    closeCreateDirectMessageModal: state => {
       state.isCreateDirectMessageModalOpen = false;
     },
-    openSearchModal: (state) => {
+    openSearchModal: state => {
       state.isSearchModalOpen = true;
     },
-    closeSearchModal: (state) => {
+    closeSearchModal: state => {
       state.isSearchModalOpen = false;
     },
-    openKeyboardShortcutsModal: (state) => {
+    openKeyboardShortcutsModal: state => {
       state.isKeyboardShortcutsModalOpen = true;
     },
-    closeKeyboardShortcutsModal: (state) => {
+    closeKeyboardShortcutsModal: state => {
       state.isKeyboardShortcutsModalOpen = false;
     },
-    openMessageAnalyticsModal: (state) => {
+    openMessageAnalyticsModal: state => {
       state.isMessageAnalyticsModalOpen = true;
     },
-    closeMessageAnalyticsModal: (state) => {
+    closeMessageAnalyticsModal: state => {
       state.isMessageAnalyticsModalOpen = false;
     },
-    openVoiceRecorderModal: (state) => {
+    openVoiceRecorderModal: state => {
       state.isVoiceRecorderModalOpen = true;
     },
-    closeVoiceRecorderModal: (state) => {
+    closeVoiceRecorderModal: state => {
       state.isVoiceRecorderModalOpen = false;
     },
-    openThemeManagerModal: (state) => {
+    openThemeManagerModal: state => {
       state.isThemeManagerModalOpen = true;
     },
-    closeThemeManagerModal: (state) => {
+    closeThemeManagerModal: state => {
       state.isThemeManagerModalOpen = false;
     },
-    openThemeCustomizerModal: (state) => {
+    openThemeCustomizerModal: state => {
       state.isThemeCustomizerModalOpen = true;
     },
-    closeThemeCustomizerModal: (state) => {
+    closeThemeCustomizerModal: state => {
       state.isThemeCustomizerModalOpen = false;
     },
 
@@ -156,17 +156,17 @@ const uiSlice = createSlice({
     },
     removeTypingUser: (state, action: PayloadAction<string>) => {
       state.typingUsers = state.typingUsers.filter(
-        (user) => user !== action.payload,
+        user => user !== action.payload
       );
     },
-    clearTypingUsers: (state) => {
+    clearTypingUsers: state => {
       state.typingUsers = [];
     },
 
     // Notification actions
     addNotification: (
       state,
-      action: PayloadAction<Omit<Notification, "id" | "timestamp" | "read">>,
+      action: PayloadAction<Omit<Notification, 'id' | 'timestamp' | 'read'>>
     ) => {
       const notification: Notification = {
         ...action.payload,
@@ -181,31 +181,31 @@ const uiSlice = createSlice({
     },
     markNotificationAsRead: (state, action: PayloadAction<string>) => {
       const notification = state.notifications.find(
-        (n) => n.id === action.payload,
+        n => n.id === action.payload
       );
       if (notification && !notification.read) {
         notification.read = true;
         state.unreadCount -= 1;
       }
     },
-    markAllNotificationsAsRead: (state) => {
-      state.notifications.forEach((notification) => {
+    markAllNotificationsAsRead: state => {
+      state.notifications.forEach(notification => {
         notification.read = true;
       });
       state.unreadCount = 0;
     },
     removeNotification: (state, action: PayloadAction<string>) => {
       const notification = state.notifications.find(
-        (n) => n.id === action.payload,
+        n => n.id === action.payload
       );
       if (notification && !notification.read) {
         state.unreadCount -= 1;
       }
       state.notifications = state.notifications.filter(
-        (n) => n.id !== action.payload,
+        n => n.id !== action.payload
       );
     },
-    clearNotifications: (state) => {
+    clearNotifications: state => {
       state.notifications = [];
       state.unreadCount = 0;
     },
@@ -223,7 +223,7 @@ const uiSlice = createSlice({
       state.error = action.payload;
       state.showError = !!action.payload;
     },
-    clearError: (state) => {
+    clearError: state => {
       state.error = null;
       state.showError = false;
     },
