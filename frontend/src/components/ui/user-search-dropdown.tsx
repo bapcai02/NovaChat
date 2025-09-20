@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, Loader2 } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { CustomAvatar } from '@/components/ui/custom-avatar';
 import {
   userSearchService,
   UserSearchResult,
@@ -143,12 +143,11 @@ export function UserSearchDropdown({
                 onMouseEnter={() => setSelectedIndex(index)}
               >
                 <div className="relative">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={user.avatar || undefined} />
-                    <AvatarFallback className="text-xs font-semibold bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                      {user.name.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
+                  <CustomAvatar 
+                    src={user.avatar} 
+                    name={user.name}
+                    size="md"
+                  />
                   <div
                     className={cn(
                       'absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white',

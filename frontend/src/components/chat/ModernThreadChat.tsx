@@ -17,7 +17,7 @@ import {
   X,
   MessageCircle,
 } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { CustomAvatar } from '@/components/ui/custom-avatar';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -320,15 +320,12 @@ export default function ModernThreadChat({
       className="flex gap-2 group"
     >
       {/* Avatar */}
-      <Avatar className="h-6 w-6 flex-shrink-0">
-        <AvatarImage src={message.sender.avatar} />
-        <AvatarFallback className="text-xs font-semibold bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-          {message.sender.name
-            .split(' ')
-            .map(n => n[0])
-            .join('')}
-        </AvatarFallback>
-      </Avatar>
+      <CustomAvatar 
+        src={message.sender.avatar} 
+        name={message.sender.name}
+        size="sm"
+        className="flex-shrink-0"
+      />
 
       {/* Message content */}
       <div className="flex-1 min-w-0">

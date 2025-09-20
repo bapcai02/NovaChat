@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button';
 import SettingsModal from '@/components/settings/SettingsModal';
 import BookmarkList from '@/components/bookmarks/BookmarkList';
 import { Input } from '@/components/ui/input';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { CustomAvatar } from '@/components/ui/custom-avatar';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { UserSearchDropdown } from '@/components/ui/user-search-dropdown';
@@ -706,12 +706,11 @@ export default function ModernSidebar({
                   >
                     <div className="flex items-center space-x-2 flex-1 min-w-0">
                       <div className="relative">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={otherUser?.avatar} />
-                          <AvatarFallback className="text-xs font-semibold bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                            {otherUser?.name?.charAt(0) || 'U'}
-                          </AvatarFallback>
-                        </Avatar>
+                        <CustomAvatar 
+                          src={otherUser?.avatar} 
+                          name={otherUser?.name || 'U'}
+                          size="md"
+                        />
                         {/* Online/Offline indicator */}
                         <UserOnlineStatus
                           userId={otherUser?.id || 0}
@@ -779,12 +778,11 @@ export default function ModernSidebar({
           <div className="p-3 border-t border-gray-100 bg-gray-50">
             <div className="flex items-center gap-3">
               <div className="relative">
-                <Avatar className="h-10 w-10">
-                  <AvatarImage src={currentUser.avatar} />
-                  <AvatarFallback className="text-sm font-semibold bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                    {currentUser.name?.charAt(0) || 'U'}
-                  </AvatarFallback>
-                </Avatar>
+                <CustomAvatar 
+                  src={currentUser.avatar} 
+                  name={currentUser.name || 'U'}
+                  size="lg"
+                />
                 <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 bg-green-500 rounded-full border-2 border-white" />
               </div>
               <div className="flex-1 min-w-0">

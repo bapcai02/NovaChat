@@ -3,6 +3,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { AnimatePresence, motion } from 'framer-motion';
+import { CustomAvatar } from '@/components/ui/custom-avatar';
 
 interface RightSidebarProps {
   open: boolean;
@@ -109,17 +110,11 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                 {/* Members List */}
                 {(members || []).map(m => (
                   <div key={m.id} className="flex items-center gap-3 group">
-                    {m.avatar ? (
-                      <img
-                        src={m.avatar}
-                        alt={m.name || m.username || 'User'}
-                        className="h-8 w-8 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center text-xs font-semibold">
-                        {(m.name || m.username || 'U').toString().charAt(0)}
-                      </div>
-                    )}
+                    <CustomAvatar 
+                      src={m.avatar} 
+                      name={m.name || m.username || 'U'}
+                      size="md"
+                    />
                     <div className="min-w-0 flex-1">
                       <div className="text-sm font-medium truncate">
                         {m.name || m.username}

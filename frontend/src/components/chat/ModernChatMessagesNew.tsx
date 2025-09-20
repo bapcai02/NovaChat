@@ -6,7 +6,7 @@ import { MessageCircle, MoreHorizontal, Smile } from 'lucide-react';
 import { apiService } from '@/services/api';
 import EmojiPicker from 'emoji-picker-react';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { CustomAvatar } from '@/components/ui/custom-avatar';
 import BookmarkButton from '@/components/ui/bookmark-button';
 import { cn } from '@/lib/utils';
 import type { Message, User } from '@/types/chat';
@@ -181,15 +181,12 @@ const MessageBubble = ({
     >
       {/* Avatar */}
       {!testIsOwn && (
-        <Avatar className="h-7 w-7 flex-shrink-0">
-          <AvatarImage src={sender.avatar} />
-          <AvatarFallback className="text-xs bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-            {sender.name
-              ?.split(' ')
-              .map(n => n[0])
-              .join('') || 'U'}
-          </AvatarFallback>
-        </Avatar>
+        <CustomAvatar 
+          src={sender.avatar} 
+          name={sender.name || 'U'}
+          size="sm"
+          className="flex-shrink-0"
+        />
       )}
 
       {/* Message content */}

@@ -12,6 +12,7 @@ import {
   CalendarIcon,
   MessageSquareIcon,
 } from 'lucide-react';
+import { CustomAvatar } from '@/components/ui/custom-avatar';
 
 interface BookmarkListProps {
   onRemoveBookmark?: (messageId: number) => void;
@@ -124,15 +125,11 @@ export default function BookmarkList({ onRemoveBookmark }: BookmarkListProps) {
                   <MessageSquareIcon className="h-4 w-4" />
                   <span>Tin nhắn từ</span>
                   <div className="flex items-center space-x-1">
-                    {bookmark.message.user.avatar ? (
-                      <img
-                        src={bookmark.message.user.avatar}
-                        alt={bookmark.message.user.name}
-                        className="h-4 w-4 rounded-full"
-                      />
-                    ) : (
-                      <UserIcon className="h-4 w-4" />
-                    )}
+                    <CustomAvatar 
+                      src={bookmark.message.user.avatar} 
+                      name={bookmark.message.user.name || 'U'}
+                      size="sm"
+                    />
                     <span className="font-medium">
                       {bookmark.message.user.name}
                     </span>

@@ -3,7 +3,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, Search } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { CustomAvatar } from '@/components/ui/custom-avatar';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { SearchResult } from '@/services/searchService';
@@ -109,15 +109,12 @@ export function SearchOverlay({
                       >
                         {/* Avatar with online status */}
                         <div className="relative">
-                          <Avatar className="h-10 w-10 ring-2 ring-white shadow-sm">
-                            <AvatarImage src={result.avatar} />
-                            <AvatarFallback className="bg-gradient-to-br from-amber-100 to-orange-100 text-amber-700 font-medium">
-                              {result.name
-                                .split(' ')
-                                .map(n => n[0])
-                                .join('')}
-                            </AvatarFallback>
-                          </Avatar>
+                          <CustomAvatar 
+                            src={result.avatar} 
+                            name={result.name}
+                            size="lg"
+                            className="ring-2 ring-white shadow-sm"
+                          />
                           {/* Online status dot */}
                           <div
                             className={cn(
