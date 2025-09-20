@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\MessageRead;
 use App\Models\Conversation;
 use App\Models\ConversationMember;
-use Illuminate\Http\Request;
+use App\Models\MessageRead;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 
@@ -17,13 +16,13 @@ class UnreadController extends Controller
     public function getUnreadCounts(): JsonResponse
     {
         $userId = Auth::id();
-        if (!$userId) {
+        if (! $userId) {
             return response()->json([
                 'success' => false,
-                'message' => 'Unauthenticated'
+                'message' => 'Unauthenticated',
             ], 401);
         }
-        
+
         $unreadCounts = MessageRead::getUnreadCountsForUser($userId);
 
         // Get conversation details
@@ -46,7 +45,7 @@ class UnreadController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $result
+            'data' => $result,
         ]);
     }
 
@@ -64,24 +63,24 @@ class UnreadController extends Controller
             })
             ->exists();
 
-        if (!$isMember) {
+        if (! $isMember) {
             return response()->json([
                 'success' => false,
-                'message' => 'You are not a member of this conversation'
+                'message' => 'You are not a member of this conversation',
             ], 403);
         }
 
         // Mark all messages as read
-        MessageRead::markConversationAsRead((int)$conversationId, $userId);
+        MessageRead::markConversationAsRead((int) $conversationId, $userId);
 
         // Also update last_read_at so unread_count in GET /conversations reflects correctly
-        ConversationMember::where('conversation_id', (int)$conversationId)
+        ConversationMember::where('conversation_id', (int) $conversationId)
             ->where('user_id', $userId)
             ->update(['last_read_at' => now()]);
 
         return response()->json([
             'success' => true,
-            'message' => 'Conversation marked as read'
+            'message' => 'Conversation marked as read',
         ]);
     }
 
@@ -99,21 +98,21 @@ class UnreadController extends Controller
             })
             ->exists();
 
-        if (!$isMember) {
+        if (! $isMember) {
             return response()->json([
                 'success' => false,
-                'message' => 'You are not a member of this conversation'
+                'message' => 'You are not a member of this conversation',
             ], 403);
         }
 
-        $unreadCount = MessageRead::getUnreadCount((int)$conversationId, $userId);
+        $unreadCount = MessageRead::getUnreadCount((int) $conversationId, $userId);
 
         return response()->json([
             'success' => true,
             'data' => [
                 'conversation_id' => $conversationId,
-                'unread_count' => $unreadCount
-            ]
+                'unread_count' => $unreadCount,
+            ],
         ]);
     }
 }

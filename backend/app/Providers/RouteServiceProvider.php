@@ -26,6 +26,7 @@ class RouteServiceProvider extends ServiceProvider
     {
         RateLimiter::for('api', function (Request $request) {
             $userId = $request->user() ? $request->user()->id : null;
+
             return Limit::perMinute(300)->by($userId ?: $request->ip());
         });
 
@@ -37,12 +38,14 @@ class RouteServiceProvider extends ServiceProvider
         // Rate limiting for message routes
         RateLimiter::for('messages', function (Request $request) {
             $userId = $request->user() ? $request->user()->id : null;
+
             return Limit::perMinute(100)->by($userId ?: $request->ip());
         });
 
         // Admin routes limiter (tighter)
         RateLimiter::for('admin', function (Request $request) {
             $userId = $request->user() ? $request->user()->id : null;
+
             return Limit::perMinute(60)->by($userId ?: $request->ip());
         });
 

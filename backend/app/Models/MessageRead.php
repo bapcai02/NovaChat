@@ -56,8 +56,8 @@ class MessageRead extends Model
         static::whereHas('message', function ($query) use ($conversationId) {
             $query->where('conversation_id', $conversationId);
         })
-        ->where('user_id', $userId)
-        ->delete();
+            ->where('user_id', $userId)
+            ->delete();
     }
 
     /**
@@ -86,8 +86,8 @@ class MessageRead extends Model
         return static::whereHas('message', function ($query) use ($conversationId) {
             $query->where('conversation_id', $conversationId);
         })
-        ->where('user_id', $userId)
-        ->count();
+            ->where('user_id', $userId)
+            ->count();
     }
 
     /**
@@ -99,12 +99,12 @@ class MessageRead extends Model
             m.conversation_id,
             COUNT(*) as unread_count
         ')
-        ->from('message_reads as mr')
-        ->join('messages as m', 'mr.message_id', '=', 'm.id')
-        ->where('mr.user_id', $userId)
-        ->groupBy('m.conversation_id')
-        ->pluck('unread_count', 'conversation_id')
-        ->toArray();
+            ->from('message_reads as mr')
+            ->join('messages as m', 'mr.message_id', '=', 'm.id')
+            ->where('mr.user_id', $userId)
+            ->groupBy('m.conversation_id')
+            ->pluck('unread_count', 'conversation_id')
+            ->toArray();
     }
 
     /**
@@ -121,7 +121,7 @@ class MessageRead extends Model
             ->toArray();
 
         if ($senderId) {
-            $memberIds = array_filter($memberIds, fn($id) => (int)$id !== (int)$senderId);
+            $memberIds = array_filter($memberIds, fn ($id) => (int) $id !== (int) $senderId);
         }
         if (empty($memberIds)) {
             return [];
@@ -137,12 +137,12 @@ class MessageRead extends Model
             return [];
         }
 
-        $users = User::whereIn('id', $readIds)->get(['id','name','username','avatar']);
+        $users = User::whereIn('id', $readIds)->get(['id', 'name', 'username', 'avatar']);
 
         return $users->map(function ($u) {
             return [
-                'id' => (int)$u->id,
-                'name' => (string)$u->name,
+                'id' => (int) $u->id,
+                'name' => (string) $u->name,
                 'username' => $u->username,
                 'avatar' => $u->avatar,
                 'read_at' => null,

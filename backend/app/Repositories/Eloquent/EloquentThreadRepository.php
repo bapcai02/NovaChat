@@ -2,8 +2,8 @@
 
 namespace App\Repositories\Eloquent;
 
-use App\Repositories\Contracts\ThreadRepositoryInterface;
 use App\Models\Message;
+use App\Repositories\Contracts\ThreadRepositoryInterface;
 
 class EloquentThreadRepository implements ThreadRepositoryInterface
 {
@@ -53,8 +53,7 @@ class EloquentThreadRepository implements ThreadRepositoryInterface
             'channel_id' => $channelId,
         ]);
         $fresh = Message::with('user')->find($msg->id);
+
         return $fresh ? $fresh->toArray() : $msg->toArray();
     }
 }
-
-

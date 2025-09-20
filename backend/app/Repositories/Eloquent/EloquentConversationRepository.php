@@ -2,13 +2,12 @@
 
 namespace App\Repositories\Eloquent;
 
-use App\Repositories\Contracts\ConversationRepositoryInterface;
 use App\Models\Conversation;
 use App\Models\ConversationMember;
+use App\Models\ConversationMute;
 use App\Models\Message;
 use App\Models\User;
-use App\Models\ConversationMute;
-use App\Models\Bookmark;
+use App\Repositories\Contracts\ConversationRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -19,40 +18,40 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
         return Conversation::whereHas('members', function ($query) use ($userId) {
             $query->where('user_id', $userId);
         })
-        ->with(['members', 'team', 'channel'])
-        ->withCount('messages')
-        ->orderByDesc('updated_at')
-        ->get()
-        ->map(function ($conversation) use ($userId) {
-            $otherMember = $conversation->members()->where('users.id', '!=', $userId)->first();
-            $unreadCount = $this->getUnreadCount($conversation->id, $userId);
-            $isMuted = ConversationMute::where('conversation_id', $conversation->id)
-                ->where('user_id', $userId)
-                ->exists();
-            
-            return [
-                'id' => $conversation->id,
-                'type' => $conversation->type,
-                'title' => $conversation->title,
-                'name' => $conversation->name,
-                'team_id' => $conversation->team_id,
-                'channel_id' => $conversation->channel_id,
-                'messages_count' => $conversation->messages_count,
-                'unread_count' => $unreadCount,
-                'is_pinned' => $conversation->is_pinned ?? false,
-                'is_muted' => $isMuted,
-                'other_member' => $otherMember ? [
-                    'id' => $otherMember->id,
-                    'name' => $otherMember->name,
-                    'username' => $otherMember->username,
-                    'avatar' => $otherMember->avatar,
-                ] : null,
-                'last_message' => $this->getLastMessage($conversation->id),
-                'created_at' => $conversation->created_at,
-                'updated_at' => $conversation->updated_at,
-            ];
-        })
-        ->toArray();
+            ->with(['members', 'team', 'channel'])
+            ->withCount('messages')
+            ->orderByDesc('updated_at')
+            ->get()
+            ->map(function ($conversation) use ($userId) {
+                $otherMember = $conversation->members()->where('users.id', '!=', $userId)->first();
+                $unreadCount = $this->getUnreadCount($conversation->id, $userId);
+                $isMuted = ConversationMute::where('conversation_id', $conversation->id)
+                    ->where('user_id', $userId)
+                    ->exists();
+
+                return [
+                    'id' => $conversation->id,
+                    'type' => $conversation->type,
+                    'title' => $conversation->title,
+                    'name' => $conversation->name,
+                    'team_id' => $conversation->team_id,
+                    'channel_id' => $conversation->channel_id,
+                    'messages_count' => $conversation->messages_count,
+                    'unread_count' => $unreadCount,
+                    'is_pinned' => $conversation->is_pinned ?? false,
+                    'is_muted' => $isMuted,
+                    'other_member' => $otherMember ? [
+                        'id' => $otherMember->id,
+                        'name' => $otherMember->name,
+                        'username' => $otherMember->username,
+                        'avatar' => $otherMember->avatar,
+                    ] : null,
+                    'last_message' => $this->getLastMessage($conversation->id),
+                    'created_at' => $conversation->created_at,
+                    'updated_at' => $conversation->updated_at,
+                ];
+            })
+            ->toArray();
     }
 
     public function getMessages(int $conversationId, int $limit = 50, ?int $beforeId = null, ?int $userId = null): array
@@ -100,9 +99,9 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
                 'is_bookmarked' => $userId ? $message->bookmarks()->where('user_id', $userId)->exists() : false,
             ];
         })
-        ->reverse()
-        ->values()
-        ->toArray();
+            ->reverse()
+            ->values()
+            ->toArray();
     }
 
     public function create(array $data): array
@@ -114,8 +113,9 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
                 Log::info('Direct conversation already exists:', [
                     'conversation_id' => $existingConversation['id'],
                     'creator_id' => $data['creator_id'],
-                    'participant_id' => $data['participant_id']
+                    'participant_id' => $data['participant_id'],
                 ]);
+
                 return $existingConversation;
             }
         }
@@ -133,9 +133,9 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
             Log::info('Creating direct conversation members:', [
                 'conversation_id' => $conversation->id,
                 'creator_id' => $data['creator_id'],
-                'participant_id' => $data['participant_id']
+                'participant_id' => $data['participant_id'],
             ]);
-            
+
             // Add creator (User A)
             $creatorMember = ConversationMember::create([
                 'conversation_id' => $conversation->id,
@@ -143,7 +143,7 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
                 'joined_at' => now(),
             ]);
             Log::info('Created creator member:', $creatorMember->toArray());
-            
+
             // Add participant (User B)
             $participantMember = ConversationMember::create([
                 'conversation_id' => $conversation->id,
@@ -176,11 +176,11 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
         // Return formatted data like getUserConversations
         $conversation = $conversation->fresh(['members']);
         $otherMember = $conversation->members()->where('users.id', '!=', $data['creator_id'])->first();
-        
+
         Log::info('Other member found:', [
-            'other_member' => $otherMember ? $otherMember->toArray() : null
+            'other_member' => $otherMember ? $otherMember->toArray() : null,
         ]);
-        
+
         $otherMemberData = null;
         if ($otherMember) {
             $otherMemberData = [
@@ -190,7 +190,7 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
                 'avatar' => $otherMember->avatar,
             ];
         }
-        
+
         return [
             'id' => $conversation->id,
             'type' => $conversation->type,
@@ -210,6 +210,7 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
     public function findById(int $id): ?array
     {
         $conversation = Conversation::with(['members', 'team', 'channel'])->find($id);
+
         return $conversation ? $conversation->toArray() : null;
     }
 
@@ -221,6 +222,7 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
                 'user_id' => $userId,
                 'joined_at' => now(),
             ]);
+
             return true;
         } catch (\Exception $e) {
             return false;
@@ -244,7 +246,7 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
     public function canManageMembers(int $conversationId, int $userId): bool
     {
         $conversation = Conversation::find($conversationId);
-        if (!$conversation) {
+        if (! $conversation) {
             return false;
         }
 
@@ -260,6 +262,7 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
                 ->where('user_id', $userId)
                 ->whereIn('role', ['owner', 'admin'])
                 ->exists();
+
             return $teamMember;
         }
 
@@ -285,14 +288,14 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
             ->with(['members'])
             ->first();
 
-        if (!$conversation) {
+        if (! $conversation) {
             return null;
         }
 
         // Return formatted data like getUserConversations
         $otherMember = $conversation->members()->where('users.id', '!=', $userId1)->first();
         $unreadCount = $this->getUnreadCount($conversation->id, $userId1);
-        
+
         return [
             'id' => $conversation->id,
             'type' => $conversation->type,
@@ -318,8 +321,8 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
     public function getMembers(int $conversationId): array
     {
         $conversation = Conversation::with('members')->find($conversationId);
-        
-        if (!$conversation) {
+
+        if (! $conversation) {
             return [];
         }
 
@@ -338,14 +341,16 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
     {
         try {
             $conversation = Conversation::find($conversationId);
-            if (!$conversation) {
+            if (! $conversation) {
                 return false;
             }
 
             $conversation->update(['is_pinned' => true]);
+
             return true;
         } catch (\Throwable $e) {
-            Log::error('EloquentConversationRepository@pinConversation failed: ' . $e->getMessage());
+            Log::error('EloquentConversationRepository@pinConversation failed: '.$e->getMessage());
+
             return false;
         }
     }
@@ -354,14 +359,16 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
     {
         try {
             $conversation = Conversation::find($conversationId);
-            if (!$conversation) {
+            if (! $conversation) {
                 return false;
             }
 
             $conversation->update(['is_pinned' => false]);
+
             return true;
         } catch (\Throwable $e) {
-            Log::error('EloquentConversationRepository@unpinConversation failed: ' . $e->getMessage());
+            Log::error('EloquentConversationRepository@unpinConversation failed: '.$e->getMessage());
+
             return false;
         }
     }
@@ -370,14 +377,16 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
     {
         // Simple mention detection: content contains @username of target user
         $user = User::find($userId);
-        if (!$user) return ['data' => [], 'pagination' => ['current_page' => $page, 'last_page' => 0, 'per_page' => $limit, 'total' => 0]];
+        if (! $user) {
+            return ['data' => [], 'pagination' => ['current_page' => $page, 'last_page' => 0, 'per_page' => $limit, 'total' => 0]];
+        }
 
         $username = $user->username ?: $user->name;
-        if (!$username) {
+        if (! $username) {
             return ['data' => [], 'pagination' => ['current_page' => 1, 'last_page' => 1, 'per_page' => $limit, 'total' => 0]];
         }
 
-        $pattern = '@' . preg_quote($username, '/');
+        $pattern = '@'.preg_quote($username, '/');
         $query = Message::where('content', 'like', '%'.$username.'%')
             ->orderByDesc('id');
 
@@ -403,7 +412,7 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
             'data' => $data,
             'pagination' => [
                 'current_page' => $page,
-                'last_page' => (int)ceil($total / $limit),
+                'last_page' => (int) ceil($total / $limit),
                 'per_page' => $limit,
                 'total' => $total,
             ],
@@ -417,7 +426,7 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
             ->orderByDesc('id')
             ->first();
 
-        if (!$message) {
+        if (! $message) {
             return null;
         }
 

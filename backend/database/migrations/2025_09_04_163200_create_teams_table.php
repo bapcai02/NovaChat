@@ -16,7 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('owner_id');
             $table->boolean('is_private')->default(false);
             $table->timestamps();
-            
+
             $table->foreign('owner_id')->references('id')->on('users')->onDelete('cascade');
             $table->index(['slug', 'is_private']);
         });

@@ -14,5 +14,3 @@ interface UserSessionRepositoryInterface
      */
     public function deleteByUserAndId(int $userId, int $id): void;
 }
-
-

@@ -23,5 +23,3 @@ class ThreadService
         return $this->threads->createReply($parentMessageId, $userId, $content, $type, $metadata);
     }
 }
-
-

@@ -2,10 +2,10 @@
 
 namespace App\Repositories\Eloquent;
 
-use App\Repositories\Contracts\MessageRepositoryInterface;
+use App\Models\Bookmark;
 use App\Models\Message;
 use App\Models\MessageReaction;
-use App\Models\Bookmark;
+use App\Repositories\Contracts\MessageRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 
 class EloquentMessageRepository implements MessageRepositoryInterface
@@ -13,6 +13,7 @@ class EloquentMessageRepository implements MessageRepositoryInterface
     public function findById(int $id): ?array
     {
         $row = Message::find($id);
+
         return $row ? $row->toArray() : null;
     }
 
@@ -22,14 +23,14 @@ class EloquentMessageRepository implements MessageRepositoryInterface
         if ($type === 'direct') {
             $query = Message::query()->with('user');
             $query->where('conversation_id', $roomId)
-                  ->whereNull('parent_id'); // exclude thread replies from main feed
-            
+                ->whereNull('parent_id'); // exclude thread replies from main feed
+
             if ($beforeId) {
                 $query->where('id', '<', (int) $beforeId);
             }
-            
+
             $rows = $query->orderByDesc('id')->limit($limit)->get();
-            
+
             return $rows->map(function ($row) use ($userId) {
                 return [
                     'id' => $row->id,
@@ -53,18 +54,18 @@ class EloquentMessageRepository implements MessageRepositoryInterface
                 ];
             })->reverse()->values()->toArray();
         }
-        
+
         // For channel/team messages, use Message model
         $query = Message::query()->with('user');
         $query->where('channel_id', $roomId)
-              ->whereNull('parent_id'); // exclude thread replies from main feed
-        
+            ->whereNull('parent_id'); // exclude thread replies from main feed
+
         if ($beforeId) {
             $query->where('id', '<', (int) $beforeId);
         }
-        
+
         $rows = $query->orderByDesc('id')->limit($limit)->get();
-        
+
         return $rows->map(function ($row) use ($userId) {
             return [
                 'id' => $row->id,
@@ -92,6 +93,7 @@ class EloquentMessageRepository implements MessageRepositoryInterface
     public function create(array $data): object
     {
         $message = Message::create($data);
+
         return (object) $message->fresh()->toArray();
     }
 
@@ -102,6 +104,7 @@ class EloquentMessageRepository implements MessageRepositoryInterface
             'user_id' => $userId,
             'emoji' => $emoji,
         ]);
+
         return $reaction->toArray();
     }
 
@@ -127,6 +130,7 @@ class EloquentMessageRepository implements MessageRepositoryInterface
             'user_id' => $userId,
             'note' => $note,
         ]);
+
         return $bookmark->toArray();
     }
 
@@ -142,21 +146,21 @@ class EloquentMessageRepository implements MessageRepositoryInterface
         $query = Bookmark::with('message.user')
             ->where('user_id', $userId)
             ->orderByDesc('created_at');
-            
+
         $total = $query->count();
         $bookmarks = $query->skip(($page - 1) * $limit)
             ->take($limit)
             ->get()
             ->toArray();
-            
+
         return [
             'data' => $bookmarks,
             'meta' => [
                 'current_page' => $page,
                 'last_page' => ceil($total / $limit),
                 'per_page' => $limit,
-                'total' => $total
-            ]
+                'total' => $total,
+            ],
         ];
     }
 
@@ -168,18 +172,22 @@ class EloquentMessageRepository implements MessageRepositoryInterface
             'is_edited' => true,
             'edited_at' => now(),
         ]);
+
         return $message->fresh()->toArray();
     }
 
     public function softDelete(int $messageId): bool
     {
         $message = Message::find($messageId);
-        if (!$message) return false;
+        if (! $message) {
+            return false;
+        }
         $message->update([
             'is_deleted' => true,
             'deleted_at' => now(),
-            'content' => '[deleted]'
+            'content' => '[deleted]',
         ]);
+
         return true;
     }
 
@@ -193,11 +201,9 @@ class EloquentMessageRepository implements MessageRepositoryInterface
                 return [
                     'emoji' => $reaction->emoji,
                     'count' => (int) $reaction->count,
-                    'users' => []
+                    'users' => [],
                 ];
             })
             ->toArray();
     }
 }
-
-

@@ -24,7 +24,7 @@ class ThreadRequest extends FormRequest
         return [
             'content' => 'required|string',
             'type' => 'nullable|string|in:text,voice,image,file',
-            'metadata' => 'array'
+            'metadata' => 'array',
         ];
     }
 

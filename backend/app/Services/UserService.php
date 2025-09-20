@@ -21,14 +21,14 @@ class UserService
     public function getUserById(int $id): ?array
     {
         $user = $this->users->findById($id);
+
         return $user ? (array) $user : null;
     }
 
     public function searchUsers(string $keyword): array
     {
         $users = $this->users->search($keyword, 20);
+
         return $users->items();
     }
 }
-
-

@@ -20,5 +20,3 @@ class BookmarkRequest extends FormRequest
         ];
     }
 }
-
-

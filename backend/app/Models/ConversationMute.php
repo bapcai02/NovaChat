@@ -17,5 +17,3 @@ class ConversationMute extends Model
         'muted_at',
     ];
 }
-
-

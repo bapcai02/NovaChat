@@ -2,15 +2,17 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Redis;
-use Illuminate\Support\Facades\Log;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Redis;
 
 class UserPresenceService
 {
     private const STREAM_NAME = 'user_presence';
+
     private const CONSUMER_GROUP = 'user_presence_consumers';
+
     private const CONSUMER_NAME = 'laravel_worker';
 
     public function __construct()
@@ -27,8 +29,8 @@ class UserPresenceService
             Redis::xgroup('CREATE', self::STREAM_NAME, self::CONSUMER_GROUP, '0', 'MKSTREAM');
         } catch (\Exception $e) {
             // Consumer group already exists, ignore error
-            if (!str_contains($e->getMessage(), 'BUSYGROUP')) {
-                Log::error('Error creating consumer group: ' . $e->getMessage());
+            if (! str_contains($e->getMessage(), 'BUSYGROUP')) {
+                Log::error('Error creating consumer group: '.$e->getMessage());
             }
         }
     }
@@ -58,7 +60,8 @@ class UserPresenceService
 
             return $processedEvents;
         } catch (\Exception $e) {
-            Log::error('Error consuming events from Redis Stream: ' . $e->getMessage());
+            Log::error('Error consuming events from Redis Stream: '.$e->getMessage());
+
             return [];
         }
     }
@@ -73,20 +76,24 @@ class UserPresenceService
             $userId = (int) ($eventData['user_id'] ?? 0);
             $timestamp = $eventData['timestamp'] ?? now()->toISOString();
 
-            if (!$event || !$userId) {
+            if (! $event || ! $userId) {
                 Log::warning('Invalid event data', ['streamId' => $streamId, 'eventData' => $eventData]);
+
                 return ['streamId' => $streamId, 'status' => 'skipped', 'reason' => 'invalid_data'];
             }
 
             switch ($event) {
                 case 'user_connected':
                     $this->handleUserConnected($userId, $timestamp);
+
                     break;
                 case 'user_disconnected':
                     $this->handleUserDisconnected($userId, $timestamp);
+
                     break;
                 default:
                     Log::warning('Unknown event type', ['event' => $event, 'userId' => $userId]);
+
                     return ['streamId' => $streamId, 'status' => 'skipped', 'reason' => 'unknown_event'];
             }
 
@@ -97,14 +104,15 @@ class UserPresenceService
                 'streamId' => $streamId,
                 'status' => 'processed',
                 'event' => $event,
-                'userId' => $userId
+                'userId' => $userId,
             ];
         } catch (\Exception $e) {
             Log::error('Error processing event', [
                 'streamId' => $streamId,
                 'eventData' => $eventData,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return ['streamId' => $streamId, 'status' => 'error', 'error' => $e->getMessage()];
         }
     }
@@ -116,26 +124,27 @@ class UserPresenceService
     {
         try {
             $user = User::find($userId);
-            if (!$user) {
+            if (! $user) {
                 Log::warning('User not found for connected event', ['userId' => $userId]);
+
                 return;
             }
 
             // Update user status
             $user->update([
                 'is_online' => true,
-                'last_seen_at' => Carbon::parse($timestamp)
+                'last_seen_at' => Carbon::parse($timestamp),
             ]);
 
             Log::info('User connected', [
                 'userId' => $userId,
                 'userName' => $user->name,
-                'timestamp' => $timestamp
+                'timestamp' => $timestamp,
             ]);
         } catch (\Exception $e) {
             Log::error('Error handling user connected', [
                 'userId' => $userId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
         }
     }
@@ -147,26 +156,27 @@ class UserPresenceService
     {
         try {
             $user = User::find($userId);
-            if (!$user) {
+            if (! $user) {
                 Log::warning('User not found for disconnected event', ['userId' => $userId]);
+
                 return;
             }
 
             // Update user status
             $user->update([
                 'is_online' => false,
-                'last_seen_at' => Carbon::parse($timestamp)
+                'last_seen_at' => Carbon::parse($timestamp),
             ]);
 
             Log::info('User disconnected', [
                 'userId' => $userId,
                 'userName' => $user->name,
-                'timestamp' => $timestamp
+                'timestamp' => $timestamp,
             ]);
         } catch (\Exception $e) {
             Log::error('Error handling user disconnected', [
                 'userId' => $userId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
         }
     }
@@ -178,20 +188,21 @@ class UserPresenceService
     {
         try {
             $user = User::find($userId);
-            if (!$user) {
+            if (! $user) {
                 return null;
             }
 
             return [
                 'user_id' => $user->id,
                 'is_online' => (bool) $user->is_online,
-                'last_seen_at' => $user->last_seen_at
+                'last_seen_at' => $user->last_seen_at,
             ];
         } catch (\Exception $e) {
             Log::error('Error getting user status', [
                 'userId' => $userId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return null;
         }
     }
@@ -203,19 +214,20 @@ class UserPresenceService
     {
         try {
             $users = User::whereIn('id', $userIds)->get();
-            
+
             return $users->map(function ($user) {
                 return [
                     'user_id' => $user->id,
                     'is_online' => (bool) $user->is_online,
-                    'last_seen_at' => $user->last_seen_at
+                    'last_seen_at' => $user->last_seen_at,
                 ];
             })->toArray();
         } catch (\Exception $e) {
             Log::error('Error getting users status', [
                 'userIds' => $userIds,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return [];
         }
     }

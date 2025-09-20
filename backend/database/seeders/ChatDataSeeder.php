@@ -2,17 +2,16 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
-use App\Models\User;
-use App\Models\Team;
-use App\Models\TeamMember;
+use App\Models\Bookmark;
 use App\Models\Channel;
 use App\Models\Conversation;
 use App\Models\ConversationMember;
 use App\Models\Message;
 use App\Models\MessageReaction;
-use App\Models\Bookmark;
+use App\Models\Team;
+use App\Models\TeamMember;
+use App\Models\User;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
 class ChatDataSeeder extends Seeder
@@ -111,7 +110,7 @@ class ChatDataSeeder extends Seeder
         foreach ($teamMembers as $memberData) {
             TeamMember::firstOrCreate([
                 'team_id' => $memberData['team_id'],
-                'user_id' => $memberData['user_id']
+                'user_id' => $memberData['user_id'],
             ], $memberData);
         }
 
@@ -136,7 +135,7 @@ class ChatDataSeeder extends Seeder
         foreach ($channels as $channelData) {
             Channel::firstOrCreate([
                 'team_id' => $channelData['team_id'],
-                'slug' => $channelData['slug']
+                'slug' => $channelData['slug'],
             ], $channelData);
         }
 
@@ -178,7 +177,7 @@ class ChatDataSeeder extends Seeder
         foreach ($conversationMembers as $memberData) {
             ConversationMember::firstOrCreate([
                 'conversation_id' => $memberData['conversation_id'],
-                'user_id' => $memberData['user_id']
+                'user_id' => $memberData['user_id'],
             ], $memberData);
         }
 

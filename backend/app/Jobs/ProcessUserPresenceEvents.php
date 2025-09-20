@@ -2,12 +2,12 @@
 
 namespace App\Jobs;
 
+use App\Services\UserPresenceService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use App\Services\UserPresenceService;
 use Illuminate\Support\Facades\Log;
 
 class ProcessUserPresenceEvents implements ShouldQueue
@@ -39,11 +39,12 @@ class ProcessUserPresenceEvents implements ShouldQueue
     {
         try {
             Log::info('Starting to process user presence events');
-            
+
             $events = $presenceService->consumeEvents(10, 1000);
-            
+
             if (empty($events)) {
                 Log::debug('No events to process');
+
                 return;
             }
 
@@ -61,7 +62,7 @@ class ProcessUserPresenceEvents implements ShouldQueue
             Log::info('Processed user presence events', [
                 'total' => count($events),
                 'processed' => $processedCount,
-                'errors' => $errorCount
+                'errors' => $errorCount,
             ]);
 
             // If there were events processed, dispatch another job to continue processing
@@ -72,8 +73,8 @@ class ProcessUserPresenceEvents implements ShouldQueue
                 self::dispatch()->delay(now()->addSeconds(5));
             }
         } catch (\Exception $e) {
-            Log::error('Error processing user presence events: ' . $e->getMessage());
-            
+            Log::error('Error processing user presence events: '.$e->getMessage());
+
             // Retry the job after a delay
             $this->release(30); // Retry after 30 seconds
         }
@@ -84,6 +85,6 @@ class ProcessUserPresenceEvents implements ShouldQueue
      */
     public function failed(\Throwable $exception): void
     {
-        Log::error('User presence events job failed: ' . $exception->getMessage());
+        Log::error('User presence events job failed: '.$exception->getMessage());
     }
 }

@@ -15,5 +15,3 @@ class WsPublisher
         Redis::publish('ws:messages', $payload);
     }
 }
-
-

@@ -16,7 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('team_id');
             $table->boolean('is_private')->default(false);
             $table->timestamps();
-            
+
             $table->foreign('team_id')->references('id')->on('teams')->onDelete('cascade');
             $table->unique(['team_id', 'slug']);
             $table->index(['team_id', 'is_private']);

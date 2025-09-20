@@ -14,7 +14,7 @@ return new class extends Migration
             $table->timestamp('joined_at')->nullable();
             $table->timestamp('last_read_at')->nullable();
             $table->timestamps();
-            
+
             $table->primary(['conversation_id', 'user_id']);
             $table->foreign('conversation_id')->references('id')->on('conversations')->onDelete('cascade');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');

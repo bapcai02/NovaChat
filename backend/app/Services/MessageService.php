@@ -4,8 +4,6 @@ namespace App\Services;
 
 use App\Repositories\Contracts\MessageRepositoryInterface;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Carbon;
 
 class MessageService
 {
@@ -20,6 +18,7 @@ class MessageService
     {
         $data = $this->messages->getForRoom($roomId, $type, $limit, $beforeId, $userId);
         $hasMore = count($data) === $limit;
+
         return ['success' => true, 'data' => $data, 'meta' => [
             'hasMore' => $hasMore,
             'nextBeforeId' => count($data) > 0 ? $data[count($data) - 1]['id'] : null,
@@ -31,7 +30,7 @@ class MessageService
     {
         Log::info('=== MessageService::storeMessage called ===');
         Log::info('Input data:', $data);
-        
+
         $messageData = [
             'user_id' => $data['user_id'],
             'content' => $data['content'],
@@ -45,12 +44,12 @@ class MessageService
         Log::info('Message data to create:', $messageData);
 
         // If this is a thread reply and conversation_id is missing, inherit from parent
-        if (empty($messageData['conversation_id']) && !empty($messageData['parent_id'])) {
+        if (empty($messageData['conversation_id']) && ! empty($messageData['parent_id'])) {
             try {
                 $parent = $this->messages->findById((int) $messageData['parent_id']);
                 if ($parent) {
                     $messageData['conversation_id'] = $parent['conversation_id'] ?? null;
-                    if (empty($messageData['channel_id']) && !empty($parent['channel_id'])) {
+                    if (empty($messageData['channel_id']) && ! empty($parent['channel_id'])) {
                         $messageData['channel_id'] = $parent['channel_id'];
                     }
                 }
@@ -60,15 +59,15 @@ class MessageService
         }
 
         $message = $this->messages->create($messageData);
-        
+
         Log::info('Message created:', ['message' => $message]);
-        
+
         // Get conversation type for channel selection
         $conversationType = 'direct'; // Default for direct messages
         if ($message->channel_id) {
             $conversationType = 'channel';
         }
-        
+
         $payload = [
             'conversation_id' => (string) $data['conversation_id'],
             'type' => $conversationType,
@@ -87,18 +86,18 @@ class MessageService
     public function addReaction(string $messageId, int $userId, string $emoji): array
     {
         $message = $this->messages->findById((int) $messageId);
-        if (!$message) {
+        if (! $message) {
             return ['success' => false, 'message' => 'Message not found'];
         }
 
         $reaction = $this->messages->addReaction((int) $messageId, $userId, $emoji);
-        
+
         // Get conversation type for channel selection
         $conversationType = 'direct';
-        if (!empty($message['channel_id'])) {
+        if (! empty($message['channel_id'])) {
             $conversationType = 'channel';
         }
-        
+
         $payload = [
             'conversation_id' => (string) $message['conversation_id'],
             'type' => $conversationType,
@@ -117,21 +116,21 @@ class MessageService
     public function removeReaction(string $messageId, int $userId, string $emoji): array
     {
         $message = $this->messages->findById((int) $messageId);
-        if (!$message) {
+        if (! $message) {
             return ['success' => false, 'message' => 'Message not found'];
         }
 
         $deleted = $this->messages->removeReaction((int) $messageId, $userId, $emoji);
-        if (!$deleted) {
+        if (! $deleted) {
             return ['success' => false, 'message' => 'Reaction not found'];
         }
 
         // Get conversation type for channel selection
         $conversationType = 'direct';
-        if (!empty($message['channel_id'])) {
+        if (! empty($message['channel_id'])) {
             $conversationType = 'channel';
         }
-        
+
         $payload = [
             'conversation_id' => (string) $message['conversation_id'],
             'type' => $conversationType,
@@ -149,33 +148,34 @@ class MessageService
     public function editMessage(string $messageId, int $userId, string $newContent): array
     {
         $message = $this->messages->findById((int) $messageId);
-        if (!$message) {
+        if (! $message) {
             return ['success' => false, 'message' => 'Message not found'];
         }
 
-        if ((int)($message['user_id'] ?? 0) !== $userId) {
+        if ((int) ($message['user_id'] ?? 0) !== $userId) {
             return ['success' => false, 'message' => 'You can only edit your own messages'];
         }
 
         // Save version
         try {
             \App\Models\MessageVersion::create([
-                'message_id' => (int)$messageId,
+                'message_id' => (int) $messageId,
                 'editor_id' => $userId,
                 'action' => 'edit',
                 'old_content' => $message['content'] ?? null,
                 'new_content' => $newContent,
             ]);
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+        }
 
-        $this->messages->edit((int)$messageId, $newContent);
+        $this->messages->edit((int) $messageId, $newContent);
 
         // Get conversation type for channel selection
         $conversationType = 'direct';
-        if (!empty($message['channel_id'])) {
+        if (! empty($message['channel_id'])) {
             $conversationType = 'channel';
         }
-        
+
         $payload = [
             'conversation_id' => (string) $message['conversation_id'],
             'type' => $conversationType,
@@ -193,17 +193,19 @@ class MessageService
     public function deleteMessage(string $messageId, int $userId): array
     {
         $message = $this->messages->findById((int) $messageId);
-        if (!$message) {
+        if (! $message) {
             return ['success' => false, 'message' => 'Message not found'];
         }
-        if ((int)($message['user_id'] ?? 0) !== $userId) {
+        if ((int) ($message['user_id'] ?? 0) !== $userId) {
             return ['success' => false, 'message' => 'You can only delete your own messages'];
         }
 
-        $ok = $this->messages->softDelete((int)$messageId);
-        if (!$ok) return ['success' => false, 'message' => 'Failed to delete message'];
+        $ok = $this->messages->softDelete((int) $messageId);
+        if (! $ok) {
+            return ['success' => false, 'message' => 'Failed to delete message'];
+        }
 
-        $conversationType = !empty($message['channel_id']) ? 'channel' : 'direct';
+        $conversationType = ! empty($message['channel_id']) ? 'channel' : 'direct';
         $payload = [
             'conversation_id' => (string) $message['conversation_id'],
             'type' => $conversationType,
@@ -211,26 +213,27 @@ class MessageService
             'user_id' => (string) $userId,
             'deleted_at' => now()->toISOString(),
         ];
+
         // Realtime is handled by WS; skip Laravel broadcast
         return ['success' => true, 'message' => 'Message deleted successfully'];
     }
 
     public function bookmarkMessage(string $messageId, int $userId, ?string $note = null, ?array $tags = null): array
     {
-        $exists = $this->messages->isBookmarked((int)$messageId, $userId);
+        $exists = $this->messages->isBookmarked((int) $messageId, $userId);
         if ($exists) {
             return ['success' => false, 'message' => 'Message already bookmarked'];
         }
 
-        $bookmark = $this->messages->createBookmark((int)$messageId, $userId, $note);
+        $bookmark = $this->messages->createBookmark((int) $messageId, $userId, $note);
 
         return ['success' => true, 'data' => $bookmark];
     }
 
     public function removeBookmark(string $messageId, int $userId): array
     {
-        $deleted = $this->messages->removeBookmark((int)$messageId, $userId);
-        if (!$deleted) {
+        $deleted = $this->messages->removeBookmark((int) $messageId, $userId);
+        if (! $deleted) {
             return ['success' => false, 'message' => 'Bookmark not found'];
         }
 
@@ -240,13 +243,12 @@ class MessageService
     public function getUserBookmarks(int $userId, int $page = 1, int $limit = 20): array
     {
         $bookmarks = $this->messages->getUserBookmarks($userId, $page, $limit);
+
         return ['success' => true, 'data' => $bookmarks['data'], 'pagination' => $bookmarks['meta']];
     }
 
     public function isMessageBookmarked(string $messageId, int $userId): bool
     {
-        return $this->messages->isBookmarked((int)$messageId, $userId);
+        return $this->messages->isBookmarked((int) $messageId, $userId);
     }
 }
-
-

@@ -3,8 +3,6 @@
 namespace App\Services;
 
 use App\Repositories\Contracts\UserRepositoryInterface;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class UserStatusService
 {
@@ -28,7 +26,7 @@ class UserStatusService
             'roomId' => $data['roomId'] ?? 'global',
             'status' => $data['status'],
             'statusMessage' => $data['statusMessage'] ?? ucfirst($data['status']),
-            'timestamp' => now()->toISOString()
+            'timestamp' => now()->toISOString(),
         ];
 
         return ['success' => true, 'data' => $payload];
@@ -37,14 +35,15 @@ class UserStatusService
     public function getOnlineUsers(): array
     {
         $users = $this->users->getOnlineUsers();
+
         return ['success' => true, 'data' => $users];
     }
 
     public function startTyping(int $userId, string $roomId): array
     {
         $user = $this->users->findById($userId);
-        if (!$user) { 
-            return ['success' => false, 'message' => 'User not found']; 
+        if (! $user) {
+            return ['success' => false, 'message' => 'User not found'];
         }
 
         $payload = [
@@ -52,7 +51,7 @@ class UserStatusService
             'userId' => (string) $userId,
             'userName' => $user->name,
             'username' => $user->username,
-            'timestamp' => now()->toISOString()
+            'timestamp' => now()->toISOString(),
         ];
 
         // Realtime is handled by WS; skip Laravel broadcast
@@ -63,8 +62,8 @@ class UserStatusService
     public function stopTyping(int $userId, string $roomId): array
     {
         $user = $this->users->findById($userId);
-        if (!$user) { 
-            return ['success' => false, 'message' => 'User not found']; 
+        if (! $user) {
+            return ['success' => false, 'message' => 'User not found'];
         }
 
         $payload = [
@@ -72,7 +71,7 @@ class UserStatusService
             'userId' => (string) $userId,
             'userName' => $user->name,
             'username' => $user->username,
-            'timestamp' => now()->toISOString()
+            'timestamp' => now()->toISOString(),
         ];
 
         // Realtime is handled by WS; skip Laravel broadcast
@@ -80,5 +79,3 @@ class UserStatusService
         return ['success' => true, 'data' => $payload];
     }
 }
-
-

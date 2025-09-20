@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Services\UserPresenceService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redis;
-use App\Services\UserPresenceService;
 
 class UserStatusController extends Controller
 {
@@ -21,23 +21,23 @@ class UserStatusController extends Controller
     {
         try {
             $status = $this->presenceService->getUserStatus($userId);
-            
-            if (!$status) {
+
+            if (! $status) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'User not found'
+                    'message' => 'User not found',
                 ], 404);
             }
 
             return response()->json([
                 'success' => true,
-                'data' => $status
+                'data' => $status,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to get user status',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -49,25 +49,25 @@ class UserStatusController extends Controller
     {
         try {
             $userIds = $request->input('user_ids', []);
-            
-            if (empty($userIds) || !is_array($userIds)) {
+
+            if (empty($userIds) || ! is_array($userIds)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'user_ids array is required'
+                    'message' => 'user_ids array is required',
                 ], 400);
             }
 
             $statuses = $this->presenceService->getUsersStatus($userIds);
-            
+
             return response()->json([
                 'success' => true,
-                'data' => $statuses
+                'data' => $statuses,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to get users status',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -79,24 +79,24 @@ class UserStatusController extends Controller
     {
         try {
             $userId = Auth::id();
-            if (!$userId) {
+            if (! $userId) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Unauthenticated'
+                    'message' => 'Unauthenticated',
                 ], 401);
             }
 
             $status = $this->presenceService->getUserStatus($userId);
-            
+
             return response()->json([
                 'success' => true,
-                'data' => $status
+                'data' => $status,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to get current user status',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -109,19 +109,19 @@ class UserStatusController extends Controller
         try {
             // Get online user IDs from Redis Set
             $onlineUserIds = Redis::smembers('online_users');
-            
+
             // Convert to integers and filter out invalid values
             $onlineUserIds = array_map('intval', array_filter($onlineUserIds, 'is_numeric'));
-            
+
             return response()->json([
                 'success' => true,
-                'data' => $onlineUserIds
+                'data' => $onlineUserIds,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to get online users',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }

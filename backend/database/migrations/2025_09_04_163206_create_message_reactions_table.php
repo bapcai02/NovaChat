@@ -14,7 +14,7 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id');
             $table->string('emoji');
             $table->timestamps();
-            
+
             $table->foreign('message_id')->references('id')->on('messages')->onDelete('cascade');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->unique(['message_id', 'user_id', 'emoji']);

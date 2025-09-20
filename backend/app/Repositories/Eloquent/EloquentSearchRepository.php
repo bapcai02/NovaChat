@@ -2,11 +2,11 @@
 
 namespace App\Repositories\Eloquent;
 
-use App\Repositories\Contracts\SearchRepositoryInterface;
-use App\Models\Message;
 use App\Models\Channel;
-use App\Models\User;
 use App\Models\File;
+use App\Models\Message;
+use App\Models\User;
+use App\Repositories\Contracts\SearchRepositoryInterface;
 
 class EloquentSearchRepository implements SearchRepositoryInterface
 {
@@ -23,9 +23,10 @@ class EloquentSearchRepository implements SearchRepositoryInterface
     public function searchMessages(string $query, array $filters = []): array
     {
         $q = Message::query()->where('content', 'like', "%$query%");
-        if (!empty($filters['channel_id'])) {
-            $q->where('channel_id', (int)$filters['channel_id']);
+        if (! empty($filters['channel_id'])) {
+            $q->where('channel_id', (int) $filters['channel_id']);
         }
+
         return $q->orderByDesc('id')->limit(50)->get()->toArray();
     }
 
@@ -38,10 +39,10 @@ class EloquentSearchRepository implements SearchRepositoryInterface
     public function searchUsers(string $query, array $filters = []): array
     {
         return User::where(function ($q) use ($query) {
-                $q->where('name', 'like', "%$query%")
-                  ->orWhere('email', 'like', "%$query%")
-                  ->orWhere('username', 'like', "%$query%");
-            })
+            $q->where('name', 'like', "%$query%")
+                ->orWhere('email', 'like', "%$query%")
+                ->orWhere('username', 'like', "%$query%");
+        })
             ->orderByDesc('id')->limit(50)->get()->toArray();
     }
 
@@ -57,5 +58,3 @@ class EloquentSearchRepository implements SearchRepositoryInterface
             ->orderByDesc('id')->limit(50)->get()->toArray();
     }
 }
-
-

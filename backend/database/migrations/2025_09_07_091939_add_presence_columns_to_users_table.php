@@ -12,10 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            if (!Schema::hasColumn('users', 'is_online')) {
+            if (! Schema::hasColumn('users', 'is_online')) {
                 $table->boolean('is_online')->default(false)->after('email');
             }
-            if (!Schema::hasColumn('users', 'last_seen_at')) {
+            if (! Schema::hasColumn('users', 'last_seen_at')) {
                 $table->timestamp('last_seen_at')->nullable()->after('is_online');
             }
         });

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Bookmark extends Model
 {
     protected $fillable = [
-        'user_id', 'message_id', 'note', 'tags'
+        'user_id', 'message_id', 'note', 'tags',
     ];
 
     protected $casts = [

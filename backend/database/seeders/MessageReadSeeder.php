@@ -2,12 +2,10 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
+use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\MessageRead;
-use App\Models\Conversation;
-use App\Models\ConversationMember;
-use App\Models\User;
+use Illuminate\Database\Seeder;
 
 class MessageReadSeeder extends Seeder
 {

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Channel extends Model
 {
     protected $fillable = [
-        'name', 'description', 'slug', 'team_id', 'is_private'
+        'name', 'description', 'slug', 'team_id', 'is_private',
     ];
 
     protected $casts = [

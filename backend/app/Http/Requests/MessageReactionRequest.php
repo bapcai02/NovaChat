@@ -18,5 +18,3 @@ class MessageReactionRequest extends FormRequest
         ];
     }
 }
-
-

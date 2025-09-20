@@ -24,5 +24,3 @@ class EloquentUserSessionRepository implements UserSessionRepositoryInterface
             ->delete();
     }
 }
-
-

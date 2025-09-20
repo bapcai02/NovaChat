@@ -40,7 +40,7 @@ class AuthService
         $token = $user->createToken('auth_token')->accessToken;
 
         return [true, 201, [
-            'user' => $user->only(['id','name','email','username','avatar','is_online','last_seen_at']),
+            'user' => $user->only(['id', 'name', 'email', 'username', 'avatar', 'is_online', 'last_seen_at']),
             'token' => $token,
             'token_type' => 'Bearer',
             'message' => 'User registered successfully',
@@ -49,23 +49,24 @@ class AuthService
 
     public function login(array $input): array
     {
-        if (!Auth::attempt(['email' => $input['email'], 'password' => $input['password']])) {
+        if (! Auth::attempt(['email' => $input['email'], 'password' => $input['password']])) {
             return [false, 401, ['message' => 'Invalid credentials']];
         }
 
         $user = $this->userRepository->findByEmail($input['email']);
-        if (!$user) {
+        if (! $user) {
             return [false, 404, ['message' => 'User not found']];
         }
 
         $this->userRepository->update($user->id, [
             'is_online' => true,
-            'last_seen_at' => now()
+            'last_seen_at' => now(),
         ]);
 
         $token = $user->createToken('auth_token')->accessToken;
+
         return [true, 200, [
-            'user' => $user->only(['id','name','email','username','avatar','is_online','last_seen_at']),
+            'user' => $user->only(['id', 'name', 'email', 'username', 'avatar', 'is_online', 'last_seen_at']),
             'token' => $token,
             'token_type' => 'Bearer',
             'message' => 'Login successful',
@@ -78,22 +79,26 @@ class AuthService
         if ($user) {
             $this->userRepository->update($user->id, [
                 'is_online' => false,
-                'last_seen_at' => now()
+                'last_seen_at' => now(),
             ]);
-            $user->tokens()->each(function ($token) { $token->revoke(); });
+            $user->tokens()->each(function ($token) {
+                $token->revoke();
+            });
         }
+
         return [true, 200, ['message' => 'Logged out successfully']];
     }
 
     public function refresh(): array
     {
         $user = Auth::user();
-        if (!$user) {
+        if (! $user) {
             return [false, 401, ['message' => 'User not authenticated']];
         }
-        
+
         request()->user()->token()->revoke();
         $token = $user->createToken('auth_token')->accessToken;
+
         return [true, 200, [
             'token' => $token,
             'token_type' => 'Bearer',
@@ -106,5 +111,3 @@ class AuthService
         return [true, 200, ['user' => Auth::user(), 'message' => 'User retrieved successfully']];
     }
 }
-
-

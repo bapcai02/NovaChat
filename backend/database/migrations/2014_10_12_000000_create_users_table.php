@@ -50,7 +50,7 @@ return new class extends Migration
             $table->timestamp('deleted_at')->nullable(); // Soft delete timestamp
             $table->rememberToken();
             $table->timestamps();
-            
+
             // Indexes
             $table->index(['status', 'role']);
             $table->index(['is_online', 'last_seen_at']);

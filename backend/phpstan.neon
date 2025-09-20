@@ -1,0 +1,28 @@
+includes:
+    - ./vendor/larastan/larastan/extension.neon
+
+parameters:
+    paths:
+        - app/
+        - database/
+        - routes/
+        - tests/
+
+    # The level 3 is more reasonable for Laravel projects
+    level: 3
+
+    ignoreErrors:
+        - '#PHPDoc tag @var has invalid value#'
+        - '#Call to an undefined method#'
+        - '#Access to an undefined property#'
+        - identifier: missingType.iterableValue
+        - identifier: missingType.generics
+
+    excludePaths:
+        - vendor/
+        - storage/
+        - bootstrap/cache/
+        - node_modules/
+
+    reportUnmatchedIgnoredErrors: false
+    memoryLimitFile: 512M

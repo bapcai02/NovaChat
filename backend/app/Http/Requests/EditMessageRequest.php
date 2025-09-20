@@ -18,5 +18,3 @@ class EditMessageRequest extends FormRequest
         ];
     }
 }
-
-

@@ -8,7 +8,7 @@ class Message extends Model
 {
     protected $fillable = [
         'user_id', 'conversation_id', 'channel_id', 'parent_id', 'content', 'type', 'metadata',
-        'is_edited', 'edited_at', 'is_pinned', 'is_deleted', 'deleted_at'
+        'is_edited', 'edited_at', 'is_pinned', 'is_deleted', 'deleted_at',
     ];
 
     protected $casts = [
@@ -77,5 +77,3 @@ class Message extends Model
         });
     }
 }
-
-

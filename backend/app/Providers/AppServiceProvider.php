@@ -2,37 +2,37 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
-use App\Repositories\Contracts\ChannelRepositoryInterface as AppChannelRepositoryInterface;
-use App\Repositories\Eloquent\EloquentChannelRepository;
-use App\Repositories\Contracts\ConversationRepositoryInterface as AppConversationRepositoryInterface;
-use App\Repositories\Eloquent\EloquentConversationRepository;
-use App\Repositories\Contracts\MessageRepositoryInterface as AppMessageRepositoryInterface;
-use App\Repositories\Eloquent\EloquentMessageRepository;
-use App\Repositories\Contracts\TeamRepositoryInterface as AppTeamRepositoryInterface;
-use App\Repositories\Eloquent\EloquentTeamRepository;
-use App\Repositories\Contracts\SearchRepositoryInterface as AppSearchRepositoryInterface;
-use App\Repositories\Eloquent\EloquentSearchRepository;
-use App\Repositories\Contracts\ThreadRepositoryInterface as AppThreadRepositoryInterface;
-use App\Repositories\Eloquent\EloquentThreadRepository;
-use App\Domain\User\Repositories\UserRepositoryInterface as DomainUserRepositoryInterface;
-use App\Infrastructure\Repositories\UserRepository as InfraUserRepository;
-use App\Repositories\Contracts\UserRepositoryInterface as AppUserRepositoryInterface;
-use App\Repositories\Eloquent\EloquentUserRepository;
-use App\Domain\Channel\Repositories\ChannelRepositoryInterface;
 use App\Domain\Channel\Repositories\ChannelRepository;
-use App\Domain\Message\Repositories\ConversationRepositoryInterface;
+use App\Domain\Channel\Repositories\ChannelRepositoryInterface;
 use App\Domain\Message\Repositories\ConversationRepository;
-use App\Domain\Message\Repositories\ThreadRepositoryInterface;
-use App\Domain\Message\Repositories\ThreadRepository;
+use App\Domain\Message\Repositories\ConversationRepositoryInterface;
 use App\Domain\Message\Repositories\MessageRepositoryInterface;
-use App\Infrastructure\Repositories\MessageRepository;
-use App\Domain\Team\Repositories\TeamRepositoryInterface;
-use App\Infrastructure\Repositories\TeamRepository;
-use App\Domain\Search\Repositories\SearchRepositoryInterface;
+use App\Domain\Message\Repositories\ThreadRepository;
+use App\Domain\Message\Repositories\ThreadRepositoryInterface;
 use App\Domain\Search\Repositories\SearchRepository;
+use App\Domain\Search\Repositories\SearchRepositoryInterface;
+use App\Domain\Team\Repositories\TeamRepositoryInterface;
+use App\Domain\User\Repositories\UserRepositoryInterface as DomainUserRepositoryInterface;
+use App\Infrastructure\Repositories\MessageRepository;
+use App\Infrastructure\Repositories\TeamRepository;
+use App\Infrastructure\Repositories\UserRepository as InfraUserRepository;
+use App\Repositories\Contracts\ChannelRepositoryInterface as AppChannelRepositoryInterface;
+use App\Repositories\Contracts\ConversationRepositoryInterface as AppConversationRepositoryInterface;
+use App\Repositories\Contracts\MessageRepositoryInterface as AppMessageRepositoryInterface;
+use App\Repositories\Contracts\SearchRepositoryInterface as AppSearchRepositoryInterface;
+use App\Repositories\Contracts\TeamRepositoryInterface as AppTeamRepositoryInterface;
+use App\Repositories\Contracts\ThreadRepositoryInterface as AppThreadRepositoryInterface;
+use App\Repositories\Contracts\UserRepositoryInterface as AppUserRepositoryInterface;
 use App\Repositories\Contracts\UserSessionRepositoryInterface;
+use App\Repositories\Eloquent\EloquentChannelRepository;
+use App\Repositories\Eloquent\EloquentConversationRepository;
+use App\Repositories\Eloquent\EloquentMessageRepository;
+use App\Repositories\Eloquent\EloquentSearchRepository;
+use App\Repositories\Eloquent\EloquentTeamRepository;
+use App\Repositories\Eloquent\EloquentThreadRepository;
+use App\Repositories\Eloquent\EloquentUserRepository;
 use App\Repositories\Eloquent\EloquentUserSessionRepository;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {

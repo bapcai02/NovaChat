@@ -2,25 +2,30 @@
 
 namespace App\Jobs;
 
+use App\Events\MessageSent;
+use App\Models\Conversation;
+use App\Models\Message;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
-use App\Models\Message;
-use App\Models\Conversation;
-use App\Events\MessageSent;
 
 class StoreChatMessage implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected $conversationId;
+
     protected $senderId;
+
     protected $content;
+
     protected $timestamp;
+
     protected $parentId;
+
     protected $attachments;
 
     /**
@@ -43,12 +48,13 @@ class StoreChatMessage implements ShouldQueue
     {
         try {
             // Force log to file
-            file_put_contents(storage_path('logs/laravel.log'),
-                '[' . now() . '] local.INFO: === StoreChatMessage Job Started ===' . PHP_EOL .
-                'Conversation ID: ' . $this->conversationId . PHP_EOL .
-                'Sender ID: ' . $this->senderId . PHP_EOL .
-                'Content: ' . $this->content . PHP_EOL .
-                'Parent ID: ' . ($this->parentId ?: 'null') . PHP_EOL,
+            file_put_contents(
+                storage_path('logs/laravel.log'),
+                '['.now().'] local.INFO: === StoreChatMessage Job Started ==='.PHP_EOL.
+                'Conversation ID: '.$this->conversationId.PHP_EOL.
+                'Sender ID: '.$this->senderId.PHP_EOL.
+                'Content: '.$this->content.PHP_EOL.
+                'Parent ID: '.($this->parentId ?: 'null').PHP_EOL,
                 FILE_APPEND | LOCK_EX
             );
 
@@ -56,11 +62,11 @@ class StoreChatMessage implements ShouldQueue
                 'conversation_id' => $this->conversationId,
                 'sender_id' => $this->senderId,
                 'content' => $this->content,
-                'parent_id' => $this->parentId
+                'parent_id' => $this->parentId,
             ]);
 
             // If this is a thread reply and conversationId is missing, inherit from parent
-            if (empty($this->conversationId) && !empty($this->parentId)) {
+            if (empty($this->conversationId) && ! empty($this->parentId)) {
                 $parent = Message::find($this->parentId);
                 if ($parent) {
                     $this->conversationId = $parent->conversation_id;
@@ -69,14 +75,15 @@ class StoreChatMessage implements ShouldQueue
 
             // Verify conversation exists (after inheritance if applied)
             $conversation = Conversation::find($this->conversationId);
-            if (!$conversation) {
+            if (! $conversation) {
                 Log::error('Conversation not found', ['conversation_id' => $this->conversationId]);
+
                 return;
             }
 
             // Determine message type based on content and attachments
             $messageType = 'text';
-            if (!empty($this->attachments)) {
+            if (! empty($this->attachments)) {
                 $messageType = 'image'; // Default to image if has attachments
                 // Could be more specific based on attachment types
             }
@@ -87,23 +94,24 @@ class StoreChatMessage implements ShouldQueue
                 'user_id' => $this->senderId,  // Changed from sender_id to user_id
                 'content' => $this->content,
                 'type' => $messageType,
-                'metadata' => !empty($this->attachments) ? ['attachments' => $this->attachments] : null,
+                'metadata' => ! empty($this->attachments) ? ['attachments' => $this->attachments] : null,
                 'parent_id' => $this->parentId,
                 'created_at' => $this->timestamp,
-                'updated_at' => $this->timestamp
+                'updated_at' => $this->timestamp,
             ]);
 
             // Force log to file
-            file_put_contents(storage_path('logs/laravel.log'),
-                '[' . now() . '] local.INFO: === Message Stored Successfully ===' . PHP_EOL .
-                'Message ID: ' . $message->id . PHP_EOL .
-                'Conversation ID: ' . $this->conversationId . PHP_EOL,
+            file_put_contents(
+                storage_path('logs/laravel.log'),
+                '['.now().'] local.INFO: === Message Stored Successfully ==='.PHP_EOL.
+                'Message ID: '.$message->id.PHP_EOL.
+                'Conversation ID: '.$this->conversationId.PHP_EOL,
                 FILE_APPEND | LOCK_EX
             );
 
             Log::info('Message stored successfully', [
                 'message_id' => $message->id,
-                'conversation_id' => $this->conversationId
+                'conversation_id' => $this->conversationId,
             ]);
 
             // Dispatch event for real-time updates (optional)
@@ -113,9 +121,9 @@ class StoreChatMessage implements ShouldQueue
             Log::error('Failed to store chat message', [
                 'error' => $e->getMessage(),
                 'conversation_id' => $this->conversationId,
-                'sender_id' => $this->senderId
+                'sender_id' => $this->senderId,
             ]);
-            
+
             // Re-throw to mark job as failed
             throw $e;
         }
@@ -129,7 +137,7 @@ class StoreChatMessage implements ShouldQueue
         Log::error('StoreChatMessage job failed', [
             'error' => $exception->getMessage(),
             'conversation_id' => $this->conversationId,
-            'sender_id' => $this->senderId
+            'sender_id' => $this->senderId,
         ]);
     }
 }

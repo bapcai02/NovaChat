@@ -14,7 +14,7 @@ return new class extends Migration
             $table->enum('role', ['owner', 'admin', 'member'])->default('member');
             $table->timestamp('joined_at')->nullable();
             $table->timestamps();
-            
+
             $table->primary(['team_id', 'user_id']);
             $table->foreign('team_id')->references('id')->on('teams')->onDelete('cascade');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');

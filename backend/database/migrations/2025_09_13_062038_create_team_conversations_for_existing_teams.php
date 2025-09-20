@@ -1,11 +1,9 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-use App\Models\Team;
 use App\Models\Conversation;
 use App\Models\ConversationMember;
+use App\Models\Team;
+use Illuminate\Database\Migrations\Migration;
 
 return new class extends Migration
 {
@@ -13,14 +11,14 @@ return new class extends Migration
     {
         // Create team conversations for existing teams
         $teams = Team::all();
-        
+
         foreach ($teams as $team) {
             // Check if team conversation already exists
             $existingConversation = Conversation::where('type', 'team')
                 ->where('team_id', $team->id)
                 ->first();
-                
-            if (!$existingConversation) {
+
+            if (! $existingConversation) {
                 // Create team conversation
                 $conversation = Conversation::create([
                     'type' => 'team',
@@ -29,12 +27,12 @@ return new class extends Migration
                     'channel_id' => null,
                     'metadata' => null,
                 ]);
-                
+
                 // Add all team members to conversation
                 $teamMembers = \DB::table('team_members')
                     ->where('team_id', $team->id)
                     ->get();
-                    
+
                 foreach ($teamMembers as $member) {
                     ConversationMember::create([
                         'conversation_id' => $conversation->id,

@@ -9,9 +9,7 @@ use React\EventLoop\Loop;
 
 class RedisBridge
 {
-    public function __construct(private ChatServer $server)
-    {
-    }
+    public function __construct(private ChatServer $server) {}
 
     public function start(string $redisUrl = 'redis://127.0.0.1:6379', string $pattern = 'ws:*'): void
     {
@@ -28,5 +26,3 @@ class RedisBridge
         });
     }
 }
-
-

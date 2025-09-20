@@ -16,7 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('channel_id')->nullable();
             $table->json('metadata')->nullable();
             $table->timestamps();
-            
+
             $table->foreign('team_id')->references('id')->on('teams')->onDelete('cascade');
             $table->foreign('channel_id')->references('id')->on('channels')->onDelete('cascade');
             $table->index(['type', 'created_at']);

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Conversation extends Model
 {
     protected $fillable = [
-        'type', 'name', 'team_id', 'channel_id', 'metadata', 'is_pinned'
+        'type', 'name', 'team_id', 'channel_id', 'metadata', 'is_pinned',
     ];
 
     protected $casts = [
@@ -47,19 +47,21 @@ class Conversation extends Model
             $authId = auth()->id();
             if ($authId) {
                 $otherMember = $this->members()->where('user_id', '!=', $authId)->first();
+
                 return $otherMember ? $otherMember->name : 'Direct Message';
             }
+
             return 'Direct Message';
         }
-        
+
         if ($this->type === 'channel' && $this->channel) {
             return $this->channel->name;
         }
-        
+
         if ($this->type === 'team' && $this->team) {
             return $this->team->name;
         }
-        
+
         return $this->name ?? 'Conversation';
     }
 }

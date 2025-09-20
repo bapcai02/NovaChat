@@ -21,7 +21,7 @@ class WebSocketServe extends Command
     {
         $port = (int) $this->option('port');
 
-        $chat = new ChatServer();
+        $chat = new ChatServer;
         // Boot Redis bridge for pub/sub
         $redisUrl = config('database.redis.default.url') ?? sprintf('redis://%s:%s', config('database.redis.default.host', '127.0.0.1'), config('database.redis.default.port', 6379));
         $pattern = config('broadcasting.connections.redis.channel_pattern', 'ws:*');
@@ -38,5 +38,3 @@ class WebSocketServe extends Command
         return self::SUCCESS;
     }
 }
-
-

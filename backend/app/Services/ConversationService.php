@@ -18,9 +18,11 @@ class ConversationService
     {
         try {
             $conversations = $this->conversations->getUserConversations($userId);
+
             return ['success' => true, 'data' => $conversations];
         } catch (\Throwable $e) {
-            Log::error('ConversationService@getUserConversations failed: ' . $e->getMessage());
+            Log::error('ConversationService@getUserConversations failed: '.$e->getMessage());
+
             return ['success' => false, 'message' => 'Failed to load conversations'];
         }
     }
@@ -29,9 +31,11 @@ class ConversationService
     {
         try {
             $conversation = $this->conversations->create($data);
+
             return ['success' => true, 'data' => $conversation];
         } catch (\Throwable $e) {
-            Log::error('ConversationService@createConversation failed: ' . $e->getMessage());
+            Log::error('ConversationService@createConversation failed: '.$e->getMessage());
+
             return ['success' => false, 'message' => 'Failed to create conversation'];
         }
     }
@@ -39,20 +43,21 @@ class ConversationService
     public function getConversation(string $conversationId, int $userId): array
     {
         try {
-            $conversation = $this->conversations->findById((int)$conversationId);
-            if (!$conversation) {
+            $conversation = $this->conversations->findById((int) $conversationId);
+            if (! $conversation) {
                 return ['success' => false, 'message' => 'Conversation not found'];
             }
 
             // Check if user is member
             $isMember = $this->conversations->isMember($conversationId, $userId);
-            if (!$isMember) {
+            if (! $isMember) {
                 return ['success' => false, 'message' => 'Access denied'];
             }
 
             return ['success' => true, 'data' => $conversation];
         } catch (\Throwable $e) {
-            Log::error('ConversationService@getConversation failed: ' . $e->getMessage());
+            Log::error('ConversationService@getConversation failed: '.$e->getMessage());
+
             return ['success' => false, 'message' => 'Failed to load conversation'];
         }
     }
@@ -61,32 +66,33 @@ class ConversationService
     {
         try {
             // Check if user is member
-            $isMember = $this->conversations->isMember((int)$conversationId, $userId);
-            if (!$isMember) {
+            $isMember = $this->conversations->isMember((int) $conversationId, $userId);
+            if (! $isMember) {
                 return ['success' => false, 'message' => 'Access denied'];
             }
 
-            $messages = $this->conversations->getMessages((int)$conversationId, $limit, $beforeId, $userId);
-            
+            $messages = $this->conversations->getMessages((int) $conversationId, $limit, $beforeId, $userId);
+
             // Get unique users from messages
             $users = [];
             $userIds = [];
             foreach ($messages as $message) {
-                if (isset($message['sender']['id']) && !in_array($message['sender']['id'], $userIds)) {
+                if (isset($message['sender']['id']) && ! in_array($message['sender']['id'], $userIds)) {
                     $userIds[] = $message['sender']['id'];
                     $users[] = $message['sender'];
                 }
             }
-            
+
             return [
-                'success' => true, 
+                'success' => true,
                 'data' => [
                     'messages' => $messages,
-                    'users' => $users
-                ]
+                    'users' => $users,
+                ],
             ];
         } catch (\Throwable $e) {
-            Log::error('ConversationService@getConversationMessages failed: ' . $e->getMessage());
+            Log::error('ConversationService@getConversationMessages failed: '.$e->getMessage());
+
             return ['success' => false, 'message' => 'Failed to load messages'];
         }
     }
@@ -95,19 +101,20 @@ class ConversationService
     {
         try {
             // Check if user is member
-            $isMember = $this->conversations->isMember((int)$conversationId, $userId);
-            if (!$isMember) {
+            $isMember = $this->conversations->isMember((int) $conversationId, $userId);
+            if (! $isMember) {
                 return ['success' => false, 'message' => 'Access denied'];
             }
 
-            $members = $this->conversations->getMembers((int)$conversationId);
-            
+            $members = $this->conversations->getMembers((int) $conversationId);
+
             return [
-                'success' => true, 
-                'data' => $members
+                'success' => true,
+                'data' => $members,
             ];
         } catch (\Throwable $e) {
-            Log::error('ConversationService@getMembers failed: ' . $e->getMessage());
+            Log::error('ConversationService@getMembers failed: '.$e->getMessage());
+
             return ['success' => false, 'message' => 'Failed to get members'];
         }
     }
@@ -116,15 +123,17 @@ class ConversationService
     {
         try {
             // Check if requester has permission
-            $canManage = $this->conversations->canManageMembers((int)$conversationId, $requesterId);
-            if (!$canManage) {
+            $canManage = $this->conversations->canManageMembers((int) $conversationId, $requesterId);
+            if (! $canManage) {
                 return ['success' => false, 'message' => 'Permission denied'];
             }
 
-            $result = $this->conversations->addMember((int)$conversationId, $userId);
+            $result = $this->conversations->addMember((int) $conversationId, $userId);
+
             return ['success' => $result, 'message' => $result ? 'Member added successfully' : 'Failed to add member'];
         } catch (\Throwable $e) {
-            Log::error('ConversationService@addMember failed: ' . $e->getMessage());
+            Log::error('ConversationService@addMember failed: '.$e->getMessage());
+
             return ['success' => false, 'message' => 'Failed to add member'];
         }
     }
@@ -133,15 +142,17 @@ class ConversationService
     {
         try {
             // Check if requester has permission
-            $canManage = $this->conversations->canManageMembers((int)$conversationId, $requesterId);
-            if (!$canManage) {
+            $canManage = $this->conversations->canManageMembers((int) $conversationId, $requesterId);
+            if (! $canManage) {
                 return ['success' => false, 'message' => 'Permission denied'];
             }
 
-            $result = $this->conversations->removeMember((int)$conversationId, $userId);
+            $result = $this->conversations->removeMember((int) $conversationId, $userId);
+
             return ['success' => $result, 'message' => $result ? 'Member removed successfully' : 'Failed to remove member'];
         } catch (\Throwable $e) {
-            Log::error('ConversationService@removeMember failed: ' . $e->getMessage());
+            Log::error('ConversationService@removeMember failed: '.$e->getMessage());
+
             return ['success' => false, 'message' => 'Failed to remove member'];
         }
     }
@@ -150,29 +161,31 @@ class ConversationService
     {
         try {
             // Check if user is member
-            $isMember = $this->conversations->isMember((int)$conversationId, $userId);
-            if (!$isMember) {
+            $isMember = $this->conversations->isMember((int) $conversationId, $userId);
+            if (! $isMember) {
                 return ['success' => false, 'message' => 'Access denied'];
             }
 
-            $result = $this->conversations->pinConversation((int)$conversationId);
-            
+            $result = $this->conversations->pinConversation((int) $conversationId);
+
             if ($result) {
                 // Get updated conversation data
-                $conversation = $this->conversations->findById((int)$conversationId);
+                $conversation = $this->conversations->findById((int) $conversationId);
+
                 return [
-                    'success' => true, 
+                    'success' => true,
                     'data' => $conversation,
-                    'message' => 'Conversation pinned successfully'
+                    'message' => 'Conversation pinned successfully',
                 ];
             }
-            
+
             return [
-                'success' => false, 
-                'message' => 'Failed to pin conversation'
+                'success' => false,
+                'message' => 'Failed to pin conversation',
             ];
         } catch (\Throwable $e) {
-            Log::error('ConversationService@pinConversation failed: ' . $e->getMessage());
+            Log::error('ConversationService@pinConversation failed: '.$e->getMessage());
+
             return ['success' => false, 'message' => 'Failed to pin conversation'];
         }
     }
@@ -181,29 +194,31 @@ class ConversationService
     {
         try {
             // Check if user is member
-            $isMember = $this->conversations->isMember((int)$conversationId, $userId);
-            if (!$isMember) {
+            $isMember = $this->conversations->isMember((int) $conversationId, $userId);
+            if (! $isMember) {
                 return ['success' => false, 'message' => 'Access denied'];
             }
 
-            $result = $this->conversations->unpinConversation((int)$conversationId);
-            
+            $result = $this->conversations->unpinConversation((int) $conversationId);
+
             if ($result) {
                 // Get updated conversation data
-                $conversation = $this->conversations->findById((int)$conversationId);
+                $conversation = $this->conversations->findById((int) $conversationId);
+
                 return [
-                    'success' => true, 
+                    'success' => true,
                     'data' => $conversation,
-                    'message' => 'Conversation unpinned successfully'
+                    'message' => 'Conversation unpinned successfully',
                 ];
             }
-            
+
             return [
-                'success' => false, 
-                'message' => 'Failed to unpin conversation'
+                'success' => false,
+                'message' => 'Failed to unpin conversation',
             ];
         } catch (\Throwable $e) {
-            Log::error('ConversationService@unpinConversation failed: ' . $e->getMessage());
+            Log::error('ConversationService@unpinConversation failed: '.$e->getMessage());
+
             return ['success' => false, 'message' => 'Failed to unpin conversation'];
         }
     }
@@ -211,18 +226,20 @@ class ConversationService
     public function muteConversation(string $conversationId, int $userId): array
     {
         try {
-            $isMember = $this->conversations->isMember((int)$conversationId, $userId);
-            if (!$isMember) {
+            $isMember = $this->conversations->isMember((int) $conversationId, $userId);
+            if (! $isMember) {
                 return ['success' => false, 'message' => 'Access denied'];
             }
 
             \App\Models\ConversationMute::updateOrCreate(
-                ['conversation_id' => (int)$conversationId, 'user_id' => $userId],
+                ['conversation_id' => (int) $conversationId, 'user_id' => $userId],
                 ['muted_at' => now()]
             );
+
             return ['success' => true, 'message' => 'Conversation muted'];
         } catch (\Throwable $e) {
-            Log::error('ConversationService@muteConversation failed: ' . $e->getMessage());
+            Log::error('ConversationService@muteConversation failed: '.$e->getMessage());
+
             return ['success' => false, 'message' => 'Failed to mute conversation'];
         }
     }
@@ -230,17 +247,19 @@ class ConversationService
     public function unmuteConversation(string $conversationId, int $userId): array
     {
         try {
-            $isMember = $this->conversations->isMember((int)$conversationId, $userId);
-            if (!$isMember) {
+            $isMember = $this->conversations->isMember((int) $conversationId, $userId);
+            if (! $isMember) {
                 return ['success' => false, 'message' => 'Access denied'];
             }
 
-            \App\Models\ConversationMute::where('conversation_id', (int)$conversationId)
+            \App\Models\ConversationMute::where('conversation_id', (int) $conversationId)
                 ->where('user_id', $userId)
                 ->delete();
+
             return ['success' => true, 'message' => 'Conversation unmuted'];
         } catch (\Throwable $e) {
-            Log::error('ConversationService@unmuteConversation failed: ' . $e->getMessage());
+            Log::error('ConversationService@unmuteConversation failed: '.$e->getMessage());
+
             return ['success' => false, 'message' => 'Failed to unmute conversation'];
         }
     }
@@ -249,9 +268,11 @@ class ConversationService
     {
         try {
             $result = $this->conversations->getMentions($userId, $page, $limit);
+
             return ['success' => true, 'data' => $result['data'], 'pagination' => $result['pagination']];
         } catch (\Throwable $e) {
-            Log::error('ConversationService@getMentions failed: ' . $e->getMessage());
+            Log::error('ConversationService@getMentions failed: '.$e->getMessage());
+
             return ['success' => false, 'message' => 'Failed to load mentions'];
         }
     }

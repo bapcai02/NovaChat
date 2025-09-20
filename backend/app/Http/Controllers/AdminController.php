@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Repositories\Contracts\UserRepositoryInterface;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -25,7 +25,7 @@ class AdminController extends Controller
     public function getUsers(Request $request): JsonResponse
     {
         $user = Auth::user();
-        if (!$user || !in_array($user->role, ['super_admin', 'admin'])) {
+        if (! $user || ! in_array($user->role, ['super_admin', 'admin'])) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -39,11 +39,11 @@ class AdminController extends Controller
             $query = User::query();
 
             // Apply search filter
-            if (!empty($search)) {
+            if (! empty($search)) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('email', 'like', "%{$search}%")
-                      ->orWhere('username', 'like', "%{$search}%");
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('username', 'like', "%{$search}%");
                 });
             }
 
@@ -59,7 +59,7 @@ class AdminController extends Controller
 
             // Get paginated results
             $users = $query->orderBy('created_at', 'desc')
-                          ->paginate($limit, ['*'], 'page', $page);
+                ->paginate($limit, ['*'], 'page', $page);
 
             return response()->json([
                 'success' => true,
@@ -69,14 +69,14 @@ class AdminController extends Controller
                     'last_page' => $users->lastPage(),
                     'per_page' => $users->perPage(),
                     'total' => $users->total(),
-                ]
+                ],
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to retrieve users',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -87,7 +87,7 @@ class AdminController extends Controller
     public function getStats(): JsonResponse
     {
         $user = Auth::user();
-        if (!$user || !in_array($user->role, ['super_admin', 'admin'])) {
+        if (! $user || ! in_array($user->role, ['super_admin', 'admin'])) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -103,14 +103,14 @@ class AdminController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => $stats
+                'data' => $stats,
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to retrieve statistics',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -121,29 +121,29 @@ class AdminController extends Controller
     public function getUser(int $id): JsonResponse
     {
         $user = Auth::user();
-        if (!$user || !in_array($user->role, ['super_admin', 'admin'])) {
+        if (! $user || ! in_array($user->role, ['super_admin', 'admin'])) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
         try {
             $targetUser = User::find($id);
-            if (!$targetUser) {
+            if (! $targetUser) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'User not found'
+                    'message' => 'User not found',
                 ], 404);
             }
 
             return response()->json([
                 'success' => true,
-                'data' => $targetUser
+                'data' => $targetUser,
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to retrieve user',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -154,23 +154,23 @@ class AdminController extends Controller
     public function updateUser(Request $request, int $id): JsonResponse
     {
         $user = Auth::user();
-        if (!$user || !in_array($user->role, ['super_admin', 'admin'])) {
+        if (! $user || ! in_array($user->role, ['super_admin', 'admin'])) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
         try {
             $targetUser = User::find($id);
-            if (!$targetUser) {
+            if (! $targetUser) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'User not found'
+                    'message' => 'User not found',
                 ], 404);
             }
 
             $validator = Validator::make($request->all(), [
                 'name' => 'sometimes|string|max:255',
-                'email' => 'sometimes|email|unique:users,email,' . $id,
-                'username' => 'sometimes|string|max:255|unique:users,username,' . $id,
+                'email' => 'sometimes|email|unique:users,email,'.$id,
+                'username' => 'sometimes|string|max:255|unique:users,username,'.$id,
                 'role' => 'sometimes|in:super_admin,admin,moderator,user,guest',
                 'status' => 'sometimes|in:active,inactive,suspended,banned',
                 'is_verified' => 'sometimes|boolean',
@@ -183,13 +183,13 @@ class AdminController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'Validation failed',
-                    'errors' => $validator->errors()
+                    'errors' => $validator->errors(),
                 ], 422);
             }
 
             $data = $request->only([
-                'name', 'email', 'username', 'role', 'status', 
-                'is_verified', 'is_premium', 'phone', 'bio'
+                'name', 'email', 'username', 'role', 'status',
+                'is_verified', 'is_premium', 'phone', 'bio',
             ]);
 
             $targetUser->update($data);
@@ -197,14 +197,14 @@ class AdminController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'User updated successfully',
-                'data' => $targetUser->fresh()
+                'data' => $targetUser->fresh(),
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update user',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -215,16 +215,16 @@ class AdminController extends Controller
     public function deleteUser(int $id): JsonResponse
     {
         $user = Auth::user();
-        if (!$user || !in_array($user->role, ['super_admin', 'admin'])) {
+        if (! $user || ! in_array($user->role, ['super_admin', 'admin'])) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
         try {
             $targetUser = User::find($id);
-            if (!$targetUser) {
+            if (! $targetUser) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'User not found'
+                    'message' => 'User not found',
                 ], 404);
             }
 
@@ -232,7 +232,7 @@ class AdminController extends Controller
             if ($targetUser->id === $user->id) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'You cannot delete yourself'
+                    'message' => 'You cannot delete yourself',
                 ], 400);
             }
 
@@ -240,14 +240,14 @@ class AdminController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'User deleted successfully'
+                'message' => 'User deleted successfully',
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete user',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -258,7 +258,7 @@ class AdminController extends Controller
     public function getReports(Request $request): JsonResponse
     {
         $user = Auth::user();
-        if (!$user || !in_array($user->role, ['super_admin', 'admin'])) {
+        if (! $user || ! in_array($user->role, ['super_admin', 'admin'])) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -272,22 +272,27 @@ class AdminController extends Controller
                 case '7d':
                     $startDate = now()->subDays(7);
                     $endDate = now();
+
                     break;
                 case '30d':
                     $startDate = now()->subDays(30);
                     $endDate = now();
+
                     break;
                 case '90d':
                     $startDate = now()->subDays(90);
                     $endDate = now();
+
                     break;
                 case '1y':
                     $startDate = now()->subYear();
                     $endDate = now();
+
                     break;
                 case 'custom':
                     $startDate = $startDate ? \Carbon\Carbon::parse($startDate) : now()->subDays(7);
                     $endDate = $endDate ? \Carbon\Carbon::parse($endDate) : now();
+
                     break;
             }
 
@@ -295,32 +300,32 @@ class AdminController extends Controller
             $totalUsers = User::count();
             $newUsers = User::whereBetween('created_at', [$startDate, $endDate])->count();
             $activeUsers = User::where('is_online', true)->count();
-            
+
             // Get message statistics
             $totalMessages = \App\Models\Message::whereBetween('created_at', [$startDate, $endDate])->count();
             $totalBookmarks = \App\Models\Bookmark::whereBetween('created_at', [$startDate, $endDate])->count();
-            
+
             // Calculate engagement (simplified)
             $userEngagement = $activeUsers > 0 ? round(($activeUsers / $totalUsers) * 100, 1) : 0;
-            
+
             // Get top users by message count
-            $topUsers = User::withCount(['messages' => function($query) use ($startDate, $endDate) {
+            $topUsers = User::withCount(['messages' => function ($query) use ($startDate, $endDate) {
                 $query->whereBetween('created_at', [$startDate, $endDate]);
             }])
-            ->withCount(['bookmarks' => function($query) use ($startDate, $endDate) {
-                $query->whereBetween('created_at', [$startDate, $endDate]);
-            }])
-            ->orderBy('messages_count', 'desc')
-            ->limit(5)
-            ->get()
-            ->map(function($user) {
-                return [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'messageCount' => $user->messages_count,
-                    'bookmarkCount' => $user->bookmarks_count,
-                ];
-            });
+                ->withCount(['bookmarks' => function ($query) use ($startDate, $endDate) {
+                    $query->whereBetween('created_at', [$startDate, $endDate]);
+                }])
+                ->orderBy('messages_count', 'desc')
+                ->limit(5)
+                ->get()
+                ->map(function ($user) {
+                    return [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'messageCount' => $user->messages_count,
+                        'bookmarkCount' => $user->bookmarks_count,
+                    ];
+                });
 
             // Get daily statistics
             $dailyStats = [];
@@ -329,14 +334,14 @@ class AdminController extends Controller
                 $dayUsers = User::whereDate('created_at', $currentDate)->count();
                 $dayMessages = \App\Models\Message::whereDate('created_at', $currentDate)->count();
                 $dayBookmarks = \App\Models\Bookmark::whereDate('created_at', $currentDate)->count();
-                
+
                 $dailyStats[] = [
                     'date' => $currentDate->format('Y-m-d'),
                     'users' => $dayUsers,
                     'messages' => $dayMessages,
                     'bookmarks' => $dayBookmarks,
                 ];
-                
+
                 $currentDate->addDay();
             }
 
@@ -355,14 +360,14 @@ class AdminController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => $reportData
+                'data' => $reportData,
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to retrieve reports',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -373,7 +378,7 @@ class AdminController extends Controller
     public function createUser(Request $request): JsonResponse
     {
         $user = Auth::user();
-        if (!$user || !in_array($user->role, ['super_admin', 'admin'])) {
+        if (! $user || ! in_array($user->role, ['super_admin', 'admin'])) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -393,12 +398,12 @@ class AdminController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'Validation failed',
-                    'errors' => $validator->errors()
+                    'errors' => $validator->errors(),
                 ], 422);
             }
 
             $data = $request->only([
-                'name', 'email', 'username', 'role', 'status', 'phone', 'bio'
+                'name', 'email', 'username', 'role', 'status', 'phone', 'bio',
             ]);
             $data['password'] = Hash::make($request->password);
             $data['status'] = $data['status'] ?? 'active';
@@ -408,14 +413,14 @@ class AdminController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'User created successfully',
-                'data' => $newUser
+                'data' => $newUser,
             ], 201);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create user',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -426,7 +431,7 @@ class AdminController extends Controller
     public function getMessages(Request $request): JsonResponse
     {
         $user = Auth::user();
-        if (!$user || !in_array($user->role, ['super_admin', 'admin'])) {
+        if (! $user || ! in_array($user->role, ['super_admin', 'admin'])) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -459,15 +464,15 @@ class AdminController extends Controller
                     'current_page' => $page,
                     'last_page' => ceil($total / $limit),
                     'per_page' => $limit,
-                    'total' => $total
-                ]
+                    'total' => $total,
+                ],
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to retrieve messages',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -478,7 +483,7 @@ class AdminController extends Controller
     public function deleteMessage($id): JsonResponse
     {
         $user = Auth::user();
-        if (!$user || !in_array($user->role, ['super_admin', 'admin'])) {
+        if (! $user || ! in_array($user->role, ['super_admin', 'admin'])) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -488,18 +493,17 @@ class AdminController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Message deleted successfully'
+                'message' => 'Message deleted successfully',
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete message',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
-
 
     /**
      * Get all bookmarks with pagination
@@ -507,7 +511,7 @@ class AdminController extends Controller
     public function getBookmarks(Request $request): JsonResponse
     {
         $user = Auth::user();
-        if (!$user || !in_array($user->role, ['super_admin', 'admin'])) {
+        if (! $user || ! in_array($user->role, ['super_admin', 'admin'])) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -535,15 +539,15 @@ class AdminController extends Controller
                     'current_page' => $page,
                     'last_page' => ceil($total / $limit),
                     'per_page' => $limit,
-                    'total' => $total
-                ]
+                    'total' => $total,
+                ],
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to retrieve bookmarks',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -554,7 +558,7 @@ class AdminController extends Controller
     public function deleteBookmark($id): JsonResponse
     {
         $user = Auth::user();
-        if (!$user || !in_array($user->role, ['super_admin', 'admin'])) {
+        if (! $user || ! in_array($user->role, ['super_admin', 'admin'])) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -564,14 +568,14 @@ class AdminController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Bookmark deleted successfully'
+                'message' => 'Bookmark deleted successfully',
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete bookmark',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -582,7 +586,7 @@ class AdminController extends Controller
     public function toggleUserBan(Request $request, $id): JsonResponse
     {
         $user = Auth::user();
-        if (!$user || !in_array($user->role, ['super_admin', 'admin'])) {
+        if (! $user || ! in_array($user->role, ['super_admin', 'admin'])) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -595,34 +599,34 @@ class AdminController extends Controller
                 $targetUser->update([
                     'status' => 'banned',
                     'banned_at' => now(),
-                    'ban_reason' => $reason
+                    'ban_reason' => $reason,
                 ]);
                 $message = 'User banned successfully';
             } elseif ($action === 'unban') {
                 $targetUser->update([
                     'status' => 'active',
                     'banned_at' => null,
-                    'ban_reason' => null
+                    'ban_reason' => null,
                 ]);
                 $message = 'User unbanned successfully';
             } else {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Invalid action. Use "ban" or "unban"'
+                    'message' => 'Invalid action. Use "ban" or "unban"',
                 ], 400);
             }
 
             return response()->json([
                 'success' => true,
                 'message' => $message,
-                'data' => $targetUser
+                'data' => $targetUser,
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update user status',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -633,7 +637,7 @@ class AdminController extends Controller
     public function getLogs(Request $request): JsonResponse
     {
         $user = Auth::user();
-        if (!$user || !in_array($user->role, ['super_admin', 'admin'])) {
+        if (! $user || ! in_array($user->role, ['super_admin', 'admin'])) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -650,32 +654,32 @@ class AdminController extends Controller
             if (file_exists($logFile)) {
                 $lines = file($logFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
                 $totalLines = count($lines);
-                
+
                 // Filter by level if specified
                 if ($level) {
-                    $lines = array_filter($lines, function($line) use ($level) {
+                    $lines = array_filter($lines, function ($line) use ($level) {
                         return strpos($line, ".{$level}:") !== false;
                     });
                 }
 
                 // Filter by date if specified
                 if ($date) {
-                    $lines = array_filter($lines, function($line) use ($date) {
+                    $lines = array_filter($lines, function ($line) use ($date) {
                         return strpos($line, $date) !== false;
                     });
                 }
 
                 $filteredLines = array_values($lines);
                 $total = count($filteredLines);
-                
+
                 // Paginate
                 $offset = ($page - 1) * $limit;
                 $paginatedLines = array_slice($filteredLines, $offset, $limit);
-                
-                $logs = array_map(function($line) {
+
+                $logs = array_map(function ($line) {
                     return [
                         'content' => $line,
-                        'timestamp' => substr($line, 0, 19) // Extract timestamp
+                        'timestamp' => substr($line, 0, 19), // Extract timestamp
                     ];
                 }, $paginatedLines);
             }
@@ -687,15 +691,15 @@ class AdminController extends Controller
                     'current_page' => $page,
                     'last_page' => ceil($total / $limit),
                     'per_page' => $limit,
-                    'total' => $total
-                ]
+                    'total' => $total,
+                ],
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to retrieve logs',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }

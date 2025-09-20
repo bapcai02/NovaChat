@@ -1,16 +1,16 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ChannelController;
 use App\Http\Controllers\ConversationController;
-use App\Http\Controllers\SearchController;
 use App\Http\Controllers\MessageController;
-use App\Http\Controllers\UserStatusController;
+use App\Http\Controllers\SearchController;
 use App\Http\Controllers\TeamController;
-use App\Http\Controllers\UserController;
 use App\Http\Controllers\UnreadController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\UserStatusController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -35,14 +35,14 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 
 // Protected routes (require authentication)
 Route::middleware('auth:api')->group(function () {
-    
+
     // Auth routes
     Route::prefix('auth')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::post('/refresh', [AuthController::class, 'refresh']);
         Route::get('/me', [AuthController::class, 'me']);
     });
-    
+
     // Teams
     Route::prefix('teams')->group(function () {
         Route::get('/', [TeamController::class, 'index']);
@@ -52,11 +52,11 @@ Route::middleware('auth:api')->group(function () {
         Route::delete('/{teamId}', [TeamController::class, 'destroy']);
         Route::get('/{teamId}/channels', [ChannelController::class, 'getTeamChannels']);
         Route::post('/{teamId}/channels', [ChannelController::class, 'store']);
-        
+
         // Team members management
         Route::post('/{teamId}/members', [TeamController::class, 'addMember']);
         Route::delete('/{teamId}/members/{userId}', [TeamController::class, 'removeMember']);
-        
+
         // Channel members management
         Route::post('/{teamId}/channels/{channelId}/members', [ChannelController::class, 'addMember']);
         Route::delete('/{teamId}/channels/{channelId}/members/{userId}', [ChannelController::class, 'removeMember']);
@@ -76,10 +76,10 @@ Route::middleware('auth:api')->group(function () {
         // Basic CRUD
         Route::get('/', [ConversationController::class, 'index']);
         Route::post('/', [ConversationController::class, 'store']);
-        
+
         // Unread messages (must be before {conversationId} routes)
         Route::get('/unread', [UnreadController::class, 'getUnreadCounts']);
-        
+
         // Conversation specific routes
         Route::get('/{conversationId}', [ConversationController::class, 'show']);
         Route::get('/{conversationId}/messages', [ConversationController::class, 'getMessages']);
@@ -88,16 +88,16 @@ Route::middleware('auth:api')->group(function () {
         // Mentions (for current user)
         Route::get('/mentions/list', [ConversationController::class, 'getMentions']);
         Route::get('/mentions/count', [ConversationController::class, 'getMentionsCount']);
-        
+
         // Members management
         Route::get('/{conversationId}/members', [ConversationController::class, 'getMembers']);
         Route::post('/{conversationId}/members', [ConversationController::class, 'addMember']);
         Route::delete('/{conversationId}/members/{userId}', [ConversationController::class, 'removeMember']);
-        
+
         // Read status
         Route::post('/{conversationId}/read', [UnreadController::class, 'markConversationAsRead']);
         Route::get('/{conversationId}/unread', [UnreadController::class, 'getConversationUnreadCount']);
-        
+
         // Pin/Unpin conversation
         Route::post('/{conversationId}/pin', [ConversationController::class, 'pinConversation']);
         Route::post('/{conversationId}/unpin', [ConversationController::class, 'unpinConversation']);
@@ -116,17 +116,17 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/{messageId}/readers', [MessageController::class, 'readers']);
         Route::get('/{messageId}/versions', [MessageController::class, 'versions']);
         Route::post('/{messageId}/versions/{versionId}/restore', [MessageController::class, 'restoreVersion']);
-        
+
         // Message reactions
         Route::post('/{messageId}/reactions', [MessageController::class, 'addReaction']);
         Route::delete('/{messageId}/reactions', [MessageController::class, 'removeReaction']);
         Route::delete('/{messageId}/reactions/{emoji}', [MessageController::class, 'removeReaction']);
-        
+
         // Message bookmarks
         Route::post('/{messageId}/bookmark', [MessageController::class, 'bookmark']);
         Route::delete('/{messageId}/bookmark', [MessageController::class, 'removeBookmark']);
         Route::get('/{messageId}/bookmark', [MessageController::class, 'isBookmarked']);
-        
+
         // Thread replies
         Route::get('/{messageId}/replies', [\App\Http\Controllers\ThreadController::class, 'index']);
         Route::post('/{messageId}/replies', [\App\Http\Controllers\ThreadController::class, 'store']);
@@ -147,7 +147,7 @@ Route::middleware('auth:api')->group(function () {
     });
 
     // Admin routes (protected + throttled)
-    Route::middleware(['auth:api','throttle:admin'])->prefix('admin')->group(function () {
+    Route::middleware(['auth:api', 'throttle:admin'])->prefix('admin')->group(function () {
         // User management
         Route::get('/users', [\App\Http\Controllers\AdminController::class, 'getUsers']);
         Route::get('/stats', [\App\Http\Controllers\AdminController::class, 'getStats']);
@@ -157,15 +157,15 @@ Route::middleware('auth:api')->group(function () {
         Route::delete('/users/{id}', [\App\Http\Controllers\AdminController::class, 'deleteUser']);
         Route::post('/users', [\App\Http\Controllers\AdminController::class, 'createUser']);
         Route::post('/users/{id}/ban', [\App\Http\Controllers\AdminController::class, 'toggleUserBan']);
-        
+
         // Message management
         Route::get('/messages', [\App\Http\Controllers\AdminController::class, 'getMessages']);
         Route::delete('/messages/{id}', [\App\Http\Controllers\AdminController::class, 'deleteMessage']);
-        
+
         // Bookmark management
         Route::get('/bookmarks', [\App\Http\Controllers\AdminController::class, 'getBookmarks']);
         Route::delete('/bookmarks/{id}', [\App\Http\Controllers\AdminController::class, 'deleteBookmark']);
-        
+
         // System logs
         Route::get('/logs', [\App\Http\Controllers\AdminController::class, 'getLogs']);
     });
@@ -206,4 +206,3 @@ Route::middleware('auth:api')->group(function () {
     });
 
 });
-

@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Traits;
 
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Exception;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 trait TransactionHandler
 {
@@ -17,12 +17,12 @@ trait TransactionHandler
         try {
             return DB::transaction($callback);
         } catch (Exception $e) {
-            Log::error('Transaction failed: ' . $e->getMessage(), [
+            Log::error('Transaction failed: '.$e->getMessage(), [
                 'exception' => $e,
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
-            
-            return $this->serverErrorResponse($errorMessage . ': ' . $e->getMessage());
+
+            return $this->serverErrorResponse($errorMessage.': '.$e->getMessage());
         }
     }
 
@@ -33,19 +33,19 @@ trait TransactionHandler
     {
         try {
             $result = DB::transaction($callback);
-            
+
             if ($result instanceof JsonResponse) {
                 return $result;
             }
-            
+
             return $this->successResponse($result, $successMessage);
         } catch (Exception $e) {
-            Log::error('Transaction failed: ' . $e->getMessage(), [
+            Log::error('Transaction failed: '.$e->getMessage(), [
                 'exception' => $e,
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
-            
-            return $this->serverErrorResponse($errorMessage . ': ' . $e->getMessage());
+
+            return $this->serverErrorResponse($errorMessage.': '.$e->getMessage());
         }
     }
 }

@@ -1,0 +1,16 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔧 Running Laravel Pint (PHP CS Fixer)..."
+docker-compose exec -T app composer format
+
+echo "🧪 Running PHPUnit tests..."
+docker-compose exec -T app composer test
+
+# Nếu tests fail, dừng commit
+if [ $? -ne 0 ]; then
+  echo "❌ Tests failed. Please fix them before committing."
+  exit 1
+fi
+
+echo "✅ Backend pre-commit checks passed!"

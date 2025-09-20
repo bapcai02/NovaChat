@@ -10,8 +10,6 @@ class MessageVersion extends Model
     use HasFactory;
 
     protected $fillable = [
-        'message_id', 'editor_id', 'action', 'old_content', 'new_content'
+        'message_id', 'editor_id', 'action', 'old_content', 'new_content',
     ];
 }
-
-

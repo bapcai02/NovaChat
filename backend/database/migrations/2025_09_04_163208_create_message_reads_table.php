@@ -20,7 +20,7 @@ return new class extends Migration
 
             // Ensure unique combination of message_id and user_id
             $table->unique(['message_id', 'user_id']);
-            
+
             // Index for performance
             $table->index(['user_id', 'read_at']);
             $table->index(['message_id', 'read_at']);

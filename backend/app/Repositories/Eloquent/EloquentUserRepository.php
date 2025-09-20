@@ -2,10 +2,9 @@
 
 namespace App\Repositories\Eloquent;
 
+use App\Models\User;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\DB;
-use App\Models\User;
 
 class EloquentUserRepository implements UserRepositoryInterface
 {
@@ -13,6 +12,7 @@ class EloquentUserRepository implements UserRepositoryInterface
     {
         return User::create($data);
     }
+
     public function findById(int $id)
     {
         return User::find($id);
@@ -31,11 +31,12 @@ class EloquentUserRepository implements UserRepositoryInterface
     public function update(int $id, array $data)
     {
         $user = User::find($id);
-        if (!$user) {
-            return null;
+        if (! $user) {
+            return;
         }
-        
+
         $user->update($data);
+
         return $user;
     }
 
@@ -70,10 +71,10 @@ class EloquentUserRepository implements UserRepositoryInterface
     public function search(string $query, int $perPage = 15): LengthAwarePaginator
     {
         return User::where(function ($q) use ($query) {
-                $q->where('name', 'like', "%{$query}%")
-                  ->orWhere('email', 'like', "%{$query}%")
-                  ->orWhere('username', 'like', "%{$query}%");
-            })
+            $q->where('name', 'like', "%{$query}%")
+                ->orWhere('email', 'like', "%{$query}%")
+                ->orWhere('username', 'like', "%{$query}%");
+        })
             ->paginate($perPage);
     }
 
@@ -98,14 +99,20 @@ class EloquentUserRepository implements UserRepositoryInterface
     public function updateStatus($user, string $status, ?string $statusMessage = null)
     {
         $model = $user instanceof User ? $user : User::find($user);
-        if (!$model) { return null; }
-        if ($status === 'online') { $model->is_online = true; }
-        elseif ($status === 'offline') { $model->is_online = false; }
-        if ($statusMessage !== null) { $model->status_message = $statusMessage; }
+        if (! $model) {
+            return null;
+        }
+        if ($status === 'online') {
+            $model->is_online = true;
+        } elseif ($status === 'offline') {
+            $model->is_online = false;
+        }
+        if ($statusMessage !== null) {
+            $model->status_message = $statusMessage;
+        }
         $model->last_seen_at = now();
         $model->save();
+
         return $model;
     }
 }
-
-

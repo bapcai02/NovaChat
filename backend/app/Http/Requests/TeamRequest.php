@@ -33,5 +33,3 @@ class TeamRequest extends FormRequest
         ];
     }
 }
-
-
