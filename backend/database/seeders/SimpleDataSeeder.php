@@ -2,21 +2,21 @@
 
 namespace Database\Seeders;
 
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Faker\Factory as Faker;
+use App\Models\User;
+use App\Models\Team;
 use App\Models\Channel;
 use App\Models\Conversation;
-use App\Models\ConversationMember;
-use App\Models\Message;
-use App\Models\Team;
 use App\Models\TeamMember;
-use App\Models\User;
-use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\DB;
-use Faker\Factory as Faker;
+use App\Models\ConversationMember;
 
 class SimpleDataSeeder extends Seeder
 {
     private $faker;
+    protected $command;
 
     public function __construct()
     {
@@ -25,37 +25,67 @@ class SimpleDataSeeder extends Seeder
 
     public function run(): void
     {
-        $this->command->info('Creating 10k users and 1M messages...');
+        $this->command = $this->command ?? app('command');
+        $this->command->info('Creating comprehensive test data...');
         $startTime = microtime(true);
 
         // Disable foreign key checks
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
 
         try {
-            // Clear data
-            $this->clearData();
+            // Only clear data if not running multiple times
+            // if (!app()->runningInConsole() || !$this->command->option('no-clear')) {
+            //     $this->clearData();
+            // }
             
             // Create users
-            $this->createUsers();
+            // $userCount = $this->createUsers();
             
             // Create teams
-            $this->createTeams();
+            // $teamCount = $this->createTeams();
             
             // Create channels
-            $this->createChannels();
+            // $channelCount = $this->createChannels();
             
             // Create conversations
-            $this->createConversations();
+            // $conversationCount = $this->createConversations();
+            
+            // Create team members
+            // $teamMemberCount = $this->createTeamMembers();
+            
+            // Create conversation members
+            // $conversationMemberCount = $this->createConversationMembers();
+            
+            // Create channel members
+            // $channelMemberCount = $this->createChannelMembers();
             
             // Create messages
-            $this->createMessages();
+            // $messageCount = $this->createMessages();
+            
+            // Create message reactions
+            $messageReactionCount = $this->createMessageReactions();
+            
+            // Create message reads
+            // $messageReadCount = $this->createMessageReads();
 
         } finally {
             DB::statement('SET FOREIGN_KEY_CHECKS=1;');
         }
 
         $endTime = microtime(true);
-        $this->command->info('Completed in ' . round($endTime - $startTime, 2) . ' seconds');
+        
+        $this->command->info("\n=== INSERT SUMMARY ===");
+        $this->command->info("Users created: 0 (skipped)");
+        $this->command->info("Teams created: 0 (skipped)");
+        $this->command->info("Channels created: 0 (skipped)");
+        $this->command->info("Conversations created: 0 (skipped)");
+        $this->command->info("Team members created: 0 (skipped)");
+        $this->command->info("Conversation members created: 0 (skipped)");
+        $this->command->info("Channel members created: 0 (skipped)");
+        $this->command->info("Messages created: 0 (skipped)");
+        $this->command->info("Message reactions created: {$messageReactionCount}");
+        $this->command->info("Message reads created: 0 (skipped)");
+        $this->command->info("Total time: " . round($endTime - $startTime, 2) . " seconds");
     }
 
     private function clearData()
@@ -76,26 +106,40 @@ class SimpleDataSeeder extends Seeder
         $progressBar = $this->command->getOutput()->createProgressBar(10000);
         $progressBar->start();
         
+        // Get current max user ID to avoid conflicts
+        $maxUserId = DB::table('users')->max('id') ?? 0;
+        $startId = $maxUserId + 1;
+        $createdCount = 0;
+        
         for ($i = 0; $i < 10000; $i++) {
+            $currentId = $startId + $i;
             $isAdmin = $i < 10; // First 10 users are admin
-            User::create([
-                'name' => $isAdmin ? "Admin " . ($i + 1) : $this->faker->name(),
-                'email' => $isAdmin ? "admin{$i}@example.com" : "user{$i}@example.com",
-                'username' => $isAdmin ? "admin{$i}" : "user{$i}",
-                'password' => Hash::make('password'),
-                'role' => $isAdmin ? 'admin' : 'user',
-                'status' => 'active',
-                'is_online' => $this->faker->boolean(30),
-                'avatar' => 'https://ui-avatars.com/api/?name=' . ($isAdmin ? 'Admin' : 'User') . '&background=random',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+            
+            try {
+                User::create([
+                    'name' => $isAdmin ? "Admin " . $currentId : $this->faker->name(),
+                    'email' => $isAdmin ? "admin{$currentId}@example.com" : "user{$currentId}@example.com",
+                    'username' => $isAdmin ? "admin{$currentId}" : "user{$currentId}",
+                    'password' => Hash::make('password'),
+                    'role' => $isAdmin ? 'admin' : 'user',
+                    'status' => 'active',
+                    'is_online' => $this->faker->boolean(30),
+                    'avatar' => 'https://ui-avatars.com/api/?name=' . ($isAdmin ? 'Admin' : 'User') . '&background=random',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                $createdCount++;
+            } catch (\Exception $e) {
+                // Skip if user already exists
+                $this->command->warn("User {$currentId} already exists, skipping...");
+            }
 
             $progressBar->advance();
         }
         
         $progressBar->finish();
         $this->command->newLine();
+        return $createdCount;
     }
 
     private function createTeams()
@@ -105,54 +149,35 @@ class SimpleDataSeeder extends Seeder
         $progressBar = $this->command->getOutput()->createProgressBar(50);
         $progressBar->start();
         
+        // Get current max team ID to avoid conflicts
+        $maxTeamId = DB::table('teams')->max('id') ?? 0;
+        $startId = $maxTeamId + 1;
+        $createdCount = 0;
+        
         for ($i = 0; $i < 50; $i++) {
-            Team::create([
-                'name' => "Team " . ($i + 1),
-                'description' => "Description for team " . ($i + 1),
-                'slug' => "team-" . ($i + 1),
-                'owner_id' => $this->faker->numberBetween(1, 10000),
-                'is_private' => false,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+            $currentId = $startId + $i;
+            
+            try {
+                Team::create([
+                    'name' => "Team " . $currentId,
+                    'description' => "Description for team " . $currentId,
+                    'slug' => "team-" . $currentId,
+                    'owner_id' => $this->faker->numberBetween(1, 10000),
+                    'is_private' => false,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                $createdCount++;
+            } catch (\Exception $e) {
+                $this->command->warn("Team {$currentId} already exists, skipping...");
+            }
             
             $progressBar->advance();
         }
         
         $progressBar->finish();
         $this->command->newLine();
-
-        // Create team members
-        $this->command->info('Creating team members...');
-        $totalMembers = 0;
-        for ($teamId = 1; $teamId <= 50; $teamId++) {
-            $userCount = $this->faker->numberBetween(10, 50);
-            $userIds = $this->faker->randomElements(range(1, 10000), $userCount);
-            $totalMembers += $userCount;
-        }
-        
-        $progressBar = $this->command->getOutput()->createProgressBar($totalMembers);
-        $progressBar->start();
-        
-        for ($teamId = 1; $teamId <= 50; $teamId++) {
-            $userCount = $this->faker->numberBetween(10, 50);
-            $userIds = $this->faker->randomElements(range(1, 10000), $userCount);
-            
-            foreach ($userIds as $userId) {
-                TeamMember::create([
-                    'team_id' => $teamId,
-                    'user_id' => $userId,
-                    'role' => 'member',
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-                
-                $progressBar->advance();
-            }
-        }
-        
-        $progressBar->finish();
-        $this->command->newLine();
+        return $createdCount;
     }
 
     private function createChannels()
@@ -162,102 +187,109 @@ class SimpleDataSeeder extends Seeder
         $progressBar = $this->command->getOutput()->createProgressBar(200);
         $progressBar->start();
         
+        // Get current max channel ID to avoid conflicts
+        $maxChannelId = DB::table('channels')->max('id') ?? 0;
+        $startId = $maxChannelId + 1;
+        $createdCount = 0;
+        
         for ($i = 0; $i < 200; $i++) {
-            Channel::create([
-                'name' => "channel-" . ($i + 1),
-                'description' => "Channel " . ($i + 1),
-                'slug' => "channel-" . ($i + 1),
-                'team_id' => $this->faker->numberBetween(1, 50),
-                'is_private' => false,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+            $currentId = $startId + $i;
+            
+            try {
+                Channel::create([
+                    'name' => "Channel " . $currentId,
+                    'description' => "Description for channel " . $currentId,
+                    'team_id' => $this->faker->numberBetween(1, 50),
+                    'is_private' => false,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                $createdCount++;
+            } catch (\Exception $e) {
+                $this->command->warn("Channel {$currentId} already exists, skipping...");
+            }
             
             $progressBar->advance();
         }
         
         $progressBar->finish();
         $this->command->newLine();
+        return $createdCount;
     }
 
     private function createConversations()
     {
-        $this->command->info('Creating conversations...');
+        $this->command->info('Creating 500 conversations...');
         
-        $channels = Channel::all();
-        $totalConversations = $channels->count() + 1000; // 200 channels + 1000 direct
-        
-        $progressBar = $this->command->getOutput()->createProgressBar($totalConversations);
+        $progressBar = $this->command->getOutput()->createProgressBar(500);
         $progressBar->start();
         
-        // Channel conversations
-        foreach ($channels as $channel) {
-            Conversation::create([
-                'type' => 'channel',
-                'name' => null,
-                'team_id' => $channel->team_id,
-                'channel_id' => $channel->id,
-                'metadata' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+        // Get current max conversation ID to avoid conflicts
+        $maxConvId = DB::table('conversations')->max('id') ?? 0;
+        $startId = $maxConvId + 1;
+        $createdCount = 0;
+        
+        for ($i = 0; $i < 500; $i++) {
+            $currentId = $startId + $i;
             
-            $progressBar->advance();
-        }
-
-        // Direct conversations
-        for ($i = 0; $i < 1000; $i++) {
-            Conversation::create([
-                'type' => 'direct',
-                'name' => null,
-                'team_id' => null,
-                'channel_id' => null,
-                'metadata' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+            try {
+                Conversation::create([
+                    'title' => "Conversation " . $currentId,
+                    'type' => $this->faker->randomElement(['channel', 'direct']),
+                    'team_id' => $this->faker->numberBetween(1, 50),
+                    'channel_id' => $this->faker->numberBetween(1, 200),
+                    'created_by' => $this->faker->numberBetween(1, 10000),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                $createdCount++;
+            } catch (\Exception $e) {
+                $this->command->warn("Conversation {$currentId} already exists, skipping...");
+            }
             
             $progressBar->advance();
         }
         
         $progressBar->finish();
         $this->command->newLine();
+        return $createdCount;
+    }
 
-        // Create conversation members
-        $this->command->info('Creating conversation members...');
-        $conversations = Conversation::all();
+    private function createTeamMembers()
+    {
+        $this->command->info('Creating team members...');
+        
+        $teams = Team::all();
+        $users = User::all();
         $totalMembers = 0;
         
-        // Calculate total members first
-        foreach ($conversations as $conversation) {
-            if ($conversation->type === 'channel') {
-                $teamMembers = TeamMember::where('team_id', $conversation->team_id)->pluck('user_id')->toArray();
-                $totalMembers += min(10, count($teamMembers));
-            } else {
-                $totalMembers += 2;
-            }
+        foreach ($teams as $team) {
+            $userCount = $this->faker->numberBetween(10, 50);
+            $selectedUsers = $users->random($userCount);
+            $totalMembers += $userCount;
         }
         
         $progressBar = $this->command->getOutput()->createProgressBar($totalMembers);
         $progressBar->start();
-
-        foreach ($conversations as $conversation) {
-            if ($conversation->type === 'channel') {
-                $teamMembers = TeamMember::where('team_id', $conversation->team_id)->pluck('user_id')->toArray();
-                $userIds = $this->faker->randomElements($teamMembers, min(10, count($teamMembers)));
-            } else {
-                $userIds = $this->faker->randomElements(range(1, 10000), 2);
-            }
-
-            foreach ($userIds as $userId) {
-                ConversationMember::create([
-                    'conversation_id' => $conversation->id,
-                    'user_id' => $userId,
-                    'joined_at' => now(),
-                    'last_read_at' => now(),
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
+        $createdCount = 0;
+        
+        foreach ($teams as $team) {
+            $userCount = $this->faker->numberBetween(10, 50);
+            $selectedUsers = $users->random($userCount);
+            
+            foreach ($selectedUsers as $user) {
+                try {
+                    TeamMember::create([
+                        'team_id' => $team->id,
+                        'user_id' => $user->id,
+                        'role' => 'member',
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                    $createdCount++;
+                } catch (\Exception $e) {
+                    // Skip if already exists
+                }
                 
                 $progressBar->advance();
             }
@@ -265,26 +297,75 @@ class SimpleDataSeeder extends Seeder
         
         $progressBar->finish();
         $this->command->newLine();
+        return $createdCount;
+    }
+
+    private function createConversationMembers()
+    {
+        $this->command->info('Creating conversation members...');
+        
+        $conversations = Conversation::all();
+        $users = User::all();
+        $totalMembers = 0;
+        
+        foreach ($conversations as $conversation) {
+            $userCount = $this->faker->numberBetween(5, 20);
+            $totalMembers += $userCount;
+        }
+        
+        $progressBar = $this->command->getOutput()->createProgressBar($totalMembers);
+        $progressBar->start();
+        $createdCount = 0;
+        
+        foreach ($conversations as $conversation) {
+            $userCount = $this->faker->numberBetween(5, 20);
+            $selectedUsers = $users->random($userCount);
+            
+            foreach ($selectedUsers as $user) {
+                try {
+                    ConversationMember::create([
+                        'conversation_id' => $conversation->id,
+                        'user_id' => $user->id,
+                        'joined_at' => now(),
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                    $createdCount++;
+                } catch (\Exception $e) {
+                    // Skip if already exists
+                }
+                
+                $progressBar->advance();
+            }
+        }
+        
+        $progressBar->finish();
+        $this->command->newLine();
+        return $createdCount;
     }
 
     private function createMessages()
     {
-        $this->command->info('Creating 1,000,000 messages...');
-        
-        $progressBar = $this->command->getOutput()->createProgressBar(1000000);
-        $progressBar->start();
-        
+        $this->command->info('Creating 1,000,000 messages with bulk insert...');
+
+        $startTime = microtime(true);
         $conversations = Conversation::all();
         $messagesPerConv = intval(1000000 / $conversations->count());
+        $batchSize = 1000; // Insert 1000 messages at a time
+        $totalMessages = 0;
+
+        $progressBar = $this->command->getOutput()->createProgressBar(1000000);
+        $progressBar->start();
 
         foreach ($conversations as $conversation) {
             $convMembers = ConversationMember::where('conversation_id', $conversation->id)->pluck('user_id')->toArray();
             if (empty($convMembers)) continue;
 
             $msgCount = $this->faker->numberBetween($messagesPerConv / 2, $messagesPerConv * 2);
-            
+            $messages = [];
+
             for ($i = 0; $i < $msgCount; $i++) {
-                Message::create([
+                $messages[] = [
                     'user_id' => $this->faker->randomElement($convMembers),
                     'conversation_id' => $conversation->id,
                     'channel_id' => $conversation->channel_id,
@@ -299,13 +380,188 @@ class SimpleDataSeeder extends Seeder
                     'deleted_at' => null,
                     'created_at' => now(),
                     'updated_at' => now(),
-                ]);
+                ];
 
-                $progressBar->advance();
+                // Bulk insert when batch is full
+                if (count($messages) >= $batchSize) {
+                    DB::table('messages')->insert($messages);
+                    $totalMessages += count($messages);
+                    $progressBar->advance(count($messages));
+                    $messages = []; // Reset batch
+                }
+            }
+
+            // Insert remaining messages
+            if (!empty($messages)) {
+                DB::table('messages')->insert($messages);
+                $totalMessages += count($messages);
+                $progressBar->advance(count($messages));
+            }
+        }
+
+        $progressBar->finish();
+        $this->command->newLine();
+
+        $endTime = microtime(true);
+        $this->command->info("Created {$totalMessages} messages in " . round($endTime - $startTime, 2) . " seconds");
+        
+        return $totalMessages;
+    }
+
+    private function createChannelMembers()
+    {
+        $this->command->info('Creating channel members with bulk insert...');
+        
+        // Get all channels and users
+        $channels = DB::table('channels')->pluck('id')->toArray();
+        $users = DB::table('users')->pluck('id')->toArray();
+        
+        if (empty($channels) || empty($users)) {
+            $this->command->warn('No channels or users found, skipping channel members creation');
+            return 0;
+        }
+        
+        $this->command->info("Found " . count($channels) . " channels and " . count($users) . " users");
+        
+        $channelMembers = [];
+        $createdCount = 0;
+        
+        // For each channel, add 5-20 random members
+        foreach ($channels as $channelId) {
+            $memberCount = $this->faker->numberBetween(5, 20);
+            $selectedUsers = $this->faker->randomElements($users, min($memberCount, count($users)));
+            
+            foreach ($selectedUsers as $userId) {
+                $channelMembers[] = [
+                    'channel_id' => $channelId,
+                    'user_id' => $userId,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+                $createdCount++;
             }
         }
         
-        $progressBar->finish();
-        $this->command->newLine();
+        $this->command->info("Prepared {$createdCount} channel members for insertion");
+        
+        // Bulk insert all channel members at once
+        try {
+            DB::table('channel_members')->insert($channelMembers);
+            $this->command->info("Created {$createdCount} channel members successfully");
+            return $createdCount;
+        } catch (\Exception $e) {
+            $this->command->warn("Error inserting channel members: " . $e->getMessage());
+            return 0;
+        }
+    }
+
+    private function createMessageReactions()
+    {
+        $this->command->info('Creating message reactions...');
+        
+        try {
+            // Get a small sample of messages and users
+            $messages = DB::table('messages')->limit(1000)->pluck('id')->toArray();
+            $users = DB::table('users')->limit(100)->pluck('id')->toArray();
+            
+            if (empty($messages) || empty($users)) {
+                $this->command->warn('No messages or users found, skipping message reactions creation');
+                return 0;
+            }
+            
+            $this->command->info("Found " . count($messages) . " messages and " . count($users) . " users");
+            
+            $reactions = ['👍', '👎', '❤️', '😂', '😮'];
+            $createdCount = 0;
+            
+            // Create reactions for 100 messages only
+            $selectedMessages = array_slice($messages, 0, 100);
+            
+            foreach ($selectedMessages as $messageId) {
+                // Each message gets 1-3 reactions
+                $reactionNum = $this->faker->numberBetween(1, 3);
+                $selectedUsers = $this->faker->randomElements($users, min($reactionNum, count($users)));
+                
+                foreach ($selectedUsers as $userId) {
+                    try {
+                        DB::table('message_reactions')->insert([
+                            'message_id' => $messageId,
+                            'user_id' => $userId,
+                            'emoji' => $this->faker->randomElement($reactions),
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                        $createdCount++;
+                    } catch (\Exception $e) {
+                        // Skip duplicate reactions
+                    }
+                }
+            }
+            
+            $this->command->info("Created {$createdCount} message reactions successfully");
+            return $createdCount;
+            
+        } catch (\Exception $e) {
+            $this->command->error("Error creating message reactions: " . $e->getMessage());
+            return 0;
+        }
+    }
+
+    private function createMessageReads()
+    {
+        $this->command->info('Creating message reads with bulk insert...');
+        
+        // Get all messages and users
+        $messages = DB::table('messages')->pluck('id')->toArray();
+        $users = DB::table('users')->pluck('id')->toArray();
+        
+        if (empty($messages) || empty($users)) {
+            $this->command->warn('No messages or users found, skipping message reads creation');
+            return 0;
+        }
+        
+        $this->command->info("Found " . count($messages) . " messages and " . count($users) . " users");
+        
+        $messageReads = [];
+        $createdCount = 0;
+        
+        // Create reads for 80% of messages
+        $messageCount = count($messages);
+        $readCount = intval($messageCount * 0.8);
+        $selectedMessages = $this->faker->randomElements($messages, $readCount);
+        
+        foreach ($selectedMessages as $messageId) {
+            // Each message gets 1-10 reads
+            $readNum = $this->faker->numberBetween(1, 10);
+            $selectedUsers = $this->faker->randomElements($users, min($readNum, count($users)));
+            
+            foreach ($selectedUsers as $userId) {
+                $messageReads[] = [
+                    'message_id' => $messageId,
+                    'user_id' => $userId,
+                    'read_at' => $this->faker->dateTimeBetween('-30 days', 'now'),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+                $createdCount++;
+            }
+        }
+        
+        $this->command->info("Prepared {$createdCount} message reads for insertion");
+        
+        // Bulk insert in batches
+        $batchSize = 1000;
+        $batches = array_chunk($messageReads, $batchSize);
+        
+        foreach ($batches as $batch) {
+            try {
+                DB::table('message_reads')->insert($batch);
+            } catch (\Exception $e) {
+                $this->command->warn("Error inserting message reads batch: " . $e->getMessage());
+            }
+        }
+        
+        $this->command->info("Created {$createdCount} message reads successfully");
+        return $createdCount;
     }
 }

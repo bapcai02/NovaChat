@@ -620,7 +620,7 @@ export default function ModernSidebar({
                       key={`channel-${channel.id}`}
                       onClick={() => onSelectConversation(channel)}
                       className={cn(
-                        'flex items-center justify-between w-full text-left hover:bg-gray-50 rounded-lg px-3 py-2 ml-4 mr-2 transition-all duration-200 group min-w-0',
+                        'flex items-center justify-between w-full text-left hover:bg-gray-50 rounded-lg px-3 py-2 ml-4 mr-1 transition-all duration-200 group min-w-0',
                         currentConversation?.id === channel.id &&
                           'bg-gray-50 border border-gray-200'
                       )}
@@ -630,41 +630,41 @@ export default function ModernSidebar({
                           <span className="text-xs font-medium text-gray-600">#</span>
                         </div>
                         <div className="flex-1 min-w-0" style={{ overflow: 'hidden' }}>
-                          <p 
-                            className="text-sm font-medium text-gray-900"
-                            style={{
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap'
-                            }}
-                            title={channel.name || channel.title || 'Channel'}
-                          >
-                            {(channel.name || channel.title || 'Channel').length > 25 
-                              ? (channel.name || channel.title || 'Channel').substring(0, 25) + '...' 
-                              : (channel.name || channel.title || 'Channel')}
-                          </p>
-                          <p 
-                            className="text-xs text-gray-500"
-                            style={{
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap'
-                            }}
-                          >
-                            Channel
-                          </p>
+                        <p 
+                          className="text-sm font-medium text-gray-900"
+                          style={{
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap'
+                          }}
+                          title={channel.name || channel.title || 'Channel'}
+                        >
+                          {(channel.name || channel.title || 'Channel').length > 25 
+                            ? (channel.name || channel.title || 'Channel').substring(0, 25) + '...' 
+                            : (channel.name || channel.title || 'Channel')}
+                        </p>
+                        <p 
+                          className="text-xs text-gray-500"
+                          style={{
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap'
+                          }}
+                        >
+                          Channel
+                        </p>
                         </div>
-                        {(channel.unread_count || 0) > 0 &&
-                          !(channel as any).is_muted && (
-                            <div className="h-5 w-5 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0 mr-1">
-                              <span className="text-xs font-medium text-white">
-                                {(channel.unread_count || 0) > 99
-                                  ? '99+'
-                                  : channel.unread_count}
-                              </span>
-                            </div>
-                          )}
                       </div>
+                      {(channel.unread_count || 0) > 0 &&
+                        !(channel as any).is_muted && (
+                          <div className="h-5 min-w-5 px-2 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0">
+                            <span className="text-xs font-medium text-white">
+                              {(channel.unread_count || 0) > 99
+                                ? '99+'
+                                : channel.unread_count}
+                            </span>
+                          </div>
+                        )}
                     </button>
                   ))}
                 </div>
