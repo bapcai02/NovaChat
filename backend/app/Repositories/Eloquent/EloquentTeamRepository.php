@@ -2,11 +2,13 @@
 
 namespace App\Repositories\Eloquent;
 
+use App\Models\Channel;
 use App\Models\Conversation;
 use App\Models\ConversationMember;
 use App\Models\Team;
 use App\Models\TeamMember;
 use App\Repositories\Contracts\TeamRepositoryInterface;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class EloquentTeamRepository implements TeamRepositoryInterface
@@ -52,19 +54,29 @@ class EloquentTeamRepository implements TeamRepositoryInterface
             'role' => 'owner',
         ]);
 
-        // Create team conversation
-        $conversation = Conversation::create([
-            'type' => 'team',
-            'name' => $team->name,
+        // Create default general channel for the team
+        $channel = Channel::create([
+            'name' => 'general',
+            'description' => 'General discussion channel',
+            'slug' => 'general',
             'team_id' => $team->id,
-            'channel_id' => null,
+            'is_private' => false,
+        ]);
+
+        // Create channel conversation
+        $conversation = Conversation::create([
+            'type' => 'channel',
+            'name' => null,
+            'team_id' => $team->id,
+            'channel_id' => $channel->id,
             'metadata' => null,
         ]);
 
         // Add team owner to conversation
-        ConversationMember::create([
+        ConversationMember::firstOrCreate([
             'conversation_id' => $conversation->id,
             'user_id' => $userId,
+        ], [
             'joined_at' => now(),
         ]);
 
@@ -80,9 +92,10 @@ class EloquentTeamRepository implements TeamRepositoryInterface
                     ]);
 
                     // Add to conversation
-                    ConversationMember::create([
+                    ConversationMember::firstOrCreate([
                         'conversation_id' => $conversation->id,
                         'user_id' => $memberId,
+                    ], [
                         'joined_at' => now(),
                     ]);
                 }
@@ -107,9 +120,10 @@ class EloquentTeamRepository implements TeamRepositoryInterface
                 ->first();
 
             if ($teamConversation) {
-                ConversationMember::create([
+                ConversationMember::firstOrCreate([
                     'conversation_id' => $teamConversation->id,
                     'user_id' => $userId,
+                ], [
                     'joined_at' => now(),
                 ]);
             }

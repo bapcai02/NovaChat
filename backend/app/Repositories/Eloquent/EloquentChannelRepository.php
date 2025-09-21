@@ -48,9 +48,10 @@ class EloquentChannelRepository implements ChannelRepositoryInterface
                 ->get();
 
             foreach ($teamMembers as $member) {
-                ConversationMember::create([
+                ConversationMember::firstOrCreate([
                     'conversation_id' => $conversation->id,
                     'user_id' => $member->user_id,
+                ], [
                     'joined_at' => now(),
                 ]);
             }
@@ -107,9 +108,10 @@ class EloquentChannelRepository implements ChannelRepositoryInterface
         }
 
         // Add user to conversation
-        $conversationMember = ConversationMember::create([
+        $conversationMember = ConversationMember::firstOrCreate([
             'conversation_id' => $conversation->id,
             'user_id' => $userId,
+        ], [
             'joined_at' => now(),
         ]);
 

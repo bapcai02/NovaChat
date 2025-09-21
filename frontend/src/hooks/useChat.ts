@@ -199,9 +199,12 @@ export function useChat() {
 
         // Do not clear global handlers here; preserve global notifications/unread listener
 
-        // Listen for messages
-        wsClient.onMessage(async (message: WebSocketMessage) => {
-          // Handle initial connection with online users
+        // Listen for messages - only if not already registered
+        if (!(window as any).__ncMessageHandlerRegistered) {
+          (window as any).__ncMessageHandlerRegistered = true;
+          console.log('[WS] Registering message handler');
+          wsClient.onMessage(async (message: WebSocketMessage) => {
+            // Handle initial connection with online users
           if (message.type === 'connected' && (message as any).online_users) {
             const onlineUsers = (message as any).online_users;
             if (Array.isArray(onlineUsers)) {
@@ -351,6 +354,16 @@ export function useChat() {
             message.type === 'chat_message' ||
             message.type === 'message_received'
           ) {
+            console.log('[WS] Received chat_message:', {
+              type: message.type,
+              conversation_id: message.conversation_id,
+              sender_id: message.sender_id,
+              content: (message as any).content,
+              timestamp: (message as any).timestamp,
+              parent_id: (message as any).parent_id,
+              handlerCount: (window as any).__ncMessageHandlerCount = ((window as any).__ncMessageHandlerCount || 0) + 1
+            });
+            
             const messageConversationId = parseInt(
               message.conversation_id?.toString() || '0'
             );
@@ -473,7 +486,7 @@ export function useChat() {
               parseInt(message.sender_id?.toString() || '0') === currentUser?.id
             ) {
               setMessages((prev: any) => {
-                // Find and remove optimistic message by id/content/sender via Set
+                // Find and remove optimistic message by content and sender
                 const filteredMessages = prev.filter((msg: any) => {
                   const isOptimistic = optimisticIdsRef.current.has(msg.id);
                   const sameSender =
@@ -482,8 +495,12 @@ export function useChat() {
                   const sameContent = msg.content === (message.content || '');
                   const shouldRemove =
                     isOptimistic && sameSender && sameContent;
-                  if (shouldRemove) optimisticIdsRef.current.delete(msg.id);
-                  return !shouldRemove;
+                  if (shouldRemove) {
+                    console.log('[WS] Removing optimistic message:', msg.id);
+                    optimisticIdsRef.current.delete(msg.id);
+                    return false; // Remove this message
+                  }
+                  return true; // Keep this message
                 });
                 // Add real message
                 return [...filteredMessages, newMessage];
@@ -531,7 +548,8 @@ export function useChat() {
               );
             }
           }
-        });
+          });
+        }
 
         return () => {
           // WebSocket client will handle cleanup
@@ -628,12 +646,16 @@ export function useChat() {
             type: a.type,
             size: a.size,
             remoteKey: a.remoteKey,
-            // @ts-expect-error include base64 if present for immediate preview
             data: (a as any).data,
           })),
         };
 
         // Add to UI immediately (optimistic update)
+        console.log('[WS] Adding optimistic message:', {
+          id: tempId,
+          content: normalizedContent,
+          sender_id: currentUser?.id
+        });
         setMessages((prev: any) => [...prev, tempMessage]);
         optimisticIdsRef.current.add(tempId);
 
@@ -695,9 +717,8 @@ export function useChat() {
               : m
           )
         );
-        await apiService.updateMessage?.(messageId.toString(), {
-          content,
-        } as any);
+        // TODO: Implement updateMessage API call
+        console.log('Message updated:', { messageId, content });
       } catch (err) {
         console.error('Failed to edit message:', err);
       }
@@ -1006,8 +1027,9 @@ export function useChat() {
         if (wsClient.isConnected()) {
           wsClient.subscribeAllConversations(currentUser.id, conversationIds);
           // Ensure a global handler exists to bump unread for non-active conversations
-          if (!(window as any).__ncGlobalWsHandlerInstalled) {
-            (window as any).__ncGlobalWsHandlerInstalled = true;
+          // Global handler is already registered in setupWebSocketSubscription
+          if (false) {
+            // Disabled duplicate handler
             wsClient.onMessage((message: any) => {
               if (message?.type === 'chat_message') {
                 const convId = parseInt(

@@ -4,6 +4,7 @@ import channelReducer from './slices/channelSlice';
 import messageReducer from './slices/messageSlice';
 import userReducer from './slices/userSlice';
 import uiReducer from './slices/uiSlice';
+import logReducer from './slices/logSlice';
 
 export const store = configureStore({
   reducer: {
@@ -12,6 +13,7 @@ export const store = configureStore({
     messages: messageReducer,
     users: userReducer,
     ui: uiReducer,
+    logs: logReducer,
   },
   middleware: getDefaultMiddleware =>
     getDefaultMiddleware({

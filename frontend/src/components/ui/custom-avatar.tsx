@@ -59,23 +59,14 @@ export function CustomAvatar({
   const [imageLoaded, setImageLoaded] = useState(false);
 
   const handleImageError = () => {
-    console.log('Avatar image error for:', name, 'src:', src);
     setImageError(true);
   };
 
   const handleImageLoad = () => {
-    console.log('Avatar image loaded for:', name, 'src:', src);
     setImageLoaded(true);
   };
-
-  // Chỉ hiển thị ảnh nếu có src, không lỗi, và đã load xong
   const showImage = src && !imageError && imageLoaded;
-  
-  // Lấy 2 ký tự đầu của tên
   const initials = name ? name.substring(0, 2).toUpperCase() : 'U';
-
-  console.log('CustomAvatar render:', { name, src, showImage, initials, imageError, imageLoaded });
-
   return (
     <div className={cn(
       'relative flex shrink-0 overflow-hidden rounded-full',

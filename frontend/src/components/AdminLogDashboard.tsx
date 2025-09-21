@@ -4,6 +4,15 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useAppDispatch, useAppSelector } from '@/hooks/useAppDispatch';
+import {
+  fetchLogStats,
+  fetchLogScore,
+  cleanupLogs,
+  selectLogStats,
+  selectLogScore,
+  selectLogsLoading,
+} from '@/store/slices/logSlice';
 import { 
   RefreshCw, 
   Download, 
@@ -35,67 +44,24 @@ interface LogScore {
 }
 
 const AdminLogDashboard: React.FC = () => {
-  const [stats, setStats] = useState<LogStats | null>(null);
-  const [score, setScore] = useState<LogScore | null>(null);
-  const [loading, setLoading] = useState(false);
+  const dispatch = useAppDispatch();
+  const stats = useAppSelector(selectLogStats);
+  const score = useAppSelector(selectLogScore);
+  const loading = useAppSelector(selectLogsLoading);
   const [activeTab, setActiveTab] = useState('overview');
 
-  const fetchStats = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch('/api/logs/stats', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setStats(data);
-      }
-    } catch (error) {
-      console.error('Error fetching stats:', error);
-    } finally {
-      setLoading(false);
-    }
+  const fetchStats = () => {
+    dispatch(fetchLogStats());
   };
 
-  const fetchScore = async () => {
-    try {
-      const response = await fetch('/api/logs/score', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setScore(data);
-      }
-    } catch (error) {
-      console.error('Error fetching score:', error);
-    }
+  const fetchScore = () => {
+    dispatch(fetchLogScore());
   };
 
-  const cleanupLogs = async () => {
-    try {
-      const response = await fetch('/api/logs/cleanup', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      if (response.ok) {
-        alert('Log cleanup completed successfully');
-        fetchStats();
-      }
-    } catch (error) {
-      console.error('Error cleaning up logs:', error);
-    }
+  const handleCleanupLogs = () => {
+    dispatch(cleanupLogs(30));
+    alert('Log cleanup completed successfully');
+    fetchStats();
   };
 
   const getHealthColor = (status: string) => {
@@ -142,7 +108,7 @@ const AdminLogDashboard: React.FC = () => {
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
-          <Button onClick={cleanupLogs} variant="outline" className="flex items-center gap-2">
+          <Button onClick={handleCleanupLogs} variant="outline" className="flex items-center gap-2">
             <Database className="h-4 w-4" />
             Cleanup
           </Button>

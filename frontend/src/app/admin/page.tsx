@@ -3,6 +3,27 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { adminService, User, AdminStats } from '@/services/adminService';
+import { useAppDispatch, useAppSelector } from '@/hooks/useAppDispatch';
+import {
+  fetchLogs,
+  fetchLogChannels,
+  fetchLogStats,
+  fetchLogScore,
+  setSelectedChannel,
+  setLogLevelFilter,
+  setLogSearchTerm,
+  setLogLines,
+  selectLogs,
+  selectChannels,
+  selectLogStats,
+  selectLogScore,
+  selectSelectedChannel,
+  selectLogLevelFilter,
+  selectLogSearchTerm,
+  selectLogLines,
+  selectLogsLoading,
+  selectLogsError,
+} from '@/store/slices/logSlice';
 import {
   Users,
   UserPlus,
@@ -25,10 +46,7 @@ import {
   CheckCircle,
   XCircle,
   Database,
-  MessageSquare,
   RefreshCw,
-  Download,
-  Filter,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -44,6 +62,9 @@ import {
 
 export default function AdminPage() {
   const router = useRouter();
+  const dispatch = useAppDispatch();
+  
+  // Local states
   const [users, setUsers] = useState<User[]>([]);
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -54,18 +75,18 @@ export default function AdminPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [error, setError] = useState<string | null>(null);
-
-  // Log states
   const [activeTab, setActiveTab] = useState<'users' | 'logs'>('users');
-  const [logs, setLogs] = useState<any[]>([]);
-  const [logChannels, setLogChannels] = useState<any[]>([]);
-  const [logStats, setLogStats] = useState<any>(null);
-  const [logScore, setLogScore] = useState<any>(null);
-  const [selectedLogChannel, setSelectedLogChannel] = useState('api');
-  const [logLevelFilter, setLogLevelFilter] = useState('all');
-  const [logSearchTerm, setLogSearchTerm] = useState('');
-  const [logLines, setLogLines] = useState(100);
-  const [logsLoading, setLogsLoading] = useState(false);
+
+  // Redux states for logs
+  const logs = useAppSelector(selectLogs);
+  const logChannels = useAppSelector(selectChannels);
+  const logStats = useAppSelector(selectLogStats);
+  const logScore = useAppSelector(selectLogScore);
+  const selectedLogChannel = useAppSelector(selectSelectedChannel);
+  const logLevelFilter = useAppSelector(selectLogLevelFilter);
+  const logSearchTerm = useAppSelector(selectLogSearchTerm);
+  const logLines = useAppSelector(selectLogLines);
+  const logsLoading = useAppSelector(selectLogsLoading);
 
   // Modal states
   const [showUserModal, setShowUserModal] = useState(false);
@@ -123,80 +144,26 @@ export default function AdminPage() {
     }
   };
 
-  // Log functions
-  const loadLogs = async () => {
-    try {
-      setLogsLoading(true);
-      const response = await fetch(`/api/logs?channel=${selectedLogChannel}&lines=${logLines}&level=${logLevelFilter}&search=${logSearchTerm}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setLogs(data.logs || []);
-      }
-    } catch (err) {
-      console.error('Error loading logs:', err);
-    } finally {
-      setLogsLoading(false);
-    }
+  // Log functions using Redux
+  const loadLogs = () => {
+    dispatch(fetchLogs({
+      channel: selectedLogChannel,
+      lines: logLines,
+      level: logLevelFilter !== 'all' ? logLevelFilter : undefined,
+      search: logSearchTerm || undefined,
+    }));
   };
 
-  const loadLogChannels = async () => {
-    try {
-      const response = await fetch('/api/logs/channels', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setLogChannels(data.channels || []);
-      }
-    } catch (err) {
-      console.error('Error loading log channels:', err);
-    }
+  const loadLogChannels = () => {
+    dispatch(fetchLogChannels());
   };
 
-  const loadLogStats = async () => {
-    try {
-      const response = await fetch('/api/logs/stats', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setLogStats(data.stats);
-      }
-    } catch (err) {
-      console.error('Error loading log stats:', err);
-    }
+  const loadLogStats = () => {
+    dispatch(fetchLogStats());
   };
 
-  const loadLogScore = async () => {
-    try {
-      const response = await fetch('/api/logs/score', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setLogScore(data.score);
-      }
-    } catch (err) {
-      console.error('Error loading log score:', err);
-    }
+  const loadLogScore = () => {
+    dispatch(fetchLogScore());
   };
 
   // Fallback to avoid infinite spinner if requests hang
@@ -259,7 +226,7 @@ export default function AdminPage() {
         // Update user
         const updateData = { ...formData };
         if (!updateData.password) {
-          delete updateData.password;
+          delete (updateData as any).password;
         }
         await adminService.updateUser(editingUser.id, updateData);
       } else {
@@ -849,20 +816,20 @@ export default function AdminPage() {
                   <div className="flex-1 min-w-[200px]">
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <Input
-                        placeholder="Search logs..."
-                        value={logSearchTerm}
-                        onChange={(e) => setLogSearchTerm(e.target.value)}
-                        className="pl-10"
-                      />
+                        <Input
+                          placeholder="Search logs..."
+                          value={logSearchTerm}
+                          onChange={(e) => dispatch(setLogSearchTerm(e.target.value))}
+                          className="pl-10"
+                        />
                     </div>
                   </div>
                   
-                  <select
-                    value={selectedLogChannel}
-                    onChange={(e) => setSelectedLogChannel(e.target.value)}
-                    className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                  >
+                         <select
+                           value={selectedLogChannel}
+                           onChange={(e) => dispatch(setSelectedChannel(e.target.value))}
+                           className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                         >
                     {logChannels.map(channel => (
                       <option key={channel.name} value={channel.name}>
                         {channel.name.toUpperCase()}
@@ -870,11 +837,11 @@ export default function AdminPage() {
                     ))}
                   </select>
                   
-                  <select
-                    value={logLevelFilter}
-                    onChange={(e) => setLogLevelFilter(e.target.value)}
-                    className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                  >
+                         <select
+                           value={logLevelFilter}
+                           onChange={(e) => dispatch(setLogLevelFilter(e.target.value))}
+                           className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                         >
                     <option value="all">All Levels</option>
                     <option value="debug">Debug</option>
                     <option value="info">Info</option>
@@ -883,11 +850,11 @@ export default function AdminPage() {
                     <option value="critical">Critical</option>
                   </select>
                   
-                  <select
-                    value={logLines}
-                    onChange={(e) => setLogLines(parseInt(e.target.value))}
-                    className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                  >
+                         <select
+                           value={logLines}
+                           onChange={(e) => dispatch(setLogLines(parseInt(e.target.value)))}
+                           className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                         >
                     <option value="50">50 lines</option>
                     <option value="100">100 lines</option>
                     <option value="500">500 lines</option>

@@ -162,25 +162,28 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
             ]);
 
             // Add creator (User A)
-            $creatorMember = ConversationMember::create([
+            $creatorMember = ConversationMember::firstOrCreate([
                 'conversation_id' => $conversation->id,
                 'user_id' => $data['creator_id'],
+            ], [
                 'joined_at' => now(),
             ]);
-            Log::info('Created creator member:', $creatorMember->toArray());
+            Log::info('Created/found creator member:', $creatorMember->toArray());
 
             // Add participant (User B)
-            $participantMember = ConversationMember::create([
+            $participantMember = ConversationMember::firstOrCreate([
                 'conversation_id' => $conversation->id,
                 'user_id' => $data['participant_id'],
+            ], [
                 'joined_at' => now(),
             ]);
-            Log::info('Created participant member:', $participantMember->toArray());
+            Log::info('Created/found participant member:', $participantMember->toArray());
         } else {
             // For other conversation types, add creator as member
-            ConversationMember::create([
+            ConversationMember::firstOrCreate([
                 'conversation_id' => $conversation->id,
                 'user_id' => $data['creator_id'],
+            ], [
                 'joined_at' => now(),
             ]);
 
@@ -188,9 +191,10 @@ class EloquentConversationRepository implements ConversationRepositoryInterface
             if (isset($data['user_ids']) && is_array($data['user_ids'])) {
                 foreach ($data['user_ids'] as $userId) {
                     if ($userId != $data['creator_id']) {
-                        ConversationMember::create([
+                        ConversationMember::firstOrCreate([
                             'conversation_id' => $conversation->id,
                             'user_id' => $userId,
+                        ], [
                             'joined_at' => now(),
                         ]);
                     }

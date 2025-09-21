@@ -14,6 +14,8 @@ import {
   BookmarkIcon,
   X,
   Shield,
+  ChevronDown,
+  ChevronRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import SettingsModal from '@/components/settings/SettingsModal';
@@ -32,6 +34,7 @@ import { useTranslation } from 'react-i18next';
 import { apiService } from '@/services/api';
 import CreateTeamModal from '@/components/modals/CreateTeamModal';
 import CreateChannelModal from '@/components/modals/CreateChannelModalNew';
+import CreateDirectModal from '@/components/modals/CreateDirectModal';
 import AddMemberModal from '@/components/modals/AddMemberModal';
 
 interface ModernSidebarProps {
@@ -56,11 +59,14 @@ export default function ModernSidebar({
   const [openSettings, setOpenSettings] = useState(false);
   const [showCreateTeamModal, setShowCreateTeamModal] = useState(false);
   const [showCreateChannelModal, setShowCreateChannelModal] = useState(false);
+  const [showCreateDirectModal, setShowCreateDirectModal] = useState(false);
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
   const [addMemberType, setAddMemberType] = useState<'team' | 'channel'>(
     'team'
   );
   const [addMemberTargetId, setAddMemberTargetId] = useState<string>('');
+  const [collapsedTeams, setCollapsedTeams] = useState<Set<number>>(new Set());
+  const [collapsedChannels, setCollapsedChannels] = useState<Set<number>>(new Set());
   const { t } = useTranslation('common');
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
@@ -137,12 +143,15 @@ export default function ModernSidebar({
   const directConversations = unpinnedConversations.filter(
     conv => conv.type === 'direct'
   );
-  const teamConversations = unpinnedConversations.filter(
-    conv => conv.type === 'team'
-  );
   const channelConversations = unpinnedConversations.filter(
     conv => conv.type === 'channel'
   );
+  
+  // Group channels by team for team display
+  const teamChannels = teams.map(team => ({
+    ...team,
+    channels: channelConversations.filter(conv => conv.team_id === team.id)
+  }));
 
   const timeAgo = (iso?: string) => {
     if (!iso) return '';
@@ -182,8 +191,6 @@ export default function ModernSidebar({
             user.id.toString()
           );
           const newConversation = (response as any).data;
-          console.log('API Response:', response);
-          console.log('New conversation:', newConversation);
 
           // Ensure the conversation has user info and members
           if (newConversation) {
@@ -324,8 +331,28 @@ export default function ModernSidebar({
   const [showNotifications, setShowNotifications] = useState(false);
   const [openBookmarks, setOpenBookmarks] = useState(false);
 
+  const toggleTeamCollapse = (teamId: number) => {
+    const newCollapsed = new Set(collapsedTeams);
+    if (newCollapsed.has(teamId)) {
+      newCollapsed.delete(teamId);
+    } else {
+      newCollapsed.add(teamId);
+    }
+    setCollapsedTeams(newCollapsed);
+  };
+
+  const toggleChannelCollapse = (channelId: number) => {
+    const newCollapsed = new Set(collapsedChannels);
+    if (newCollapsed.has(channelId)) {
+      newCollapsed.delete(channelId);
+    } else {
+      newCollapsed.add(channelId);
+    }
+    setCollapsedChannels(newCollapsed);
+  };
+
   return (
-    <div className="w-full h-full bg-white border-r border-gray-200 flex flex-col">
+    <div className="w-full h-full bg-white border-r border-gray-200 flex flex-col overflow-hidden">
       {/* Top Navigation Bar */}
       <div className="flex items-center justify-between p-4 border-b border-gray-100 relative">
         <div className="flex flex-col items-center gap-1">
@@ -480,7 +507,7 @@ export default function ModernSidebar({
           <div className="space-y-1">
             {pinnedConversations.map(conversation => (
               <button
-                key={conversation.id}
+                key={`pinned-${conversation.id}`}
                 onClick={() => onSelectConversation(conversation)}
                 className={cn(
                   'flex items-center justify-between w-full text-left hover:bg-gray-50 rounded-lg p-2 transition-all duration-200 group',
@@ -522,8 +549,8 @@ export default function ModernSidebar({
       )}
 
       {/* Content */}
-      <ScrollArea className="flex-1">
-        <div className="p-3 space-y-6">
+      <ScrollArea className="flex-1 overflow-hidden">
+        <div className="p-3 space-y-6 min-w-0">
           {/* Teams */}
           <div className="space-y-3">
             <div className="flex items-center justify-between mb-2">
@@ -554,53 +581,93 @@ export default function ModernSidebar({
               </button>
             </div>
             <div className="space-y-1">
-              {teamConversations.map(conversation => (
-                <button
-                  key={conversation.id}
-                  onClick={() => onSelectConversation(conversation)}
-                  className={cn(
-                    'flex items-center justify-between w-full text-left hover:bg-gray-50 rounded-lg p-2 transition-all duration-200 group',
-                    currentConversation?.id === conversation.id &&
-                      'bg-gray-50 border border-gray-200'
-                  )}
-                >
-                  <div className="flex items-center space-x-3 flex-1 min-w-0">
-                    <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0">
-                      <Users className="h-4 w-4 text-white" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center space-x-1">
-                        <p className="text-sm font-medium text-gray-900 truncate">
-                          {conversation.name ||
-                            conversation.title ||
-                            'Team Chat'}
-                        </p>
-                        {conversation.is_pinned && (
-                          <svg
-                            className="h-3 w-3 text-yellow-500 flex-shrink-0"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path d="M10 2L3 7v11h4v-6h6v6h4V7l-7-5z" />
-                          </svg>
-                        )}
+              {teamChannels.map(team => (
+                <div key={`team-${team.id}`} className="space-y-1">
+                  {/* Team Header */}
+                  <div className="flex items-center space-x-2 px-2 py-1 pr-4">
+                    <button
+                      onClick={() => toggleTeamCollapse(team.id)}
+                      className="flex items-center space-x-2 flex-1 min-w-0 hover:bg-gray-50 rounded-lg p-1 -m-1 transition-colors text-left"
+                    >
+                      <div className="h-6 w-6 rounded bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+                        <Users className="h-3 w-3 text-white" />
                       </div>
-                      <p className="text-xs text-gray-500 truncate">
-                        Team conversation
-                      </p>
-                    </div>
-                    {conversation.unread_count > 0 &&
-                      !(conversation as any).is_muted && (
-                        <div className="h-5 w-5 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0">
-                          <span className="text-xs font-medium text-white">
-                            {conversation.unread_count > 99
-                              ? '99+'
-                              : conversation.unread_count}
-                          </span>
-                        </div>
+                      <span 
+                        className="text-sm font-medium text-gray-700 flex-1 min-w-0"
+                        style={{
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }}
+                        title={team.name}
+                      >
+                        {team.name.length > 25 ? team.name.substring(0, 25) + '...' : team.name}
+                      </span>
+                      <span className="text-xs text-gray-500 flex-shrink-0">
+                        ({team.channels.length})
+                      </span>
+                      {collapsedTeams.has(team.id) ? (
+                        <ChevronRight className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4 text-gray-400 flex-shrink-0" />
                       )}
+                    </button>
                   </div>
-                </button>
+                  
+                  {/* Team Channels */}
+                  {!collapsedTeams.has(team.id) && team.channels.map(channel => (
+                    <button
+                      key={`channel-${channel.id}`}
+                      onClick={() => onSelectConversation(channel)}
+                      className={cn(
+                        'flex items-center justify-between w-full text-left hover:bg-gray-50 rounded-lg px-3 py-2 ml-4 mr-2 transition-all duration-200 group min-w-0',
+                        currentConversation?.id === channel.id &&
+                          'bg-gray-50 border border-gray-200'
+                      )}
+                    >
+                      <div className="flex items-center space-x-3 flex-1 min-w-0">
+                        <div className="h-6 w-6 rounded bg-gray-100 flex items-center justify-center flex-shrink-0">
+                          <span className="text-xs font-medium text-gray-600">#</span>
+                        </div>
+                        <div className="flex-1 min-w-0" style={{ overflow: 'hidden' }}>
+                          <p 
+                            className="text-sm font-medium text-gray-900"
+                            style={{
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap'
+                            }}
+                            title={channel.name || channel.title || 'Channel'}
+                          >
+                            {(channel.name || channel.title || 'Channel').length > 25 
+                              ? (channel.name || channel.title || 'Channel').substring(0, 25) + '...' 
+                              : (channel.name || channel.title || 'Channel')}
+                          </p>
+                          <p 
+                            className="text-xs text-gray-500"
+                            style={{
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap'
+                            }}
+                          >
+                            Channel
+                          </p>
+                        </div>
+                        {(channel.unread_count || 0) > 0 &&
+                          !(channel as any).is_muted && (
+                            <div className="h-5 w-5 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0 mr-1">
+                              <span className="text-xs font-medium text-white">
+                                {(channel.unread_count || 0) > 99
+                                  ? '99+'
+                                  : channel.unread_count}
+                              </span>
+                            </div>
+                          )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
               ))}
             </div>
           </div>
@@ -608,12 +675,20 @@ export default function ModernSidebar({
           {/* Channels */}
           <div className="space-y-3">
             <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center space-x-2">
+              <button
+                onClick={() => toggleChannelCollapse(0)} // Use 0 as special ID for channels section
+                className="flex items-center space-x-2 hover:bg-gray-50 rounded-lg p-1 -m-1 transition-colors text-left"
+              >
                 <Hash className="h-4 w-4 text-gray-500" />
                 <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
                   {t('channels')}
                 </span>
-              </div>
+                {collapsedChannels.has(0) ? (
+                  <ChevronRight className="h-4 w-4 text-gray-400" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-gray-400" />
+                )}
+              </button>
               <button
                 onClick={() => setShowCreateChannelModal(true)}
                 className="h-6 w-6 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
@@ -634,13 +709,14 @@ export default function ModernSidebar({
                 </svg>
               </button>
             </div>
-            <div className="space-y-1">
-              {channelConversations.map(conversation => (
+            {!collapsedChannels.has(0) && (
+              <div className="space-y-1">
+                {channelConversations.map(conversation => (
                 <button
-                  key={conversation.id}
+                  key={`channel-${conversation.id}`}
                   onClick={() => onSelectConversation(conversation)}
                   className={cn(
-                    'flex items-center justify-between w-full text-left hover:bg-gray-50 rounded-lg p-2 transition-all duration-200 group',
+                    'flex items-center justify-between w-full text-left hover:bg-gray-50 rounded-lg px-3 py-2 mr-2 transition-all duration-200 group min-w-0',
                     currentConversation?.id === conversation.id &&
                       'bg-gray-50 border border-gray-200'
                   )}
@@ -649,14 +725,33 @@ export default function ModernSidebar({
                     <div className="h-8 w-8 flex items-center justify-center bg-gray-100 rounded-lg">
                       {getChannelIcon(conversation.title || '')}
                     </div>
-                    <div className="flex-1">
-                      <span className="text-sm font-medium text-gray-800 group-hover:text-blue-600">
-                        {conversation.title}
+                    <div className="flex-1 min-w-0" style={{ overflow: 'hidden' }}>
+                      <span 
+                        className="text-sm font-medium text-gray-800 group-hover:text-blue-600 block"
+                        style={{
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }}
+                        title={conversation.title}
+                      >
+                        {(conversation.title || '').length > 25 
+                          ? (conversation.title || '').substring(0, 25) + '...' 
+                          : (conversation.title || '')}
                       </span>
-                      <p className="text-xs text-gray-500">Channel</p>
+                      <p 
+                        className="text-xs text-gray-500"
+                        style={{
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        Channel
+                      </p>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 mr-1">
                     {(conversation.unread_count ?? 0) > 0 &&
                       !(conversation as any).is_muted && (
                         <Badge className="bg-red-500 text-white text-[10px] font-bold px-1 py-0.5 h-4 min-w-[16px] flex items-center justify-center">
@@ -665,17 +760,39 @@ export default function ModernSidebar({
                       )}
                   </div>
                 </button>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Direct Messages */}
           <div className="space-y-3">
-            <div className="flex items-center space-x-2 mb-2">
-              <MessageCircle className="h-4 w-4 text-gray-500" />
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                {t('direct_messages')}
-              </span>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center space-x-2">
+                <MessageCircle className="h-4 w-4 text-gray-500" />
+                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  {t('direct_messages')}
+                </span>
+              </div>
+              <button
+                onClick={() => setShowCreateDirectModal(true)}
+                className="h-6 w-6 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+                title="Start new conversation"
+              >
+                <svg
+                  className="h-3 w-3 text-gray-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                  />
+                </svg>
+              </button>
             </div>
             <div className="space-y-1">
               {directConversations.map(conversation => {
@@ -695,11 +812,11 @@ export default function ModernSidebar({
 
                 return (
                   <motion.button
-                    key={conversation.id}
+                    key={`direct-${conversation.id}`}
                     onClick={() => onSelectConversation(conversation)}
                     whileHover={{ backgroundColor: 'rgba(59, 130, 246, 0.05)' }}
                     className={cn(
-                      'flex items-center justify-between w-full text-left hover:bg-gray-50 rounded-lg p-2 transition-all duration-200 group',
+                      'flex items-center justify-between w-full text-left hover:bg-gray-50 rounded-lg px-3 py-2 mr-2 transition-all duration-200 group min-w-0',
                       currentConversation?.id === conversation.id &&
                         'bg-gray-50 border border-gray-200'
                     )}
@@ -722,7 +839,7 @@ export default function ModernSidebar({
                           className="absolute -bottom-0.5 -right-0.5"
                         />
                       </div>
-                      <div className="flex-1 min-w-0">
+                      <div className="flex-1 min-w-0" style={{ overflow: 'hidden' }}>
                         <div className="flex items-center space-x-1">
                           {conversation.is_pinned && (
                             <svg
@@ -733,8 +850,18 @@ export default function ModernSidebar({
                               <path d="M10 2L3 7v11h4v-6h6v6h4V7l-7-5z" />
                             </svg>
                           )}
-                          <p className="text-sm font-medium text-gray-800 group-hover:text-blue-600 truncate">
-                            {displayName}
+                          <p 
+                            className="text-sm font-medium text-gray-800 group-hover:text-blue-600"
+                            style={{
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap'
+                            }}
+                            title={displayName}
+                          >
+                            {displayName.length > 25 
+                              ? displayName.substring(0, 25) + '...' 
+                              : displayName}
                           </p>
                         </div>
                         {conversation.last_message && (
@@ -749,7 +876,7 @@ export default function ModernSidebar({
                         )}
                       </div>
                     </div>
-                    <div className="flex flex-col items-end space-y-0.5">
+                    <div className="flex flex-col items-end space-y-0.5 mr-1">
                       <span className="text-xs text-gray-400">
                         {timeAgo(
                           conversation.last_message?.updated_at ||
@@ -855,6 +982,16 @@ export default function ModernSidebar({
               // TODO: Add channel to conversations list
             }}
             teams={teams}
+          />
+
+          {/* Create Direct Conversation Modal */}
+          <CreateDirectModal
+            isOpen={showCreateDirectModal}
+            onClose={() => setShowCreateDirectModal(false)}
+            onConversationCreated={conversation => {
+              console.log('Direct conversation created:', conversation);
+              onAddConversation?.(conversation);
+            }}
           />
 
           {/* Add Member Modal */}

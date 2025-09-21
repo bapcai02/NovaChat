@@ -207,18 +207,18 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/online', [App\Http\Controllers\UserStatusController::class, 'getOnlineUsers']);
     });
 
-// Log routes
-Route::middleware(['auth:sanctum'])->prefix('logs')->group(function () {
-    Route::get('/', [LogController::class, 'index']);
-    Route::get('/channels', [LogController::class, 'channels']);
-    Route::get('/export', [LogController::class, 'export']);
-    
-    // Admin only routes
-    Route::middleware(['admin'])->group(function () {
-        Route::get('/stats', [LogController::class, 'stats']);
-        Route::get('/score', [LogController::class, 'score']);
-        Route::post('/cleanup', [LogController::class, 'cleanup']);
+    // Log routes
+    Route::prefix('logs')->group(function () {
+        Route::get('/', [LogController::class, 'index']);
+        Route::get('/channels', [LogController::class, 'channels']);
+        Route::get('/export', [LogController::class, 'export']);
+        
+        // Admin only routes
+        Route::middleware(['admin'])->group(function () {
+            Route::get('/stats', [LogController::class, 'stats']);
+            Route::get('/score', [LogController::class, 'score']);
+            Route::post('/cleanup', [LogController::class, 'cleanup']);
+        });
     });
-});
 
 });

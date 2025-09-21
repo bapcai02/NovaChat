@@ -10,9 +10,9 @@ class LogController extends Controller
 {
     protected $logService;
 
-    public function __construct(LogService $logService)
+    public function __construct()
     {
-        $this->logService = $logService;
+        // LogService methods are static, no need to inject
     }
 
     public function index(Request $request)
@@ -32,7 +32,7 @@ class LogController extends Controller
         }
         
         try {
-            $logs = $this->logService->getLogs($channel, $lines, $level, $search);
+            $logs = LogService::getLogs($channel, $lines, $level, $search);
             
             // Filter logs for non-admin users
             if ($user->role !== 'admin') {
@@ -98,7 +98,7 @@ class LogController extends Controller
         }
         
         try {
-            $stats = $this->logService->getStats();
+            $stats = LogService::getStats();
             return response()->json([
                 'success' => true,
                 'stats' => $stats
@@ -124,7 +124,7 @@ class LogController extends Controller
         }
         
         try {
-            $score = $this->logService->getLogScore();
+            $score = LogService::getLogScore();
             return response()->json([
                 'success' => true,
                 'score' => $score
@@ -152,7 +152,7 @@ class LogController extends Controller
         }
         
         try {
-            $logs = $this->logService->getLogs($channel, $lines);
+            $logs = LogService::getLogs($channel, $lines);
             
             // Filter logs for non-admin users
             if ($user->role !== 'admin') {
@@ -189,7 +189,7 @@ class LogController extends Controller
         
         try {
             $days = $request->get('days', 30);
-            $this->logService->cleanupLogs($days);
+            LogService::cleanupLogs($days);
             
             return response()->json([
                 'success' => true,

@@ -179,4 +179,196 @@ class LogService
 
         Log::channel($channel)->{$level}($message, $structuredContext);
     }
+
+    /**
+     * Get logs from a specific channel
+     */
+    public static function getLogs(string $channel, int $lines = 100, string $level = null, string $search = null): array
+    {
+        $logPath = storage_path("logs/{$channel}-" . now()->format('Y-m-d') . ".log");
+        
+        if (!file_exists($logPath)) {
+            // Try without date suffix
+            $logPath = storage_path("logs/{$channel}.log");
+            if (!file_exists($logPath)) {
+                return [];
+            }
+        }
+
+        $command = "tail -n {$lines} " . escapeshellarg($logPath);
+        
+        if ($level) {
+            $command .= " | grep -i '{$level}'";
+        }
+        
+        if ($search) {
+            $command .= " | grep -i " . escapeshellarg($search);
+        }
+        
+        $logs = shell_exec($command);
+        
+        if (!$logs) {
+            return [];
+        }
+
+        $logLines = explode("\n", trim($logs));
+        $parsedLogs = [];
+
+        foreach ($logLines as $line) {
+            if (empty($line)) continue;
+            
+            // Parse Laravel log format: [timestamp] level.message context
+            if (preg_match('/^\[([^\]]+)\]\s+(\w+)\.(\w+):\s+(.+?)\s+(\{.*\})?$/', $line, $matches)) {
+                $timestamp = $matches[1];
+                $logLevel = strtolower($matches[3]);
+                $message = $matches[4];
+                $context = isset($matches[5]) ? json_decode($matches[5], true) : [];
+
+                $parsedLogs[] = [
+                    'timestamp' => $timestamp,
+                    'level' => $logLevel,
+                    'message' => $message,
+                    'context' => $context,
+                ];
+            }
+        }
+
+        return array_reverse($parsedLogs); // Most recent first
+    }
+
+    /**
+     * Get log statistics
+     */
+    public static function getStats(): array
+    {
+        $channels = ['api', 'auth', 'chat', 'security', 'performance', 'database'];
+        $stats = [
+            'total_logs' => 0,
+            'error_count' => 0,
+            'warning_count' => 0,
+            'info_count' => 0,
+            'channels' => [],
+        ];
+
+        foreach ($channels as $channel) {
+            $logPath = storage_path("logs/{$channel}-" . now()->format('Y-m-d') . ".log");
+            
+            if (!file_exists($logPath)) {
+                $logPath = storage_path("logs/{$channel}.log");
+                if (!file_exists($logPath)) {
+                    continue;
+                }
+            }
+
+            $totalLines = (int) shell_exec("wc -l < " . escapeshellarg($logPath));
+            $errorCount = (int) shell_exec("grep -c 'ERROR' " . escapeshellarg($logPath));
+            $warningCount = (int) shell_exec("grep -c 'WARNING' " . escapeshellarg($logPath));
+            $infoCount = (int) shell_exec("grep -c 'INFO' " . escapeshellarg($logPath));
+
+            $stats['total_logs'] += $totalLines;
+            $stats['error_count'] += $errorCount;
+            $stats['warning_count'] += $warningCount;
+            $stats['info_count'] += $infoCount;
+            $stats['channels'][$channel] = $totalLines;
+        }
+
+        return $stats;
+    }
+
+    /**
+     * Get log health score
+     */
+    public static function getLogScore(): array
+    {
+        $stats = self::getStats();
+        
+        $score = 100;
+        $issues = [];
+        $recommendations = [];
+
+        // Deduct points for errors
+        if ($stats['error_count'] > 0) {
+            $errorRate = $stats['error_count'] / max($stats['total_logs'], 1);
+            if ($errorRate > 0.1) {
+                $score -= 30;
+                $issues[] = "High error rate: " . round($errorRate * 100, 2) . "%";
+            } elseif ($errorRate > 0.05) {
+                $score -= 15;
+                $issues[] = "Moderate error rate: " . round($errorRate * 100, 2) . "%";
+            }
+        }
+
+        // Check for warnings
+        if ($stats['warning_count'] > 50) {
+            $score -= 10;
+            $issues[] = "High number of warnings: {$stats['warning_count']}";
+        }
+
+        // Determine health status
+        if ($score >= 90) {
+            $healthStatus = 'excellent';
+        } elseif ($score >= 80) {
+            $healthStatus = 'good';
+        } elseif ($score >= 60) {
+            $healthStatus = 'warning';
+        } else {
+            $healthStatus = 'critical';
+        }
+
+        // Add recommendations
+        if ($stats['error_count'] > 0) {
+            $recommendations[] = "Review and fix error logs";
+        }
+        if ($stats['warning_count'] > 20) {
+            $recommendations[] = "Address warning messages";
+        }
+        if (empty($recommendations)) {
+            $recommendations[] = "Logs look healthy! Keep up the good work.";
+        }
+
+        return [
+            'score' => $score,
+            'health_status' => $healthStatus,
+            'issues' => $issues,
+            'recommendations' => $recommendations,
+        ];
+    }
+
+    /**
+     * Clean up old log files
+     */
+    public static function cleanupLogs(int $days = 30): array
+    {
+        $logPath = storage_path('logs');
+        $files = File::allFiles($logPath);
+        $deletedFiles = [];
+        $spaceFreed = 0;
+
+        foreach ($files as $file) {
+            if (now()->subDays($days)->greaterThan($file->getMTime())) {
+                $spaceFreed += $file->getSize();
+                File::delete($file->getPathname());
+                $deletedFiles[] = $file->getFilename();
+            }
+        }
+
+        return [
+            'deleted_files' => $deletedFiles,
+            'space_freed' => self::formatBytes($spaceFreed),
+        ];
+    }
+
+    /**
+     * Format bytes to human readable format
+     */
+    private static function formatBytes($bytes, $precision = 2)
+    {
+        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+
+        for ($i = 0; $bytes > 1024 && $i < count($units) - 1; $i++) {
+            $bytes /= 1024;
+        }
+
+        return round($bytes, $precision) . ' ' . $units[$i];
+    }
 }

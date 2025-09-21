@@ -6,6 +6,17 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { RefreshCw, Download, Filter, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { useAppDispatch, useAppSelector } from '@/hooks/useAppDispatch';
+import {
+  fetchLogs,
+  setSelectedChannel,
+  setLogLines,
+  selectLogs,
+  selectChannels,
+  selectSelectedChannel,
+  selectLogLines,
+  selectLogsLoading,
+} from '@/store/slices/logSlice';
 
 interface LogEntry {
   timestamp: string;
@@ -20,12 +31,14 @@ interface LogViewerProps {
 }
 
 const LogViewer: React.FC<LogViewerProps> = ({ isAdmin = false }) => {
-  const [logs, setLogs] = useState<LogEntry[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [selectedChannel, setSelectedChannel] = useState('api');
+  const dispatch = useAppDispatch();
+  const logs = useAppSelector(selectLogs);
+  const channels = useAppSelector(selectChannels);
+  const selectedChannel = useAppSelector(selectSelectedChannel);
+  const lines = useAppSelector(selectLogLines);
+  const loading = useAppSelector(selectLogsLoading);
   const [searchTerm, setSearchTerm] = useState('');
   const [levelFilter, setLevelFilter] = useState('all');
-  const [lines, setLines] = useState(100);
 
   const channels = isAdmin 
     ? ['api', 'auth', 'chat', 'websocket', 'security', 'performance', 'database']
@@ -33,32 +46,18 @@ const LogViewer: React.FC<LogViewerProps> = ({ isAdmin = false }) => {
 
   const levels = ['all', 'debug', 'info', 'warning', 'error', 'critical'];
 
-  const fetchLogs = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch(`/api/logs?channel=${selectedChannel}&lines=${lines}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setLogs(data.logs || []);
-      } else {
-        console.error('Failed to fetch logs');
-      }
-    } catch (error) {
-      console.error('Error fetching logs:', error);
-    } finally {
-      setLoading(false);
-    }
+  const loadLogs = () => {
+    dispatch(fetchLogs({
+      channel: selectedChannel,
+      lines: lines,
+      level: levelFilter !== 'all' ? levelFilter : undefined,
+      search: searchTerm || undefined,
+    }));
   };
 
   const downloadLogs = async () => {
     try {
-      const response = await fetch(`/api/logs/export?channel=${selectedChannel}&lines=${lines}`, {
+      const response = await fetch(`http://localhost:8000/api/logs/export?channel=${selectedChannel}&lines=${lines}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
@@ -107,7 +106,7 @@ const LogViewer: React.FC<LogViewerProps> = ({ isAdmin = false }) => {
   });
 
   useEffect(() => {
-    fetchLogs();
+    loadLogs();
   }, [selectedChannel, lines]);
 
   return (
@@ -183,7 +182,7 @@ const LogViewer: React.FC<LogViewerProps> = ({ isAdmin = false }) => {
 
           {/* Actions */}
           <div className="flex gap-2">
-            <Button onClick={fetchLogs} disabled={loading} className="flex items-center gap-2">
+            <Button onClick={loadLogs} disabled={loading} className="flex items-center gap-2">
               <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
               Refresh
             </Button>
