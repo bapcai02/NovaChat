@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\LogController;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,4 +16,11 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
+});
+
+// Log Dashboard (Admin only)
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::get('/logs', function () {
+        return view('logs.dashboard');
+    });
 });

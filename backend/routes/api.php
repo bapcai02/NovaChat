@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ChannelController;
 use App\Http\Controllers\ConversationController;
+use App\Http\Controllers\LogController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\TeamController;
@@ -205,5 +206,19 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/{userId}/status', [App\Http\Controllers\UserStatusController::class, 'getUserStatus']);
         Route::get('/online', [App\Http\Controllers\UserStatusController::class, 'getOnlineUsers']);
     });
+
+// Log routes
+Route::middleware(['auth:sanctum'])->prefix('logs')->group(function () {
+    Route::get('/', [LogController::class, 'index']);
+    Route::get('/channels', [LogController::class, 'channels']);
+    Route::get('/export', [LogController::class, 'export']);
+    
+    // Admin only routes
+    Route::middleware(['admin'])->group(function () {
+        Route::get('/stats', [LogController::class, 'stats']);
+        Route::get('/score', [LogController::class, 'score']);
+        Route::post('/cleanup', [LogController::class, 'cleanup']);
+    });
+});
 
 });
