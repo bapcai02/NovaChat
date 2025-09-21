@@ -9,6 +9,21 @@ use Illuminate\Http\Request;
 class LogService
 {
     /**
+     * Generic log method
+     */
+    public static function log(string $channel, string $level, string $message, array $context = []): void
+    {
+        $context = array_merge([
+            'user_id' => Auth::id(),
+            'ip' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+            'timestamp' => now()->toISOString(),
+        ], $context);
+
+        Log::channel($channel)->{$level}($message, $context);
+    }
+
+    /**
      * Log authentication events
      */
     public static function auth(string $action, array $data = []): void

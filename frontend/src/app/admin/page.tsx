@@ -19,6 +19,16 @@ import {
   Ban,
   UserCheck,
   X,
+  FileText,
+  Activity,
+  AlertTriangle,
+  CheckCircle,
+  XCircle,
+  Database,
+  MessageSquare,
+  RefreshCw,
+  Download,
+  Filter,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -44,6 +54,18 @@ export default function AdminPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [error, setError] = useState<string | null>(null);
+
+  // Log states
+  const [activeTab, setActiveTab] = useState<'users' | 'logs'>('users');
+  const [logs, setLogs] = useState<any[]>([]);
+  const [logChannels, setLogChannels] = useState<any[]>([]);
+  const [logStats, setLogStats] = useState<any>(null);
+  const [logScore, setLogScore] = useState<any>(null);
+  const [selectedLogChannel, setSelectedLogChannel] = useState('api');
+  const [logLevelFilter, setLogLevelFilter] = useState('all');
+  const [logSearchTerm, setLogSearchTerm] = useState('');
+  const [logLines, setLogLines] = useState(100);
+  const [logsLoading, setLogsLoading] = useState(false);
 
   // Modal states
   const [showUserModal, setShowUserModal] = useState(false);
@@ -81,6 +103,7 @@ export default function AdminPage() {
         status: statusFilter,
       });
 
+      console.log('API Response:', response);
       setUsers(response.data);
       setTotalPages(response.pagination.last_page);
     } catch (err: any) {
@@ -97,6 +120,82 @@ export default function AdminPage() {
       setStats(response);
     } catch (err) {
       console.error('Error loading stats:', err);
+    }
+  };
+
+  // Log functions
+  const loadLogs = async () => {
+    try {
+      setLogsLoading(true);
+      const response = await fetch(`/api/logs?channel=${selectedLogChannel}&lines=${logLines}&level=${logLevelFilter}&search=${logSearchTerm}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setLogs(data.logs || []);
+      }
+    } catch (err) {
+      console.error('Error loading logs:', err);
+    } finally {
+      setLogsLoading(false);
+    }
+  };
+
+  const loadLogChannels = async () => {
+    try {
+      const response = await fetch('/api/logs/channels', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setLogChannels(data.channels || []);
+      }
+    } catch (err) {
+      console.error('Error loading log channels:', err);
+    }
+  };
+
+  const loadLogStats = async () => {
+    try {
+      const response = await fetch('/api/logs/stats', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setLogStats(data.stats);
+      }
+    } catch (err) {
+      console.error('Error loading log stats:', err);
+    }
+  };
+
+  const loadLogScore = async () => {
+    try {
+      const response = await fetch('/api/logs/score', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setLogScore(data.score);
+      }
+    } catch (err) {
+      console.error('Error loading log score:', err);
     }
   };
 
@@ -230,6 +329,21 @@ export default function AdminPage() {
     loadStats();
   }, [currentPage, searchQuery, roleFilter, statusFilter]);
 
+  useEffect(() => {
+    if (activeTab === 'logs') {
+      loadLogChannels();
+      loadLogStats();
+      loadLogScore();
+      loadLogs();
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab === 'logs') {
+      loadLogs();
+    }
+  }, [selectedLogChannel, logLevelFilter, logSearchTerm, logLines]);
+
   const getRoleColor = (role: string) => {
     switch (role) {
       case 'admin':
@@ -293,10 +407,10 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#f9fafb' }}>
       {/* Header */}
       <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
               <Shield className="h-8 w-8 text-blue-600" />
@@ -313,12 +427,40 @@ export default function AdminPage() {
               <Button onClick={() => router.push('/chat')}>Back to Chat</Button>
             </div>
           </div>
+          
+          {/* Tabs */}
+          <div className="flex space-x-8 border-b border-gray-200">
+            <button
+              onClick={() => setActiveTab('users')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'users'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <Users className="h-4 w-4 inline mr-2" />
+              Users Management
+            </button>
+            <button
+              onClick={() => setActiveTab('logs')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'logs'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <FileText className="h-4 w-4 inline mr-2" />
+              System Logs
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-8" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {activeTab === 'users' ? (
+          <>
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center">
               <Users className="h-8 w-8 text-blue-600" />
@@ -419,10 +561,10 @@ export default function AdminPage() {
         </div>
 
         {/* Users Table */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="overflow-x-auto">
+        <div className="bg-white rounded-lg shadow overflow-hidden" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ flex: 1, overflow: 'auto' }}>
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-50" style={{ position: 'sticky', top: 0, zIndex: 10 }}>
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     User
@@ -572,32 +714,268 @@ export default function AdminPage() {
         </div>
 
         {/* Pagination */}
-        <div className="flex items-center justify-between mt-6">
-          <div className="text-sm text-gray-500">
-            Showing {filteredUsers.length} users
+        {totalPages > 0 && (
+          <div className="flex items-center justify-between mt-6">
+            <div className="text-sm text-gray-500">
+              Showing {users.length} users on page {currentPage} of {totalPages}
+              {process.env.NODE_ENV === 'development' && (
+                <span className="ml-2 text-xs text-gray-400">
+                  (Debug: totalPages={totalPages}, currentPage={currentPage})
+                </span>
+              )}
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(currentPage - 1)}
+              >
+                Previous
+              </Button>
+              
+              {/* Page numbers */}
+              <div className="flex items-center space-x-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  const pageNum = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+                  if (pageNum > totalPages) return null;
+                  
+                  return (
+                    <Button
+                      key={pageNum}
+                      variant={pageNum === currentPage ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCurrentPage(pageNum)}
+                      className="w-8 h-8 p-0"
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                })}
+              </div>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage(currentPage + 1)}
+              >
+                Next
+              </Button>
+            </div>
           </div>
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage(currentPage - 1)}
-            >
-              Previous
-            </Button>
-            <span className="text-sm text-gray-500">
-              Page {currentPage} of {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage(currentPage + 1)}
-            >
-              Next
-            </Button>
+        )}
+          </>
+        ) : (
+          /* Logs Tab */
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            {/* Log Stats */}
+            {logStats && (
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div className="bg-white rounded-lg shadow p-6">
+                  <div className="flex items-center">
+                    <Activity className="h-8 w-8 text-blue-600" />
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-500">Total Logs</p>
+                      <p className="text-2xl font-bold text-gray-700">
+                        {logStats.total_logs || 0}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-white rounded-lg shadow p-6">
+                  <div className="flex items-center">
+                    <XCircle className="h-8 w-8 text-red-600" />
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-500">Errors</p>
+                      <p className="text-2xl font-bold text-gray-700">
+                        {logStats.error_count || 0}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-white rounded-lg shadow p-6">
+                  <div className="flex items-center">
+                    <AlertTriangle className="h-8 w-8 text-yellow-600" />
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-500">Warnings</p>
+                      <p className="text-2xl font-bold text-gray-700">
+                        {logStats.warning_count || 0}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-white rounded-lg shadow p-6">
+                  <div className="flex items-center">
+                    <CheckCircle className="h-8 w-8 text-green-600" />
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-500">Info</p>
+                      <p className="text-2xl font-bold text-gray-700">
+                        {logStats.info_count || 0}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Log Health Score */}
+            {logScore && (
+              <div className="bg-white rounded-lg shadow p-6 mb-8">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Database className="h-8 w-8 text-indigo-600" />
+                    <div className="ml-4">
+                      <h3 className="text-lg font-semibold text-gray-700">System Health</h3>
+                      <p className="text-sm text-gray-500">Log analysis score</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-3xl font-bold text-indigo-600">
+                      {logScore.score}/100
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {logScore.health_status}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Log Filters */}
+            <div className="bg-white rounded-lg shadow mb-6">
+              <div className="px-6 py-4">
+                <div className="flex flex-wrap items-center gap-4">
+                  <div className="flex-1 min-w-[200px]">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <Input
+                        placeholder="Search logs..."
+                        value={logSearchTerm}
+                        onChange={(e) => setLogSearchTerm(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+                  
+                  <select
+                    value={selectedLogChannel}
+                    onChange={(e) => setSelectedLogChannel(e.target.value)}
+                    className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                  >
+                    {logChannels.map(channel => (
+                      <option key={channel.name} value={channel.name}>
+                        {channel.name.toUpperCase()}
+                      </option>
+                    ))}
+                  </select>
+                  
+                  <select
+                    value={logLevelFilter}
+                    onChange={(e) => setLogLevelFilter(e.target.value)}
+                    className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                  >
+                    <option value="all">All Levels</option>
+                    <option value="debug">Debug</option>
+                    <option value="info">Info</option>
+                    <option value="warning">Warning</option>
+                    <option value="error">Error</option>
+                    <option value="critical">Critical</option>
+                  </select>
+                  
+                  <select
+                    value={logLines}
+                    onChange={(e) => setLogLines(parseInt(e.target.value))}
+                    className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                  >
+                    <option value="50">50 lines</option>
+                    <option value="100">100 lines</option>
+                    <option value="500">500 lines</option>
+                    <option value="1000">1000 lines</option>
+                  </select>
+                  
+                  <Button onClick={loadLogs} disabled={logsLoading} className="flex items-center gap-2">
+                    <RefreshCw className={`h-4 w-4 ${logsLoading ? 'animate-spin' : ''}`} />
+                    Refresh
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Logs Table */}
+            <div className="bg-white rounded-lg shadow overflow-hidden" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+              <div style={{ flex: 1, overflow: 'auto' }}>
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50" style={{ position: 'sticky', top: 0, zIndex: 10 }}>
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Timestamp
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Level
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Message
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Context
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {logsLoading ? (
+                      <tr>
+                        <td colSpan={4} className="px-6 py-12 text-center text-gray-500">
+                          <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
+                          Loading logs...
+                        </td>
+                      </tr>
+                    ) : logs.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="px-6 py-12 text-center text-gray-500">
+                          No logs found
+                        </td>
+                      </tr>
+                    ) : (
+                      logs.map((log, index) => (
+                        <tr key={index} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {new Date(log.timestamp).toLocaleString()}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <Badge className={
+                              log.level === 'error' || log.level === 'critical' ? 'bg-red-100 text-red-800' :
+                              log.level === 'warning' ? 'bg-yellow-100 text-yellow-800' :
+                              log.level === 'info' ? 'bg-blue-100 text-blue-800' :
+                              'bg-gray-100 text-gray-800'
+                            }>
+                              {log.level.toUpperCase()}
+                            </Badge>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-900">
+                            {log.message}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-500">
+                            {log.context ? (
+                              <details>
+                                <summary className="cursor-pointer hover:text-gray-700">
+                                  View Context
+                                </summary>
+                                <pre className="mt-2 p-2 bg-gray-100 rounded text-xs overflow-x-auto">
+                                  {JSON.stringify(log.context, null, 2)}
+                                </pre>
+                              </details>
+                            ) : '-'}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* User Modal */}

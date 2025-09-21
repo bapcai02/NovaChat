@@ -60,11 +60,11 @@ const Navigation: React.FC = () => {
               {user?.role === 'admin' && (
                 <>
                   <Link 
-                    href="/admin/logs" 
+                    href="/admin" 
                     className="flex items-center space-x-1 text-gray-600 hover:text-blue-600 transition-colors"
                   >
                     <Shield className="h-4 w-4" />
-                    <span>Admin Logs</span>
+                    <span>Admin Panel</span>
                   </Link>
                   
                   <Link 
