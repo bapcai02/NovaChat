@@ -1,199 +1,80 @@
-# NovaChat Mobile
+# 📱 NovaChat Mobile
 
-React Native mobile application for NovaChat - a real-time chat platform.
+React Native mobile app built with Expo for NovaChat platform.
 
-## Features
+## 🚀 Quick Start
 
-- **Real-time Messaging**: WebSocket-based real-time chat
-- **Authentication**: Login, register, and profile management
-- **Teams & Channels**: Organize conversations by teams
-- **Audio/Video Calls**: WebRTC-powered calling features
-- **Push Notifications**: Real-time notifications
-- **Cross-platform**: iOS and Android support
-
-## Tech Stack
-
-- **Framework**: React Native with Expo
-- **Language**: TypeScript
-- **State Management**: Redux Toolkit
-- **Navigation**: React Navigation
-- **UI Components**: Custom components with React Native
-- **WebSocket**: Custom WebSocket service
-- **WebRTC**: React Native WebRTC
-- **Storage**: AsyncStorage
-
-## Project Structure
-
-```
-src/
-├── components/          # Reusable UI components
-│   ├── auth/           # Authentication components
-│   ├── chat/           # Chat-specific components
-│   └── ui/             # Generic UI components
-├── navigation/         # Navigation configuration
-├── screens/           # Screen components
-│   ├── auth/          # Authentication screens
-│   ├── chat/          # Chat screens
-│   ├── settings/      # Settings screens
-│   └── teams/         # Team screens
-├── services/          # API and WebSocket services
-├── store/             # Redux store and slices
-├── types/             # TypeScript type definitions
-└── utils/             # Utility functions
-```
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js (v20.19.4 or higher)
-- npm or yarn
-- Expo CLI
-- iOS Simulator (for iOS development)
-- Android Studio (for Android development)
-
-### Installation
-
-1. Install dependencies:
+### 1. Setup Environment
 ```bash
+# Run setup script (Ubuntu/Debian)
+./setup-env.sh
+
+# Or install manually
 npm install
 ```
 
-2. Start the development server:
+### 2. Start App
 ```bash
-npm start
+# Method 1: Use script (recommended)
+./start-android.sh
+
+# Method 2: Manual
+npm run web          # Web version
+npm run android      # Android version
+npx expo start       # Development server
 ```
 
-3. Run on specific platforms:
+## 📁 Project Structure
+
+```
+mobile/
+├── src/
+│   ├── components/     # React components
+│   ├── contexts/       # Context providers  
+│   ├── services/       # API services
+│   ├── types/          # TypeScript types
+│   └── utils/          # Utility functions
+├── App.tsx             # Main app
+├── start-android.sh    # Android startup script
+├── setup-env.sh        # Environment setup
+└── SETUP.md           # Detailed setup guide
+```
+
+## ✨ Features
+
+- 🔐 **Authentication** - Login/Register with API
+- 💾 **State Management** - Context API + AsyncStorage
+- 🎨 **Beautiful UI** - Matching frontend design
+- 📱 **Mobile-First** - Optimized for mobile devices
+- 🔄 **Auto-reload** - Hot reload during development
+- 🛡️ **TypeScript** - Type safety throughout
+- 🧪 **Demo Mode** - Test with demo credentials
+
+## 🎯 Available Scripts
+
 ```bash
-# iOS
-npm run ios
-
-# Android
-npm run android
-
-# Web
-npm run web
+npm run web        # Start web version
+npm run android    # Start Android version  
+npm run ios        # Start iOS version (macOS only)
+npx expo start     # Start development server
 ```
 
-### Configuration
+## 📖 Documentation
 
-1. Update API endpoints in `src/services/api.ts`:
-```typescript
-const API_BASE_URL = 'http://your-api-url.com/api';
-```
+- [Detailed Setup Guide](SETUP.md) - Complete setup instructions
+- [Expo Documentation](https://docs.expo.dev/)
+- [React Native Docs](https://reactnative.dev/)
 
-2. Update WebSocket URL in `src/services/websocket.ts`:
-```typescript
-constructor(url: string = 'ws://your-websocket-url.com') {
-```
+## 🆘 Troubleshooting
 
-## Features Overview
+Common issues and solutions:
 
-### Authentication
-- Login with email/password
-- Registration with validation
-- Password reset functionality
-- JWT token management
+- **ADB not found**: `sudo ln -s ~/Android/Sdk/platform-tools/adb /usr/bin/adb`
+- **Emulator issues**: Check `adb devices` and restart emulator
+- **Metro bundler**: Run `npx expo start --reset-cache`
+- **Node version**: Ensure Node.js 18+ is installed
 
-### Chat
-- Real-time messaging via WebSocket
-- Message history loading
-- Typing indicators
-- Message reactions
-- File attachments
+## 🔗 Related
 
-### Teams & Channels
-- Team management
-- Channel creation and joining
-- Member management
-- Private/public teams
-
-### Settings
-- Profile management
-- Notification preferences
-- Privacy settings
-- Account management
-
-## API Integration
-
-The mobile app integrates with the NovaChat Laravel backend API:
-
-- **Authentication**: `/auth/login`, `/auth/register`, `/auth/me`
-- **Conversations**: `/conversations`, `/conversations/{id}/messages`
-- **Teams**: `/teams`, `/teams/{id}/channels`
-- **Users**: `/users/search`, `/user/profile`
-
-## WebSocket Events
-
-The app listens for these WebSocket events:
-
-- `chat_message`: New message received
-- `typing_start`/`typing_stop`: Typing indicators
-- `message_read`: Read receipts
-- `user_online`/`user_offline`: User presence
-- `rtc_offer`/`rtc_answer`/`rtc_candidate`: WebRTC signaling
-
-## Development
-
-### Adding New Features
-
-1. Create types in `src/types/index.ts`
-2. Add Redux slice if needed in `src/store/slices/`
-3. Create API methods in `src/services/api.ts`
-4. Add WebSocket handlers in `src/services/websocket.ts`
-5. Create components in appropriate folders
-6. Add screens and navigation routes
-
-### Code Style
-
-- Use TypeScript for all files
-- Follow React Native best practices
-- Use functional components with hooks
-- Implement proper error handling
-- Add loading states for async operations
-
-## Building for Production
-
-### iOS
-
-1. Configure app in Expo dashboard
-2. Build with EAS Build:
-```bash
-eas build --platform ios
-```
-
-### Android
-
-1. Configure app in Expo dashboard
-2. Build with EAS Build:
-```bash
-eas build --platform android
-```
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Metro bundler issues**: Clear cache with `npx expo start -c`
-2. **iOS simulator not working**: Reset simulator or restart Xcode
-3. **Android build fails**: Check Android SDK and build tools
-4. **WebSocket connection fails**: Verify backend is running and URL is correct
-
-### Debug Mode
-
-Enable debug mode by adding to your device:
-- Shake device or press `Cmd+D` (iOS) / `Cmd+M` (Android)
-- Select "Debug" from the developer menu
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
-## License
-
-This project is part of the NovaChat platform. See the main repository for license information.
+- [Frontend](../frontend/) - Next.js web application
+- [Backend](../backend/) - Laravel API server
